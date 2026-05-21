@@ -1,99 +1,190 @@
 import { NavLink } from 'react-router-dom'
+import { useLang } from '../../context/LangContext'
+import { useSidebar } from '../../context/SidebarContext'
+import { t } from '../../i18n/translations'
 
-const Logo = () => (
-  <svg width="48" height="48" viewBox="0 0 50 50" fill="none">
-    <circle cx="25" cy="25" r="25" fill="#0a3318"/>
-    <path d="M37 13 A15 15 0 1 0 37 37" stroke="#c9a84c" strokeWidth="3.2" strokeLinecap="round" fill="none"/>
-    <path d="M32 18 A9 9 0 1 0 32 32" stroke="#c9a84c" strokeWidth="2.3" strokeLinecap="round" fill="none"/>
-    <line x1="18" y1="15" x2="18" y2="31" stroke="#c9a84c" strokeWidth="2.8" strokeLinecap="round"/>
-    <line x1="18" y1="31" x2="26" y2="31" stroke="#c9a84c" strokeWidth="2.8" strokeLinecap="round"/>
+// ── SVG Flags (reliable cross-platform) ───────────────────────────────────
+const FlagPT = () => (
+  <svg width="20" height="14" viewBox="0 0 20 14" style={{ borderRadius: '2px', flexShrink: 0 }}>
+    <rect width="8"  height="14" fill="#006600"/>
+    <rect x="8" width="12" height="14" fill="#CC0000"/>
+    <ellipse cx="8" cy="7" rx="2.8" ry="3.5" fill="#FFFF00" stroke="#006600" strokeWidth="0.4"/>
+    <ellipse cx="8" cy="7" rx="1.6" ry="2.0" fill="#fff" stroke="#003399" strokeWidth="0.4"/>
   </svg>
 )
 
-const navItems = [
-  {
-    section: 'ESG Consulting',
-    items: [
-      { to: '/dashboard',           icon: '📊', label: 'Dashboard' },
-      { to: '/esg/projetos',        icon: '🌱', label: 'Projetos ESG',       badge: 4 },
-      { to: '/esg/diagnostico',     icon: '🔍', label: 'Diagnóstico' },
-      { to: '/esg/materialidade',   icon: '⚖️', label: 'Materialidade' },
-      { to: '/esg/kpis',            icon: '📈', label: 'KPIs & Monitorização' },
-      { to: '/esg/relatorios',      icon: '📋', label: 'Relatórios ESG' },
-    ]
-  },
-  {
-    section: 'Contabilidade',
-    items: [
-      { to: '/contabilidade/clientes',    icon: '👥', label: 'Clientes',           badge: 2 },
-      { to: '/contabilidade/obrigacoes',  icon: '📅', label: 'Obrigações Fiscais' },
-      { to: '/contabilidade/tarefas',     icon: '✅', label: 'Tarefas' },
-    ]
-  },
-  {
-    section: 'Gestão',
-    items: [
-      { to: '/financeiro', icon: '💶', label: 'Financeiro' },
-    ]
-  }
+const FlagDE = () => (
+  <svg width="20" height="14" viewBox="0 0 20 14" style={{ borderRadius: '2px', flexShrink: 0 }}>
+    <rect y="0"    width="20" height="4.67" fill="#000000"/>
+    <rect y="4.67" width="20" height="4.67" fill="#CC0000"/>
+    <rect y="9.33" width="20" height="4.67" fill="#FFCE00"/>
+  </svg>
+)
+
+// ── Nav items ──────────────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { to: '/contabilidade/caixa',        icon: '💵', labelKey: 'nav_caixa'       },
+  { to: '/contabilidade/precificacao', icon: '🧮', labelKey: 'nav_preco'       },
+  { to: '/contabilidade/clientes',     icon: '👥', labelKey: 'nav_clients'     },
+  { to: '/contabilidade/obrigacoes',   icon: '📅', labelKey: 'nav_obligations' },
 ]
 
-const niBase = {
-  display: 'flex', alignItems: 'center', gap: '10px',
-  padding: '9px 18px', margin: '1px 8px', borderRadius: '8px',
-  color: 'rgba(255,255,255,.72)', fontSize: '13px', fontWeight: 500,
-  cursor: 'pointer', textDecoration: 'none', transition: 'all .2s',
-}
-const niActive = { background: 'var(--gold)', color: 'var(--green)', fontWeight: 700 }
-
 export default function Sidebar() {
+  const { lang, setLang }       = useLang()
+  const { collapsed, setCollapsed } = useSidebar()
+
+  const W = collapsed ? '64px' : '248px'
+
+  const niBase = {
+    display: 'flex', alignItems: 'center', gap: collapsed ? 0 : '10px',
+    padding: collapsed ? '10px 0' : '9px 18px',
+    justifyContent: collapsed ? 'center' : 'flex-start',
+    margin: '1px 8px', borderRadius: '8px',
+    color: 'rgba(255,255,255,.72)', fontSize: '13px', fontWeight: 500,
+    cursor: 'pointer', textDecoration: 'none', transition: 'all .15s',
+  }
+  const niActive = { background: 'var(--gold)', color: 'var(--green)', fontWeight: 700 }
+
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, width: '248px', height: '100vh',
+      position: 'fixed', top: 0, left: 0, width: W, height: '100vh',
       background: 'var(--green)', display: 'flex', flexDirection: 'column',
       zIndex: 100, boxShadow: '4px 0 24px rgba(0,0,0,.18)',
+      transition: 'width .22s ease', overflow: 'hidden',
     }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <Logo />
-        <div style={{ color: '#fff', fontSize: '14px', fontWeight: 800, marginTop: '9px' }}>Office Consulting</div>
-        <div style={{ color: 'var(--gold)', fontSize: '9px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', marginTop: '2px' }}>Lúcio Cilio</div>
+
+      {/* ── Logo ── */}
+      <div style={{
+        padding: collapsed ? '16px 8px' : '18px 16px 14px',
+        borderBottom: '1px solid rgba(255,255,255,.1)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+      }}>
+        <img
+          src="/logo.png"
+          alt="LC Office Consulting"
+          style={{
+            width: collapsed ? '54px' : '78px',
+            height: collapsed ? '54px' : '78px',
+            objectFit: 'contain',
+            transition: 'width .22s, height .22s',
+          }}
+        />
       </div>
 
-      {/* Nav */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '12px' }}>
-        {navItems.map(group => (
-          <div key={group.section}>
-            <div style={{ padding: '14px 14px 3px', color: 'rgba(255,255,255,.35)', fontSize: '9px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
-              {group.section}
-            </div>
-            {group.items.map(item => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                style={({ isActive }) => ({ ...niBase, ...(isActive ? niActive : {}) })}
-              >
-                <span style={{ fontSize: '15px', width: '18px', textAlign: 'center' }}>{item.icon}</span>
-                {item.label}
-                {item.badge && (
-                  <span style={{ marginLeft: 'auto', background: '#e53e3e', color: '#fff', fontSize: '9px', fontWeight: 800, padding: '1px 6px', borderRadius: '10px' }}>
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            ))}
+      {/* ── Nav ── */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '18px', paddingBottom: '12px' }}>
+        {!collapsed && (
+          <div style={{ padding: '0 14px 6px', color: 'rgba(255,255,255,.35)', fontSize: '9px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
+            {t(lang, 'section_acc')}
           </div>
+        )}
+
+        {NAV_ITEMS.map(item => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            title={collapsed ? t(lang, item.labelKey) : undefined}
+            style={({ isActive }) => ({ ...niBase, ...(isActive ? niActive : {}) })}
+          >
+            <span style={{ fontSize: '16px', flexShrink: 0, width: '18px', textAlign: 'center' }}>
+              {item.icon}
+            </span>
+            {!collapsed && (
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                {t(lang, item.labelKey)}
+              </span>
+            )}
+          </NavLink>
         ))}
       </div>
 
-      {/* Footer */}
-      <div style={{ padding: '14px 18px', borderTop: '1px solid rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '13px', color: 'var(--green)', flexShrink: 0 }}>LC</div>
-        <div>
-          <div style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>Lúcia Cilio</div>
-          <div style={{ color: 'rgba(255,255,255,.45)', fontSize: '10px' }}>TOC · Consultora ESG</div>
+      {/* ── Collapse toggle ── */}
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        title={collapsed ? (lang === 'de' ? 'Erweitern' : 'Expandir') : (lang === 'de' ? 'Minimieren' : 'Recolher')}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: '8px', width: '100%', padding: '10px 18px',
+          background: 'rgba(255,255,255,.04)', border: 'none',
+          borderTop: '1px solid rgba(255,255,255,.08)',
+          color: 'rgba(255,255,255,.4)', cursor: 'pointer',
+          fontSize: '12px', fontWeight: 600,
+          transition: 'background .15s, color .15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.09)'; e.currentTarget.style.color = 'rgba(255,255,255,.75)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.04)'; e.currentTarget.style.color = 'rgba(255,255,255,.4)' }}
+      >
+        <span style={{ fontSize: '16px', lineHeight: 1, transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform .22s', display: 'inline-block' }}>
+          »
+        </span>
+        {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{lang === 'de' ? 'Minimieren' : 'Recolher'}</span>}
+      </button>
+
+      {/* ── Language switcher ── */}
+      <div style={{
+        padding: collapsed ? '12px 6px' : '12px 18px',
+        borderTop: '1px solid rgba(255,255,255,.1)',
+      }}>
+        {!collapsed && (
+          <div style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,.3)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
+            {lang === 'de' ? 'Sprache' : 'Idioma'}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: '6px', justifyContent: collapsed ? 'center' : 'flex-start', flexDirection: collapsed ? 'column' : 'row' }}>
+          {[
+            { code: 'pt', Flag: FlagPT, label: 'PT' },
+            { code: 'de', Flag: FlagDE, label: 'DE' },
+          ].map(({ code, Flag, label }) => (
+            <button
+              key={code}
+              onClick={() => setLang(code)}
+              title={code.toUpperCase()}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: collapsed ? '5px' : '5px 10px',
+                borderRadius: '6px', fontSize: '11px', fontWeight: 700,
+                cursor: 'pointer',
+                border: `1px solid ${lang === code ? 'var(--gold)' : 'rgba(255,255,255,.2)'}`,
+                background: lang === code ? 'var(--gold)' : 'transparent',
+                color: lang === code ? 'var(--green)' : 'rgba(255,255,255,.6)',
+                justifyContent: 'center',
+              }}
+            >
+              <Flag />
+              {!collapsed && <span>{label}</span>}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* ── User footer ── */}
+      <div style={{
+        padding: collapsed ? '12px 8px' : '14px 18px',
+        borderTop: '1px solid rgba(255,255,255,.1)',
+        display: 'flex', alignItems: 'center',
+        gap: collapsed ? 0 : '10px',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+      }}>
+        <div style={{
+          width: '34px', height: '34px', borderRadius: '50%',
+          background: 'var(--gold)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontWeight: 800, fontSize: '13px',
+          color: 'var(--green)', flexShrink: 0,
+        }}>
+          LC
+        </div>
+        {!collapsed && (
+          <div>
+            <div style={{ color: '#fff', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '15px', fontWeight: 600 }}>
+              Lúcia Cílio
+            </div>
+            <div style={{ color: 'rgba(255,255,255,.45)', fontSize: '10px' }}>
+              {t(lang, 'role_label')}
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }

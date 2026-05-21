@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code local config
+.claude/
+
+# Local reference materials (not for public repo)
+ref/
+
+# Env
+.env
+.env.local
+.env.*.local
