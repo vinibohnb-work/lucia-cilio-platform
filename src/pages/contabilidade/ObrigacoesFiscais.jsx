@@ -1,112 +1,176 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLang } from '../../context/LangContext'
-import { t } from '../../i18n/translations'
+import { supabase } from '../../lib/supabase'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
-const obligations = [
-  { id: 1, typeKey: 'obl_t1', client: 'Solar Luso Lda',      country: '🇵🇹', countryCode: 'pt', deadline: '2026-06-10', statusKey: 'obl_pending' },
-  { id: 2, typeKey: 'obl_t2', client: 'TerraVerde Lda',      country: '🇵🇹', countryCode: 'pt', deadline: '2026-06-30', statusKey: 'obl_pending' },
-  { id: 3, typeKey: 'obl_t3', client: 'Meinhardt GmbH',      country: '🇩🇪', countryCode: 'de', deadline: '2026-05-10', statusKey: 'obl_done'    },
-  { id: 4, typeKey: 'obl_t4', client: 'Meinhardt GmbH',      country: '🇩🇪', countryCode: 'de', deadline: '2026-07-31', statusKey: 'obl_pending' },
-  { id: 5, typeKey: 'obl_t5', client: 'Grupo Horizonte',     country: '🇵🇹', countryCode: 'pt', deadline: '2026-06-30', statusKey: 'obl_pending' },
-  { id: 6, typeKey: 'obl_t3', client: 'Schneider & Partner', country: '🇩🇪', countryCode: 'de', deadline: '2026-05-10', statusKey: 'obl_done'    },
-  { id: 7, typeKey: 'obl_t1', client: 'Tech Lisboa',         country: '🇵🇹', countryCode: 'pt', deadline: '2026-06-10', statusKey: 'obl_pending' },
-]
-
 const STATUS_STYLE = {
-  obl_pending: { bg: '#fef3c7', color: '#92400e' },
-  obl_done:    { bg: '#d1fae5', color: '#065f46' },
-  obl_overdue: { bg: '#fee2e2', color: '#991b1b' },
+  pending: { bg: '#fef3c7', color: '#92400e' },
+  done:    { bg: '#d1fae5', color: '#065f46' },
 }
 
 function daysUntil(dateStr) {
-  const today = new Date('2026-05-15')
+  const today = new Date(); today.setHours(0,0,0,0)
   const target = new Date(dateStr)
   return Math.round((target - today) / 86400000)
 }
 
+const EMPTY = { obligation_type: '', client: '', country: 'pt', deadline: new Date().toISOString().slice(0,10), status: 'pending' }
+
 export default function ObrigacoesFiscais() {
   const { lang } = useLang()
-  const [filter, setFilter] = useState('all')
+  const [items, setItems]   = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving]   = useState(false)
+  const [filter, setFilter]   = useState('all')
+  const [form, setForm]       = useState(EMPTY)
+  const [showForm, setShowForm] = useState(false)
 
-  const visible = filter === 'all' ? obligations
-    : filter === 'pending' ? obligations.filter(o => o.statusKey === 'obl_pending')
-    : obligations.filter(o => o.countryCode === filter)
+  const load = useCallback(async () => {
+    setLoading(true)
+    const { data, error } = await supabase.from('fiscal_obligations').select('*').order('deadline', { ascending: true })
+    if (!error) setItems(data || [])
+    setLoading(false)
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  const L = lang === 'de' ? {
+    new: '+ Neuer Termin', pending: 'Offen', done: 'Erledigt', deadline: 'Frist',
+    country: 'Land', client: 'Mandant', type: 'Verpflichtung', status: 'Status',
+    all: 'Alle', save: 'Speichern', loading: 'Wird geladen…',
+    empty: 'Noch keine Termine. Fügen Sie den ersten hinzu.', typePh: 'z.B. Umsatzsteuervoranmeldung',
+    days: 'Tage', today: 'Heute', overdue: 'überfällig', markDone: 'Als erledigt markieren',
+    alert1: 'offene Frist', alert2: 'offene Fristen',
+  } : {
+    new: '+ Nova Obrigação', pending: 'Pendente', done: 'Entregue', deadline: 'Prazo',
+    country: 'País', client: 'Cliente', type: 'Obrigação', status: 'Estado',
+    all: 'Todas', save: 'Guardar', loading: 'A carregar…',
+    empty: 'Ainda não há obrigações. Adicione a primeira.', typePh: 'ex: DMR, IRS, IVA…',
+    days: 'dias', today: 'Hoje', overdue: 'em atraso', markDone: 'Marcar como entregue',
+    alert1: 'obrigação pendente', alert2: 'obrigações pendentes',
+  }
+
+  const visible = filter === 'all' ? items
+    : filter === 'pending' ? items.filter(o => o.status === 'pending')
+    : items.filter(o => o.country === filter)
 
   const filterBtnStyle = (val) => ({
-    padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
-    cursor: 'pointer', border: `1px solid ${filter === val ? G : '#dde8de'}`,
-    background: filter === val ? G : '#fff',
-    color: filter === val ? '#fff' : '#64748b',
+    padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+    border: `1px solid ${filter === val ? G : '#dde8de'}`,
+    background: filter === val ? G : '#fff', color: filter === val ? '#fff' : '#64748b',
   })
 
-  const pendingCount = obligations.filter(o => o.statusKey === 'obl_pending').length
+  const pendingCount = items.filter(o => o.status === 'pending').length
+
+  async function addItem() {
+    if (!form.obligation_type || !form.deadline) return
+    setSaving(true)
+    const { error } = await supabase.from('fiscal_obligations').insert({ ...form, client: form.client || null })
+    setSaving(false)
+    if (error) { alert(error.message); return }
+    setForm(EMPTY); setShowForm(false); load()
+  }
+  async function toggleStatus(o) {
+    const next = o.status === 'done' ? 'pending' : 'done'
+    setItems(prev => prev.map(x => x.id === o.id ? { ...x, status: next } : x))
+    const { error } = await supabase.from('fiscal_obligations').update({ status: next }).eq('id', o.id)
+    if (error) { alert(error.message); load() }
+  }
+  async function removeItem(id) {
+    setItems(prev => prev.filter(o => o.id !== id))
+    const { error } = await supabase.from('fiscal_obligations').delete().eq('id', id)
+    if (error) { alert(error.message); load() }
+  }
+
+  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const selectStyle = { ...inputStyle, cursor: 'pointer' }
+  const GRID = '2fr 1fr 80px 120px 110px 90px'
 
   return (
     <div style={{ width: '100%' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {[
-            ['all',     lang === 'de' ? 'Alle' : 'Todas'],
-            ['pending', lang === 'de' ? 'Offen' : 'Pendentes'],
-            ['pt',      '🇵🇹 Portugal'],
-            ['de',      '🇩🇪 Deutschland'],
-          ].map(([val, label]) => (
+          {[['all', L.all], ['pending', L.pending], ['pt', '🇵🇹 Portugal'], ['de', '🇩🇪 Deutschland']].map(([val, label]) => (
             <button key={val} style={filterBtnStyle(val)} onClick={() => setFilter(val)}>{label}</button>
           ))}
         </div>
-        <button style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-          {t(lang, 'obl_new')}
+        <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+          {L.new}
         </button>
       </div>
 
-      {/* Alert banner */}
-      {pendingCount > 0 && (
+      {/* Alert */}
+      {!loading && pendingCount > 0 && (
         <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '12px 18px', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '18px' }}>⚠️</span>
           <span style={{ fontSize: '13px', fontWeight: 600, color: '#92400e' }}>
-            {pendingCount} {lang === 'de' ? `offene Frist${pendingCount > 1 ? 'en' : ''}` : `obrigaç${pendingCount > 1 ? 'ões' : 'ão'} pendente${pendingCount > 1 ? 's' : ''}`}
+            {pendingCount} {pendingCount > 1 ? L.alert2 : L.alert1}
           </span>
+        </div>
+      )}
+
+      {/* Add form */}
+      {showForm && (
+        <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 110px 150px auto', gap: '10px', alignItems: 'end' }}>
+            {[
+              [L.type, <input value={form.obligation_type} onChange={e=>setForm(f=>({...f,obligation_type:e.target.value}))} placeholder={L.typePh} style={inputStyle} />],
+              [L.client, <input value={form.client} onChange={e=>setForm(f=>({...f,client:e.target.value}))} placeholder={L.client} style={inputStyle} />],
+              [L.country, <select value={form.country} onChange={e=>setForm(f=>({...f,country:e.target.value}))} style={selectStyle}><option value="pt">🇵🇹 PT</option><option value="de">🇩🇪 DE</option></select>],
+              [L.deadline, <input type="date" value={form.deadline} onChange={e=>setForm(f=>({...f,deadline:e.target.value}))} style={inputStyle} />],
+            ].map(([label, field], i) => (
+              <div key={i}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{label}</div>
+                {field}
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
+              <button onClick={addItem} disabled={saving} style={{ padding: '8px 14px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer' }}>{saving?'…':L.save}</button>
+              <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* List */}
       <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden' }}>
-        {/* Header row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px 100px 110px', padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de' }}>
-          {[t(lang,'obl_type'), t(lang,'obl_client'), t(lang,'obl_country'), t(lang,'obl_deadline'), t(lang,'cli_status')].map(h => (
-            <div key={h} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
+          {[L.type, L.client, L.country, L.deadline, L.status, ''].map((h,i) => (
+            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
 
-        {visible.map((o, i) => {
-          const stStyle = STATUS_STYLE[o.statusKey] || {}
-          const days = daysUntil(o.deadline)
-          const dateColor = o.statusKey === 'obl_done' ? '#64748b' : days <= 14 ? '#e53e3e' : G
+        {loading && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.loading}</div>}
+        {!loading && visible.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.empty}</div>}
 
+        {!loading && visible.map((o, i) => {
+          const st = STATUS_STYLE[o.status] || {}
+          const days = daysUntil(o.deadline)
+          const isDone = o.status === 'done'
+          const dateColor = isDone ? '#64748b' : days < 0 ? '#991b1b' : days <= 14 ? '#e53e3e' : G
           return (
-            <div key={o.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 100px 100px 110px', padding: '14px 20px', borderBottom: i < visible.length - 1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#1a2e1a', lineHeight: 1.4 }}>{t(lang, o.typeKey)}</div>
-              <div style={{ fontSize: '12px', color: '#4a6355', fontWeight: 500 }}>{o.client}</div>
-              <div style={{ fontSize: '20px' }}>{o.country}</div>
+            <div key={o.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#1a2e1a', lineHeight: 1.4 }}>{o.obligation_type}</div>
+              <div style={{ fontSize: '12px', color: '#4a6355', fontWeight: 500 }}>{o.client || '—'}</div>
+              <div style={{ fontSize: '20px' }}>{o.country === 'pt' ? '🇵🇹' : '🇩🇪'}</div>
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 800, color: dateColor }}>{o.deadline.slice(5).split('-').join('/')}</div>
-                {o.statusKey !== 'obl_done' && (
+                <div style={{ fontSize: '12px', fontWeight: 800, color: dateColor }}>{o.deadline.split('-').reverse().join('/')}</div>
+                {!isDone && (
                   <div style={{ fontSize: '10px', color: days <= 14 ? '#e53e3e' : '#64748b', marginTop: '2px' }}>
-                    {days > 0 ? `${days} ${lang === 'de' ? 'Tage' : 'dias'}` : lang === 'de' ? 'Heute' : 'Hoje'}
+                    {days > 0 ? `${days} ${L.days}` : days === 0 ? L.today : `${Math.abs(days)} ${L.days} ${L.overdue}`}
                   </div>
                 )}
               </div>
               <div>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: stStyle.bg, color: stStyle.color }}>
-                  {t(lang, o.statusKey)}
-                </span>
+                <button onClick={() => toggleStatus(o)} title={L.markDone} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: 'pointer' }}>
+                  {isDone ? `✓ ${L.done}` : L.pending}
+                </button>
               </div>
+              <button onClick={() => removeItem(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1, justifySelf: 'start' }} title="Remover">✕</button>
             </div>
           )
         })}

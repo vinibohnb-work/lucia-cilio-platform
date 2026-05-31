@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useSidebar } from '../../context/SidebarContext'
+import { useAuth } from '../../context/AuthContext'
 import { t } from '../../i18n/translations'
 
 // ── SVG Flags (reliable cross-platform) ───────────────────────────────────
@@ -32,6 +33,16 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const { lang, setLang }       = useLang()
   const { collapsed, setCollapsed } = useSidebar()
+  const { user, signOut }       = useAuth()
+  const navigate                = useNavigate()
+
+  async function handleLogout() {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
+
+  const initials = (user?.email || 'LC').slice(0, 2).toUpperCase()
+  const displayName = user?.email?.split('@')[0] || 'Lúcia Cílio'
 
   const W = collapsed ? '64px' : '248px'
 
@@ -159,10 +170,10 @@ export default function Sidebar() {
 
       {/* ── User footer ── */}
       <div style={{
-        padding: collapsed ? '12px 8px' : '14px 18px',
+        padding: collapsed ? '12px 8px' : '12px 14px',
         borderTop: '1px solid rgba(255,255,255,.1)',
         display: 'flex', alignItems: 'center',
-        gap: collapsed ? 0 : '10px',
+        gap: collapsed ? 0 : '8px',
         justifyContent: collapsed ? 'center' : 'flex-start',
       }}>
         <div style={{
@@ -171,19 +182,47 @@ export default function Sidebar() {
           justifyContent: 'center', fontWeight: 800, fontSize: '13px',
           color: 'var(--green)', flexShrink: 0,
         }}>
-          LC
+          {initials}
         </div>
         {!collapsed && (
-          <div>
-            <div style={{ color: '#fff', fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '15px', fontWeight: 600 }}>
-              Lúcia Cílio
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {displayName}
             </div>
             <div style={{ color: 'rgba(255,255,255,.45)', fontSize: '10px' }}>
               {t(lang, 'role_label')}
             </div>
           </div>
         )}
+        {!collapsed && (
+          <button
+            onClick={handleLogout}
+            title={lang === 'de' ? 'Abmelden' : 'Sair'}
+            style={{
+              background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)',
+              borderRadius: '7px', cursor: 'pointer', color: 'rgba(255,255,255,.7)',
+              padding: '6px 9px', fontSize: '13px', flexShrink: 0, lineHeight: 1,
+            }}
+          >
+            ⎋
+          </button>
+        )}
       </div>
+
+      {collapsed && (
+        <button
+          onClick={handleLogout}
+          title={lang === 'de' ? 'Abmelden' : 'Sair'}
+          style={{
+            margin: '0 8px 12px', background: 'rgba(255,255,255,.08)',
+            border: '1px solid rgba(255,255,255,.15)', borderRadius: '7px',
+            cursor: 'pointer', color: 'rgba(255,255,255,.7)', padding: '8px',
+            fontSize: '14px', lineHeight: 1,
+          }}
+        >
+          ⎋
+        </button>
+      )}
 
     </div>
   )

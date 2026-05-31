@@ -1,10 +1,15 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { LangProvider } from './context/LangContext'
 import { SidebarProvider, useSidebar } from './context/SidebarContext'
+import { AuthProvider } from './context/AuthContext'
 
 // Public pages
 import Landing from './pages/Landing'
 import DiagnosticoPublico from './pages/DiagnosticoPublico'
+import Login from './pages/Login'
+
+// Auth guard
+import ProtectedRoute from './components/ProtectedRoute'
 
 // Internal layout
 import Sidebar from './components/layout/Sidebar'
@@ -42,15 +47,22 @@ function AppLayout() {
 export default function App() {
   return (
     <LangProvider>
-      <SidebarProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/"                      element={<Landing />} />
-            <Route path="/diagnostico-gratuito"  element={<DiagnosticoPublico />} />
-            <Route path="/*"                     element={<AppLayout />} />
-          </Routes>
-        </BrowserRouter>
-      </SidebarProvider>
+      <AuthProvider>
+        <SidebarProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/"                      element={<Landing />} />
+              <Route path="/diagnostico-gratuito"  element={<DiagnosticoPublico />} />
+              <Route path="/login"                 element={<Login />} />
+              <Route path="/*" element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </BrowserRouter>
+        </SidebarProvider>
+      </AuthProvider>
     </LangProvider>
   )
 }
