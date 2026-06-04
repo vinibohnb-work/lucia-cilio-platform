@@ -67,7 +67,7 @@ export default function Login() {
       setError(error.message?.toLowerCase().includes('invalid') ? L.invalid : L.generic)
       return
     }
-    navigate('/contabilidade/caixa', { replace: true })
+    navigate('/contabilidade/dashboard', { replace: true })
   }
 
   const inputStyle = {

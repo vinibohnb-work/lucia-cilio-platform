@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
+import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
+import InfoTooltip from '../../components/InfoTooltip'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -13,30 +16,29 @@ const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigit
 
 function exportCSV(entries, lang) {
   const header = lang === 'de'
-    ? 'Datum;Belegnr.;Beschreibung;Einnahme;Ausgabe;Konto\n'
-    : 'Data;Doc.;Descrição;Entrada;Saída;Destino\n'
+    ? 'Datum;Belegnr.;Beschreibung;Kategorie;Einnahme;Ausgabe;Konto\n'
+    : 'Data;Doc.;Descrição;Categoria;Entrada;Saída;Destino\n'
   const rows = entries.map(e => {
     const inc = e.type === 'entrada' ? Number(e.amount).toFixed(2) : ''
     const exp = e.type === 'saida'   ? Number(e.amount).toFixed(2) : ''
-    const dest = lang === 'de'
-      ? (e.destination === 'caixa' ? 'Kasse' : 'Bank')
-      : (e.destination === 'caixa' ? 'Caixa' : 'Banco')
-    return `${e.entry_date};${e.doc||''};${e.description};${inc};${exp};${dest}`
+    const dest = lang === 'de' ? (e.destination === 'caixa' ? 'Kasse' : 'Bank') : (e.destination === 'caixa' ? 'Caixa' : 'Banco')
+    const cat = e.category ? (getCategory(e.category)?.[lang]?.label || '') : ''
+    return `${e.entry_date};${e.doc||''};${e.description};${cat};${inc};${exp};${dest}`
   }).join('\n')
   const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = url
-  a.download = `livro-caixa-${new Date().toISOString().slice(0,7)}.csv`
-  a.click()
+  a.href = url; a.download = `livro-caixa-${new Date().toISOString().slice(0,7)}.csv`; a.click()
   URL.revokeObjectURL(url)
 }
 
-const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', description: '', type: 'entrada', amount: '', destination: 'caixa' }
+const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', description: '', type: 'entrada', amount: '', destination: 'caixa', category: '', catalog_item_id: '' }
 
 export default function LivroCaixa() {
   const { lang } = useLang()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState([])
+  const [catalog, setCatalog] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
   const [form, setForm]       = useState(EMPTY_FORM)
@@ -47,20 +49,27 @@ export default function LivroCaixa() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('cash_entries')
-      .select('*')
-      .order('entry_date', { ascending: true })
-      .order('created_at', { ascending: true })
-    if (!error) setEntries(data || [])
+    const [{ data: ce }, { data: ci }] = await Promise.all([
+      supabase.from('cash_entries').select('*').order('entry_date', { ascending: true }).order('created_at', { ascending: true }),
+      supabase.from('catalog_items').select('id,name,kind,price').order('name', { ascending: true }),
+    ])
+    setEntries(ce || [])
+    setCatalog(ci || [])
     setLoading(false)
   }, [])
-
   useEffect(() => { load() }, [load])
 
-  const filtered = filterMonth === 'all'
-    ? entries
-    : entries.filter(e => e.entry_date.slice(5,7) === filterMonth)
+  // Abrir formulário quando vier do botão "+ Nova Entrada" do cabeçalho (?new=1)
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setForm({ ...EMPTY_FORM })
+      setShowForm(true)
+      searchParams.delete('new')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
+  const filtered = filterMonth === 'all' ? entries : entries.filter(e => e.entry_date.slice(5,7) === filterMonth)
 
   let running = 0
   const withBalance = filtered.map(e => {
@@ -73,6 +82,16 @@ export default function LivroCaixa() {
   const cashBal  = filtered.reduce((s,e)=> e.destination==='caixa' ? s+(e.type==='entrada'?Number(e.amount):-Number(e.amount)) : s, 0)
   const bankBal  = filtered.reduce((s,e)=> e.destination==='banco' ? s+(e.type==='entrada'?Number(e.amount):-Number(e.amount)) : s, 0)
 
+  function pickCatalog(id) {
+    const it = catalog.find(c => c.id === id)
+    setForm(f => ({
+      ...f,
+      catalog_item_id: id,
+      description: it && !f.description ? it.name : f.description,
+      amount: it && it.price != null && !f.amount ? String(it.price) : f.amount,
+    }))
+  }
+
   async function addEntry() {
     if (!form.description || !form.amount || !form.entry_date) return
     setSaving(true)
@@ -83,73 +102,89 @@ export default function LivroCaixa() {
       type: form.type,
       amount: parseFloat(form.amount),
       destination: form.destination,
+      category: form.type === 'saida' ? (form.category || null) : null,
+      catalog_item_id: form.catalog_item_id || null,
     })
     setSaving(false)
     if (error) { alert(error.message); return }
-    setForm({ ...EMPTY_FORM })
-    setShowForm(false)
-    load()
+    setForm({ ...EMPTY_FORM }); setShowForm(false); load()
   }
-
   async function removeEntry(id) {
-    setEntries(prev => prev.filter(e => e.id !== id)) // optimistic
+    setEntries(prev => prev.filter(e => e.id !== id))
     const { error } = await supabase.from('cash_entries').delete().eq('id', id)
     if (error) { alert(error.message); load() }
   }
 
   const L = lang === 'de' ? {
-    newEntry: '+ Neue Buchung', export: 'CSV exportieren', balance: 'Kassenbestand',
-    income: 'Einnahmen', expense: 'Ausgaben', cash: 'Kasse', bank: 'Bank',
-    date: 'Datum', doc: 'Belegnr.', desc: 'Beschreibung', type: 'Art',
-    amount: 'Betrag (€)', dest: 'Konto', running: 'Bestand',
-    entrada: 'Einnahme', saida: 'Ausgabe', caixa: 'Kasse', banco: 'Bank',
-    save: 'Speichern', all: 'Alle Monate', noEntries: 'Noch keine Buchungen. Fügen Sie die erste hinzu.',
-    loading: 'Wird geladen…', total: 'Summe',
+    export: 'CSV exportieren', balance: 'Kassenbestand', income: 'Einnahmen', expense: 'Ausgaben',
+    cash: 'Kasse', bank: 'Bank', date: 'Datum', doc: 'Belegnr.', desc: 'Beschreibung', type: 'Art',
+    amount: 'Betrag (€)', dest: 'Konto', running: 'Bestand', entrada: 'Einnahme', saida: 'Ausgabe',
+    caixa: 'Kasse', banco: 'Bank', save: 'Speichern', all: 'Alle Monate',
+    noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
+    loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
+    catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
   } : {
-    newEntry: '+ Nova Entrada', export: 'Exportar CSV', balance: 'Saldo Atual',
-    income: 'Total Entradas', expense: 'Total Saídas', cash: 'Em Caixa', bank: 'No Banco',
-    date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
-    amount: 'Valor (€)', dest: 'Destino', running: 'Saldo',
-    entrada: 'Entrada', saida: 'Saída', caixa: 'Caixa', banco: 'Banco',
-    save: 'Guardar', all: 'Todos os meses', noEntries: 'Ainda não há registos. Adicione o primeiro.',
-    loading: 'A carregar…', total: 'Total',
+    export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
+    cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
+    amount: 'Valor (€)', dest: 'Destino', running: 'Saldo', entrada: 'Entrada', saida: 'Saída',
+    caixa: 'Caixa', banco: 'Banco', save: 'Guardar', all: 'Todos os meses',
+    noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
+    loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
+    catalogNone: '— nenhum —', catHint: 'Escolha a categoria da despesa.', costType: 'Tipo de custo',
   }
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const GRID = '110px 70px 1fr 100px 90px 90px 90px 36px'
+  const GRID = '108px 64px 1fr 96px 92px 88px 92px 34px'
+
+  const fieldWrap = (label, node, minW, extra) => (
+    <div style={{ flex: `1 1 ${minW}`, minWidth: minW }}>
+      <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {label}{extra}
+      </div>
+      {node}
+    </div>
+  )
+
+  const selCat = getCategory(form.category)
 
   return (
     <div style={{ width: '100%' }}>
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+      {/* Header (sem botão de Nova Entrada — está no topo) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
         <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} style={{ ...selectStyle, width: 'auto', padding: '7px 12px' }}>
           <option value="all">{L.all}</option>
           {months.map((m,i) => <option key={i} value={String(i+1).padStart(2,'0')}>{m} 2026</option>)}
         </select>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => exportCSV(filtered, lang)} style={{ padding: '8px 14px', background: BG, border: '1px solid #dde8de', borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: '#4a6355' }}>
-            ⬇ {L.export}
-          </button>
-          <button onClick={() => { setShowForm(v => !v); setForm({ ...EMPTY_FORM }) }} style={{ padding: '8px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-            {L.newEntry}
-          </button>
-        </div>
+        <button onClick={() => exportCSV(filtered, lang)} style={{ padding: '8px 14px', background: BG, border: '1px solid #dde8de', borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: '#4a6355' }}>
+          ⬇ {L.export}
+        </button>
       </div>
 
-      {/* Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '12px', marginBottom: '20px' }}>
+      {/* Summary — linha 1: Saldo / Entradas / Saídas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '12px' }}>
         {[
           { label: L.balance, value: totalIn - totalOut, color: (totalIn-totalOut)>=0 ? G : '#e53e3e', bg: '#fff' },
           { label: L.income,  value: totalIn,  color: '#065f46', bg: '#d1fae5' },
           { label: L.expense, value: totalOut, color: '#e53e3e', bg: '#fee2e2' },
-          { label: L.cash,    value: cashBal,  color: G,         bg: '#f5edd6' },
-          { label: L.bank,    value: bankBal,  color: '#1d4ed8', bg: '#eff6ff' },
         ].map(c => (
-          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 14px', border: '1px solid #dde8de', textAlign: 'center' }}>
-            <div style={{ fontSize: '18px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</div>
+          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 18px', border: '1px solid #dde8de', textAlign: 'center' }}>
+            <div style={{ fontSize: '20px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</div>
             <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Summary — linha 2: Em Caixa / No Banco */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '12px', marginBottom: '20px' }}>
+        {[
+          { label: L.cash, value: cashBal, color: '#92400e', bg: '#f5edd6', icon: '💵' },
+          { label: L.bank, value: bankBal, color: '#1d4ed8', bg: '#eff6ff', icon: '🏦' },
+        ].map(c => (
+          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 20px', border: '1px solid #dde8de', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.icon} {c.label}</span>
+            <span style={{ fontSize: '20px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</span>
           </div>
         ))}
       </div>
@@ -157,22 +192,43 @@ export default function LivroCaixa() {
       {/* Add form */}
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '130px 90px 1fr 110px 110px 110px auto', gap: '10px', alignItems: 'end' }}>
-            {[
-              [L.date, <input type="date" value={form.entry_date} onChange={e=>setForm(f=>({...f,entry_date:e.target.value}))} style={inputStyle} />],
-              [L.doc,  <input value={form.doc} onChange={e=>setForm(f=>({...f,doc:e.target.value}))} placeholder="001" style={inputStyle} />],
-              [L.desc, <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={lang==='de'?'Beschreibung…':'Descrição…'} style={inputStyle} />],
-              [L.type, <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))} style={selectStyle}><option value="entrada">{L.entrada}</option><option value="saida">{L.saida}</option></select>],
-              [L.amount, <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />],
-              [L.dest, <select value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))} style={selectStyle}><option value="caixa">{L.caixa}</option><option value="banco">{L.banco}</option></select>],
-            ].map(([label, field], i) => (
-              <div key={i}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{label}</div>
-                {field}
-              </div>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+            {fieldWrap(L.date, <input type="date" value={form.entry_date} onChange={e=>setForm(f=>({...f,entry_date:e.target.value}))} style={inputStyle} />, '130px')}
+            {fieldWrap(L.doc, <input value={form.doc} onChange={e=>setForm(f=>({...f,doc:e.target.value}))} placeholder="001" style={inputStyle} />, '80px')}
+            {fieldWrap(L.desc, <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={lang==='de'?'Beschreibung…':'Descrição…'} style={inputStyle} />, '180px')}
+            {fieldWrap(L.type, (
+              <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value, category: e.target.value==='entrada' ? '' : f.category}))} style={selectStyle}>
+                <option value="entrada">{L.entrada}</option>
+                <option value="saida">{L.saida}</option>
+              </select>
+            ), '110px')}
+            {fieldWrap(L.amount, <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />, '100px')}
+            {fieldWrap(L.dest, (
+              <select value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))} style={selectStyle}>
+                <option value="caixa">{L.caixa}</option>
+                <option value="banco">{L.banco}</option>
+              </select>
+            ), '110px')}
+            {fieldWrap(L.catalog, (
+              <select value={form.catalog_item_id} onChange={e=>pickCatalog(e.target.value)} style={selectStyle}>
+                <option value="">{L.catalogNone}</option>
+                {catalog.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            ), '150px')}
+
+            {/* Categoria — só para saídas */}
+            {form.type === 'saida' && fieldWrap(
+              L.category,
+              <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}>
+                <option value="">{L.catHint}</option>
+                {EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang].label}</option>)}
+              </select>,
+              '170px',
+              selCat ? <InfoTooltip text={selCat[lang].explain} badge={`${L.costType}: ${COST_TYPE[selCat.costType][lang]}`} /> : null
+            )}
+
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={addEntry} disabled={saving} style={{ padding: '8px 14px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : L.save}</button>
+              <button onClick={addEntry} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : L.save}</button>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
           </div>
@@ -190,18 +246,39 @@ export default function LivroCaixa() {
         {loading && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.loading}</div>}
         {!loading && withBalance.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.noEntries}</div>}
 
-        {!loading && withBalance.map((e, i) => (
-          <div key={e.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '13px 18px', borderBottom: i < withBalance.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', background: e.type === 'saida' ? '#fffbfb' : '#fff' }}>
-            <div style={{ fontSize: '12px', color: '#4a6355' }}>{e.entry_date.split('-').reverse().join('/')}</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>{e.doc}</div>
-            <div style={{ fontSize: '13px', fontWeight: 500, color: '#1a2e1a' }}>{e.description}</div>
-            <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: e.type==='entrada'?'#d1fae5':'#fee2e2', color: e.type==='entrada'?'#065f46':'#991b1b' }}>{e.type==='entrada'?L.entrada:L.saida}</span></div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: e.type==='entrada'?'#065f46':'#e53e3e', textAlign: 'right' }}>{e.type==='entrada'?'+':'−'} € {fmt(e.amount)}</div>
-            <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: e.destination==='caixa'?'#f5edd6':'#eff6ff', color: e.destination==='caixa'?'#92400e':'#1d4ed8' }}>{e.destination==='caixa'?L.caixa:L.banco}</span></div>
-            <div style={{ fontSize: '13px', fontWeight: 800, color: e.balance>=0?G:'#e53e3e', textAlign: 'right' }}>€ {fmt(e.balance)}</div>
-            <button onClick={() => removeEntry(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', borderRadius: '4px', lineHeight: 1 }} title="Remover">✕</button>
-          </div>
-        ))}
+        {!loading && withBalance.map((e, i) => {
+          const cat = e.category ? getCategory(e.category) : null
+          const linked = e.catalog_item_id ? catalog.find(c => c.id === e.catalog_item_id) : null
+          return (
+            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 18px', borderBottom: i < withBalance.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', background: e.type === 'saida' ? '#fffbfb' : '#fff' }}>
+              <div style={{ fontSize: '12px', color: '#4a6355' }}>{e.entry_date.split('-').reverse().join('/')}</div>
+              <div style={{ fontSize: '11px', color: '#94a3b8' }}>{e.doc}</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: '#1a2e1a' }}>{e.description}</div>
+                {(cat || linked) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                    {cat && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: COST_TYPE[cat.costType].bg, color: COST_TYPE[cat.costType].color }}>
+                        {cat[lang].label}
+                        <InfoTooltip text={cat[lang].explain} badge={`${L.costType}: ${COST_TYPE[cat.costType][lang]}`} />
+                      </span>
+                    )}
+                    {linked && (
+                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 600, background: '#ede9fe', color: '#5b21b6' }}>
+                        🏷️ {linked.name}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: e.type==='entrada'?'#d1fae5':'#fee2e2', color: e.type==='entrada'?'#065f46':'#991b1b' }}>{e.type==='entrada'?L.entrada:L.saida}</span></div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: e.type==='entrada'?'#065f46':'#e53e3e', textAlign: 'right' }}>{e.type==='entrada'?'+':'−'} € {fmt(e.amount)}</div>
+              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: e.destination==='caixa'?'#f5edd6':'#eff6ff', color: e.destination==='caixa'?'#92400e':'#1d4ed8' }}>{e.destination==='caixa'?L.caixa:L.banco}</span></div>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: e.balance>=0?G:'#e53e3e', textAlign: 'right' }}>€ {fmt(e.balance)}</div>
+              <button onClick={() => removeEntry(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', borderRadius: '4px', lineHeight: 1 }} title="Remover">✕</button>
+            </div>
+          )
+        })}
 
         {!loading && withBalance.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 18px', background: BG, borderTop: `2px solid ${G}`, gap: '8px', alignItems: 'center' }}>

@@ -3,7 +3,9 @@ import { useLang } from '../../context/LangContext'
 import { t } from '../../i18n/translations'
 
 const titleKeys = {
+  '/contabilidade/dashboard':    'nav_dash',
   '/contabilidade/caixa':        'nav_caixa',
+  '/contabilidade/catalogo':     'nav_catalogo',
   '/contabilidade/precificacao': 'nav_preco',
   '/contabilidade/clientes':     'nav_clients',
   '/contabilidade/obrigacoes':   'nav_obligations',
@@ -40,7 +42,7 @@ export default function Topbar() {
   const navigate     = useNavigate()
   const { lang }     = useLang()
   const now          = useNow()
-  const titleKey     = titleKeys[pathname] || 'nav_caixa'
+  const titleKey     = titleKeys[pathname] || 'nav_dash'
 
   return (
     <div style={{
@@ -67,7 +69,7 @@ export default function Topbar() {
           <span style={{ position: 'absolute', top: '6px', right: '6px', width: '7px', height: '7px', background: '#e53e3e', borderRadius: '50%', border: '2px solid #fff' }} />
         </div>
         <button
-          onClick={() => navigate('/contabilidade/caixa')}
+          onClick={() => navigate('/contabilidade/caixa?new=1')}
           style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: 'none', background: 'var(--gold)', color: 'var(--green)' }}
         >
           {lang === 'de' ? '+ Neue Buchung' : '+ Nova Entrada'}

@@ -16,10 +16,12 @@ import Sidebar from './components/layout/Sidebar'
 import Topbar from './components/layout/Topbar'
 
 // Internal pages
+import Dashboard from './pages/contabilidade/Dashboard'
 import Clientes from './pages/contabilidade/Clientes'
 import LivroCaixa from './pages/contabilidade/LivroCaixa'
 import ObrigacoesFiscais from './pages/contabilidade/ObrigacoesFiscais'
 import Precificacao from './pages/contabilidade/Precificacao'
+import Catalogo from './pages/contabilidade/Catalogo'
 
 function AppLayout() {
   const { collapsed } = useSidebar()
@@ -32,11 +34,13 @@ function AppLayout() {
         <Topbar />
         <main style={{ flex: 1, padding: '24px 28px', background: 'var(--bg)', minWidth: 0 }}>
           <Routes>
+            <Route path="/contabilidade/dashboard"     element={<Dashboard />} />
             <Route path="/contabilidade/caixa"         element={<LivroCaixa />} />
+            <Route path="/contabilidade/catalogo"      element={<Catalogo />} />
             <Route path="/contabilidade/precificacao"  element={<Precificacao />} />
             <Route path="/contabilidade/clientes"      element={<Clientes />} />
             <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
-            <Route path="*"                            element={<LivroCaixa />} />
+            <Route path="*"                            element={<Dashboard />} />
           </Routes>
         </main>
       </div>

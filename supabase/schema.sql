@@ -3,17 +3,29 @@
 -- Executar no Supabase: Dashboard → SQL Editor → New query → colar → Run
 -- ============================================================================
 
+-- ─── 0. CATÁLOGO (produtos e serviços) ──────────────────────────────────────
+create table if not exists public.catalog_items (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade default auth.uid(),
+  name       text not null,
+  kind       text not null default 'service' check (kind in ('product','service')),
+  price      numeric(12,2),
+  created_at timestamptz not null default now()
+);
+
 -- ─── 1. LIVRO DE CAIXA ──────────────────────────────────────────────────────
 create table if not exists public.cash_entries (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references auth.users (id) on delete cascade default auth.uid(),
-  entry_date  date not null,
-  doc         text,
-  description text not null,
-  type        text not null check (type in ('entrada','saida')),
-  amount      numeric(12,2) not null check (amount >= 0),
-  destination text not null check (destination in ('caixa','banco')),
-  created_at  timestamptz not null default now()
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users (id) on delete cascade default auth.uid(),
+  entry_date      date not null,
+  doc             text,
+  description     text not null,
+  type            text not null check (type in ('entrada','saida')),
+  amount          numeric(12,2) not null check (amount >= 0),
+  destination     text not null check (destination in ('caixa','banco')),
+  category        text,
+  catalog_item_id uuid references public.catalog_items (id) on delete set null,
+  created_at      timestamptz not null default now()
 );
 
 -- ─── 2. CLIENTES ────────────────────────────────────────────────────────────
@@ -44,12 +56,18 @@ create table if not exists public.fiscal_obligations (
 create index if not exists idx_cash_entries_user on public.cash_entries (user_id, entry_date);
 create index if not exists idx_clients_user       on public.clients (user_id);
 create index if not exists idx_obligations_user   on public.fiscal_obligations (user_id, deadline);
+create index if not exists idx_catalog_user       on public.catalog_items (user_id);
 
 -- ─── ROW LEVEL SECURITY ─────────────────────────────────────────────────────
 -- Cada utilizador só vê e altera as SUAS linhas.
+alter table public.catalog_items      enable row level security;
 alter table public.cash_entries       enable row level security;
 alter table public.clients            enable row level security;
 alter table public.fiscal_obligations enable row level security;
+
+drop policy if exists "own catalog" on public.catalog_items;
+create policy "own catalog" on public.catalog_items
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- cash_entries
 drop policy if exists "own cash_entries" on public.cash_entries;

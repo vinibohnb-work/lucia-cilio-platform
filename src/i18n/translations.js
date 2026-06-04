@@ -9,6 +9,8 @@ const T = {
     nav_obligations: 'Obrigações Fiscais',
     nav_caixa: 'Livro de Caixa',
     nav_preco: 'Calculadora de Preços',
+    nav_dash: 'Dashboard',
+    nav_catalogo: 'Catálogo',
     role_label: 'TOC · Consultora ESG',
     // Topbar
     btn_new_diag: '+ Novo Diagnóstico',
@@ -108,6 +110,8 @@ const T = {
     nav_obligations: 'Steuertermine',
     nav_caixa: 'Kassenbuch',
     nav_preco: 'Preiskalkulation',
+    nav_dash: 'Dashboard',
+    nav_catalogo: 'Katalog',
     role_label: 'TOC · ESG-Beraterin',
     // Topbar
     btn_new_diag: '+ Neue Diagnose',
