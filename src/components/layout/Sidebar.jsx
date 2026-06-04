@@ -35,7 +35,7 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const { lang, setLang }       = useLang()
   const { collapsed, setCollapsed } = useSidebar()
-  const { user, signOut }       = useAuth()
+  const { user, signOut, isAdmin } = useAuth()
   const navigate                = useNavigate()
 
   async function handleLogout() {
@@ -109,6 +109,18 @@ export default function Sidebar() {
             )}
           </NavLink>
         ))}
+
+        {/* Link para a área de Admin (apenas administradores) */}
+        {isAdmin && (
+          <NavLink
+            to="/admin"
+            title={collapsed ? 'Admin' : undefined}
+            style={{ ...niBase, marginTop: '8px', borderTop: '1px solid rgba(255,255,255,.08)', borderRadius: 0, paddingTop: '14px' }}
+          >
+            <span style={{ fontSize: '16px', flexShrink: 0, width: '18px', textAlign: 'center' }}>🛠️</span>
+            {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>Admin</span>}
+          </NavLink>
+        )}
       </div>
 
       {/* ── Collapse toggle ── */}

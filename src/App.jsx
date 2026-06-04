@@ -8,8 +8,12 @@ import Landing from './pages/Landing'
 import DiagnosticoPublico from './pages/DiagnosticoPublico'
 import Login from './pages/Login'
 
-// Auth guard
+// Auth guards
 import ProtectedRoute from './components/ProtectedRoute'
+import RoleRoute from './components/RoleRoute'
+
+// Admin
+import AdminHome from './pages/admin/AdminHome'
 
 // Internal layout
 import Sidebar from './components/layout/Sidebar'
@@ -58,6 +62,11 @@ export default function App() {
               <Route path="/"                      element={<Landing />} />
               <Route path="/diagnostico-gratuito"  element={<DiagnosticoPublico />} />
               <Route path="/login"                 element={<Login />} />
+              <Route path="/admin/*" element={
+                <RoleRoute requireRole="admin">
+                  <AdminHome />
+                </RoleRoute>
+              } />
               <Route path="/*" element={
                 <ProtectedRoute>
                   <AppLayout />

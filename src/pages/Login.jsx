@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
+import { supabase } from '../lib/supabase'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -61,13 +62,20 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const { error } = await signIn(email.trim(), password)
-    setLoading(false)
+    const { data, error } = await signIn(email.trim(), password)
     if (error) {
+      setLoading(false)
       setError(error.message?.toLowerCase().includes('invalid') ? L.invalid : L.generic)
       return
     }
-    navigate('/contabilidade/dashboard', { replace: true })
+    // Redireciona consoante o role
+    let role = 'user'
+    try {
+      const { data: prof } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+      if (prof?.role) role = prof.role
+    } catch { /* antes da migração 003 → trata como user */ }
+    setLoading(false)
+    navigate(role === 'admin' ? '/admin' : '/contabilidade/dashboard', { replace: true })
   }
 
   const inputStyle = {

@@ -83,3 +83,25 @@ create policy "own clients" on public.clients
 drop policy if exists "own obligations" on public.fiscal_obligations;
 create policy "own obligations" on public.fiscal_obligations
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ─── PERFIS (role user/admin) — ver migration_003.sql ───────────────────────
+create table if not exists public.profiles (
+  id         uuid primary key references auth.users (id) on delete cascade,
+  role       text not null default 'user' check (role in ('user','admin')),
+  created_at timestamptz not null default now()
+);
+alter table public.profiles enable row level security;
+drop policy if exists "read own profile" on public.profiles;
+create policy "read own profile" on public.profiles
+  for select using (auth.uid() = id);
+
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, role) values (new.id, 'user') on conflict (id) do nothing;
+  return new;
+end;
+$$;
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users for each row execute function public.handle_new_user();
