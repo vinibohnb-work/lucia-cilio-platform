@@ -43,8 +43,9 @@ export default function Sidebar() {
     navigate('/login', { replace: true })
   }
 
-  const initials = (user?.email || 'LC').slice(0, 2).toUpperCase()
-  const displayName = user?.email?.split('@')[0] || 'Lúcia Cílio'
+  const meta = user?.user_metadata || {}
+  const displayName = meta.display_name || meta.full_name || meta.name || user?.email?.split('@')[0] || 'Utilizador'
+  const initials = displayName.slice(0, 2).toUpperCase()
 
   const W = collapsed ? '64px' : '248px'
 
