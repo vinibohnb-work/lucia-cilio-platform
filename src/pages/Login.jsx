@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
@@ -25,8 +25,15 @@ const FlagDE = () => (
 
 export default function Login() {
   const navigate = useNavigate()
-  const { signIn } = useAuth()
+  const { signIn, session, isAdmin, loading: authLoading } = useAuth()
   const { lang, setLang } = useLang()
+
+  // Já autenticado? Salta o formulário e vai direto para a app.
+  useEffect(() => {
+    if (!authLoading && session) {
+      navigate(isAdmin ? '/admin' : '/contabilidade/dashboard', { replace: true })
+    }
+  }, [authLoading, session, isAdmin, navigate])
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')

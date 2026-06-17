@@ -1,12 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LangProvider } from './context/LangContext'
 import { SidebarProvider, useSidebar } from './context/SidebarContext'
 import { AuthProvider } from './context/AuthContext'
 import { useIsMobile } from './hooks/useIsMobile'
 
 // Public pages
-import Landing from './pages/Landing'
-import DiagnosticoPublico from './pages/DiagnosticoPublico'
 import Login from './pages/Login'
 
 // Auth guards
@@ -68,8 +66,7 @@ export default function App() {
         <SidebarProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/"                      element={<Landing />} />
-              <Route path="/diagnostico-gratuito"  element={<DiagnosticoPublico />} />
+              <Route path="/"                      element={<Navigate to="/login" replace />} />
               <Route path="/login"                 element={<Login />} />
               <Route path="/admin/*" element={
                 <RoleRoute requireRole="admin">
