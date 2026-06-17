@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -21,6 +22,7 @@ const EMPTY = { name: '', country: '', sector: '', service: 'acc', status: 'acti
 
 export default function Clientes() {
   const { lang } = useLang()
+  const isMobile = useIsMobile()
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -94,7 +96,7 @@ export default function Clientes() {
       {/* Add form */}
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 140px 130px auto', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 140px 130px auto', gap: '10px', alignItems: 'end' }}>
             {[
               [L.name, <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder={L.name} style={inputStyle} />],
               [L.country, (
@@ -121,7 +123,8 @@ export default function Clientes() {
       )}
 
       {/* Table */}
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden' }}>
+      <div className="table-scroll">
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '720px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
           {[L.name, L.country, L.sector, L.service, L.status, ''].map((h,i) => (
             <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
@@ -145,6 +148,7 @@ export default function Clientes() {
             </div>
           )
         })}
+      </div>
       </div>
 
       {/* Summary */}

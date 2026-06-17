@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { LangProvider } from './context/LangContext'
 import { SidebarProvider, useSidebar } from './context/SidebarContext'
 import { AuthProvider } from './context/AuthContext'
+import { useIsMobile } from './hooks/useIsMobile'
 
 // Public pages
 import Landing from './pages/Landing'
@@ -28,15 +29,23 @@ import Precificacao from './pages/contabilidade/Precificacao'
 import Catalogo from './pages/contabilidade/Catalogo'
 
 function AppLayout() {
-  const { collapsed } = useSidebar()
-  const ml = collapsed ? '64px' : '248px'
+  const { collapsed, mobileOpen, setMobileOpen } = useSidebar()
+  const isMobile = useIsMobile()
+  const ml = isMobile ? '0' : (collapsed ? '64px' : '248px')
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
-      <div style={{ marginLeft: ml, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left .22s ease' }}>
+      {/* Backdrop do drawer no mobile */}
+      {isMobile && mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 90 }}
+        />
+      )}
+      <div style={{ marginLeft: ml, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', transition: 'margin-left .22s ease' }}>
         <Topbar />
-        <main style={{ flex: 1, padding: '24px 28px', background: 'var(--bg)', minWidth: 0 }}>
+        <main style={{ flex: 1, padding: isMobile ? '16px 14px' : '24px 28px', background: 'var(--bg)', minWidth: 0 }}>
           <Routes>
             <Route path="/contabilidade/dashboard"     element={<Dashboard />} />
             <Route path="/contabilidade/caixa"         element={<LivroCaixa />} />

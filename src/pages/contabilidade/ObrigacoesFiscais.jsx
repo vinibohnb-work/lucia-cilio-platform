@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -22,6 +23,7 @@ const EMPTY = { obligation_type: '', client: '', country: '', deadline: new Date
 
 export default function ObrigacoesFiscais() {
   const { lang } = useLang()
+  const isMobile = useIsMobile()
   const [items, setItems]   = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -131,7 +133,7 @@ export default function ObrigacoesFiscais() {
       {/* Add form */}
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 150px auto', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 150px auto', gap: '10px', alignItems: 'end' }}>
             {[
               [L.type, <input value={form.obligation_type} onChange={e=>setForm(f=>({...f,obligation_type:e.target.value}))} placeholder={L.typePh} style={inputStyle} />],
               [L.client, <input value={form.client} onChange={e=>setForm(f=>({...f,client:e.target.value}))} placeholder={L.client} style={inputStyle} />],
@@ -157,7 +159,8 @@ export default function ObrigacoesFiscais() {
       )}
 
       {/* List */}
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden' }}>
+      <div className="table-scroll">
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '720px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
           {[L.type, L.client, L.country, L.deadline, L.status, ''].map((h,i) => (
             <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
@@ -194,6 +197,7 @@ export default function ObrigacoesFiscais() {
             </div>
           )
         })}
+      </div>
       </div>
 
     </div>

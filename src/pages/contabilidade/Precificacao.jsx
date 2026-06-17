@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLang } from '../../context/LangContext'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -11,6 +12,7 @@ const p   = (v)  => parseFloat(v) || 0
 // ── Tipo: Evento / Catering ────────────────────────────────────────────────
 function EventoCalculator({ lang }) {
   const isDE = lang === 'de'
+  const isMobile = useIsMobile()
   const ivaDefault = isDE ? 19 : 23
 
   const [adults,   setAdults  ] = useState(50)
@@ -59,7 +61,7 @@ function EventoCalculator({ lang }) {
   const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'start' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
 
       {/* Left: inputs */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -67,7 +69,7 @@ function EventoCalculator({ lang }) {
         {/* Guests & menu */}
         <div style={{ background: '#fff', borderRadius: '12px', padding: '18px 20px', border: '1px solid #dde8de' }}>
           <div style={{ fontSize: '12px', fontWeight: 800, color: G, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.guests}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '10px' }}>
             {[
               [L.adults,    adults,    setAdults   ],
               [L.children,  children,  setChildren ],
@@ -115,7 +117,7 @@ function EventoCalculator({ lang }) {
 
         {/* Extra costs & margin */}
         <div style={{ background: '#fff', borderRadius: '12px', padding: '18px 20px', border: '1px solid #dde8de' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 160px', gap: '12px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr 160px', gap: '12px', alignItems: 'end' }}>
             {[
               [L.extraCosts, extraCosts, setExtraCosts],
               [L.margin,     margin,     setMargin    ],
@@ -172,6 +174,7 @@ function EventoCalculator({ lang }) {
 // ── Tipo: Serviço por Hora ─────────────────────────────────────────────────
 function ServicoCalculator({ lang }) {
   const isDE = lang === 'de'
+  const isMobile = useIsMobile()
   const [hours,     setHours    ] = useState(10)
   const [rate,      setRate     ] = useState(50)
   const [materials, setMaterials] = useState(0)
@@ -200,9 +203,9 @@ function ServicoCalculator({ lang }) {
   const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'start' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
       <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #dde8de' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '14px' }}>
           {[
             [L.hours, hours, setHours, 1],
             [L.rate, rate, setRate, 0.5],
@@ -250,6 +253,7 @@ function ServicoCalculator({ lang }) {
 // ── Tipo: Produto / Revenda (MB Standard) ─────────────────────────────────
 function ProdutoCalculator({ lang }) {
   const isDE = lang === 'de'
+  const isMobile = useIsMobile()
   const [buyPrice,   setBuyPrice  ] = useState(10)
   const [indirect,   setIndirect  ] = useState(20)
   const [margin,     setMargin    ] = useState(40)
@@ -280,9 +284,9 @@ function ProdutoCalculator({ lang }) {
   const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'start' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
       <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #dde8de' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '14px' }}>
           {[
             [L.buyPrice, buyPrice, setBuyPrice, 0.01],
             [L.indirect, indirect, setIndirect, 1],

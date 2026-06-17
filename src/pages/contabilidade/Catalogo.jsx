@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -17,6 +18,7 @@ const EMPTY = { name: '', kind: 'service', price: '' }
 
 export default function Catalogo() {
   const { lang } = useLang()
+  const isMobile = useIsMobile()
   const [items, setItems]   = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -94,7 +96,7 @@ export default function Catalogo() {
       {/* Add form */}
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 160px auto', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 160px 160px auto', gap: '10px', alignItems: 'end' }}>
             {[
               [L.name, <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder={L.namePh} style={inputStyle} />],
               [L.kind, <select value={form.kind} onChange={e=>setForm(f=>({...f,kind:e.target.value}))} style={selectStyle}><option value="service">{L.service}</option><option value="product">{L.product}</option></select>],
@@ -114,7 +116,8 @@ export default function Catalogo() {
       )}
 
       {/* Table */}
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden' }}>
+      <div className="table-scroll">
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '520px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
           {[L.name, L.kind, L.price, ''].map((h,i) => (
             <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
@@ -135,6 +138,7 @@ export default function Catalogo() {
             </div>
           )
         })}
+      </div>
       </div>
 
     </div>

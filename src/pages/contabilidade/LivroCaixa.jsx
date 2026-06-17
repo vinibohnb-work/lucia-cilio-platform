@@ -4,6 +4,7 @@ import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
 import InfoTooltip from '../../components/InfoTooltip'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -36,6 +37,7 @@ const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', 
 
 export default function LivroCaixa() {
   const { lang } = useLang()
+  const isMobile = useIsMobile()
   const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState([])
   const [catalog, setCatalog] = useState([])
@@ -236,7 +238,8 @@ export default function LivroCaixa() {
       )}
 
       {/* Table */}
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden' }}>
+      <div className="table-scroll">
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '11px 18px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
           {[L.date, L.doc, L.desc, L.type, L.amount, L.dest, L.running, ''].map((h,i) => (
             <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
@@ -290,6 +293,7 @@ export default function LivroCaixa() {
             <div />
           </div>
         )}
+      </div>
       </div>
 
     </div>

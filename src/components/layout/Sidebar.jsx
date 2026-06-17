@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useSidebar } from '../../context/SidebarContext'
 import { useAuth } from '../../context/AuthContext'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { t } from '../../i18n/translations'
 
 // ── SVG Flags (reliable cross-platform) ───────────────────────────────────
@@ -34,25 +35,32 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const { lang, setLang }       = useLang()
-  const { collapsed, setCollapsed } = useSidebar()
+  const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebar()
   const { user, signOut, isAdmin } = useAuth()
+  const isMobile                = useIsMobile()
   const navigate                = useNavigate()
 
+  // No mobile a barra está sempre expandida (drawer), nunca em modo "estreito".
+  const collapsedEff = isMobile ? false : collapsed
+
   async function handleLogout() {
+    setMobileOpen(false)
     await signOut()
     navigate('/login', { replace: true })
   }
+
+  const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
 
   const meta = user?.user_metadata || {}
   const displayName = meta.display_name || meta.full_name || meta.name || user?.email?.split('@')[0] || 'Utilizador'
   const initials = displayName.slice(0, 2).toUpperCase()
 
-  const W = collapsed ? '64px' : '248px'
+  const W = isMobile ? '264px' : (collapsedEff ? '64px' : '248px')
 
   const niBase = {
-    display: 'flex', alignItems: 'center', gap: collapsed ? 0 : '10px',
-    padding: collapsed ? '10px 0' : '9px 18px',
-    justifyContent: collapsed ? 'center' : 'flex-start',
+    display: 'flex', alignItems: 'center', gap: collapsedEff ? 0 : '10px',
+    padding: collapsedEff ? '10px 0' : '11px 18px',
+    justifyContent: collapsedEff ? 'center' : 'flex-start',
     margin: '1px 8px', borderRadius: '8px',
     color: 'rgba(255,255,255,.72)', fontSize: '13px', fontWeight: 500,
     cursor: 'pointer', textDecoration: 'none', transition: 'all .15s',
@@ -64,12 +72,13 @@ export default function Sidebar() {
       position: 'fixed', top: 0, left: 0, width: W, height: '100vh',
       background: 'var(--green)', display: 'flex', flexDirection: 'column',
       zIndex: 100, boxShadow: '4px 0 24px rgba(0,0,0,.18)',
-      transition: 'width .22s ease', overflow: 'hidden',
+      transition: 'width .22s ease, transform .25s ease', overflow: 'hidden',
+      transform: isMobile ? (mobileOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
     }}>
 
       {/* ── Logo ── */}
       <div style={{
-        padding: collapsed ? '16px 8px' : '18px 16px 14px',
+        padding: collapsedEff ? '16px 8px' : '18px 16px 14px',
         borderBottom: '1px solid rgba(255,255,255,.1)',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
       }}>
@@ -77,8 +86,8 @@ export default function Sidebar() {
           src="/logo.png"
           alt="LC Office Consulting"
           style={{
-            width: collapsed ? '54px' : '78px',
-            height: collapsed ? '54px' : '78px',
+            width: collapsedEff ? '54px' : '78px',
+            height: collapsedEff ? '54px' : '78px',
             objectFit: 'contain',
             transition: 'width .22s, height .22s',
           }}
@@ -87,7 +96,7 @@ export default function Sidebar() {
 
       {/* ── Nav ── */}
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: '18px', paddingBottom: '12px' }}>
-        {!collapsed && (
+        {!collapsedEff && (
           <div style={{ padding: '0 14px 6px', color: 'rgba(255,255,255,.35)', fontSize: '9px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
             {t(lang, 'section_acc')}
           </div>
@@ -97,13 +106,14 @@ export default function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
-            title={collapsed ? t(lang, item.labelKey) : undefined}
+            onClick={closeOnMobile}
+            title={collapsedEff ? t(lang, item.labelKey) : undefined}
             style={({ isActive }) => ({ ...niBase, ...(isActive ? niActive : {}) })}
           >
             <span style={{ fontSize: '16px', flexShrink: 0, width: '18px', textAlign: 'center' }}>
               {item.icon}
             </span>
-            {!collapsed && (
+            {!collapsedEff && (
               <span style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>
                 {t(lang, item.labelKey)}
               </span>
@@ -115,16 +125,18 @@ export default function Sidebar() {
         {isAdmin && (
           <NavLink
             to="/admin"
-            title={collapsed ? 'Admin' : undefined}
+            onClick={closeOnMobile}
+            title={collapsedEff ? 'Admin' : undefined}
             style={{ ...niBase, marginTop: '8px', borderTop: '1px solid rgba(255,255,255,.08)', borderRadius: 0, paddingTop: '14px' }}
           >
             <span style={{ fontSize: '16px', flexShrink: 0, width: '18px', textAlign: 'center' }}>🛠️</span>
-            {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>Admin</span>}
+            {!collapsedEff && <span style={{ whiteSpace: 'nowrap' }}>Admin</span>}
           </NavLink>
         )}
       </div>
 
-      {/* ── Collapse toggle ── */}
+      {/* ── Collapse toggle (apenas desktop) ── */}
+      {!isMobile && (
       <button
         onClick={() => setCollapsed(c => !c)}
         title={collapsed ? (lang === 'de' ? 'Erweitern' : 'Expandir') : (lang === 'de' ? 'Minimieren' : 'Recolher')}
@@ -145,18 +157,19 @@ export default function Sidebar() {
         </span>
         {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{lang === 'de' ? 'Minimieren' : 'Recolher'}</span>}
       </button>
+      )}
 
       {/* ── Language switcher ── */}
       <div style={{
-        padding: collapsed ? '12px 6px' : '12px 18px',
+        padding: collapsedEff ? '12px 6px' : '12px 18px',
         borderTop: '1px solid rgba(255,255,255,.1)',
       }}>
-        {!collapsed && (
+        {!collapsedEff && (
           <div style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,.3)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
             {lang === 'de' ? 'Sprache' : 'Idioma'}
           </div>
         )}
-        <div style={{ display: 'flex', gap: '6px', justifyContent: collapsed ? 'center' : 'flex-start', flexDirection: collapsed ? 'column' : 'row' }}>
+        <div style={{ display: 'flex', gap: '6px', justifyContent: collapsedEff ? 'center' : 'flex-start', flexDirection: collapsedEff ? 'column' : 'row' }}>
           {[
             { code: 'pt', Flag: FlagPT, label: 'PT' },
             { code: 'de', Flag: FlagDE, label: 'DE' },
@@ -167,7 +180,7 @@ export default function Sidebar() {
               title={code.toUpperCase()}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: collapsed ? '5px' : '5px 10px',
+                padding: collapsedEff ? '5px' : '5px 10px',
                 borderRadius: '6px', fontSize: '11px', fontWeight: 700,
                 cursor: 'pointer',
                 border: `1px solid ${lang === code ? 'var(--gold)' : 'rgba(255,255,255,.2)'}`,
@@ -177,7 +190,7 @@ export default function Sidebar() {
               }}
             >
               <Flag />
-              {!collapsed && <span>{label}</span>}
+              {!collapsedEff && <span>{label}</span>}
             </button>
           ))}
         </div>
@@ -185,11 +198,11 @@ export default function Sidebar() {
 
       {/* ── User footer ── */}
       <div style={{
-        padding: collapsed ? '12px 8px' : '12px 14px',
+        padding: collapsedEff ? '12px 8px' : '12px 14px',
         borderTop: '1px solid rgba(255,255,255,.1)',
         display: 'flex', alignItems: 'center',
-        gap: collapsed ? 0 : '8px',
-        justifyContent: collapsed ? 'center' : 'flex-start',
+        gap: collapsedEff ? 0 : '8px',
+        justifyContent: collapsedEff ? 'center' : 'flex-start',
       }}>
         <div style={{
           width: '34px', height: '34px', borderRadius: '50%',
@@ -199,7 +212,7 @@ export default function Sidebar() {
         }}>
           {initials}
         </div>
-        {!collapsed && (
+        {!collapsedEff && (
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {displayName}
@@ -209,7 +222,7 @@ export default function Sidebar() {
             </div>
           </div>
         )}
-        {!collapsed && (
+        {!collapsedEff && (
           <button
             onClick={handleLogout}
             title={lang === 'de' ? 'Abmelden' : 'Sair'}
@@ -224,7 +237,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {collapsed && (
+      {collapsedEff && (
         <button
           onClick={handleLogout}
           title={lang === 'de' ? 'Abmelden' : 'Sair'}

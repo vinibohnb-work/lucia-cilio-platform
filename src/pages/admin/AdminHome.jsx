@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { listUsers, createUser, updateUser, deleteUser } from '../../lib/adminApi'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -32,6 +33,7 @@ export default function AdminHome() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { lang, setLang } = useLang()
+  const isMobile = useIsMobile()
 
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -155,7 +157,7 @@ export default function AdminHome() {
         {/* Form */}
         {editingId && (
           <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 130px auto', gap: '10px', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 130px auto', gap: '10px', alignItems: 'end' }}>
               <div>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{L.email}</div>
                 <input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="nome@email.com" style={inputStyle} />
@@ -184,7 +186,8 @@ export default function AdminHome() {
         )}
 
         {/* Table */}
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden' }}>
+        <div className="table-scroll">
+        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
             {[L.email, L.name, L.role, L.created, L.lastLogin, ''].map((h,i) => (
               <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
@@ -216,6 +219,7 @@ export default function AdminHome() {
               </div>
             )
           })}
+        </div>
         </div>
       </div>
 

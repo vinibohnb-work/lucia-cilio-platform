@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -16,6 +17,7 @@ const fmt2 = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFract
 
 export default function Dashboard() {
   const { lang } = useLang()
+  const isMobile = useIsMobile()
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [year] = useState(2026)
@@ -87,7 +89,7 @@ export default function Dashboard() {
     <div style={{ width: '100%' }}>
 
       {/* KPIs topo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '14px', marginBottom: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? '10px' : '14px', marginBottom: '20px' }}>
         {[
           { label: L.revenue, value: revenue,             color: GREEN, bg: '#f0fdf4' },
           { label: L.fixed,   value: fixedTotal,          color: '#1d4ed8', bg: '#eff6ff' },
@@ -107,7 +109,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '16px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.6fr 1fr', gap: '16px', alignItems: 'start' }}>
 
         {/* ── Timeline ── */}
         <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px' }}>
