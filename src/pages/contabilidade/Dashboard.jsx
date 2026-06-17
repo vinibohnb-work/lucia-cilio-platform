@@ -19,14 +19,19 @@ export default function Dashboard() {
   const { lang } = useLang()
   const isMobile = useIsMobile()
   const [entries, setEntries] = useState([])
+  const [catalog, setCatalog] = useState([])
   const [loading, setLoading] = useState(true)
   const [year] = useState(2026)
 
   useEffect(() => {
     (async () => {
       setLoading(true)
-      const { data } = await supabase.from('cash_entries').select('*')
-      setEntries(data || [])
+      const [{ data: ce }, { data: ci }] = await Promise.all([
+        supabase.from('cash_entries').select('*'),
+        supabase.from('catalog_items').select('id,name,kind'),
+      ])
+      setEntries(ce || [])
+      setCatalog(ci || [])
       setLoading(false)
     })()
   }, [])
@@ -59,6 +64,22 @@ export default function Dashboard() {
   const aboveBE = revenue >= breakeven && breakeven > 0
   const progressBE = breakeven > 0 ? Math.min(100, (revenue / breakeven) * 100) : 0
 
+  // ── Receita por produto/serviço do catálogo ──
+  const catalogById = Object.fromEntries(catalog.map(c => [c.id, c]))
+  const revByItem = {}
+  let unassignedRev = 0
+  entries.filter(e => e.type === 'entrada').forEach(e => {
+    if (e.catalog_item_id && catalogById[e.catalog_item_id]) {
+      revByItem[e.catalog_item_id] = (revByItem[e.catalog_item_id] || 0) + Number(e.amount)
+    } else {
+      unassignedRev += Number(e.amount)
+    }
+  })
+  const productRows = Object.entries(revByItem)
+    .map(([id, total]) => ({ id, name: catalogById[id]?.name || '—', kind: catalogById[id]?.kind, total }))
+    .sort((a, b) => b.total - a.total)
+  const maxProductRev = Math.max(1, ...productRows.map(r => r.total))
+
   const L = lang === 'de' ? {
     timeline: 'Cashflow nach Monat', breakeven: 'Break-even-Analyse',
     income: 'Einnahmen', expense: 'Ausgaben', net: 'Netto',
@@ -69,6 +90,9 @@ export default function Dashboard() {
     noData: 'Noch keine Daten. Fügen Sie Buchungen im Kassenbuch hinzu.',
     beHint: 'Mindestumsatz, um alle Kosten zu decken.',
     yearNet: 'Jahresergebnis', surplus: 'Überschuss',
+    byProduct: 'Umsatz nach Produkt/Leistung', share: 'Anteil',
+    unassigned: 'Ohne Produkt zugeordnet', noProducts: 'Noch keine Einnahmen mit Produkt/Leistung verknüpft.',
+    product: 'Produkt', service: 'Leistung',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -79,6 +103,9 @@ export default function Dashboard() {
     noData: 'Ainda não há dados. Adicione lançamentos no Livro de Caixa.',
     beHint: 'Receita mínima para cobrir todos os custos.',
     yearNet: 'Resultado do ano', surplus: 'Excedente',
+    byProduct: 'Receita por Produto/Serviço', share: 'Peso',
+    unassigned: 'Sem produto associado', noProducts: 'Ainda não há entradas associadas a produtos/serviços.',
+    product: 'Produto', service: 'Serviço',
   }
 
   if (loading) return <div style={{ padding: '40px', color: '#94a3b8', fontSize: '14px' }}>{L.loading}</div>
@@ -183,6 +210,47 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* ── Receita por produto/serviço ── */}
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px', marginTop: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: '0 0 16px' }}>{L.byProduct}</h3>
+
+        {productRows.length === 0 && (
+          <div style={{ fontSize: '13px', color: '#94a3b8', padding: '8px 0' }}>{L.noProducts}</div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {productRows.map(r => {
+            const pct = revenue > 0 ? (r.total / revenue) * 100 : 0
+            return (
+              <div key={r.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px', gap: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a2e1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {r.name}
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: r.kind === 'product' ? '#5b21b6' : G, marginLeft: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {r.kind === 'product' ? L.product : L.service}
+                    </span>
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: G, flexShrink: 0 }}>
+                    {fmt2(r.total)} <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>· {Math.round(pct)}%</span>
+                  </span>
+                </div>
+                <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
+                  <div style={{ width: `${(r.total / maxProductRev) * 100}%`, height: '100%', background: `linear-gradient(90deg,${G},${GOLD})`, borderRadius: '99px', transition: 'width .4s' }} />
+                </div>
+              </div>
+            )
+          })}
+
+          {unassignedRev > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f0f4f1' }}>
+              <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>{L.unassigned}</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>{fmt2(unassignedRev)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
     </div>
   )
 }
