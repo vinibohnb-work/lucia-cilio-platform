@@ -33,7 +33,7 @@ create table if not exists public.clients (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users (id) on delete cascade default auth.uid(),
   name       text not null,
-  country    text not null default 'pt' check (country in ('pt','de')),
+  country    text not null,  -- código ISO 3166-1 alpha-2 (PT, DE, FR, BR, US…)
   sector     text,
   service    text not null default 'acc' check (service in ('esg','acc','both')),
   status     text not null default 'active' check (status in ('active','inactive')),
@@ -46,7 +46,7 @@ create table if not exists public.fiscal_obligations (
   user_id         uuid not null references auth.users (id) on delete cascade default auth.uid(),
   obligation_type text not null,
   client          text,
-  country         text not null default 'pt' check (country in ('pt','de')),
+  country         text not null,  -- código ISO 3166-1 alpha-2
   deadline        date not null,
   status          text not null default 'pending' check (status in ('pending','done')),
   created_at      timestamptz not null default now()

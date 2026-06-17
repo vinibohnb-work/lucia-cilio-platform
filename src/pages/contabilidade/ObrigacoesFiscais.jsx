@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
+import { getCountryOptions, countryName } from '../../data/countries'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -17,16 +18,19 @@ function daysUntil(dateStr) {
   return Math.round((target - today) / 86400000)
 }
 
-const EMPTY = { obligation_type: '', client: '', country: 'pt', deadline: new Date().toISOString().slice(0,10), status: 'pending' }
+const EMPTY = { obligation_type: '', client: '', country: '', deadline: new Date().toISOString().slice(0,10), status: 'pending' }
 
 export default function ObrigacoesFiscais() {
   const { lang } = useLang()
   const [items, setItems]   = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
-  const [filter, setFilter]   = useState('all')
+  const [filter, setFilter]   = useState('all')      // 'all' | 'pending'
+  const [countryFilter, setCountryFilter] = useState('all')
   const [form, setForm]       = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
+
+  const countryOptions = useMemo(() => getCountryOptions(lang), [lang])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -36,25 +40,32 @@ export default function ObrigacoesFiscais() {
   }, [])
   useEffect(() => { load() }, [load])
 
+  const presentCountries = useMemo(() => {
+    const codes = [...new Set(items.map(o => (o.country || '').toUpperCase()).filter(Boolean))]
+    return codes.map(code => ({ code, name: countryName(code, lang) })).sort((a,b) => a.name.localeCompare(b.name))
+  }, [items, lang])
+
   const L = lang === 'de' ? {
     new: '+ Neuer Termin', pending: 'Offen', done: 'Erledigt', deadline: 'Frist',
     country: 'Land', client: 'Mandant', type: 'Verpflichtung', status: 'Status',
     all: 'Alle', save: 'Speichern', loading: 'Wird geladen…',
     empty: 'Noch keine Termine. Fügen Sie den ersten hinzu.', typePh: 'z.B. Umsatzsteuervoranmeldung',
     days: 'Tage', today: 'Heute', overdue: 'überfällig', markDone: 'Als erledigt markieren',
-    alert1: 'offene Frist', alert2: 'offene Fristen',
+    alert1: 'offene Frist', alert2: 'offene Fristen', allCountries: 'Alle Länder', selectCountry: '— Land wählen —',
   } : {
     new: '+ Nova Obrigação', pending: 'Pendente', done: 'Entregue', deadline: 'Prazo',
     country: 'País', client: 'Cliente', type: 'Obrigação', status: 'Estado',
     all: 'Todas', save: 'Guardar', loading: 'A carregar…',
     empty: 'Ainda não há obrigações. Adicione a primeira.', typePh: 'ex: DMR, IRS, IVA…',
     days: 'dias', today: 'Hoje', overdue: 'em atraso', markDone: 'Marcar como entregue',
-    alert1: 'obrigação pendente', alert2: 'obrigações pendentes',
+    alert1: 'obrigação pendente', alert2: 'obrigações pendentes', allCountries: 'Todos os países', selectCountry: '— Selecionar país —',
   }
 
-  const visible = filter === 'all' ? items
-    : filter === 'pending' ? items.filter(o => o.status === 'pending')
-    : items.filter(o => o.country === filter)
+  const visible = items.filter(o => {
+    if (filter === 'pending' && o.status !== 'pending') return false
+    if (countryFilter !== 'all' && (o.country || '').toUpperCase() !== countryFilter) return false
+    return true
+  })
 
   const filterBtnStyle = (val) => ({
     padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
@@ -65,9 +76,9 @@ export default function ObrigacoesFiscais() {
   const pendingCount = items.filter(o => o.status === 'pending').length
 
   async function addItem() {
-    if (!form.obligation_type || !form.deadline) return
+    if (!form.obligation_type || !form.deadline || !form.country) return
     setSaving(true)
-    const { error } = await supabase.from('fiscal_obligations').insert({ ...form, client: form.client || null })
+    const { error } = await supabase.from('fiscal_obligations').insert({ ...form, country: form.country.toUpperCase(), client: form.client || null })
     setSaving(false)
     if (error) { alert(error.message); return }
     setForm(EMPTY); setShowForm(false); load()
@@ -86,17 +97,21 @@ export default function ObrigacoesFiscais() {
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const GRID = '2fr 1fr 80px 120px 110px 90px'
+  const GRID = '2fr 1fr 140px 120px 110px 90px'
 
   return (
     <div style={{ width: '100%' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {[['all', L.all], ['pending', L.pending], ['pt', '🇵🇹 Portugal'], ['de', '🇩🇪 Deutschland']].map(([val, label]) => (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {[['all', L.all], ['pending', L.pending]].map(([val, label]) => (
             <button key={val} style={filterBtnStyle(val)} onClick={() => setFilter(val)}>{label}</button>
           ))}
+          <select value={countryFilter} onChange={e => setCountryFilter(e.target.value)} style={{ ...selectStyle, width: 'auto', minWidth: '180px', padding: '7px 12px' }}>
+            <option value="all">{L.allCountries}</option>
+            {presentCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+          </select>
         </div>
         <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
           {L.new}
@@ -116,11 +131,16 @@ export default function ObrigacoesFiscais() {
       {/* Add form */}
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 110px 150px auto', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 150px auto', gap: '10px', alignItems: 'end' }}>
             {[
               [L.type, <input value={form.obligation_type} onChange={e=>setForm(f=>({...f,obligation_type:e.target.value}))} placeholder={L.typePh} style={inputStyle} />],
               [L.client, <input value={form.client} onChange={e=>setForm(f=>({...f,client:e.target.value}))} placeholder={L.client} style={inputStyle} />],
-              [L.country, <select value={form.country} onChange={e=>setForm(f=>({...f,country:e.target.value}))} style={selectStyle}><option value="pt">🇵🇹 PT</option><option value="de">🇩🇪 DE</option></select>],
+              [L.country, (
+                <select value={form.country} onChange={e=>setForm(f=>({...f,country:e.target.value}))} style={selectStyle}>
+                  <option value="">{L.selectCountry}</option>
+                  {countryOptions.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                </select>
+              )],
               [L.deadline, <input type="date" value={form.deadline} onChange={e=>setForm(f=>({...f,deadline:e.target.value}))} style={inputStyle} />],
             ].map(([label, field], i) => (
               <div key={i}>
@@ -156,7 +176,7 @@ export default function ObrigacoesFiscais() {
             <div key={o.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#1a2e1a', lineHeight: 1.4 }}>{o.obligation_type}</div>
               <div style={{ fontSize: '12px', color: '#4a6355', fontWeight: 500 }}>{o.client || '—'}</div>
-              <div style={{ fontSize: '20px' }}>{o.country === 'pt' ? '🇵🇹' : '🇩🇪'}</div>
+              <div style={{ fontSize: '12px', color: '#4a6355' }}>{countryName(o.country, lang) || '—'}</div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: dateColor }}>{o.deadline.split('-').reverse().join('/')}</div>
                 {!isDone && (

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
+import { getCountryOptions, countryName } from '../../data/countries'
 
 const G = '#0d3b20'
 const GOLD = '#c9a84c'
@@ -16,16 +17,18 @@ const STATUS_STYLE = {
   inactive: { bg: '#f1f5f9', color: '#64748b' },
 }
 
-const EMPTY = { name: '', country: 'pt', sector: '', service: 'acc', status: 'active' }
+const EMPTY = { name: '', country: '', sector: '', service: 'acc', status: 'active' }
 
 export default function Clientes() {
   const { lang } = useLang()
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
-  const [filter, setFilter]   = useState('all')
+  const [filter, setFilter]   = useState('all') // 'all' | código de país
   const [form, setForm]       = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
+
+  const countryOptions = useMemo(() => getCountryOptions(lang), [lang])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -38,27 +41,27 @@ export default function Clientes() {
   const L = lang === 'de' ? {
     new: '+ Neuer Mandant', name: 'Name', country: 'Land', sector: 'Branche', service: 'Leistung', status: 'Status',
     active: 'Aktiv', inactive: 'Inaktiv', esg: 'ESG', acc: 'Buchhaltung', both: 'ESG + Buchh.',
-    all: 'Alle', save: 'Speichern', loading: 'Wird geladen…', empty: 'Noch keine Mandanten. Fügen Sie den ersten hinzu.',
-    total: 'Insgesamt', sectorPh: 'z.B. Bau, Industrie…',
+    all: 'Alle Länder', save: 'Speichern', loading: 'Wird geladen…', empty: 'Noch keine Mandanten. Fügen Sie den ersten hinzu.',
+    total: 'Insgesamt', countries: 'Länder', sectorPh: 'z.B. Bau, Industrie…', selectCountry: '— Land wählen —',
   } : {
     new: '+ Novo Cliente', name: 'Nome', country: 'País', sector: 'Setor', service: 'Serviço', status: 'Estado',
     active: 'Ativo', inactive: 'Inativo', esg: 'ESG', acc: 'Contabilidade', both: 'ESG + Cont.',
-    all: 'Todos', save: 'Guardar', loading: 'A carregar…', empty: 'Ainda não há clientes. Adicione o primeiro.',
-    total: 'Total', sectorPh: 'ex: Construção, Indústria…',
+    all: 'Todos os países', save: 'Guardar', loading: 'A carregar…', empty: 'Ainda não há clientes. Adicione o primeiro.',
+    total: 'Total', countries: 'Países', sectorPh: 'ex: Construção, Indústria…', selectCountry: '— Selecionar país —',
   }
 
-  const visible = filter === 'all' ? clients : clients.filter(c => c.country === filter)
+  // Países presentes nos dados (para o filtro dinâmico)
+  const presentCountries = useMemo(() => {
+    const codes = [...new Set(clients.map(c => (c.country || '').toUpperCase()).filter(Boolean))]
+    return codes.map(code => ({ code, name: countryName(code, lang) })).sort((a,b) => a.name.localeCompare(b.name))
+  }, [clients, lang])
 
-  const filterBtnStyle = (val) => ({
-    padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
-    border: `1px solid ${filter === val ? G : '#dde8de'}`,
-    background: filter === val ? G : '#fff', color: filter === val ? '#fff' : '#64748b',
-  })
+  const visible = filter === 'all' ? clients : clients.filter(c => (c.country || '').toUpperCase() === filter)
 
   async function addClient() {
-    if (!form.name) return
+    if (!form.name || !form.country) return
     setSaving(true)
-    const { error } = await supabase.from('clients').insert({ ...form, sector: form.sector || null })
+    const { error } = await supabase.from('clients').insert({ ...form, country: form.country.toUpperCase(), sector: form.sector || null })
     setSaving(false)
     if (error) { alert(error.message); return }
     setForm(EMPTY); setShowForm(false); load()
@@ -71,18 +74,18 @@ export default function Clientes() {
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const GRID = '1fr 80px 150px 140px 110px 36px'
+  const GRID = '1fr 150px 150px 140px 110px 36px'
 
   return (
     <div style={{ width: '100%' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {[['all', L.all], ['pt', '🇵🇹 Portugal'], ['de', '🇩🇪 Deutschland']].map(([val, label]) => (
-            <button key={val} style={filterBtnStyle(val)} onClick={() => setFilter(val)}>{label}</button>
-          ))}
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
+        {/* Filtro dinâmico por país (só os que existem nos dados) */}
+        <select value={filter} onChange={e => setFilter(e.target.value)} style={{ ...selectStyle, width: 'auto', minWidth: '200px', padding: '7px 12px' }}>
+          <option value="all">{L.all}</option>
+          {presentCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+        </select>
         <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
           {L.new}
         </button>
@@ -91,10 +94,15 @@ export default function Clientes() {
       {/* Add form */}
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 1fr 140px 130px auto', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 140px 130px auto', gap: '10px', alignItems: 'end' }}>
             {[
               [L.name, <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder={L.name} style={inputStyle} />],
-              [L.country, <select value={form.country} onChange={e=>setForm(f=>({...f,country:e.target.value}))} style={selectStyle}><option value="pt">🇵🇹 PT</option><option value="de">🇩🇪 DE</option></select>],
+              [L.country, (
+                <select value={form.country} onChange={e=>setForm(f=>({...f,country:e.target.value}))} style={selectStyle}>
+                  <option value="">{L.selectCountry}</option>
+                  {countryOptions.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                </select>
+              )],
               [L.sector, <input value={form.sector} onChange={e=>setForm(f=>({...f,sector:e.target.value}))} placeholder={L.sectorPh} style={inputStyle} />],
               [L.service, <select value={form.service} onChange={e=>setForm(f=>({...f,service:e.target.value}))} style={selectStyle}><option value="acc">{L.acc}</option><option value="esg">{L.esg}</option><option value="both">{L.both}</option></select>],
               [L.status, <select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))} style={selectStyle}><option value="active">{L.active}</option><option value="inactive">{L.inactive}</option></select>],
@@ -129,7 +137,7 @@ export default function Clientes() {
           return (
             <div key={c.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '13px', fontWeight: 700, color: G }}>{c.name}</div>
-              <div style={{ fontSize: '20px' }}>{c.country === 'pt' ? '🇵🇹' : '🇩🇪'}</div>
+              <div style={{ fontSize: '12px', color: '#4a6355' }}>{countryName(c.country, lang) || '—'}</div>
               <div style={{ fontSize: '12px', color: '#4a6355' }}>{c.sector || '—'}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: svc.bg, color: svc.color }}>{L[c.service]}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color }}>{c.status==='active'?L.active:L.inactive}</span></div>
@@ -144,8 +152,7 @@ export default function Clientes() {
         <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
           {[
             { label: L.total, val: clients.length, color: G },
-            { label: 'Portugal', val: clients.filter(c=>c.country==='pt').length, color: '#1a5c32' },
-            { label: 'Deutschland', val: clients.filter(c=>c.country==='de').length, color: GOLD },
+            { label: L.countries, val: presentCountries.length, color: GOLD },
           ].map(s => (
             <div key={s.label} style={{ background: '#fff', borderRadius: '10px', padding: '12px 18px', border: '1px solid #dde8de', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '18px', fontWeight: 900, color: s.color }}>{s.val}</span>
