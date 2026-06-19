@@ -45,7 +45,9 @@ export default function Topbar() {
 
   return (
     <div style={{
-      background: '#fff', padding: isMobile ? '0 14px' : '0 28px', height: '60px',
+      background: '#fff', padding: isMobile ? '0 14px' : '0 28px',
+      height: 'calc(60px + env(safe-area-inset-top))',
+      paddingTop: 'env(safe-area-inset-top)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       borderBottom: '1px solid #dde8de', position: 'sticky', top: 0, zIndex: 50,
       boxShadow: '0 2px 8px rgba(0,0,0,.04)', gap: '10px',

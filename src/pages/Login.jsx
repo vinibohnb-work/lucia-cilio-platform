@@ -98,7 +98,7 @@ export default function Login() {
       fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '20px', position: 'relative',
     }}>
       {/* Language toggle top-right */}
-      <div style={{ position: 'absolute', top: '20px', right: '24px', display: 'flex', gap: '6px' }}>
+      <div style={{ position: 'absolute', top: 'calc(20px + env(safe-area-inset-top))', right: '24px', display: 'flex', gap: '6px' }}>
         {[['pt', FlagPT, 'PT'], ['de', FlagDE, 'DE']].map(([code, Flag, label]) => (
           <button key={code} onClick={() => setLang(code)} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px',

@@ -74,6 +74,7 @@ export default function Sidebar() {
       zIndex: 100, boxShadow: '4px 0 24px rgba(0,0,0,.18)',
       transition: 'width .22s ease, transform .25s ease', overflow: 'hidden',
       transform: isMobile ? (mobileOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+      paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
     }}>
 
       {/* ── Logo ── */}

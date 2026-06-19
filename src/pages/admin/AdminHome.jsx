@@ -111,7 +111,7 @@ export default function AdminHome() {
     <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
       {/* Top bar */}
-      <div style={{ background: G, padding: '0 28px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: G, padding: '0 28px', paddingTop: 'env(safe-area-inset-top)', height: 'calc(64px + env(safe-area-inset-top))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img src="/logo.png" alt="" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
           <div>
