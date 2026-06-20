@@ -22,6 +22,8 @@ export default function Dashboard() {
   const [catalog, setCatalog] = useState([])
   const [loading, setLoading] = useState(true)
   const [year] = useState(2026)
+  const [period, setPeriod]   = useState('year')  // 'year' | 'quarter'
+  const [quarter, setQuarter] = useState(Math.ceil((new Date().getMonth() + 1) / 3))
 
   useEffect(() => {
     (async () => {
@@ -38,19 +40,31 @@ export default function Dashboard() {
 
   const months = lang === 'de' ? MONTHS_DE : MONTHS_PT
 
-  // ── Timeline mensal ──
-  const monthly = months.map((m, i) => {
+  // ── Período (ano inteiro ou trimestre) ──
+  const isQuarter = period === 'quarter'
+  const scoped = entries.filter(e => {
+    if (e.entry_date?.slice(0,4) !== String(year)) return false
+    if (isQuarter) return Math.ceil(parseInt(e.entry_date.slice(5,7), 10) / 3) === quarter
+    return true
+  })
+  const periodLabel = isQuarter ? `T${quarter} ${year}` : `${year}`
+
+  // ── Timeline (meses do período) ──
+  const monthIdx = isQuarter
+    ? [(quarter - 1) * 3, (quarter - 1) * 3 + 1, (quarter - 1) * 3 + 2]
+    : months.map((_, i) => i)
+  const monthly = monthIdx.map(i => {
     const mm = String(i + 1).padStart(2, '0')
-    const inMonth = entries.filter(e => e.entry_date?.slice(0,4) === String(year) && e.entry_date?.slice(5,7) === mm)
+    const inMonth = scoped.filter(e => e.entry_date?.slice(5,7) === mm)
     const inc = inMonth.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.amount),0)
     const exp = inMonth.filter(e => e.type === 'saida'  ).reduce((s,e)=>s+Number(e.amount),0)
-    return { label: m, inc, exp, net: inc - exp }
+    return { label: months[i], inc, exp, net: inc - exp }
   })
   const maxVal = Math.max(1, ...monthly.map(m => Math.max(m.inc, m.exp)))
 
   // ── Breakeven ──
-  const revenue = entries.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.amount),0)
-  const saidas  = entries.filter(e => e.type === 'saida')
+  const revenue = scoped.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.amount),0)
+  const saidas  = scoped.filter(e => e.type === 'saida')
   let fixedC = 0, varC = 0, otherC = 0
   saidas.forEach(e => {
     const ct = getCategory(e.category)?.costType
@@ -68,7 +82,7 @@ export default function Dashboard() {
   const catalogById = Object.fromEntries(catalog.map(c => [c.id, c]))
   const revByItem = {}
   let unassignedRev = 0
-  entries.filter(e => e.type === 'entrada').forEach(e => {
+  scoped.filter(e => e.type === 'entrada').forEach(e => {
     if (e.catalog_item_id && catalogById[e.catalog_item_id]) {
       revByItem[e.catalog_item_id] = (revByItem[e.catalog_item_id] || 0) + Number(e.amount)
     } else {
@@ -93,6 +107,12 @@ export default function Dashboard() {
     byProduct: 'Umsatz nach Produkt/Leistung', share: 'Anteil',
     unassigned: 'Ohne Produkt zugeordnet', noProducts: 'Noch keine Einnahmen mit Produkt/Leistung verknüpft.',
     product: 'Produkt', service: 'Leistung',
+    quarterly: 'Quartal', annual: 'Jahr',
+    ssTitle: 'Sozialversicherung (PT)',
+    ssHint: 'Quartalseinkommen — Basis für die vierteljährliche SS-Meldung in Portugal.',
+    ssIncome: 'Quartalseinkommen', ssBase: 'Bemessungsgrundlage (70 %)',
+    ssEst: 'Geschätzter Beitrag (21,4 %)',
+    ssNote: 'Schätzung für Dienstleister (70 % × 21,4 %). Einstufung prüfen.',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -105,15 +125,50 @@ export default function Dashboard() {
     yearNet: 'Resultado do ano', surplus: 'Excedente',
     byProduct: 'Receita por Produto/Serviço', share: 'Peso',
     unassigned: 'Sem produto associado', noProducts: 'Ainda não há entradas associadas a produtos/serviços.',
+    quarterly: 'Trimestral', annual: 'Anual',
+    ssTitle: 'Base Segurança Social',
+    ssHint: 'Rendimento do trimestre — base para a declaração trimestral à Segurança Social.',
+    ssIncome: 'Rendimento do trimestre', ssBase: 'Base de incidência (70%)',
+    ssEst: 'Contribuição estimada (21,4%)',
+    ssNote: 'Estimativa para prestadores de serviços (70% × 21,4%). Confirmar enquadramento.',
     product: 'Produto', service: 'Serviço',
   }
 
   if (loading) return <div style={{ padding: '40px', color: '#94a3b8', fontSize: '14px' }}>{L.loading}</div>
 
   const yearNet = revenue - (fixedTotal + varC)
+  const netLabel = isQuarter ? `${lang === 'de' ? 'Ergebnis' : 'Resultado'} ${periodLabel}` : L.yearNet
+  const ssBase = revenue * 0.70
+  const ssEst  = ssBase * 0.214
+
+  // Toggle do período
+  const segBtn = (active) => ({
+    padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+    border: 'none', background: active ? G : 'transparent', color: active ? '#fff' : '#64748b',
+  })
+  const qBtn = (active) => ({
+    padding: '6px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+    border: `1px solid ${active ? G : '#dde8de'}`, background: active ? G : '#fff', color: active ? '#fff' : '#64748b',
+  })
 
   return (
     <div style={{ width: '100%' }}>
+
+      {/* Toggle período */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '4px', background: '#fff', borderRadius: '10px', padding: '4px', border: '1px solid #dde8de' }}>
+          <button style={segBtn(!isQuarter)} onClick={() => setPeriod('year')}>{L.annual}</button>
+          <button style={segBtn(isQuarter)} onClick={() => setPeriod('quarter')}>{L.quarterly}</button>
+        </div>
+        {isQuarter && (
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {[1,2,3,4].map(q => (
+              <button key={q} style={qBtn(quarter === q)} onClick={() => setQuarter(q)}>{`T${q}`}</button>
+            ))}
+          </div>
+        )}
+        <span style={{ marginLeft: 'auto', fontSize: '12px', fontWeight: 700, color: GOLD }}>{periodLabel}</span>
+      </div>
 
       {/* KPIs topo */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? '10px' : '14px', marginBottom: '20px' }}>
@@ -121,7 +176,7 @@ export default function Dashboard() {
           { label: L.revenue, value: revenue,             color: GREEN, bg: '#f0fdf4' },
           { label: L.fixed,   value: fixedTotal,          color: '#1d4ed8', bg: '#eff6ff' },
           { label: L.variable,value: varC,                color: '#c2410c', bg: '#fff7ed' },
-          { label: L.yearNet, value: yearNet,             color: yearNet>=0?G:RED, bg: '#fff' },
+          { label: netLabel,  value: yearNet,             color: yearNet>=0?G:RED, bg: '#fff' },
         ].map(k => (
           <div key={k.label} style={{ background: k.bg, borderRadius: '14px', padding: '18px 20px', border: '1px solid #dde8de' }}>
             <div style={{ fontSize: '22px', fontWeight: 900, color: k.color }}>{fmt(k.value)}</div>
@@ -133,6 +188,29 @@ export default function Dashboard() {
       {entries.length === 0 && (
         <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
           {L.noData}
+        </div>
+      )}
+
+      {/* ── Base Segurança Social (apenas trimestral) ── */}
+      {isQuarter && (
+        <div style={{ background: `linear-gradient(135deg, ${G} 0%, #1a5c32 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+            <span style={{ fontSize: '16px' }}>🇵🇹</span>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0 }}>{L.ssTitle} · {periodLabel}</h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '12px' : '16px' }}>
+            {[
+              { label: L.ssIncome, value: revenue, big: true },
+              { label: L.ssBase,   value: ssBase },
+              { label: L.ssEst,    value: ssEst, gold: true },
+            ].map(c => (
+              <div key={c.label} style={{ background: 'rgba(255,255,255,.08)', borderRadius: '10px', padding: '14px 16px' }}>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.6)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+                <div style={{ fontSize: c.big ? '24px' : '20px', fontWeight: 900, color: c.gold ? GOLD : '#fff' }}>{fmt2(c.value)}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,.55)', margin: '14px 0 0', lineHeight: 1.5 }}>{L.ssNote}</p>
         </div>
       )}
 
