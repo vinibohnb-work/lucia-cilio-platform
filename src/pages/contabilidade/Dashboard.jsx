@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 const GREEN = '#16a34a'
@@ -193,7 +193,7 @@ export default function Dashboard() {
 
       {/* ── Base Segurança Social (apenas trimestral) ── */}
       {isQuarter && (
-        <div style={{ background: `linear-gradient(135deg, ${G} 0%, #1a5c32 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
+        <div style={{ background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <span style={{ fontSize: '16px' }}>🇵🇹</span>
             <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0 }}>{L.ssTitle} · {periodLabel}</h3>
@@ -214,12 +214,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.6fr 1fr', gap: '16px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.6fr 1fr', gap: '16px', alignItems: 'stretch' }}>
 
         {/* ── Timeline ── */}
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px' }}>
+        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.timeline} · {year}</h3>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.timeline} · {periodLabel}</h3>
             <div style={{ display: 'flex', gap: '14px' }}>
               <Legend color={GREEN} label={L.income} />
               <Legend color={RED} label={L.expense} />
@@ -227,7 +227,7 @@ export default function Dashboard() {
           </div>
 
           {/* Bars */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '180px', borderBottom: '2px solid #e2e8f0', paddingBottom: '0' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', flex: 1, minHeight: '180px', borderBottom: '2px solid #e2e8f0', paddingBottom: '0' }}>
             {monthly.map((m, i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '100%', width: '100%', justifyContent: 'center' }}>

@@ -6,7 +6,7 @@ import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCa
 import InfoTooltip from '../../components/InfoTooltip'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 

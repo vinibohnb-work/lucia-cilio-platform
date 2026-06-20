@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 

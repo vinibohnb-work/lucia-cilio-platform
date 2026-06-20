@@ -24,7 +24,7 @@ export default function InfoTooltip({ text, badge }) {
         <span style={{
           position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%',
           transform: 'translateX(-50%)', zIndex: 200,
-          background: '#0d3b20', color: '#fff', borderRadius: '8px',
+          background: '#0a2f1a', color: '#fff', borderRadius: '8px',
           padding: '9px 12px', width: '220px', fontSize: '11px',
           lineHeight: 1.5, fontWeight: 500, textAlign: 'left',
           boxShadow: '0 6px 20px rgba(0,0,0,.25)', pointerEvents: 'none',
@@ -39,7 +39,7 @@ export default function InfoTooltip({ text, badge }) {
           <span style={{
             position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
             borderWidth: '5px', borderStyle: 'solid',
-            borderColor: '#0d3b20 transparent transparent transparent',
+            borderColor: '#0a2f1a transparent transparent transparent',
           }} />
         </span>
       )}

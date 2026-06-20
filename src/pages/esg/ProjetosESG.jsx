@@ -1,7 +1,7 @@
 import { useLang } from '../../context/LangContext'
 import { t } from '../../i18n/translations'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 

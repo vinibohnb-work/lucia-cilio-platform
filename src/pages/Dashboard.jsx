@@ -1,7 +1,7 @@
 import { useLang } from '../context/LangContext'
 import { t } from '../i18n/translations'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
@@ -17,7 +17,7 @@ export default function Dashboard() {
   const activities = [
     { icon: '🌱', text: t(lang, 'dash_act1'), time: `${t(lang, 'dash_today')}, 09:30`,    dot: G },
     { icon: '📋', text: t(lang, 'dash_act2'), time: `${t(lang, 'dash_yesterday')}, 15:00`, dot: GOLD },
-    { icon: '👥', text: t(lang, 'dash_act3'), time: t(lang, 'dash_may12'),                dot: '#1a5c32' },
+    { icon: '👥', text: t(lang, 'dash_act3'), time: t(lang, 'dash_may12'),                dot: '#164e2b' },
     { icon: '📅', text: t(lang, 'dash_act4'), time: t(lang, 'dash_may10'),                dot: '#64748b' },
   ]
 

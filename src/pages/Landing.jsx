@@ -2,14 +2,14 @@ import { useNavigate } from 'react-router-dom'
 import { useLang } from '../context/LangContext'
 import { t } from '../i18n/translations'
 
-const G = '#0d3b20'
-const GM = '#1a5c32'
+const G = '#0a2f1a'
+const GM = '#164e2b'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
 const Logo = () => (
   <svg width="40" height="40" viewBox="0 0 50 50" fill="none">
-    <circle cx="25" cy="25" r="25" fill="#0a3318"/>
+    <circle cx="25" cy="25" r="25" fill="#082713"/>
     <path d="M37 13 A15 15 0 1 0 37 37" stroke="#c9a84c" strokeWidth="3.2" strokeLinecap="round" fill="none"/>
     <path d="M32 18 A9 9 0 1 0 32 32" stroke="#c9a84c" strokeWidth="2.3" strokeLinecap="round" fill="none"/>
     <line x1="18" y1="15" x2="18" y2="31" stroke="#c9a84c" strokeWidth="2.8" strokeLinecap="round"/>
@@ -62,7 +62,7 @@ export default function Landing() {
 
       {/* ── HERO ── */}
       <section style={{
-        background: `linear-gradient(135deg, ${G} 0%, #1a5c32 60%, #1e6b38 100%)`,
+        background: `linear-gradient(135deg, ${G} 0%, #164e2b 60%, #175230 100%)`,
         padding: '90px 6% 80px 11%',
         position: 'relative',
         overflow: 'hidden',
@@ -97,21 +97,21 @@ export default function Landing() {
           <div style={{
             position: 'absolute', inset: 0,
             background: `linear-gradient(to right,
-              #0d3b20 0%,
-              #0d3b20 30%,
-              rgba(13,59,32,0.97) 36%,
-              rgba(13,59,32,0.91) 42%,
-              rgba(13,59,32,0.78) 49%,
-              rgba(13,59,32,0.58) 57%,
-              rgba(13,59,32,0.34) 66%,
-              rgba(13,59,32,0.12) 75%,
+              #0a2f1a 0%,
+              #0a2f1a 30%,
+              rgba(10,47,26,0.97) 36%,
+              rgba(10,47,26,0.91) 42%,
+              rgba(10,47,26,0.78) 49%,
+              rgba(10,47,26,0.58) 57%,
+              rgba(10,47,26,0.34) 66%,
+              rgba(10,47,26,0.12) 75%,
               transparent 85%
             )`,
           }} />
           {/* escurecimento topo e fundo */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: `linear-gradient(to bottom, rgba(13,59,32,0.5) 0%, transparent 18%, transparent 80%, rgba(13,59,32,0.55) 100%)`,
+            background: `linear-gradient(to bottom, rgba(10,47,26,0.5) 0%, transparent 18%, transparent 80%, rgba(10,47,26,0.55) 100%)`,
           }} />
         </div>
 
@@ -248,7 +248,7 @@ export default function Landing() {
                 {i < 3 && (
                   <div style={{ position: 'absolute', top: '36px', right: '-10px', zIndex: 1, fontSize: '16px', color: GOLD }}>→</div>
                 )}
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: G, color: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', margin: '0 auto 16px', boxShadow: `0 4px 16px rgba(13,59,32,.2)` }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: G, color: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', margin: '0 auto 16px', boxShadow: `0 4px 16px rgba(10,47,26,.2)` }}>
                   {s.icon}
                 </div>
                 <div style={{ fontSize: '10px', fontWeight: 800, color: GOLD, letterSpacing: '2px', marginBottom: '6px' }}>PASSO {s.n}</div>
@@ -264,7 +264,7 @@ export default function Landing() {
       {/* ── CTA DIAGNÓSTICO ── */}
       <section style={{ padding: '80px 6%', background: BG }}>
         <div style={{ maxWidth: '760px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: '20px', padding: '52px 48px', border: `2px solid ${GOLD}`, boxShadow: '0 8px 40px rgba(13,59,32,.08)' }}>
+          <div style={{ background: '#fff', borderRadius: '20px', padding: '52px 48px', border: `2px solid ${GOLD}`, boxShadow: '0 8px 40px rgba(10,47,26,.08)' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌱</div>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: G, marginBottom: '14px', letterSpacing: '-0.5px' }}>
               Descubra onde a sua empresa<br />está em ESG — gratuitamente
@@ -279,7 +279,7 @@ export default function Landing() {
             </div>
             <button
               onClick={() => navigate('/diagnostico-gratuito')}
-              style={{ padding: '16px 48px', background: G, color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '16px', cursor: 'pointer', boxShadow: `0 4px 20px rgba(13,59,32,.3)` }}
+              style={{ padding: '16px 48px', background: G, color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '16px', cursor: 'pointer', boxShadow: `0 4px 20px rgba(10,47,26,.3)` }}
             >
               Iniciar Diagnóstico →
             </button>

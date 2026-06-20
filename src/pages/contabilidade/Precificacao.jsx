@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
@@ -347,7 +347,7 @@ export default function Precificacao() {
     fontWeight: 700, fontSize: '13px', border: 'none', transition: 'all .15s',
     background: type === key ? G : '#fff',
     color: type === key ? '#fff' : '#4a6355',
-    boxShadow: type === key ? '0 2px 10px rgba(13,59,32,.2)' : 'none',
+    boxShadow: type === key ? '0 2px 10px rgba(10,47,26,.2)' : 'none',
     borderBottom: type === key ? 'none' : '1px solid #dde8de',
   })
 

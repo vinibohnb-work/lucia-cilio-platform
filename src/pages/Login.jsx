@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
 import { supabase } from '../lib/supabase'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 
 const FlagPT = () => (
@@ -94,7 +94,7 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: `linear-gradient(135deg, ${G} 0%, #1a5c32 100%)`,
+      background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`,
       fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '20px', position: 'relative',
     }}>
       {/* Language toggle top-right */}
@@ -167,8 +167,8 @@ export default function Login() {
           {/* Submit */}
           <button type="submit" disabled={loading} style={{
             width: '100%', padding: '13px', marginTop: '20px', borderRadius: '10px', border: 'none',
-            background: loading ? '#1a5c32' : G, color: '#fff', fontWeight: 800, fontSize: '15px',
-            cursor: loading ? 'wait' : 'pointer', boxShadow: '0 4px 16px rgba(13,59,32,.3)',
+            background: loading ? '#164e2b' : G, color: '#fff', fontWeight: 800, fontSize: '15px',
+            cursor: loading ? 'wait' : 'pointer', boxShadow: '0 4px 16px rgba(10,47,26,.3)',
           }}>
             {loading ? L.entering : `${L.enter} →`}
           </button>

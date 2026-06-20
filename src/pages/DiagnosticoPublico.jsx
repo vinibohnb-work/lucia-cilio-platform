@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // ─── Brand tokens ────────────────────────────────────────────────────────────
-const GREEN      = '#0d3b20'
-const GREEN_MID  = '#1a5c32'
+const GREEN      = '#0a2f1a'
+const GREEN_MID  = '#164e2b'
 const GREEN_LIGHT= '#e8f5ec'
 const GOLD       = '#c9a84c'
 const BG         = '#f2f6f3'
@@ -372,7 +372,7 @@ export default function DiagnosticoPublico() {
             background: '#fff',
             borderRadius: 20,
             padding: '48px 40px',
-            boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+            boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
           }}>
             <div style={{
               display: 'inline-flex',
@@ -443,7 +443,7 @@ export default function DiagnosticoPublico() {
             background: '#fff',
             borderRadius: 20,
             padding: '40px',
-            boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+            boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
           }}>
             <ProgressBar step={1} total={5} />
             <h2 style={{ fontSize: 22, fontWeight: 700, color: GREEN, marginBottom: 6 }}>
@@ -548,7 +548,7 @@ export default function DiagnosticoPublico() {
             background: '#fff',
             borderRadius: 20,
             padding: '40px',
-            boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+            boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
           }}>
             <ProgressBar step={2} total={5} />
             <PillarHeader
@@ -572,7 +572,7 @@ export default function DiagnosticoPublico() {
             background: '#fff',
             borderRadius: 20,
             padding: '40px',
-            boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+            boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
           }}>
             <ProgressBar step={3} total={5} />
             <PillarHeader
@@ -596,7 +596,7 @@ export default function DiagnosticoPublico() {
             background: '#fff',
             borderRadius: 20,
             padding: '40px',
-            boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+            boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
           }}>
             <ProgressBar step={4} total={5} />
             <PillarHeader
@@ -625,7 +625,7 @@ export default function DiagnosticoPublico() {
               color: '#fff',
               marginBottom: 20,
               textAlign: 'center',
-              boxShadow: '0 8px 32px rgba(13,59,32,0.25)',
+              boxShadow: '0 8px 32px rgba(10,47,26,0.25)',
             }}>
               <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 8, letterSpacing: '0.08em' }}>
                 RESULTADO DO DIAGNÓSTICO
@@ -679,7 +679,7 @@ export default function DiagnosticoPublico() {
               background: '#fff',
               borderRadius: 20,
               padding: '32px 40px',
-              boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+              boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
               marginBottom: 20,
             }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: GREEN, marginBottom: 24 }}>
@@ -695,7 +695,7 @@ export default function DiagnosticoPublico() {
               background: '#fff',
               borderRadius: 20,
               padding: '32px 40px',
-              boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+              boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
               marginBottom: 20,
             }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: GREEN, marginBottom: 20 }}>
@@ -723,7 +723,7 @@ export default function DiagnosticoPublico() {
               background: '#fff',
               borderRadius: 20,
               padding: '32px 40px',
-              boxShadow: '0 4px 24px rgba(13,59,32,0.08)',
+              boxShadow: '0 4px 24px rgba(10,47,26,0.08)',
               border: `2px solid ${GOLD}`,
             }}>
               {!submitted ? (

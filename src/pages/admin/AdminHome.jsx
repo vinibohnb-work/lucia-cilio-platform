@@ -5,7 +5,7 @@ import { useLang } from '../../context/LangContext'
 import { listUsers, createUser, updateUser, deleteUser } from '../../lib/adminApi'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
-const G = '#0d3b20'
+const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
