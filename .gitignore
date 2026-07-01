@@ -33,3 +33,6 @@ ref/
 .env
 .env.local
 .env.*.local
+
+# Artefactos de revisão
+*.zip
