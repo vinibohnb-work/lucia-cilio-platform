@@ -12,6 +12,7 @@ const T = {
     nav_dash: 'Dashboard',
     nav_catalogo: 'Catálogo',
     nav_empresa: 'Empresa',
+    nav_recorrentes: 'Despesas Recorrentes',
     role_label: 'TOC · Consultora ESG',
     // Topbar
     btn_new_diag: '+ Novo Diagnóstico',
@@ -114,6 +115,7 @@ const T = {
     nav_dash: 'Dashboard',
     nav_catalogo: 'Katalog',
     nav_empresa: 'Firma',
+    nav_recorrentes: 'Wiederkehrende Ausgaben',
     role_label: 'TOC · ESG-Beraterin',
     // Topbar
     btn_new_diag: '+ Neue Diagnose',

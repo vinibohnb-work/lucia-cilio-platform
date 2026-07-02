@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
@@ -17,6 +18,7 @@ const fmt2 = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFract
 
 export default function Dashboard() {
   const { lang } = useLang()
+  const navigate = useNavigate()
   const isMobile = useIsMobile()
   const [entries, setEntries] = useState([])
   const [catalog, setCatalog] = useState([])
@@ -25,15 +27,19 @@ export default function Dashboard() {
   const [period, setPeriod]   = useState('year')  // 'year' | 'quarter'
   const [quarter, setQuarter] = useState(Math.ceil((new Date().getMonth() + 1) / 3))
 
+  const [recurring, setRecurring] = useState([])
+
   useEffect(() => {
     (async () => {
       setLoading(true)
-      const [{ data: ce }, { data: ci }] = await Promise.all([
+      const [{ data: ce }, { data: ci }, { data: re }] = await Promise.all([
         supabase.from('cash_entries').select('*'),
         supabase.from('catalog_items').select('id,name,kind'),
+        supabase.from('recurring_expenses').select('*').eq('active', true),
       ])
       setEntries(ce || [])
       setCatalog(ci || [])
+      setRecurring(re || [])
       setLoading(false)
     })()
   }, [])
@@ -94,6 +100,14 @@ export default function Dashboard() {
     .sort((a, b) => b.total - a.total)
   const maxProductRev = Math.max(1, ...productRows.map(r => r.total))
 
+  // ── Custos fixos previstos por confirmar (mês corrente) ──
+  const curPeriod = new Date().toISOString().slice(0, 7)
+  const curMonthNum = parseInt(curPeriod.slice(5, 7), 10)
+  const isDue = (p, m) => p === 'monthly' || (p === 'quarterly' && [1,4,7,10].includes(m)) || (p === 'annual' && m === 1)
+  const confirmedIds = new Set(entries.filter(e => e.recurring_expense_id && e.period === curPeriod).map(e => e.recurring_expense_id))
+  const pendingRecurring = recurring.filter(r => isDue(r.periodicity, curMonthNum) && !confirmedIds.has(r.id))
+  const predictedFixed = pendingRecurring.reduce((s, r) => s + Number(r.amount), 0)
+
   const L = lang === 'de' ? {
     timeline: 'Cashflow nach Monat', breakeven: 'Break-even-Analyse',
     income: 'Einnahmen', expense: 'Ausgaben', net: 'Netto',
@@ -113,6 +127,7 @@ export default function Dashboard() {
     ssIncome: 'Quartalseinkommen', ssBase: 'Bemessungsgrundlage (70 %)',
     ssEst: 'Geschätzter Beitrag (21,4 %)',
     ssNote: 'Schätzung für Dienstleister (70 % × 21,4 %). Einstufung prüfen.',
+    predictedFixed: 'Geplante Fixkosten (offen, diesen Monat)', predictedCta: 'Bestätigen →',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -131,6 +146,7 @@ export default function Dashboard() {
     ssIncome: 'Rendimento do trimestre', ssBase: 'Base de incidência (70%)',
     ssEst: 'Contribuição estimada (21,4%)',
     ssNote: 'Estimativa para prestadores de serviços (70% × 21,4%). Confirmar enquadramento.',
+    predictedFixed: 'Custos fixos previstos (por confirmar, este mês)', predictedCta: 'Confirmar →',
     product: 'Produto', service: 'Serviço',
   }
 
@@ -188,6 +204,19 @@ export default function Dashboard() {
       {entries.length === 0 && (
         <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
           {L.noData}
+        </div>
+      )}
+
+      {/* ── Custos fixos previstos por confirmar ── */}
+      {predictedFixed > 0 && (
+        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '18px' }}>🔁</span>
+          <span style={{ fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
+            {L.predictedFixed}: <strong>€ {fmt2(predictedFixed)}</strong> · {pendingRecurring.length}
+          </span>
+          <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
+            {L.predictedCta}
+          </button>
         </div>
       )}
 

@@ -27,6 +27,7 @@ const FlagDE = () => (
 const NAV_ITEMS = [
   { to: '/contabilidade/dashboard',    icon: '📊', labelKey: 'nav_dash'        },
   { to: '/contabilidade/caixa',        icon: '💵', labelKey: 'nav_caixa'       },
+  { to: '/contabilidade/recorrentes',  icon: '🔁', labelKey: 'nav_recorrentes' },
   { to: '/contabilidade/catalogo',     icon: '🏷️', labelKey: 'nav_catalogo'    },
   { to: '/contabilidade/precificacao', icon: '🧮', labelKey: 'nav_preco'       },
   { to: '/contabilidade/clientes',     icon: '👥', labelKey: 'nav_clients'     },

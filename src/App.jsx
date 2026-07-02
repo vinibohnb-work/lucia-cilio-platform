@@ -24,6 +24,7 @@ import LivroCaixa from './pages/contabilidade/LivroCaixa'
 import ObrigacoesFiscais from './pages/contabilidade/ObrigacoesFiscais'
 import Precificacao from './pages/contabilidade/Precificacao'
 import Catalogo from './pages/contabilidade/Catalogo'
+import DespesasRecorrentes from './pages/contabilidade/DespesasRecorrentes'
 import Empresa from './pages/Empresa'
 
 function AppLayout() {
@@ -55,6 +56,7 @@ function AppLayout() {
           <Routes>
             <Route path="/contabilidade/dashboard"     element={<Dashboard />} />
             <Route path="/contabilidade/caixa"         element={<LivroCaixa />} />
+            <Route path="/contabilidade/recorrentes"   element={<DespesasRecorrentes />} />
             <Route path="/contabilidade/catalogo"      element={<Catalogo />} />
             <Route path="/contabilidade/precificacao"  element={<Precificacao />} />
             <Route path="/contabilidade/clientes"      element={<Clientes />} />
