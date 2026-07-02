@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
+import { getCompanySettings } from '../../lib/companySettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 const G = '#0a2f1a'
@@ -28,18 +29,21 @@ export default function Dashboard() {
   const [quarter, setQuarter] = useState(Math.ceil((new Date().getMonth() + 1) / 3))
 
   const [recurring, setRecurring] = useState([])
+  const [settings, setSettings] = useState(null)
 
   useEffect(() => {
     (async () => {
       setLoading(true)
-      const [{ data: ce }, { data: ci }, { data: re }] = await Promise.all([
+      const [{ data: ce }, { data: ci }, { data: re }, cs] = await Promise.all([
         supabase.from('cash_entries').select('*'),
         supabase.from('catalog_items').select('id,name,kind'),
         supabase.from('recurring_expenses').select('*').eq('active', true),
+        getCompanySettings(),
       ])
       setEntries(ce || [])
       setCatalog(ci || [])
       setRecurring(re || [])
+      setSettings(cs)
       setLoading(false)
     })()
   }, [])
@@ -146,6 +150,7 @@ export default function Dashboard() {
     ssNote: 'Schätzung für Dienstleister (70 % × 21,4 %). Einstufung prüfen.',
     predictedFixed: 'Geplante Fixkosten (offen)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
     ivaTitle: 'MwSt.', ivaLiq: 'MwSt. (Verkäufe)', ivaDed: 'Vorsteuer (Einkäufe)', ivaPay: 'MwSt.-Zahllast', ivaRec: 'MwSt.-Guthaben',
+    irTitle: 'Steuerrücklage', irBase: 'Ergebnis (Basis)', irReserve: 'Zurückzulegen', irHint: 'auf das Periodenergebnis', irNoResult: 'Kein positives Ergebnis — nichts zurückzulegen.',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -166,6 +171,7 @@ export default function Dashboard() {
     ssNote: 'Estimativa para prestadores de serviços (70% × 21,4%). Confirmar enquadramento.',
     predictedFixed: 'Custos fixos previstos (por confirmar)', predictedCta: 'Confirmar →', predicted: 'Previsto',
     ivaTitle: 'IVA', ivaLiq: 'IVA liquidado (vendas)', ivaDed: 'IVA dedutível (compras)', ivaPay: 'IVA a entregar', ivaRec: 'IVA a recuperar',
+    irTitle: 'Reserva para IR', irBase: 'Resultado (base)', irReserve: 'A reservar', irHint: 'sobre o resultado do período', irNoResult: 'Sem resultado positivo — nada a reservar.',
     product: 'Produto', service: 'Serviço',
   }
 
@@ -174,6 +180,10 @@ export default function Dashboard() {
   const yearNet = revenue - (fixedTotal + varC)
   const netLabel = isQuarter ? `${lang === 'de' ? 'Ergebnis' : 'Resultado'} ${periodLabel}` : L.yearNet
   const ssBase = revenue * 0.70
+  // Reserva de IR: % da empresa sobre o resultado positivo do período
+  const irPct = settings?.ir_reserve_pct != null ? Number(settings.ir_reserve_pct) : 25
+  const irBase = Math.max(0, yearNet)
+  const irReserve = irBase * irPct / 100
   const ssEst  = ssBase * 0.214
 
   // Toggle do período
@@ -255,6 +265,32 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Reserva para IR ── */}
+      {revenue > 0 && (
+        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '18px 22px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.irTitle} · {periodLabel}</h3>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>{irPct}% {L.irHint}</span>
+          </div>
+          {irBase > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '10px' : '16px' }}>
+              {[
+                { label: L.irBase, value: irBase, color: G, bg: BG },
+                { label: `${L.irReserve} (${irPct}%)`, value: irReserve, color: '#b45309', bg: '#fffbeb', strong: true },
+                { label: netLabel, value: yearNet - irReserve, color: (yearNet - irReserve) >= 0 ? '#065f46' : RED, bg: '#f0fdf4' },
+              ].map(c => (
+                <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: '1px solid #dde8de' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+                  <div style={{ fontSize: c.strong ? '22px' : '19px', fontWeight: 900, color: c.color }}>{fmt2(c.value)}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: '13px', color: '#94a3b8' }}>{L.irNoResult}</div>
+          )}
         </div>
       )}
 

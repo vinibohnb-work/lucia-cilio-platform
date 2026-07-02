@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { getCompanySettings } from '../../lib/companySettings'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -10,7 +11,7 @@ const fmt = (n) => isNaN(n) ? '0,00' : n.toLocaleString('pt-PT', { minimumFracti
 const p   = (v)  => parseFloat(v) || 0
 
 // ── Tipo: Evento / Catering ────────────────────────────────────────────────
-function EventoCalculator({ lang }) {
+function EventoCalculator({ lang, irDefault }) {
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
   const ivaDefault = isDE ? 19 : 23
@@ -25,6 +26,7 @@ function EventoCalculator({ lang }) {
   const [extraCosts, setExtraCosts] = useState(120)
   const [margin,     setMargin    ] = useState(10)
   const [ivaRate,    setIvaRate   ] = useState(ivaDefault)
+  const [irPct,      setIrPct     ] = useState(0)
   const [round,      setRound     ] = useState(true)
 
   const menuTotal   = p(adults) * p(menuPrice) + p(children) * p(menuPrice) * 0.5
@@ -32,8 +34,10 @@ function EventoCalculator({ lang }) {
   const costsTotal  = menuTotal + staffTotal + p(extraCosts)
   const withMargin  = costsTotal * (1 + p(margin) / 100)
   const rounded     = round ? Math.ceil(withMargin / 10) * 10 : withMargin
-  const ivaAmt      = rounded * p(ivaRate) / 100
-  const total       = rounded + ivaAmt
+  const irAmt       = rounded * p(irPct) / 100
+  const baseNoIva   = rounded + irAmt
+  const ivaAmt      = baseNoIva * p(ivaRate) / 100
+  const total       = baseNoIva + ivaAmt
   const perPerson   = p(adults) + p(children) > 0 ? total / (p(adults) + p(children)) : 0
 
   function updateStaff(i, field, val) {
@@ -49,6 +53,7 @@ function EventoCalculator({ lang }) {
     ivaRate: 'MwSt. (%)', round: 'Runden (auf 10 €)', perPerson: 'Pro Person',
     costLabel: 'Gesamtkosten', priceNoIva: 'Preis ohne MwSt.', ivaLabel: `MwSt. (${ivaRate}%)`,
     priceWithIva: 'Gesamtpreis mit MwSt.', name: 'Name',
+    ir: 'IR-Rücklage (%)', irAmount: 'IR-Rücklage', irHint: 'Vorschlag',
   } : {
     guests: 'Convidados', adults: 'Adultos', children: 'Crianças (50%)', menuPrice: 'Preço/adulto (€)',
     menuTotal: 'Custo do Menu', staff: 'Equipa', hours: 'Horas', rate: '€/hora',
@@ -56,6 +61,7 @@ function EventoCalculator({ lang }) {
     ivaRate: 'IVA (%)', round: 'Arredondar (a 10 €)', perPerson: 'Por pessoa',
     costLabel: 'Total de Custos', priceNoIva: 'Preço sem IVA', ivaLabel: `IVA (${ivaRate}%)`,
     priceWithIva: 'Preço final com IVA', name: 'Nome',
+    ir: 'Reserva IR (%)', irAmount: 'Reserva IR', irHint: 'sugestão',
   }
 
   const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
@@ -117,15 +123,17 @@ function EventoCalculator({ lang }) {
 
         {/* Extra costs & margin */}
         <div style={{ background: '#fff', borderRadius: '12px', padding: '18px 20px', border: '1px solid #dde8de' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr 160px', gap: '12px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr 1fr 150px', gap: '12px', alignItems: 'end' }}>
             {[
-              [L.extraCosts, extraCosts, setExtraCosts],
-              [L.margin,     margin,     setMargin    ],
-              [L.ivaRate,    ivaRate,    setIvaRate   ],
-            ].map(([label, val, set]) => (
+              [L.extraCosts, extraCosts, setExtraCosts, null],
+              [L.margin,     margin,     setMargin,     null],
+              [L.ivaRate,    ivaRate,    setIvaRate,    null],
+              [L.ir,         irPct,      setIrPct,      irDefault ? `${L.irHint}: ${irDefault}%` : null],
+            ].map(([label, val, set, hint]) => (
               <div key={label}>
                 <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>{label}</div>
                 <input type="number" min="0" step="0.5" value={val} onChange={e => set(e.target.value)} style={inputSm} />
+                {hint && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '3px' }}>{hint}</div>}
               </div>
             ))}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: '#4a6355', fontWeight: 600, paddingBottom: '2px' }}>
@@ -146,6 +154,7 @@ function EventoCalculator({ lang }) {
           {[
             { label: L.costLabel,   value: costsTotal, muted: true },
             { label: L.priceNoIva,  value: rounded,    muted: false },
+            ...(irAmt > 0 ? [{ label: `${L.irAmount} (${irPct}%)`, value: irAmt, muted: true }] : []),
             { label: L.ivaLabel,    value: ivaAmt,     muted: true },
           ].map(r => (
             <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -172,7 +181,7 @@ function EventoCalculator({ lang }) {
 }
 
 // ── Tipo: Serviço por Hora ─────────────────────────────────────────────────
-function ServicoCalculator({ lang }) {
+function ServicoCalculator({ lang, irDefault }) {
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
   const [hours,     setHours    ] = useState(10)
@@ -181,23 +190,28 @@ function ServicoCalculator({ lang }) {
   const [fixedCosts,setFixedCosts] = useState(30)
   const [margin,    setMargin   ] = useState(20)
   const [ivaRate,   setIvaRate  ] = useState(isDE ? 19 : 23)
+  const [irPct,     setIrPct    ] = useState(0)
 
   const laborCost  = p(hours) * p(rate)
   const totalCosts = laborCost + p(materials) + p(fixedCosts)
   const withMargin = totalCosts * (1 + p(margin) / 100)
-  const ivaAmt     = withMargin * p(ivaRate) / 100
-  const total      = withMargin + ivaAmt
+  const irAmt      = withMargin * p(irPct) / 100
+  const baseNoIva  = withMargin + irAmt
+  const ivaAmt     = baseNoIva * p(ivaRate) / 100
+  const total      = baseNoIva + ivaAmt
 
   const L = isDE ? {
     hours: 'Arbeitsstunden', rate: 'Stundensatz (€)', materials: 'Materialkosten (€)',
     fixedCosts: 'Fixkosten anteilig (€)', margin: 'Gewinnmarge (%)', ivaRate: 'MwSt. (%)',
     labor: 'Arbeitskosten', costs: 'Gesamtkosten', priceNoIva: 'Preis ohne MwSt.',
     ivaLabel: `MwSt. (${ivaRate}%)`, priceWithIva: 'Gesamtpreis',
+    ir: 'IR-Rücklage (%)', irAmount: 'IR-Rücklage', irHint: 'Vorschlag',
   } : {
     hours: 'Horas de trabalho', rate: 'Valor/hora (€)', materials: 'Materiais (€)',
     fixedCosts: 'Custos fixos prop. (€)', margin: 'Margem de lucro (%)', ivaRate: 'IVA (%)',
     labor: 'Custo de mão-de-obra', costs: 'Total de custos', priceNoIva: 'Preço sem IVA',
     ivaLabel: `IVA (${ivaRate}%)`, priceWithIva: 'Preço final com IVA',
+    ir: 'Reserva IR (%)', irAmount: 'Reserva IR', irHint: 'sugestão',
   }
 
   const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
@@ -213,10 +227,12 @@ function ServicoCalculator({ lang }) {
             [L.fixedCosts, fixedCosts, setFixedCosts, 0.5],
             [L.margin, margin, setMargin, 1],
             [L.ivaRate, ivaRate, setIvaRate, 1],
-          ].map(([label, val, set, step]) => (
+            [L.ir, irPct, setIrPct, 1, irDefault ? `${L.irHint}: ${irDefault}%` : null],
+          ].map(([label, val, set, step, hint]) => (
             <div key={label}>
               <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>{label}</div>
               <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
+              {hint && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '3px' }}>{hint}</div>}
             </div>
           ))}
         </div>
@@ -233,6 +249,7 @@ function ServicoCalculator({ lang }) {
         {[
           { label: L.costs,      value: totalCosts, muted: true },
           { label: L.priceNoIva, value: withMargin,  muted: false },
+          ...(irAmt > 0 ? [{ label: `${L.irAmount} (${irPct}%)`, value: irAmt, muted: true }] : []),
           { label: L.ivaLabel,   value: ivaAmt,      muted: true },
         ].map(r => (
           <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -251,7 +268,7 @@ function ServicoCalculator({ lang }) {
 }
 
 // ── Tipo: Produto / Revenda (MB Standard) ─────────────────────────────────
-function ProdutoCalculator({ lang }) {
+function ProdutoCalculator({ lang, irDefault }) {
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
   const [buyPrice,   setBuyPrice  ] = useState(10)
@@ -259,10 +276,13 @@ function ProdutoCalculator({ lang }) {
   const [margin,     setMargin    ] = useState(40)
   const [discount,   setDiscount  ] = useState(5)
   const [ivaRate,    setIvaRate   ] = useState(isDE ? 19 : 23)
+  const [irPct,      setIrPct     ] = useState(0)
 
   const indirectAmt  = p(buyPrice) * p(indirect) / 100
   const costPrice    = p(buyPrice) + indirectAmt
-  const sellingNoIva = costPrice / (1 - p(margin) / 100)
+  const sellingBase  = costPrice / (1 - p(margin) / 100)
+  const irAmt        = sellingBase * p(irPct) / 100
+  const sellingNoIva = sellingBase + irAmt
   const withDiscount = sellingNoIva * (1 - p(discount) / 100)
   const ivaAmt       = sellingNoIva * p(ivaRate) / 100
   const totalPrice   = sellingNoIva + ivaAmt
@@ -273,12 +293,14 @@ function ProdutoCalculator({ lang }) {
     indirectAmt: 'Gemeinkosten', costPrice: 'Selbstkosten', minPrice: 'Mindestverkaufspreis',
     priceNoIva: 'Verkaufspreis ohne MwSt.', ivaLabel: `MwSt. (${ivaRate}%)`,
     priceWithIva: 'Endverkaufspreis', withDiscount: `Preis mit ${discount}% Rabatt`,
+    ir: 'IR-Rücklage (%)', irAmount: 'IR-Rücklage', irHint: 'Vorschlag',
   } : {
     buyPrice: 'Custo de compra (€)', indirect: 'Custos indiretos (%)', margin: 'Margem de lucro (%)',
     discount: 'Desconto possível (%)', ivaRate: 'IVA (%)',
     indirectAmt: 'Custos indiretos', costPrice: 'Custo total', minPrice: 'Preço mínimo de venda',
     priceNoIva: 'Preço sem IVA', ivaLabel: `IVA (${ivaRate}%)`,
     priceWithIva: 'Preço final com IVA', withDiscount: `Preço com ${discount}% desconto`,
+    ir: 'Reserva IR (%)', irAmount: 'Reserva IR', irHint: 'sugestão',
   }
 
   const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
@@ -293,10 +315,12 @@ function ProdutoCalculator({ lang }) {
             [L.margin,   margin,   setMargin,   1],
             [L.discount, discount, setDiscount, 1],
             [L.ivaRate,  ivaRate,  setIvaRate,  1],
-          ].map(([label, val, set, step]) => (
+            [L.ir,       irPct,    setIrPct,    1, irDefault ? `${L.irHint}: ${irDefault}%` : null],
+          ].map(([label, val, set, step, hint]) => (
             <div key={label}>
               <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>{label}</div>
               <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
+              {hint && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '3px' }}>{hint}</div>}
             </div>
           ))}
         </div>
@@ -312,6 +336,7 @@ function ProdutoCalculator({ lang }) {
         </div>
         {[
           { label: L.costPrice,   value: costPrice,    muted: true },
+          ...(irAmt > 0 ? [{ label: `${L.irAmount} (${irPct}%)`, value: irAmt, muted: true }] : []),
           { label: L.priceNoIva,  value: sellingNoIva, muted: false },
           { label: L.ivaLabel,    value: ivaAmt,        muted: true },
         ].map(r => (
@@ -340,6 +365,11 @@ const TYPES = {
 export default function Precificacao() {
   const { lang } = useLang()
   const [type, setType] = useState('evento')
+  const [irDefault, setIrDefault] = useState(0)
+
+  useEffect(() => {
+    getCompanySettings().then(cs => { if (cs?.ir_reserve_pct != null) setIrDefault(Number(cs.ir_reserve_pct)) })
+  }, [])
 
   const tabStyle = (key) => ({
     display: 'flex', alignItems: 'center', gap: '8px',
@@ -365,9 +395,9 @@ export default function Precificacao() {
       </div>
 
       {/* Calculator */}
-      {type === 'evento'  && <EventoCalculator  lang={lang} key={lang} />}
-      {type === 'servico' && <ServicoCalculator lang={lang} key={lang} />}
-      {type === 'produto' && <ProdutoCalculator lang={lang} key={lang} />}
+      {type === 'evento'  && <EventoCalculator  lang={lang} irDefault={irDefault} key={lang} />}
+      {type === 'servico' && <ServicoCalculator lang={lang} irDefault={irDefault} key={lang} />}
+      {type === 'produto' && <ProdutoCalculator lang={lang} irDefault={irDefault} key={lang} />}
 
     </div>
   )
