@@ -55,6 +55,17 @@ export default function Dashboard() {
   })
   const periodLabel = isQuarter ? `T${quarter} ${year}` : `${year}`
 
+  // ── Custos fixos recorrentes previstos por confirmar (mês corrente) ──
+  const curPeriod = new Date().toISOString().slice(0, 7)
+  const curMonthNum = parseInt(curPeriod.slice(5, 7), 10)
+  const curYearMatches = curPeriod.slice(0, 4) === String(year)
+  const isDue = (p, m) => p === 'monthly' || (p === 'quarterly' && [1,4,7,10].includes(m)) || (p === 'annual' && m === 1)
+  const confirmedIds = new Set(entries.filter(e => e.recurring_expense_id && e.period === curPeriod).map(e => e.recurring_expense_id))
+  const pendingRecurring = recurring.filter(r => isDue(r.periodicity, curMonthNum) && !confirmedIds.has(r.id))
+  const predictedFixed = pendingRecurring.reduce((s, r) => s + Number(r.amount), 0)
+  // O previsto entra no período mostrado quando o mês corrente está dentro dele
+  const curMonthInScope = curYearMatches && (!isQuarter || Math.ceil(curMonthNum / 3) === quarter)
+
   // ── Timeline (meses do período) ──
   const monthIdx = isQuarter
     ? [(quarter - 1) * 3, (quarter - 1) * 3 + 1, (quarter - 1) * 3 + 2]
@@ -64,9 +75,10 @@ export default function Dashboard() {
     const inMonth = scoped.filter(e => e.entry_date?.slice(5,7) === mm)
     const inc = inMonth.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.amount),0)
     const exp = inMonth.filter(e => e.type === 'saida'  ).reduce((s,e)=>s+Number(e.amount),0)
-    return { label: months[i], inc, exp, net: inc - exp }
+    const predicted = (curYearMatches && (i + 1) === curMonthNum) ? predictedFixed : 0
+    return { label: months[i], inc, exp, predicted, net: inc - exp }
   })
-  const maxVal = Math.max(1, ...monthly.map(m => Math.max(m.inc, m.exp)))
+  const maxVal = Math.max(1, ...monthly.map(m => Math.max(m.inc, m.exp + m.predicted)))
 
   // ── Breakeven ──
   const revenue = scoped.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.amount),0)
@@ -78,7 +90,8 @@ export default function Dashboard() {
     else if (ct === 'fixed') fixedC += Number(e.amount)
     else otherC += Number(e.amount) // 'other' ou sem categoria → tratado como estrutural
   })
-  const fixedTotal = fixedC + otherC
+  // Inclui os custos fixos previstos por confirmar (do mês corrente, se no período)
+  const fixedTotal = fixedC + otherC + (curMonthInScope ? predictedFixed : 0)
   const cmRatio = revenue > 0 ? (revenue - varC) / revenue : 0          // margem de contribuição
   const breakeven = cmRatio > 0 ? fixedTotal / cmRatio : 0
   const aboveBE = revenue >= breakeven && breakeven > 0
@@ -100,14 +113,6 @@ export default function Dashboard() {
     .sort((a, b) => b.total - a.total)
   const maxProductRev = Math.max(1, ...productRows.map(r => r.total))
 
-  // ── Custos fixos previstos por confirmar (mês corrente) ──
-  const curPeriod = new Date().toISOString().slice(0, 7)
-  const curMonthNum = parseInt(curPeriod.slice(5, 7), 10)
-  const isDue = (p, m) => p === 'monthly' || (p === 'quarterly' && [1,4,7,10].includes(m)) || (p === 'annual' && m === 1)
-  const confirmedIds = new Set(entries.filter(e => e.recurring_expense_id && e.period === curPeriod).map(e => e.recurring_expense_id))
-  const pendingRecurring = recurring.filter(r => isDue(r.periodicity, curMonthNum) && !confirmedIds.has(r.id))
-  const predictedFixed = pendingRecurring.reduce((s, r) => s + Number(r.amount), 0)
-
   const L = lang === 'de' ? {
     timeline: 'Cashflow nach Monat', breakeven: 'Break-even-Analyse',
     income: 'Einnahmen', expense: 'Ausgaben', net: 'Netto',
@@ -127,7 +132,7 @@ export default function Dashboard() {
     ssIncome: 'Quartalseinkommen', ssBase: 'Bemessungsgrundlage (70 %)',
     ssEst: 'Geschätzter Beitrag (21,4 %)',
     ssNote: 'Schätzung für Dienstleister (70 % × 21,4 %). Einstufung prüfen.',
-    predictedFixed: 'Geplante Fixkosten (offen, diesen Monat)', predictedCta: 'Bestätigen →',
+    predictedFixed: 'Geplante Fixkosten (offen, diesen Monat)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -146,7 +151,7 @@ export default function Dashboard() {
     ssIncome: 'Rendimento do trimestre', ssBase: 'Base de incidência (70%)',
     ssEst: 'Contribuição estimada (21,4%)',
     ssNote: 'Estimativa para prestadores de serviços (70% × 21,4%). Confirmar enquadramento.',
-    predictedFixed: 'Custos fixos previstos (por confirmar, este mês)', predictedCta: 'Confirmar →',
+    predictedFixed: 'Custos fixos previstos (por confirmar, este mês)', predictedCta: 'Confirmar →', predicted: 'Previsto',
     product: 'Produto', service: 'Serviço',
   }
 
@@ -212,7 +217,7 @@ export default function Dashboard() {
         <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '18px' }}>🔁</span>
           <span style={{ fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
-            {L.predictedFixed}: <strong>€ {fmt2(predictedFixed)}</strong> · {pendingRecurring.length}
+            {L.predictedFixed}: <strong>{fmt2(predictedFixed)}</strong> · {pendingRecurring.length}
           </span>
           <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
             {L.predictedCta}
@@ -252,6 +257,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', gap: '14px' }}>
               <Legend color={GREEN} label={L.income} />
               <Legend color={RED} label={L.expense} />
+              {predictedFixed > 0 && <Legend color="rgba(229,62,62,.38)" label={L.predicted} />}
             </div>
           </div>
 
@@ -261,7 +267,13 @@ export default function Dashboard() {
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '100%', width: '100%', justifyContent: 'center' }}>
                   <div title={`${L.income}: ${fmt2(m.inc)}`} style={{ width: '42%', height: `${(m.inc/maxVal)*100}%`, minHeight: m.inc>0?'3px':'0', background: GREEN, borderRadius: '3px 3px 0 0', transition: 'height .3s' }} />
-                  <div title={`${L.expense}: ${fmt2(m.exp)}`} style={{ width: '42%', height: `${(m.exp/maxVal)*100}%`, minHeight: m.exp>0?'3px':'0', background: RED, borderRadius: '3px 3px 0 0', transition: 'height .3s' }} />
+                  {/* Coluna de saídas: realizado (sólido) + previsto por confirmar (opaco) empilhado */}
+                  <div style={{ width: '42%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                    {m.predicted > 0 && (
+                      <div title={`${L.predicted}: ${fmt2(m.predicted)}`} style={{ height: `${(m.predicted/maxVal)*100}%`, minHeight: '2px', background: 'rgba(229,62,62,.38)', borderRadius: '3px 3px 0 0', transition: 'height .3s' }} />
+                    )}
+                    <div title={`${L.expense}: ${fmt2(m.exp)}`} style={{ height: `${(m.exp/maxVal)*100}%`, minHeight: m.exp>0?'3px':'0', background: RED, borderRadius: m.predicted>0 ? '0' : '3px 3px 0 0', transition: 'height .3s' }} />
+                  </div>
                 </div>
               </div>
             ))}
