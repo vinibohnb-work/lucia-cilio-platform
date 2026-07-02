@@ -5,6 +5,10 @@ import { supabase } from '../../lib/supabase'
 import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
 import InfoTooltip from '../../components/InfoTooltip'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
+
+// IVA contido num montante total (com IVA): total × taxa/(100+taxa)
+const vatFromGross = (gross, rate) => (rate > 0 ? Number(gross) * rate / (100 + rate) : 0)
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -17,14 +21,16 @@ const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigit
 
 function exportCSV(entries, lang) {
   const header = lang === 'de'
-    ? 'Datum;Belegnr.;Beschreibung;Kategorie;Einnahme;Ausgabe;Konto\n'
-    : 'Data;Doc.;Descrição;Categoria;Entrada;Saída;Destino\n'
+    ? 'Datum;Belegnr.;Beschreibung;Kategorie;Einnahme;Ausgabe;MwSt.-Satz;MwSt.-Betrag;Konto\n'
+    : 'Data;Doc.;Descrição;Categoria;Entrada;Saída;Taxa IVA;Valor IVA;Destino\n'
   const rows = entries.map(e => {
     const inc = e.type === 'entrada' ? Number(e.amount).toFixed(2) : ''
     const exp = e.type === 'saida'   ? Number(e.amount).toFixed(2) : ''
     const dest = lang === 'de' ? (e.destination === 'caixa' ? 'Kasse' : 'Bank') : (e.destination === 'caixa' ? 'Caixa' : 'Banco')
     const cat = e.category ? (getCategory(e.category)?.[lang]?.label || '') : ''
-    return `${e.entry_date};${e.doc||''};${e.description};${cat};${inc};${exp};${dest}`
+    const vr = e.vat_rate != null ? `${e.vat_rate}%` : ''
+    const va = e.vat_amount != null ? Number(e.vat_amount).toFixed(2) : ''
+    return `${e.entry_date};${e.doc||''};${e.description};${cat};${inc};${exp};${vr};${va};${dest}`
   }).join('\n')
   const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -33,7 +39,7 @@ function exportCSV(entries, lang) {
   URL.revokeObjectURL(url)
 }
 
-const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', description: '', type: 'entrada', amount: '', destination: 'caixa', category: '', catalog_item_id: '' }
+const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', description: '', type: 'entrada', amount: '', destination: 'caixa', category: '', catalog_item_id: '', vat_rate: '' }
 
 export default function LivroCaixa() {
   const { lang } = useLang()
@@ -41,6 +47,7 @@ export default function LivroCaixa() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState([])
   const [catalog, setCatalog] = useState([])
+  const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
   const [form, setForm]       = useState(EMPTY_FORM)
@@ -49,14 +56,22 @@ export default function LivroCaixa() {
 
   const months = lang === 'de' ? MONTHS_DE : MONTHS_PT
 
+  // Taxa de IVA por defeito e opções conforme a empresa
+  const isExempt = settings?.vat_regime === 'exempt'
+  const defaultRate = settings ? (isExempt ? 0 : Number(settings.vat_default_rate)) : 0
+  const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
+  const formRate = form.vat_rate === '' ? defaultRate : Number(form.vat_rate)
+
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: ce }, { data: ci }] = await Promise.all([
+    const [{ data: ce }, { data: ci }, cs] = await Promise.all([
       supabase.from('cash_entries').select('*').order('entry_date', { ascending: true }).order('created_at', { ascending: true }),
       supabase.from('catalog_items').select('id,name,kind,price').order('name', { ascending: true }),
+      getCompanySettings(),
     ])
     setEntries(ce || [])
     setCatalog(ci || [])
+    setSettings(cs)
     setLoading(false)
   }, [])
   useEffect(() => { load() }, [load])
@@ -97,15 +112,19 @@ export default function LivroCaixa() {
   async function addEntry() {
     if (!form.description || !form.amount || !form.entry_date) return
     setSaving(true)
+    const gross = parseFloat(form.amount)
+    const rate = formRate
     const { error } = await supabase.from('cash_entries').insert({
       entry_date: form.entry_date,
       doc: form.doc || null,
       description: form.description,
       type: form.type,
-      amount: parseFloat(form.amount),
+      amount: gross,
       destination: form.destination,
       category: form.type === 'saida' ? (form.category || null) : null,
       catalog_item_id: form.catalog_item_id || null,
+      vat_rate: rate,
+      vat_amount: Number(vatFromGross(gross, rate).toFixed(2)),
     })
     setSaving(false)
     if (error) { alert(error.message); return }
@@ -125,6 +144,7 @@ export default function LivroCaixa() {
     noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
     catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
+    vat: 'MwSt.', vatExempt: 'befreit',
   } : {
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
@@ -133,6 +153,7 @@ export default function LivroCaixa() {
     noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
     loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
     catalogNone: '— nenhum —', catHint: 'Escolha a categoria da despesa.', costType: 'Tipo de custo',
+    vat: 'IVA', vatExempt: 'isento',
   }
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
@@ -205,6 +226,11 @@ export default function LivroCaixa() {
               </select>
             ), '110px')}
             {fieldWrap(L.amount, <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />, '100px')}
+            {fieldWrap(L.vat, (
+              <select value={form.vat_rate === '' ? String(defaultRate) : form.vat_rate} onChange={e=>setForm(f=>({...f,vat_rate:e.target.value}))} style={selectStyle}>
+                {vatOptions.map(r => <option key={r} value={r}>{r === 0 ? `0% (${L.vatExempt})` : `${r}%`}</option>)}
+              </select>
+            ), '110px')}
             {fieldWrap(L.dest, (
               <select value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))} style={selectStyle}>
                 <option value="caixa">{L.caixa}</option>
@@ -258,12 +284,17 @@ export default function LivroCaixa() {
               <div style={{ fontSize: '11px', color: '#94a3b8' }}>{e.doc}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#1a2e1a' }}>{e.description}</div>
-                {(cat || linked) && (
+                {(cat || linked || e.vat_amount > 0) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
                     {cat && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: COST_TYPE[cat.costType].bg, color: COST_TYPE[cat.costType].color }}>
                         {cat[lang].label}
                         <InfoTooltip text={cat[lang].explain} badge={`${L.costType}: ${COST_TYPE[cat.costType][lang]}`} />
+                      </span>
+                    )}
+                    {e.vat_amount > 0 && (
+                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 600, background: '#eff6ff', color: '#1d4ed8' }}>
+                        {L.vat} {e.vat_rate}% · € {fmt(e.vat_amount)}
                       </span>
                     )}
                     {linked && (

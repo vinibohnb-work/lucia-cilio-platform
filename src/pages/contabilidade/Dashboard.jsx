@@ -119,6 +119,12 @@ export default function Dashboard() {
     .sort((a, b) => b.total - a.total)
   const maxProductRev = Math.max(1, ...productRows.map(r => r.total))
 
+  // ── Apuramento de IVA (período) ──
+  const ivaLiquidado = scoped.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.vat_amount||0),0)
+  const ivaDedutivel = scoped.filter(e => e.type === 'saida'  ).reduce((s,e)=>s+Number(e.vat_amount||0),0)
+  const ivaApagar = ivaLiquidado - ivaDedutivel
+  const hasIva = ivaLiquidado > 0 || ivaDedutivel > 0
+
   const L = lang === 'de' ? {
     timeline: 'Cashflow nach Monat', breakeven: 'Break-even-Analyse',
     income: 'Einnahmen', expense: 'Ausgaben', net: 'Netto',
@@ -139,6 +145,7 @@ export default function Dashboard() {
     ssEst: 'Geschätzter Beitrag (21,4 %)',
     ssNote: 'Schätzung für Dienstleister (70 % × 21,4 %). Einstufung prüfen.',
     predictedFixed: 'Geplante Fixkosten (offen)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
+    ivaTitle: 'MwSt.', ivaLiq: 'MwSt. (Verkäufe)', ivaDed: 'Vorsteuer (Einkäufe)', ivaPay: 'MwSt.-Zahllast', ivaRec: 'MwSt.-Guthaben',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -158,6 +165,7 @@ export default function Dashboard() {
     ssEst: 'Contribuição estimada (21,4%)',
     ssNote: 'Estimativa para prestadores de serviços (70% × 21,4%). Confirmar enquadramento.',
     predictedFixed: 'Custos fixos previstos (por confirmar)', predictedCta: 'Confirmar →', predicted: 'Previsto',
+    ivaTitle: 'IVA', ivaLiq: 'IVA liquidado (vendas)', ivaDed: 'IVA dedutível (compras)', ivaPay: 'IVA a entregar', ivaRec: 'IVA a recuperar',
     product: 'Produto', service: 'Serviço',
   }
 
@@ -228,6 +236,25 @@ export default function Dashboard() {
           <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
             {L.predictedCta}
           </button>
+        </div>
+      )}
+
+      {/* ── Apuramento de IVA ── */}
+      {hasIva && (
+        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '18px 22px', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: '0 0 14px' }}>{L.ivaTitle} · {periodLabel}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '10px' : '16px' }}>
+            {[
+              { label: L.ivaLiq, value: ivaLiquidado, color: '#065f46', bg: '#f0fdf4' },
+              { label: L.ivaDed, value: ivaDedutivel, color: '#1d4ed8', bg: '#eff6ff' },
+              { label: ivaApagar >= 0 ? L.ivaPay : L.ivaRec, value: Math.abs(ivaApagar), color: ivaApagar >= 0 ? '#c2410c' : '#065f46', bg: ivaApagar >= 0 ? '#fff7ed' : '#f0fdf4', strong: true },
+            ].map(c => (
+              <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: '1px solid #dde8de' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+                <div style={{ fontSize: c.strong ? '22px' : '19px', fontWeight: 900, color: c.color }}>{fmt2(c.value)}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
