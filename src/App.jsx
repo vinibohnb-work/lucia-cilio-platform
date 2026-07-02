@@ -24,6 +24,7 @@ import LivroCaixa from './pages/contabilidade/LivroCaixa'
 import ObrigacoesFiscais from './pages/contabilidade/ObrigacoesFiscais'
 import Precificacao from './pages/contabilidade/Precificacao'
 import Catalogo from './pages/contabilidade/Catalogo'
+import Empresa from './pages/Empresa'
 
 function AppLayout() {
   const { collapsed, mobileOpen, setMobileOpen } = useSidebar()
@@ -58,6 +59,7 @@ function AppLayout() {
             <Route path="/contabilidade/precificacao"  element={<Precificacao />} />
             <Route path="/contabilidade/clientes"      element={<Clientes />} />
             <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
+            <Route path="/contabilidade/empresa"       element={<Empresa />} />
             <Route path="*"                            element={<Dashboard />} />
           </Routes>
         </main>

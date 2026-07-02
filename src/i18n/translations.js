@@ -11,6 +11,7 @@ const T = {
     nav_preco: 'Calculadora de Preços',
     nav_dash: 'Dashboard',
     nav_catalogo: 'Catálogo',
+    nav_empresa: 'Empresa',
     role_label: 'TOC · Consultora ESG',
     // Topbar
     btn_new_diag: '+ Novo Diagnóstico',
@@ -112,6 +113,7 @@ const T = {
     nav_preco: 'Preiskalkulation',
     nav_dash: 'Dashboard',
     nav_catalogo: 'Katalog',
+    nav_empresa: 'Firma',
     role_label: 'TOC · ESG-Beraterin',
     // Topbar
     btn_new_diag: '+ Neue Diagnose',

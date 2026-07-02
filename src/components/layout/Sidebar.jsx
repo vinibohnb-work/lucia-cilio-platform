@@ -31,6 +31,7 @@ const NAV_ITEMS = [
   { to: '/contabilidade/precificacao', icon: '🧮', labelKey: 'nav_preco'       },
   { to: '/contabilidade/clientes',     icon: '👥', labelKey: 'nav_clients'     },
   { to: '/contabilidade/obrigacoes',   icon: '📅', labelKey: 'nav_obligations' },
+  { to: '/contabilidade/empresa',      icon: '🏢', labelKey: 'nav_empresa'     },
 ]
 
 export default function Sidebar() {
