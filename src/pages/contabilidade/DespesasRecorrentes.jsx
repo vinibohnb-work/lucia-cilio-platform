@@ -20,7 +20,16 @@ function isDue(periodicity, monthNum) {
   return false
 }
 
-const EMPTY = { description: '', category: '', amount: '', periodicity: 'monthly', due_day: '', destination: 'banco', active: true }
+const toYm = (period) => { const [y, m] = period.split('-').map(Number); return y * 12 + (m - 1) }
+function inRange(period, startMonth, endMonth) {
+  const ym = toYm(period)
+  if (startMonth && ym < toYm(startMonth)) return false
+  if (endMonth && ym > toYm(endMonth)) return false
+  return true
+}
+
+const CUR_MONTH = new Date().toISOString().slice(0, 7)
+const EMPTY = { description: '', category: '', amount: '', periodicity: 'monthly', due_day: '', destination: 'banco', start_month: CUR_MONTH, end_month: '', active: true }
 
 export default function DespesasRecorrentes() {
   const { lang } = useLang()
@@ -63,6 +72,7 @@ export default function DespesasRecorrentes() {
     none: 'Noch keine wiederkehrenden Ausgaben.', noDue: 'Nichts in diesem Monat fällig.',
     loading: 'Wird geladen…', selectCat: '— Kategorie —', costType: 'Kostenart',
     totalPred: 'Geplant (offen)', totalConf: 'Bestätigt',
+    startM: 'Beginn', endM: 'Ende', validity: 'Gültigkeit', noEnd: 'ohne Ende', endHint: 'leer = ohne Ende', since: 'ab',
   } : {
     title: 'Despesas Recorrentes',
     subtitle: 'Defina os custos fixos e confirme o valor real gasto em cada mês.',
@@ -75,12 +85,13 @@ export default function DespesasRecorrentes() {
     none: 'Ainda não há despesas recorrentes.', noDue: 'Nada previsto para este mês.',
     loading: 'A carregar…', selectCat: '— Categoria —', costType: 'Tipo de custo',
     totalPred: 'Previsto (por confirmar)', totalConf: 'Confirmado',
+    startM: 'Início', endM: 'Fim', validity: 'Vigência', noEnd: 'sem fim', endHint: 'vazio = sem fim', since: 'desde',
   }
 
   const catLabel = (key) => getCategory(key)?.[lang]?.label || '—'
   const confirmedByTpl = Object.fromEntries(confirmed.map(c => [c.recurring_expense_id, c]))
 
-  const dueTemplates = templates.filter(t => t.active && isDue(t.periodicity, monthNum))
+  const dueTemplates = templates.filter(t => t.active && isDue(t.periodicity, monthNum) && inRange(period, t.start_month, t.end_month))
   const totalPredicted = dueTemplates.filter(t => !confirmedByTpl[t.id]).reduce((s,t)=>s+Number(t.amount),0)
   const totalConfirmed = dueTemplates.filter(t => confirmedByTpl[t.id]).reduce((s,t)=>s+Number(confirmedByTpl[t.id].amount),0)
 
@@ -94,6 +105,8 @@ export default function DespesasRecorrentes() {
       periodicity: form.periodicity,
       due_day: form.due_day ? parseInt(form.due_day, 10) : null,
       destination: form.destination,
+      start_month: form.start_month || null,
+      end_month: form.end_month || null,
       active: true,
     })
     setSaving(false)
@@ -202,21 +215,23 @@ export default function DespesasRecorrentes() {
 
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '14px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr 100px 120px 90px auto', gap: '10px', alignItems: 'end' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
             {[
-              [L.desc, <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={L.desc} style={inputStyle} />],
-              [L.category, <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}><option value="">{L.selectCat}</option>{EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang].label}</option>)}</select>],
-              [L.amount, <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />],
-              [L.period_, <select value={form.periodicity} onChange={e=>setForm(f=>({...f,periodicity:e.target.value}))} style={selectStyle}><option value="monthly">{L.monthly}</option><option value="quarterly">{L.quarterly}</option><option value="annual">{L.annual}</option></select>],
-              [L.dueDay, <input type="number" min="1" max="31" value={form.due_day} onChange={e=>setForm(f=>({...f,due_day:e.target.value}))} placeholder="—" style={inputStyle} />],
-            ].map(([lb, field], i) => (
-              <div key={i}>
+              [L.desc, '180px', <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={L.desc} style={inputStyle} />],
+              [L.category, '160px', <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}><option value="">{L.selectCat}</option>{EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang].label}</option>)}</select>],
+              [L.amount, '110px', <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />],
+              [L.period_, '130px', <select value={form.periodicity} onChange={e=>setForm(f=>({...f,periodicity:e.target.value}))} style={selectStyle}><option value="monthly">{L.monthly}</option><option value="quarterly">{L.quarterly}</option><option value="annual">{L.annual}</option></select>],
+              [L.dueDay, '90px', <input type="number" min="1" max="31" value={form.due_day} onChange={e=>setForm(f=>({...f,due_day:e.target.value}))} placeholder="—" style={inputStyle} />],
+              [L.startM, '150px', <input type="month" value={form.start_month} onChange={e=>setForm(f=>({...f,start_month:e.target.value}))} style={inputStyle} />],
+              [`${L.endM} (${L.endHint})`, '170px', <input type="month" value={form.end_month} onChange={e=>setForm(f=>({...f,end_month:e.target.value}))} style={inputStyle} />],
+            ].map(([lb, minW, field], i) => (
+              <div key={i} style={{ flex: `1 1 ${minW}`, minWidth: minW }}>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{lb}</div>
                 {field}
               </div>
             ))}
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={addTemplate} disabled={saving} style={{ padding: '8px 14px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer' }}>{saving?'…':L.save}</button>
+              <button onClick={addTemplate} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving?'…':L.save}</button>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
           </div>
@@ -224,20 +239,23 @@ export default function DespesasRecorrentes() {
       )}
 
       <div className="table-scroll">
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '680px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 110px 120px 80px 36px', padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
-          {[L.desc, L.category, L.amount, L.period_, L.dueDay, ''].map((h,i) => (
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '780px' : 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 36px', padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
+          {[L.desc, L.category, L.amount, L.period_, L.dueDay, L.validity, ''].map((h,i) => (
             <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
         {templates.length === 0 && <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.none}</div>}
         {templates.map((t, i) => (
-          <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 110px 120px 80px 36px', padding: '13px 20px', borderBottom: i < templates.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', opacity: t.active ? 1 : 0.5 }}>
+          <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 36px', padding: '13px 20px', borderBottom: i < templates.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', opacity: t.active ? 1 : 0.5 }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: G }}>{t.description}</div>
             <div style={{ fontSize: '12px', color: '#4a6355' }}>{catLabel(t.category)}</div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#4a6355' }}>€ {fmt(t.amount)}</div>
             <div style={{ fontSize: '12px', color: '#4a6355' }}>{t.periodicity==='monthly'?L.monthly:t.periodicity==='quarterly'?L.quarterly:L.annual}</div>
             <div style={{ fontSize: '12px', color: '#64748b' }}>{t.due_day || '—'}</div>
+            <div style={{ fontSize: '11px', color: '#64748b' }}>
+              {t.start_month ? `${L.since} ${t.start_month}` : '—'}{t.end_month ? ` · ${t.end_month}` : ` · ${L.noEnd}`}
+            </div>
             <button onClick={() => removeTemplate(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title={L.del}>✕</button>
           </div>
         ))}

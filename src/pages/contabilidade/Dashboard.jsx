@@ -55,16 +55,18 @@ export default function Dashboard() {
   })
   const periodLabel = isQuarter ? `T${quarter} ${year}` : `${year}`
 
-  // ── Custos fixos recorrentes previstos por confirmar (mês corrente) ──
-  const curPeriod = new Date().toISOString().slice(0, 7)
-  const curMonthNum = parseInt(curPeriod.slice(5, 7), 10)
-  const curYearMatches = curPeriod.slice(0, 4) === String(year)
-  const isDue = (p, m) => p === 'monthly' || (p === 'quarterly' && [1,4,7,10].includes(m)) || (p === 'annual' && m === 1)
-  const confirmedIds = new Set(entries.filter(e => e.recurring_expense_id && e.period === curPeriod).map(e => e.recurring_expense_id))
-  const pendingRecurring = recurring.filter(r => isDue(r.periodicity, curMonthNum) && !confirmedIds.has(r.id))
-  const predictedFixed = pendingRecurring.reduce((s, r) => s + Number(r.amount), 0)
-  // O previsto entra no período mostrado quando o mês corrente está dentro dele
-  const curMonthInScope = curYearMatches && (!isQuarter || Math.ceil(curMonthNum / 3) === quarter)
+  // ── Custos fixos recorrentes previstos por confirmar (por mês, respeitando vigência) ──
+  const toYm = (p) => { const [y, m] = p.split('-').map(Number); return y * 12 + (m - 1) }
+  const inRange = (p, s, e) => { const ym = toYm(p); if (s && ym < toYm(s)) return false; if (e && ym > toYm(e)) return false; return true }
+  const isDue = (per, m) => per === 'monthly' || (per === 'quarterly' && [1,4,7,10].includes(m)) || (per === 'annual' && m === 1)
+  const confirmedByPeriod = {}
+  entries.forEach(e => { if (e.recurring_expense_id && e.period) { (confirmedByPeriod[e.period] ||= new Set()).add(e.recurring_expense_id) } })
+  const pendingForMonth = (monthNum) => {
+    const periodStr = `${year}-${String(monthNum).padStart(2, '0')}`
+    const done = confirmedByPeriod[periodStr]
+    return recurring.filter(r => isDue(r.periodicity, monthNum) && inRange(periodStr, r.start_month, r.end_month) && !(done && done.has(r.id)))
+  }
+  const predictedForMonth = (monthNum) => pendingForMonth(monthNum).reduce((s, r) => s + Number(r.amount), 0)
 
   // ── Timeline (meses do período) ──
   const monthIdx = isQuarter
@@ -75,10 +77,14 @@ export default function Dashboard() {
     const inMonth = scoped.filter(e => e.entry_date?.slice(5,7) === mm)
     const inc = inMonth.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.amount),0)
     const exp = inMonth.filter(e => e.type === 'saida'  ).reduce((s,e)=>s+Number(e.amount),0)
-    const predicted = (curYearMatches && (i + 1) === curMonthNum) ? predictedFixed : 0
+    const predicted = predictedForMonth(i + 1)
     return { label: months[i], inc, exp, predicted, net: inc - exp }
   })
   const maxVal = Math.max(1, ...monthly.map(m => Math.max(m.inc, m.exp + m.predicted)))
+
+  // Total previsto acumulado no período mostrado + nº de ocorrências
+  const periodPredicted = monthly.reduce((s, m) => s + m.predicted, 0)
+  const pendingCountPeriod = monthIdx.reduce((c, i) => c + pendingForMonth(i + 1).length, 0)
 
   // ── Breakeven ──
   const revenue = scoped.filter(e => e.type === 'entrada').reduce((s,e)=>s+Number(e.amount),0)
@@ -90,8 +96,8 @@ export default function Dashboard() {
     else if (ct === 'fixed') fixedC += Number(e.amount)
     else otherC += Number(e.amount) // 'other' ou sem categoria → tratado como estrutural
   })
-  // Inclui os custos fixos previstos por confirmar (do mês corrente, se no período)
-  const fixedTotal = fixedC + otherC + (curMonthInScope ? predictedFixed : 0)
+  // Inclui os custos fixos previstos por confirmar (acumulados no período mostrado)
+  const fixedTotal = fixedC + otherC + periodPredicted
   const cmRatio = revenue > 0 ? (revenue - varC) / revenue : 0          // margem de contribuição
   const breakeven = cmRatio > 0 ? fixedTotal / cmRatio : 0
   const aboveBE = revenue >= breakeven && breakeven > 0
@@ -132,7 +138,7 @@ export default function Dashboard() {
     ssIncome: 'Quartalseinkommen', ssBase: 'Bemessungsgrundlage (70 %)',
     ssEst: 'Geschätzter Beitrag (21,4 %)',
     ssNote: 'Schätzung für Dienstleister (70 % × 21,4 %). Einstufung prüfen.',
-    predictedFixed: 'Geplante Fixkosten (offen, diesen Monat)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
+    predictedFixed: 'Geplante Fixkosten (offen)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -151,7 +157,7 @@ export default function Dashboard() {
     ssIncome: 'Rendimento do trimestre', ssBase: 'Base de incidência (70%)',
     ssEst: 'Contribuição estimada (21,4%)',
     ssNote: 'Estimativa para prestadores de serviços (70% × 21,4%). Confirmar enquadramento.',
-    predictedFixed: 'Custos fixos previstos (por confirmar, este mês)', predictedCta: 'Confirmar →', predicted: 'Previsto',
+    predictedFixed: 'Custos fixos previstos (por confirmar)', predictedCta: 'Confirmar →', predicted: 'Previsto',
     product: 'Produto', service: 'Serviço',
   }
 
@@ -212,12 +218,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Custos fixos previstos por confirmar ── */}
-      {predictedFixed > 0 && (
+      {/* ── Custos fixos previstos por confirmar (acumulado no período) ── */}
+      {periodPredicted > 0 && (
         <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '18px' }}>🔁</span>
           <span style={{ fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
-            {L.predictedFixed}: <strong>{fmt2(predictedFixed)}</strong> · {pendingRecurring.length}
+            {L.predictedFixed} · {periodLabel}: <strong>{fmt2(periodPredicted)}</strong> · {pendingCountPeriod}
           </span>
           <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
             {L.predictedCta}
@@ -257,7 +263,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', gap: '14px' }}>
               <Legend color={GREEN} label={L.income} />
               <Legend color={RED} label={L.expense} />
-              {predictedFixed > 0 && <Legend color="rgba(229,62,62,.38)" label={L.predicted} />}
+              {periodPredicted > 0 && <Legend color="rgba(229,62,62,.38)" label={L.predicted} />}
             </div>
           </div>
 
