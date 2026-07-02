@@ -42,6 +42,7 @@ export default function DespesasRecorrentes() {
   const [busyId, setBusyId] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState(null) // null = criar; id = editar modelo
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)) // 'YYYY-MM'
   const [actuals, setActuals] = useState({}) // id -> valor a confirmar
 
@@ -95,10 +96,28 @@ export default function DespesasRecorrentes() {
   const totalPredicted = dueTemplates.filter(t => !confirmedByTpl[t.id]).reduce((s,t)=>s+Number(t.amount),0)
   const totalConfirmed = dueTemplates.filter(t => confirmedByTpl[t.id]).reduce((s,t)=>s+Number(confirmedByTpl[t.id].amount),0)
 
-  async function addTemplate() {
+  function openCreate() { setEditingId(null); setForm(EMPTY); setShowForm(true) }
+  function openEdit(t) {
+    setEditingId(t.id)
+    setForm({
+      description: t.description || '',
+      category: t.category || '',
+      amount: t.amount != null ? String(t.amount) : '',
+      periodicity: t.periodicity || 'monthly',
+      due_day: t.due_day ? String(t.due_day) : '',
+      destination: t.destination || 'banco',
+      start_month: t.start_month || '',
+      end_month: t.end_month || '',
+      active: t.active,
+    })
+    setShowForm(true)
+  }
+  function closeForm() { setShowForm(false); setEditingId(null); setForm(EMPTY) }
+
+  async function saveTemplate() {
     if (!form.description || form.amount === '') return
     setSaving(true)
-    const { error } = await supabase.from('recurring_expenses').insert({
+    const payload = {
       description: form.description,
       category: form.category || null,
       amount: parseFloat(form.amount) || 0,
@@ -107,11 +126,13 @@ export default function DespesasRecorrentes() {
       destination: form.destination,
       start_month: form.start_month || null,
       end_month: form.end_month || null,
-      active: true,
-    })
+    }
+    const { error } = editingId
+      ? await supabase.from('recurring_expenses').update(payload).eq('id', editingId)
+      : await supabase.from('recurring_expenses').insert({ ...payload, active: true })
     setSaving(false)
     if (error) { alert(error.message); return }
-    setForm(EMPTY); setShowForm(false); load()
+    closeForm(); load()
   }
 
   async function removeTemplate(id) {
@@ -210,11 +231,14 @@ export default function DespesasRecorrentes() {
       {/* ── Modelos ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.templates}</h3>
-        <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.new}</button>
+        <button onClick={openCreate} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.new}</button>
       </div>
 
       {showForm && (
         <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '14px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: editingId ? GOLD : G, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            {editingId ? `${L.edit} — ${form.description || ''}` : L.new}
+          </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
             {[
               [L.desc, '180px', <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={L.desc} style={inputStyle} />],
@@ -231,23 +255,23 @@ export default function DespesasRecorrentes() {
               </div>
             ))}
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={addTemplate} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving?'…':L.save}</button>
-              <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+              <button onClick={saveTemplate} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving?'…':L.save}</button>
+              <button onClick={closeForm} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
             </div>
           </div>
         </div>
       )}
 
       <div className="table-scroll">
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '780px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 36px', padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
+      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '860px' : 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 110px', padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
           {[L.desc, L.category, L.amount, L.period_, L.dueDay, L.validity, ''].map((h,i) => (
             <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
         {templates.length === 0 && <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.none}</div>}
         {templates.map((t, i) => (
-          <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 36px', padding: '13px 20px', borderBottom: i < templates.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', opacity: t.active ? 1 : 0.5 }}>
+          <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 110px', padding: '13px 20px', borderBottom: i < templates.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', opacity: t.active ? 1 : 0.5 }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: G }}>{t.description}</div>
             <div style={{ fontSize: '12px', color: '#4a6355' }}>{catLabel(t.category)}</div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#4a6355' }}>€ {fmt(t.amount)}</div>
@@ -256,7 +280,10 @@ export default function DespesasRecorrentes() {
             <div style={{ fontSize: '11px', color: '#64748b' }}>
               {t.start_month ? `${L.since} ${t.start_month}` : '—'}{t.end_month ? ` · ${t.end_month}` : ` · ${L.noEnd}`}
             </div>
-            <button onClick={() => removeTemplate(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title={L.del}>✕</button>
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+              <button onClick={() => openEdit(t)} style={{ padding: '5px 10px', background: BG, border: '1px solid #dde8de', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: '#4a6355' }}>{L.edit}</button>
+              <button onClick={() => removeTemplate(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px 4px', lineHeight: 1 }} title={L.del}>✕</button>
+            </div>
           </div>
         ))}
       </div>
