@@ -10,6 +10,11 @@ import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 // IVA contido num montante total (com IVA): total × taxa/(100+taxa)
 const vatFromGross = (gross, rate) => (rate > 0 ? Number(gross) * rate / (100 + rate) : 0)
 
+// Recorrência: mês devido e vigência
+const isRecDue = (per, m) => per === 'monthly' || (per === 'quarterly' && [1,4,7,10].includes(m)) || (per === 'annual' && m === 1)
+const toYm = (p) => { const [y, m] = p.split('-').map(Number); return y * 12 + (m - 1) }
+const inRecRange = (p, s, e) => { const ym = toYm(p); if (s && ym < toYm(s)) return false; if (e && ym > toYm(e)) return false; return true }
+
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
@@ -47,6 +52,7 @@ export default function LivroCaixa() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState([])
   const [catalog, setCatalog] = useState([])
+  const [recurring, setRecurring] = useState([])
   const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -64,13 +70,15 @@ export default function LivroCaixa() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [{ data: ce }, { data: ci }, cs] = await Promise.all([
+    const [{ data: ce }, { data: ci }, { data: re }, cs] = await Promise.all([
       supabase.from('cash_entries').select('*').order('entry_date', { ascending: true }).order('created_at', { ascending: true }),
       supabase.from('catalog_items').select('id,name,kind,price').order('name', { ascending: true }),
+      supabase.from('recurring_expenses').select('*').eq('active', true),
       getCompanySettings(),
     ])
     setEntries(ce || [])
     setCatalog(ci || [])
+    setRecurring(re || [])
     setSettings(cs)
     setLoading(false)
   }, [])
@@ -98,6 +106,22 @@ export default function LivroCaixa() {
   const totalOut = filtered.filter(e => e.type === 'saida'  ).reduce((s,e)=>s+Number(e.amount),0)
   const cashBal  = filtered.reduce((s,e)=> e.destination==='caixa' ? s+(e.type==='entrada'?Number(e.amount):-Number(e.amount)) : s, 0)
   const bankBal  = filtered.reduce((s,e)=> e.destination==='banco' ? s+(e.type==='entrada'?Number(e.amount):-Number(e.amount)) : s, 0)
+
+  // ── Saídas previstas: recorrentes devidas no âmbito do filtro e ainda por confirmar ──
+  const YEAR = 2026
+  const confirmedByPeriod = {}
+  entries.forEach(e => { if (e.recurring_expense_id && e.period) { (confirmedByPeriod[e.period] ||= new Set()).add(e.recurring_expense_id) } })
+  const scopeMonths = filterMonth === 'all' ? Array.from({ length: 12 }, (_, i) => i + 1) : [Number(filterMonth)]
+  let predictedOut = 0
+  scopeMonths.forEach(m => {
+    const periodStr = `${YEAR}-${String(m).padStart(2, '0')}`
+    const done = confirmedByPeriod[periodStr]
+    recurring.forEach(r => {
+      if (isRecDue(r.periodicity, m) && inRecRange(periodStr, r.start_month, r.end_month) && !(done && done.has(r.id))) {
+        predictedOut += Number(r.amount)
+      }
+    })
+  })
 
   function pickCatalog(id) {
     const it = catalog.find(c => c.id === id)
@@ -144,7 +168,7 @@ export default function LivroCaixa() {
     noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
     catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
-    vat: 'MwSt.', vatExempt: 'befreit',
+    vat: 'MwSt.', vatExempt: 'befreit', predictedOut: 'Geplante Ausgaben', predictedOutSub: 'wiederkehrend, offen',
   } : {
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
@@ -153,7 +177,7 @@ export default function LivroCaixa() {
     noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
     loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
     catalogNone: '— nenhum —', catHint: 'Escolha a categoria da despesa.', costType: 'Tipo de custo',
-    vat: 'IVA', vatExempt: 'isento',
+    vat: 'IVA', vatExempt: 'isento', predictedOut: 'Saídas previstas', predictedOutSub: 'recorrentes a confirmar',
   }
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
@@ -185,16 +209,20 @@ export default function LivroCaixa() {
         </button>
       </div>
 
-      {/* Summary — linha 1: Saldo / Entradas / Saídas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '12px' }}>
+      {/* Summary — linha 1: Saldo / Entradas / Saídas / Saídas previstas */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: '12px', marginBottom: '12px' }}>
         {[
           { label: L.balance, value: totalIn - totalOut, color: (totalIn-totalOut)>=0 ? G : '#e53e3e', bg: '#fff' },
           { label: L.income,  value: totalIn,  color: '#065f46', bg: '#d1fae5' },
           { label: L.expense, value: totalOut, color: '#e53e3e', bg: '#fee2e2' },
+          { label: L.predictedOut, sub: L.predictedOutSub, value: predictedOut, color: '#b45309', bg: '#fffbeb' },
         ].map(c => (
           <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 18px', border: '1px solid #dde8de', textAlign: 'center' }}>
             <div style={{ fontSize: '20px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</div>
-            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {c.sub ? '🔁 ' : ''}{c.label}
+            </div>
+            {c.sub && <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '2px' }}>({c.sub})</div>}
           </div>
         ))}
       </div>
