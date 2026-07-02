@@ -281,7 +281,9 @@ export default function DespesasRecorrentes() {
               {t.start_month ? `${L.since} ${t.start_month}` : '—'}{t.end_month ? ` · ${t.end_month}` : ` · ${L.noEnd}`}
             </div>
             <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-              <button onClick={() => openEdit(t)} style={{ padding: '5px 10px', background: BG, border: '1px solid #dde8de', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: '#4a6355' }}>{L.edit}</button>
+              <button onClick={() => openEdit(t)} title={L.edit} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 11px', background: BG, border: '1px solid #dde8de', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: '#4a6355' }}>
+                <span style={{ fontSize: '13px', lineHeight: 1 }}>✏️</span>{!isMobile && L.edit}
+              </button>
               <button onClick={() => removeTemplate(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px 4px', lineHeight: 1 }} title={L.del}>✕</button>
             </div>
           </div>
