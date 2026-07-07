@@ -45,19 +45,18 @@ export default async function handler(req, res) {
       return res.status(200).json({ users })
     }
 
-    // ── CRIAR ──
+    // ── CRIAR (convite por email) ──
     if (req.method === 'POST') {
-      const { email, password, display_name, role } = req.body || {}
-      if (!email || !password) return res.status(400).json({ error: 'Email e palavra-passe são obrigatórios.' })
-      const { data, error } = await admin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { display_name: display_name || '' },
+      const { email, display_name, role, redirectTo } = req.body || {}
+      if (!email) return res.status(400).json({ error: 'Email é obrigatório.' })
+      // Envia email de convite; o utilizador define a password na página redirectTo.
+      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { display_name: display_name || '' },
+        redirectTo: redirectTo || undefined,
       })
       if (error) throw error
       await admin.from('profiles').upsert({ id: data.user.id, role: role === 'admin' ? 'admin' : 'user' })
-      return res.status(200).json({ ok: true, id: data.user.id })
+      return res.status(200).json({ ok: true, id: data.user.id, invited: true })
     }
 
     // ── EDITAR ──

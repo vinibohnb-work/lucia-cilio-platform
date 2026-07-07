@@ -23,8 +23,10 @@ export async function listUsers() {
   return users || []
 }
 
+// Cria por convite: envia email com link para o utilizador definir a password.
 export async function createUser(payload) {
-  const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify(payload) })
+  const redirectTo = `${window.location.origin}/definir-senha`
+  const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ ...payload, redirectTo }) })
   return handle(res)
 }
 

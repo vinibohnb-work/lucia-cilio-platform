@@ -27,7 +27,7 @@ const ROLE_STYLE = {
   user:  { bg: '#e8f5ec', color: G },
 }
 
-const EMPTY = { email: '', password: '', display_name: '', role: 'user' }
+const EMPTY = { email: '', display_name: '', role: 'user' }
 
 export default function AdminHome() {
   const navigate = useNavigate()
@@ -38,6 +38,7 @@ export default function AdminHome() {
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
   const [err, setErr]       = useState('')
+  const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
   const [form, setForm]     = useState(EMPTY)
   const [editingId, setEditingId] = useState(null) // null = fechado, 'new' = criar, uuid = editar
@@ -46,23 +47,25 @@ export default function AdminHome() {
   const L = lang === 'de' ? {
     title: 'Administration', badge: 'Administrator', logout: 'Abmelden',
     openPlatform: 'Plattform öffnen', users: 'Benutzerverwaltung',
-    new: '+ Neuer Benutzer', email: 'E-Mail', password: 'Passwort', name: 'Anzeigename',
+    new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer', created: 'Erstellt',
-    lastLogin: 'Letzter Login', actions: '', save: 'Speichern', cancel: 'Abbrechen',
+    lastLogin: 'Letzter Login', actions: '', save: 'Speichern', invite: 'Einladung senden', cancel: 'Abbrechen',
     edit: 'Bearbeiten', del: 'Löschen', loading: 'Wird geladen…',
     empty: 'Keine Benutzer.', never: 'nie',
-    pwHintNew: 'Mind. 6 Zeichen', pwHintEdit: 'Leer lassen, um beizubehalten',
+    inviteHint: 'Es wird eine E-Mail mit einem Link zum Festlegen des Passworts gesendet.',
+    invited: (e) => `Einladung an ${e} gesendet.`,
     confirmDel: (e) => `Benutzer „${e}" wirklich löschen?`,
     apiHint: 'Benutzerverwaltung benötigt die bereitgestellte Version (Vercel). Lokal nicht verfügbar.',
   } : {
     title: 'Administração', badge: 'Administrador', logout: 'Sair',
     openPlatform: 'Abrir plataforma', users: 'Gestão de Utilizadores',
-    new: '+ Novo Utilizador', email: 'E-mail', password: 'Palavra-passe', name: 'Nome de exibição',
+    new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador', created: 'Criado',
-    lastLogin: 'Último acesso', actions: '', save: 'Guardar', cancel: 'Cancelar',
+    lastLogin: 'Último acesso', actions: '', save: 'Guardar', invite: 'Enviar convite', cancel: 'Cancelar',
     edit: 'Editar', del: 'Eliminar', loading: 'A carregar…',
     empty: 'Sem utilizadores.', never: 'nunca',
-    pwHintNew: 'Mín. 6 caracteres', pwHintEdit: 'Deixe vazio para manter',
+    inviteHint: 'Será enviado um e-mail com um link para o utilizador definir a palavra-passe.',
+    invited: (e) => `Convite enviado para ${e}.`,
     confirmDel: (e) => `Eliminar o utilizador "${e}"?`,
     apiHint: 'A gestão de utilizadores requer a versão publicada (Vercel). Indisponível em modo local.',
   }
@@ -77,17 +80,18 @@ export default function AdminHome() {
 
   async function handleLogout() { await signOut(); navigate('/login', { replace: true }) }
 
-  function openCreate() { setForm(EMPTY); setEditingId('new') }
-  function openEdit(u) { setForm({ email: u.email, password: '', display_name: u.display_name, role: u.role }); setEditingId(u.id) }
+  function openCreate() { setForm(EMPTY); setEditingId('new'); setErr(''); setNotice('') }
+  function openEdit(u) { setForm({ email: u.email, display_name: u.display_name, role: u.role }); setEditingId(u.id); setErr(''); setNotice('') }
   function closeForm() { setEditingId(null); setForm(EMPTY) }
 
   async function submit() {
-    setSaving(true); setErr('')
+    setSaving(true); setErr(''); setNotice('')
     try {
       if (editingId === 'new') {
-        await createUser(form)
+        await createUser({ email: form.email, display_name: form.display_name, role: form.role })
+        setNotice(L.invited(form.email))
       } else {
-        await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role, password: form.password || undefined })
+        await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role })
       }
       closeForm(); await load()
     } catch (e) { setErr(e.message) }
@@ -153,18 +157,19 @@ export default function AdminHome() {
             {err}
           </div>
         )}
+        {notice && (
+          <div style={{ background: '#d1fae5', border: '1px solid #bbf7d0', color: '#065f46', borderRadius: '8px', padding: '10px 14px', fontSize: '12px', fontWeight: 600, marginBottom: '14px' }}>
+            ✉️ {notice}
+          </div>
+        )}
 
         {/* Form */}
         {editingId && (
           <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 130px auto', gap: '10px', alignItems: 'end' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1.4fr 130px auto', gap: '10px', alignItems: 'end' }}>
               <div>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{L.email}</div>
                 <input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="nome@email.com" style={inputStyle} />
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{L.password}</div>
-                <input type="text" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} placeholder={editingId === 'new' ? L.pwHintNew : L.pwHintEdit} style={inputStyle} />
               </div>
               <div>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{L.name}</div>
@@ -178,10 +183,13 @@ export default function AdminHome() {
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-                <button onClick={submit} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer' }}>{saving ? '…' : L.save}</button>
+                <button onClick={submit} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.invite : L.save)}</button>
                 <button onClick={closeForm} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
               </div>
             </div>
+            {editingId === 'new' && (
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '10px' }}>✉️ {L.inviteHint}</div>
+            )}
           </div>
         )}
 

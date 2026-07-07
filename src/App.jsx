@@ -6,6 +6,7 @@ import { useIsMobile } from './hooks/useIsMobile'
 
 // Public pages
 import Login from './pages/Login'
+import DefinirSenha from './pages/DefinirSenha'
 
 // Auth guards
 import ProtectedRoute from './components/ProtectedRoute'
@@ -117,6 +118,7 @@ export default function App() {
             <Routes>
               <Route path="/"                      element={<Navigate to="/login" replace />} />
               <Route path="/login"                 element={<Login />} />
+              <Route path="/definir-senha"         element={<DefinirSenha />} />
               <Route path="/admin/*" element={
                 <RoleRoute requireRole="admin">
                   <AdminHome />
