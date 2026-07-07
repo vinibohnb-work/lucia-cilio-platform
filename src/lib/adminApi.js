@@ -24,8 +24,11 @@ export async function listUsers() {
 }
 
 // Cria por convite: envia email com link para o utilizador definir a password.
+// O link aponta sempre para VITE_APP_URL (domínio de produção) quando definida;
+// caso contrário usa o domínio atual (útil em desenvolvimento).
 export async function createUser(payload) {
-  const redirectTo = `${window.location.origin}/definir-senha`
+  const base = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '')
+  const redirectTo = `${base}/definir-senha`
   const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ ...payload, redirectTo }) })
   return handle(res)
 }
