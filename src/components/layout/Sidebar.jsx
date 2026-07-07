@@ -2,259 +2,140 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useSidebar } from '../../context/SidebarContext'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { t } from '../../i18n/translations'
+import { t as translate } from '../../i18n/translations'
 
-// ── SVG Flags (reliable cross-platform) ───────────────────────────────────
-const FlagPT = () => (
-  <svg width="20" height="14" viewBox="0 0 20 14" style={{ borderRadius: '2px', flexShrink: 0 }}>
-    <rect width="8"  height="14" fill="#006600"/>
-    <rect x="8" width="12" height="14" fill="#CC0000"/>
-    <ellipse cx="8" cy="7" rx="2.8" ry="3.5" fill="#FFFF00" stroke="#006600" strokeWidth="0.4"/>
-    <ellipse cx="8" cy="7" rx="1.6" ry="2.0" fill="#fff" stroke="#003399" strokeWidth="0.4"/>
+// ── Ícones (stroke = currentColor) ─────────────────────────────────────────
+const Icon = ({ d, size = 17, sw = 1.7, children }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} style={{ flexShrink: 0 }}>
+    {children || <path d={d} />}
   </svg>
 )
+const IconPainel = () => <Icon><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></Icon>
+const IconCaixa = () => <Icon><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8 8h8M8 12h5"/></Icon>
+const IconCatalogo = () => <Icon><path d="M20.6 13.4 12 22l-9-9V4a1 1 0 0 1 1-1h8z"/><circle cx="7.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"/></Icon>
+const IconPreco = () => <Icon><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M8 7h8M8 11h8M8 15h4"/></Icon>
+const IconClientes = () => <Icon><circle cx="9" cy="8" r="3.3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.5a3 3 0 0 1 0 5.6M17.5 20a5 5 0 0 0-3-4.6"/></Icon>
+const IconObrig = () => <Icon><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/></Icon>
+const IconEmpresa = () => <Icon><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/></Icon>
+const IconAdmin = () => <Icon><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></Icon>
+const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
+const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
 
-const FlagDE = () => (
-  <svg width="20" height="14" viewBox="0 0 20 14" style={{ borderRadius: '2px', flexShrink: 0 }}>
-    <rect y="0"    width="20" height="4.67" fill="#000000"/>
-    <rect y="4.67" width="20" height="4.67" fill="#CC0000"/>
-    <rect y="9.33" width="20" height="4.67" fill="#FFCE00"/>
-  </svg>
-)
-
-// ── Nav items ──────────────────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { to: '/contabilidade/dashboard',    icon: '📊', labelKey: 'nav_dash'        },
-  { to: '/contabilidade/caixa',        icon: '💵', labelKey: 'nav_caixa'       },
-  { to: '/contabilidade/recorrentes',  icon: '🔁', labelKey: 'nav_recorrentes' },
-  { to: '/contabilidade/catalogo',     icon: '🏷️', labelKey: 'nav_catalogo'    },
-  { to: '/contabilidade/precificacao', icon: '🧮', labelKey: 'nav_preco'       },
-  { to: '/contabilidade/clientes',     icon: '👥', labelKey: 'nav_clients'     },
-  { to: '/contabilidade/obrigacoes',   icon: '📅', labelKey: 'nav_obligations' },
-  { to: '/contabilidade/empresa',      icon: '🏢', labelKey: 'nav_empresa'     },
+const SECTIONS = [
+  { key: 'section_acc', items: [
+    { to: '/contabilidade/dashboard',    Icon: IconPainel,   labelKey: 'nav_dash' },
+    { to: '/contabilidade/caixa',        Icon: IconCaixa,    labelKey: 'nav_caixa' },
+    { to: '/contabilidade/catalogo',     Icon: IconCatalogo, labelKey: 'nav_catalogo' },
+    { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations', badge: 2 },
+  ]},
+  { key: 'section_mgmt', items: [
+    { to: '/contabilidade/precificacao', Icon: IconPreco,    labelKey: 'nav_preco' },
+    { to: '/contabilidade/clientes',     Icon: IconClientes, labelKey: 'nav_clients' },
+    { to: '/contabilidade/empresa',      Icon: IconEmpresa,  labelKey: 'nav_empresa' },
+  ]},
 ]
 
 export default function Sidebar() {
-  const { lang, setLang }       = useLang()
-  const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebar()
+  const { lang, setLang } = useLang()
+  const { mobileOpen, setMobileOpen } = useSidebar()
   const { user, signOut, isAdmin } = useAuth()
-  const isMobile                = useIsMobile()
-  const navigate                = useNavigate()
-
-  // No mobile a barra está sempre expandida (drawer), nunca em modo "estreito".
-  const collapsedEff = isMobile ? false : collapsed
-
-  async function handleLogout() {
-    setMobileOpen(false)
-    await signOut()
-    navigate('/login', { replace: true })
-  }
+  const { t, night, toggle } = useTheme()
+  const isMobile = useIsMobile()
+  const navigate = useNavigate()
 
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
+  async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
 
-  const meta = user?.user_metadata || {}
-  const displayName = meta.display_name || meta.full_name || meta.name || user?.email?.split('@')[0] || 'Utilizador'
-  const initials = displayName.slice(0, 2).toUpperCase()
+  const W = isMobile ? 264 : 238
 
-  const W = isMobile ? '264px' : (collapsedEff ? '64px' : '248px')
+  const navRow = (item) => (
+    <NavLink key={item.to} to={item.to} onClick={closeOnMobile}
+      style={({ isActive }) => ({
+        position: 'relative', display: 'flex', alignItems: 'center', gap: '12px',
+        padding: '11px 14px', borderRadius: '9px', fontSize: '13.5px', textDecoration: 'none',
+        background: isActive ? t.navActiveBg : 'transparent',
+        color: isActive ? t.navActiveText : t.navText,
+        fontWeight: isActive ? 600 : 500,
+      })}
+    >
+      {({ isActive }) => (
+        <>
+          <span style={{ position: 'absolute', left: 0, top: '9px', bottom: '9px', width: '3px', borderRadius: '3px', background: isActive ? t.accent : 'transparent' }} />
+          <span style={{ color: isActive ? t.accent : 'currentColor', display: 'flex' }}><item.Icon /></span>
+          {translate(lang, item.labelKey)}
+          {item.badge && <span style={{ marginLeft: 'auto', fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '20px', background: t.badgeBg, color: t.badgeInk }}>{item.badge}</span>}
+        </>
+      )}
+    </NavLink>
+  )
 
-  const niBase = {
-    display: 'flex', alignItems: 'center', gap: collapsedEff ? 0 : '10px',
-    padding: collapsedEff ? '10px 0' : '11px 18px',
-    justifyContent: collapsedEff ? 'center' : 'flex-start',
-    margin: '1px 8px', borderRadius: '8px',
-    color: 'rgba(255,255,255,.72)', fontSize: '13px', fontWeight: 500,
-    cursor: 'pointer', textDecoration: 'none', transition: 'all .15s',
-  }
-  const niActive = { background: 'var(--gold)', color: 'var(--green)', fontWeight: 700 }
+  const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung' } }
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, width: W, height: '100vh',
-      background: 'var(--green)', display: 'flex', flexDirection: 'column',
-      zIndex: 100, boxShadow: '4px 0 24px rgba(0,0,0,.18)',
-      transition: 'width .22s ease, transform .25s ease', overflow: 'hidden',
+    <aside style={{
+      position: 'fixed', top: 0, left: 0, width: `${W}px`, height: '100vh', zIndex: 100,
+      display: 'flex', flexDirection: 'column', padding: '26px 0',
+      background: t.sidebarBg, fontFamily: t.fontBody,
       transform: isMobile ? (mobileOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
-      paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
+      transition: 'transform .25s ease', boxShadow: isMobile ? '4px 0 24px rgba(0,0,0,.3)' : 'none',
+      paddingTop: 'calc(26px + env(safe-area-inset-top))', paddingBottom: 'calc(0px + env(safe-area-inset-bottom))',
     }}>
-
-      {/* ── Logo ── */}
-      <div style={{
-        padding: collapsedEff ? '16px 8px' : '18px 16px 14px',
-        borderBottom: '1px solid rgba(255,255,255,.1)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-      }}>
-        <img
-          src="/logo.png"
-          alt="LC Office Consulting"
-          style={{
-            width: collapsedEff ? '54px' : '78px',
-            height: collapsedEff ? '54px' : '78px',
-            objectFit: 'contain',
-            transition: 'width .22s, height .22s',
-          }}
-        />
+      {/* Logo */}
+      <div style={{ padding: '0 24px 22px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
+        <div style={{ width: '40px', height: '40px', flex: 'none', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: t.fontDisplay, fontWeight: 700, fontSize: '22px', color: t.logoInk, background: t.logoBg, border: t.logoBorder }}>lc</div>
+        <div>
+          <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '19px', lineHeight: 1, color: '#f3ecdb' }}>Lúcia Cílio</div>
+          <div style={{ fontSize: '9px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.sidebarSub }}>Office Consulting</div>
+        </div>
       </div>
 
-      {/* ── Nav ── */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '18px', paddingBottom: '12px' }}>
-        {!collapsedEff && (
-          <div style={{ padding: '0 14px 6px', color: 'rgba(255,255,255,.35)', fontSize: '9px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
-            {t(lang, 'section_acc')}
+      {/* Nav */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {SECTIONS.map((sec, si) => (
+          <div key={sec.key} style={{ marginTop: si ? '20px' : 0 }}>
+            <div style={{ padding: '0 24px', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 8px', color: t.sectionLabel }}>
+              {sectionLabel[sec.key][lang] || sectionLabel[sec.key].pt}
+            </div>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>
+              {sec.items.map(navRow)}
+              {sec.key === 'section_mgmt' && isAdmin && navRow({ to: '/admin', Icon: IconAdmin, labelKey: 'nav_admin' })}
+            </nav>
           </div>
-        )}
-
-        {NAV_ITEMS.map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={closeOnMobile}
-            title={collapsedEff ? t(lang, item.labelKey) : undefined}
-            style={({ isActive }) => ({ ...niBase, ...(isActive ? niActive : {}) })}
-          >
-            <span style={{ fontSize: '16px', flexShrink: 0, width: '18px', textAlign: 'center' }}>
-              {item.icon}
-            </span>
-            {!collapsedEff && (
-              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>
-                {t(lang, item.labelKey)}
-              </span>
-            )}
-          </NavLink>
         ))}
-
-        {/* Link para a área de Admin (apenas administradores) */}
-        {isAdmin && (
-          <NavLink
-            to="/admin"
-            onClick={closeOnMobile}
-            title={collapsedEff ? 'Admin' : undefined}
-            style={{ ...niBase, marginTop: '8px', borderTop: '1px solid rgba(255,255,255,.08)', borderRadius: 0, paddingTop: '14px' }}
-          >
-            <span style={{ fontSize: '16px', flexShrink: 0, width: '18px', textAlign: 'center' }}>🛠️</span>
-            {!collapsedEff && <span style={{ whiteSpace: 'nowrap' }}>Admin</span>}
-          </NavLink>
-        )}
       </div>
 
-      {/* ── Collapse toggle (apenas desktop) ── */}
-      {!isMobile && (
-      <button
-        onClick={() => setCollapsed(c => !c)}
-        title={collapsed ? (lang === 'de' ? 'Erweitern' : 'Expandir') : (lang === 'de' ? 'Minimieren' : 'Recolher')}
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: '8px', width: '100%', padding: '10px 18px',
-          background: 'rgba(255,255,255,.04)', border: 'none',
-          borderTop: '1px solid rgba(255,255,255,.08)',
-          color: 'rgba(255,255,255,.4)', cursor: 'pointer',
-          fontSize: '12px', fontWeight: 600,
-          transition: 'background .15s, color .15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.09)'; e.currentTarget.style.color = 'rgba(255,255,255,.75)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.04)'; e.currentTarget.style.color = 'rgba(255,255,255,.4)' }}
-      >
-        <span style={{ fontSize: '16px', lineHeight: 1, transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform .22s', display: 'inline-block' }}>
-          »
-        </span>
-        {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{lang === 'de' ? 'Minimieren' : 'Recolher'}</span>}
-      </button>
-      )}
-
-      {/* ── Language switcher ── */}
-      <div style={{
-        padding: collapsedEff ? '12px 6px' : '12px 18px',
-        borderTop: '1px solid rgba(255,255,255,.1)',
-      }}>
-        {!collapsedEff && (
-          <div style={{ fontSize: '9px', fontWeight: 800, color: 'rgba(255,255,255,.3)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
-            {lang === 'de' ? 'Sprache' : 'Idioma'}
+      {/* Footer */}
+      <div style={{ marginTop: 'auto', padding: '18px 20px 0', borderTop: `1px solid ${t.sidebarBorder}` }}>
+        {/* Utilizador */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px 12px' }}>
+          <div style={{ width: '30px', height: '30px', flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, fontFamily: t.fontDisplay, background: t.avatarBg, color: t.avatarInk, border: t.avatarBorder }}>
+            {(user?.user_metadata?.display_name || user?.email || 'LC').slice(0,2).toUpperCase()}
           </div>
-        )}
-        <div style={{ display: 'flex', gap: '6px', justifyContent: collapsedEff ? 'center' : 'flex-start', flexDirection: collapsedEff ? 'column' : 'row' }}>
-          {[
-            { code: 'pt', Flag: FlagPT, label: 'PT' },
-            { code: 'de', Flag: FlagDE, label: 'DE' },
-          ].map(({ code, Flag, label }) => (
-            <button
-              key={code}
-              onClick={() => setLang(code)}
-              title={code.toUpperCase()}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: collapsedEff ? '5px' : '5px 10px',
-                borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                cursor: 'pointer',
-                border: `1px solid ${lang === code ? 'var(--gold)' : 'rgba(255,255,255,.2)'}`,
-                background: lang === code ? 'var(--gold)' : 'transparent',
-                color: lang === code ? 'var(--green)' : 'rgba(255,255,255,.6)',
-                justifyContent: 'center',
-              }}
-            >
-              <Flag />
-              {!collapsedEff && <span>{label}</span>}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── User footer ── */}
-      <div style={{
-        padding: collapsedEff ? '12px 8px' : '12px 14px',
-        borderTop: '1px solid rgba(255,255,255,.1)',
-        display: 'flex', alignItems: 'center',
-        gap: collapsedEff ? 0 : '8px',
-        justifyContent: collapsedEff ? 'center' : 'flex-start',
-      }}>
-        <div style={{
-          width: '34px', height: '34px', borderRadius: '50%',
-          background: 'var(--gold)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', fontWeight: 800, fontSize: '13px',
-          color: 'var(--green)', flexShrink: 0,
-        }}>
-          {initials}
-        </div>
-        {!collapsedEff && (
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: '#fff', fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {displayName}
-            </div>
-            <div style={{ color: 'rgba(255,255,255,.45)', fontSize: '10px' }}>
-              {t(lang, 'role_label')}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: '12px', color: '#f3ecdb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Utilizador'}
             </div>
           </div>
-        )}
-        {!collapsedEff && (
-          <button
-            onClick={handleLogout}
-            title={lang === 'de' ? 'Abmelden' : 'Sair'}
-            style={{
-              background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)',
-              borderRadius: '7px', cursor: 'pointer', color: 'rgba(255,255,255,.7)',
-              padding: '6px 9px', fontSize: '13px', flexShrink: 0, lineHeight: 1,
-            }}
-          >
-            ⎋
+        </div>
+        {/* Logout */}
+        <div onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 6px 14px', fontSize: '12.5px', cursor: 'pointer', color: t.sidebarSub }}>
+          <IconLogout />{lang === 'de' ? 'Abmelden' : 'Terminar sessão'}
+        </div>
+        {/* Idioma + tema */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
+            {['pt','de'].map(code => (
+              <span key={code} onClick={() => setLang(code)} style={{ padding: '5px 11px', cursor: 'pointer', background: lang === code ? t.accent : 'transparent', color: lang === code ? '#0a2f1a' : t.sidebarSub }}>{code.toUpperCase()}</span>
+            ))}
+          </div>
+          <button onClick={toggle} title={night ? (lang==='de'?'Heller Modus':'Modo claro') : (lang==='de'?'Nachtmodus':'Modo noturno')} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>
+            {night ? <MoonIcon /> : <SunIcon />}
           </button>
-        )}
+        </div>
       </div>
-
-      {collapsedEff && (
-        <button
-          onClick={handleLogout}
-          title={lang === 'de' ? 'Abmelden' : 'Sair'}
-          style={{
-            margin: '0 8px 12px', background: 'rgba(255,255,255,.08)',
-            border: '1px solid rgba(255,255,255,.15)', borderRadius: '7px',
-            cursor: 'pointer', color: 'rgba(255,255,255,.7)', padding: '8px',
-            fontSize: '14px', lineHeight: 1,
-          }}
-        >
-          ⎋
-        </button>
-      )}
-
-    </div>
+    </aside>
   )
 }

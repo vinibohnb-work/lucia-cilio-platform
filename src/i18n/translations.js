@@ -9,9 +9,10 @@ const T = {
     nav_obligations: 'Obrigações Fiscais',
     nav_caixa: 'Livro de Caixa',
     nav_preco: 'Calculadora de Preços',
-    nav_dash: 'Dashboard',
+    nav_dash: 'Painel',
     nav_catalogo: 'Catálogo',
     nav_empresa: 'Empresa',
+    nav_admin: 'Administração',
     nav_recorrentes: 'Despesas Recorrentes',
     role_label: 'TOC · Consultora ESG',
     // Topbar
@@ -112,9 +113,10 @@ const T = {
     nav_obligations: 'Steuertermine',
     nav_caixa: 'Kassenbuch',
     nav_preco: 'Preiskalkulation',
-    nav_dash: 'Dashboard',
+    nav_dash: 'Übersicht',
     nav_catalogo: 'Katalog',
     nav_empresa: 'Firma',
+    nav_admin: 'Verwaltung',
     nav_recorrentes: 'Wiederkehrende Ausgaben',
     role_label: 'TOC · ESG-Beraterin',
     // Topbar

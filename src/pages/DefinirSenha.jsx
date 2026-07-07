@@ -3,57 +3,39 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
+import { useTheme } from '../context/ThemeContext'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
-
-const FlagPT = () => (
-  <svg width="20" height="14" viewBox="0 0 20 14" style={{ borderRadius: '2px' }}>
-    <rect width="8" height="14" fill="#006600"/><rect x="8" width="12" height="14" fill="#CC0000"/>
-    <ellipse cx="8" cy="7" rx="2.8" ry="3.5" fill="#FFFF00" stroke="#006600" strokeWidth="0.4"/>
-    <ellipse cx="8" cy="7" rx="1.6" ry="2.0" fill="#fff" stroke="#003399" strokeWidth="0.4"/>
-  </svg>
-)
-const FlagDE = () => (
-  <svg width="20" height="14" viewBox="0 0 20 14" style={{ borderRadius: '2px' }}>
-    <rect y="0" width="20" height="4.67" fill="#000"/><rect y="4.67" width="20" height="4.67" fill="#CC0000"/><rect y="9.33" width="20" height="4.67" fill="#FFCE00"/>
-  </svg>
-)
+const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
 
 export default function DefinirSenha() {
   const navigate = useNavigate()
   const { session, loading: authLoading } = useAuth()
   const { lang, setLang } = useLang()
+  const { t, night, toggle } = useTheme()
 
   const [pw, setPw]         = useState('')
   const [pw2, setPw2]       = useState('')
   const [showPw, setShowPw] = useState(false)
   const [error, setError]   = useState('')
   const [saving, setSaving] = useState(false)
+  const [waited, setWaited] = useState(false)
+  useEffect(() => { const id = setTimeout(() => setWaited(true), 1500); return () => clearTimeout(id) }, [])
 
   const L = lang === 'de' ? {
     title: 'Passwort festlegen', subtitle: 'Legen Sie Ihr Zugangspasswort fest, um fortzufahren.',
-    pw: 'Passwort', pw2: 'Passwort bestätigen', save: 'Passwort festlegen & anmelden', saving: 'Wird gespeichert…',
-    show: 'Anzeigen', hide: 'Verbergen',
-    mismatch: 'Die Passwörter stimmen nicht überein.', short: 'Mindestens 6 Zeichen.',
-    invalid: 'Link ungültig oder abgelaufen. Bitten Sie um eine neue Einladung.',
-    checking: 'Einladung wird geprüft…',
+    pw: 'Passwort', pw2: 'Passwort bestätigen', save: 'Festlegen & anmelden', saving: 'Wird gespeichert…',
+    show: 'Anzeigen', hide: 'Verbergen', mismatch: 'Die Passwörter stimmen nicht überein.', short: 'Mindestens 6 Zeichen.',
+    invalid: 'Link ungültig oder abgelaufen. Bitten Sie um eine neue Einladung.', checking: 'Einladung wird geprüft…',
   } : {
     title: 'Definir palavra-passe', subtitle: 'Defina a sua palavra-passe de acesso para continuar.',
     pw: 'Palavra-passe', pw2: 'Confirmar palavra-passe', save: 'Definir e entrar', saving: 'A guardar…',
-    show: 'Mostrar', hide: 'Ocultar',
-    mismatch: 'As palavras-passe não coincidem.', short: 'Mínimo de 6 caracteres.',
-    invalid: 'Ligação inválida ou expirada. Peça um novo convite.',
-    checking: 'A validar o convite…',
+    show: 'Mostrar', hide: 'Ocultar', mismatch: 'As palavras-passe não coincidem.', short: 'Mínimo de 6 caracteres.',
+    invalid: 'Ligação inválida ou expirada. Peça um novo convite.', checking: 'A validar o convite…',
   }
 
-  // Enquanto o cliente processa o token do link, mostra "a validar…"
-  const [waited, setWaited] = useState(false)
-  useEffect(() => { const t = setTimeout(() => setWaited(true), 1500); return () => clearTimeout(t) }, [])
-
   async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
+    e.preventDefault(); setError('')
     if (pw.length < 6) { setError(L.short); return }
     if (pw !== pw2) { setError(L.mismatch); return }
     setSaving(true)
@@ -63,52 +45,42 @@ export default function DefinirSenha() {
     navigate('/contabilidade/dashboard', { replace: true })
   }
 
-  const inputStyle = { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #dde8de', fontSize: '14px', background: '#fff', outline: 'none', boxSizing: 'border-box', color: '#1a2e1a' }
-
+  const inputStyle = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: '10px', fontSize: '14px', background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.heading, outline: 'none' }
+  const label = (txt) => <label style={{ display: 'block', fontSize: '11px', letterSpacing: '.5px', fontWeight: 600, marginBottom: '7px', color: t.textMuted }}>{txt}</label>
   const noSession = !authLoading && !session && waited
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`, fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '20px', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 'calc(20px + env(safe-area-inset-top))', right: '24px', display: 'flex', gap: '6px' }}>
-        {[['pt', FlagPT, 'PT'], ['de', FlagDE, 'DE']].map(([code, Flag, label]) => (
-          <button key={code} onClick={() => setLang(code)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '7px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${lang === code ? GOLD : 'rgba(255,255,255,.25)'}`, background: lang === code ? GOLD : 'rgba(255,255,255,.08)', color: lang === code ? G : 'rgba(255,255,255,.85)' }}>
-            <Flag /> {label}
-          </button>
-        ))}
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', fontFamily: t.fontBody, background: t.loginBg, position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 'calc(26px + env(safe-area-inset-top))', right: '30px', display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
+          {['pt','de'].map(code => <span key={code} onClick={() => setLang(code)} style={{ padding: '5px 11px', cursor: 'pointer', background: lang === code ? t.accent : 'transparent', color: lang === code ? '#0a2f1a' : (night ? t.sidebarSub : t.textMuted) }}>{code.toUpperCase()}</span>)}
+        </div>
+        <button onClick={toggle} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>{night ? <MoonIcon /> : <SunIcon />}</button>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '410px', background: '#fff', borderRadius: '20px', padding: '40px 36px', boxShadow: '0 20px 60px rgba(0,0,0,.3)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-          <img src="/logo.png" alt="LC Office Consulting" style={{ width: '84px', height: '84px', objectFit: 'contain' }} />
+      <div style={{ width: '400px', maxWidth: '100%', borderRadius: '20px', padding: '40px 38px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.loginShadow }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '26px' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: t.fontDisplay, fontWeight: 700, fontSize: '30px', marginBottom: '16px', color: t.logoInk, background: t.logoBg, border: t.logoBorder }}>lc</div>
+          <h1 style={{ fontFamily: t.fontDisplay, fontSize: '24px', fontWeight: 600, color: t.heading, margin: '0 0 6px' }}>{L.title}</h1>
+          <p style={{ fontSize: '13px', color: t.textMuted, margin: 0 }}>{L.subtitle}</p>
         </div>
-        <h1 style={{ fontSize: '22px', fontWeight: 900, color: G, textAlign: 'center', margin: '0 0 6px' }}>{L.title}</h1>
-        <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', margin: '0 0 26px' }}>{L.subtitle}</p>
 
         {noSession ? (
-          <div style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#991b1b', borderRadius: '10px', padding: '14px', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
-            {L.invalid}
-          </div>
+          <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '14px', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>{L.invalid}</div>
         ) : !session ? (
-          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '10px' }}>{L.checking}</div>
+          <div style={{ textAlign: 'center', color: t.subtle, fontSize: '13px', padding: '10px' }}>{L.checking}</div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#4a6355', marginBottom: '6px' }}>{L.pw}</label>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div>
+              {label(L.pw)}
               <div style={{ position: 'relative' }}>
                 <input type={showPw ? 'text' : 'password'} value={pw} onChange={e => setPw(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={{ ...inputStyle, paddingRight: '64px' }} />
-                <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: GOLD }}>{showPw ? L.hide : L.show}</button>
+                <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: t.accent }}>{showPw ? L.hide : L.show}</button>
               </div>
             </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#4a6355', marginBottom: '6px' }}>{L.pw2}</label>
-              <input type={showPw ? 'text' : 'password'} value={pw2} onChange={e => setPw2(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={inputStyle} />
-            </div>
-
-            {error && <div style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#991b1b', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: 600, margin: '14px 0 0' }}>{error}</div>}
-
-            <button type="submit" disabled={saving} style={{ width: '100%', padding: '13px', marginTop: '20px', borderRadius: '10px', border: 'none', background: saving ? '#164e2b' : G, color: '#fff', fontWeight: 800, fontSize: '15px', cursor: saving ? 'wait' : 'pointer', boxShadow: '0 4px 16px rgba(10,47,26,.3)' }}>
-              {saving ? L.saving : `${L.save} →`}
-            </button>
+            <div>{label(L.pw2)}<input type={showPw ? 'text' : 'password'} value={pw2} onChange={e => setPw2(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={inputStyle} /></div>
+            {error && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: 600 }}>{error}</div>}
+            <button type="submit" disabled={saving} style={{ marginTop: '8px', width: '100%', padding: '13px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', background: t.btnBg, color: t.btnInk }}>{saving ? L.saving : L.save}</button>
           </form>
         )}
       </div>
