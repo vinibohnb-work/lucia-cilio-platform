@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings } from '../../lib/companySettings'
+import { useTheme } from '../../context/ThemeContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -14,6 +15,8 @@ const p   = (v)  => parseFloat(v) || 0
 function EventoCalculator({ lang, irDefault }) {
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const ivaDefault = isDE ? 19 : 23
 
   const [adults,   setAdults  ] = useState(50)
@@ -64,7 +67,7 @@ function EventoCalculator({ lang, irDefault }) {
     ir: 'Reserva IR (%)', irAmount: 'Reserva IR', irHint: 'sugestão',
   }
 
-  const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
+  const inputSm = { padding: '7px 9px', border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontSize: '13px', background: t.cardBg, width: '100%', boxSizing: 'border-box' }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
@@ -73,7 +76,7 @@ function EventoCalculator({ lang, irDefault }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
         {/* Guests & menu */}
-        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px 20px', border: '1px solid #dde8de' }}>
+        <div style={{ background: t.cardBg, borderRadius: '12px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
           <div style={{ fontSize: '12px', fontWeight: 800, color: G, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.guests}</div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '10px' }}>
             {[
@@ -82,47 +85,47 @@ function EventoCalculator({ lang, irDefault }) {
               [L.menuPrice, menuPrice, setMenuPrice],
             ].map(([label, val, set]) => (
               <div key={label}>
-                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>{label}</div>
+                <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
                 <input type="number" min="0" step="1" value={val} onChange={e => set(e.target.value)} style={inputSm} />
               </div>
             ))}
           </div>
-          <div style={{ marginTop: '10px', fontSize: '12px', color: '#4a6355' }}>
+          <div style={{ marginTop: '10px', fontSize: '12px', color: t.text }}>
             {L.menuTotal}: <strong>€ {fmt(menuTotal)}</strong>
-            <span style={{ marginLeft: '12px', fontSize: '11px', color: '#94a3b8' }}>
+            <span style={{ marginLeft: '12px', fontSize: '11px', color: t.subtle }}>
               ({p(adults)} × €{fmt(p(menuPrice))} + {p(children)} × €{fmt(p(menuPrice)*0.5)})
             </span>
           </div>
         </div>
 
         {/* Staff */}
-        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px 20px', border: '1px solid #dde8de' }}>
+        <div style={{ background: t.cardBg, borderRadius: '12px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
           <div style={{ fontSize: '12px', fontWeight: 800, color: G, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.staff}</div>
           {staff.map((m, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 32px', gap: '8px', marginBottom: '8px', alignItems: 'end' }}>
               <div>
-                {i === 0 && <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{L.name}</div>}
+                {i === 0 && <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '4px' }}>{L.name}</div>}
                 <input value={m.name} onChange={e => updateStaff(i,'name',e.target.value)} style={inputSm} placeholder={L.name} />
               </div>
               <div>
-                {i === 0 && <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{L.hours}</div>}
+                {i === 0 && <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '4px' }}>{L.hours}</div>}
                 <input type="number" min="0" value={m.hours} onChange={e => updateStaff(i,'hours',e.target.value)} style={inputSm} />
               </div>
               <div>
-                {i === 0 && <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>{L.rate}</div>}
+                {i === 0 && <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '4px' }}>{L.rate}</div>}
                 <input type="number" min="0" value={m.rate} onChange={e => updateStaff(i,'rate',e.target.value)} style={inputSm} />
               </div>
-              <button onClick={() => removeStaff(i)} style={{ background: 'none', border: '1px solid #dde8de', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', color: '#94a3b8', height: '34px', paddingBottom: '3px' }}>✕</button>
+              <button onClick={() => removeStaff(i)} style={{ background: 'none', border: `1px solid ${t.cardBorder}`, borderRadius: '7px', cursor: 'pointer', fontSize: '13px', color: t.subtle, height: '34px', paddingBottom: '3px' }}>✕</button>
             </div>
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
             <button onClick={addStaff} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: G, fontWeight: 700, padding: 0 }}>{L.addPerson}</button>
-            <span style={{ fontSize: '12px', color: '#4a6355' }}>{lang === 'de' ? 'Personal gesamt' : 'Total equipa'}: <strong>€ {fmt(staffTotal)}</strong></span>
+            <span style={{ fontSize: '12px', color: t.text }}>{lang === 'de' ? 'Personal gesamt' : 'Total equipa'}: <strong>€ {fmt(staffTotal)}</strong></span>
           </div>
         </div>
 
         {/* Extra costs & margin */}
-        <div style={{ background: '#fff', borderRadius: '12px', padding: '18px 20px', border: '1px solid #dde8de' }}>
+        <div style={{ background: t.cardBg, borderRadius: '12px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr 1fr 150px', gap: '12px', alignItems: 'end' }}>
             {[
               [L.extraCosts, extraCosts, setExtraCosts, null],
@@ -131,12 +134,12 @@ function EventoCalculator({ lang, irDefault }) {
               [L.ir,         irPct,      setIrPct,      irDefault ? `${L.irHint}: ${irDefault}%` : null],
             ].map(([label, val, set, hint]) => (
               <div key={label}>
-                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>{label}</div>
+                <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
                 <input type="number" min="0" step="0.5" value={val} onChange={e => set(e.target.value)} style={inputSm} />
-                {hint && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '3px' }}>{hint}</div>}
+                {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
               </div>
             ))}
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: '#4a6355', fontWeight: 600, paddingBottom: '2px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: t.text, fontWeight: 600, paddingBottom: '2px' }}>
               <input type="checkbox" checked={round} onChange={e => setRound(e.target.checked)} style={{ width: '15px', height: '15px', accentColor: G }} />
               {L.round}
             </label>
@@ -146,7 +149,7 @@ function EventoCalculator({ lang, irDefault }) {
 
       {/* Right: result card */}
       <div style={{ position: 'sticky', top: '20px' }}>
-        <div style={{ background: G, borderRadius: '16px', padding: '24px', color: '#fff' }}>
+        <div style={{ background: t.highlightBg, borderRadius: '16px', padding: '24px', color: t.highlightValue }}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,.5)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>
             {lang === 'de' ? 'Kalkulation' : 'Resultado'}
           </div>
@@ -184,6 +187,8 @@ function EventoCalculator({ lang, irDefault }) {
 function ServicoCalculator({ lang, irDefault }) {
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const [hours,     setHours    ] = useState(10)
   const [rate,      setRate     ] = useState(50)
   const [materials, setMaterials] = useState(0)
@@ -214,11 +219,11 @@ function ServicoCalculator({ lang, irDefault }) {
     ir: 'Reserva IR (%)', irAmount: 'Reserva IR', irHint: 'sugestão',
   }
 
-  const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
+  const inputSm = { padding: '7px 9px', border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontSize: '13px', background: t.cardBg, width: '100%', boxSizing: 'border-box' }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #dde8de' }}>
+      <div style={{ background: t.cardBg, borderRadius: '12px', padding: '20px', border: `1px solid ${t.cardBorder}` }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '14px' }}>
           {[
             [L.hours, hours, setHours, 1],
@@ -230,19 +235,19 @@ function ServicoCalculator({ lang, irDefault }) {
             [L.ir, irPct, setIrPct, 1, irDefault ? `${L.irHint}: ${irDefault}%` : null],
           ].map(([label, val, set, step, hint]) => (
             <div key={label}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>{label}</div>
+              <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
               <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
-              {hint && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '3px' }}>{hint}</div>}
+              {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
             </div>
           ))}
         </div>
-        <div style={{ marginTop: '14px', padding: '12px 14px', background: BG, borderRadius: '10px', fontSize: '12px', color: '#4a6355' }}>
+        <div style={{ marginTop: '14px', padding: '12px 14px', background: BG, borderRadius: '10px', fontSize: '12px', color: t.text }}>
           {L.labor}: <strong>€ {fmt(laborCost)}</strong>
           &ensp;·&ensp;
           {L.costs}: <strong>€ {fmt(totalCosts)}</strong>
         </div>
       </div>
-      <div style={{ background: G, borderRadius: '16px', padding: '24px', color: '#fff' }}>
+      <div style={{ background: t.highlightBg, borderRadius: '16px', padding: '24px', color: t.highlightValue }}>
         <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,.5)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>
           {lang === 'de' ? 'Kalkulation' : 'Resultado'}
         </div>
@@ -271,6 +276,8 @@ function ServicoCalculator({ lang, irDefault }) {
 function ProdutoCalculator({ lang, irDefault }) {
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const [buyPrice,   setBuyPrice  ] = useState(10)
   const [indirect,   setIndirect  ] = useState(20)
   const [margin,     setMargin    ] = useState(40)
@@ -303,11 +310,11 @@ function ProdutoCalculator({ lang, irDefault }) {
     ir: 'Reserva IR (%)', irAmount: 'Reserva IR', irHint: 'sugestão',
   }
 
-  const inputSm = { padding: '7px 9px', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '13px', background: '#fff', width: '100%', boxSizing: 'border-box' }
+  const inputSm = { padding: '7px 9px', border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontSize: '13px', background: t.cardBg, width: '100%', boxSizing: 'border-box' }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', border: '1px solid #dde8de' }}>
+      <div style={{ background: t.cardBg, borderRadius: '12px', padding: '20px', border: `1px solid ${t.cardBorder}` }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '14px' }}>
           {[
             [L.buyPrice, buyPrice, setBuyPrice, 0.01],
@@ -318,19 +325,19 @@ function ProdutoCalculator({ lang, irDefault }) {
             [L.ir,       irPct,    setIrPct,    1, irDefault ? `${L.irHint}: ${irDefault}%` : null],
           ].map(([label, val, set, step, hint]) => (
             <div key={label}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '5px' }}>{label}</div>
+              <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
               <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
-              {hint && <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '3px' }}>{hint}</div>}
+              {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
             </div>
           ))}
         </div>
-        <div style={{ marginTop: '14px', padding: '12px 14px', background: BG, borderRadius: '10px', fontSize: '12px', color: '#4a6355', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ marginTop: '14px', padding: '12px 14px', background: BG, borderRadius: '10px', fontSize: '12px', color: t.text, display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <span>{L.indirectAmt}: <strong>€ {fmt(indirectAmt)}</strong></span>
           <span>{L.costPrice}: <strong>€ {fmt(costPrice)}</strong></span>
           <span>{L.withDiscount}: <strong>€ {fmt(withDiscount)}</strong></span>
         </div>
       </div>
-      <div style={{ background: G, borderRadius: '16px', padding: '24px', color: '#fff' }}>
+      <div style={{ background: t.highlightBg, borderRadius: '16px', padding: '24px', color: t.highlightValue }}>
         <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,.5)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>
           {isDE ? 'MB-Kalkulation' : 'Resultado'}
         </div>
@@ -364,6 +371,8 @@ const TYPES = {
 
 export default function Precificacao() {
   const { lang } = useLang()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const [type, setType] = useState('evento')
   const [irDefault, setIrDefault] = useState(0)
 
@@ -375,10 +384,10 @@ export default function Precificacao() {
     display: 'flex', alignItems: 'center', gap: '8px',
     padding: '10px 20px', borderRadius: '10px', cursor: 'pointer',
     fontWeight: 700, fontSize: '13px', border: 'none', transition: 'all .15s',
-    background: type === key ? G : '#fff',
+    background: type === key ? t.accent : t.cardBg,
     color: type === key ? '#fff' : '#4a6355',
     boxShadow: type === key ? '0 2px 10px rgba(10,47,26,.2)' : 'none',
-    borderBottom: type === key ? 'none' : '1px solid #dde8de',
+    borderBottom: type === key ? 'none' : `1px solid ${t.cardBorder}`,
   })
 
   return (

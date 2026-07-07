@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { listUsers, createUser, updateUser, deleteUser } from '../../lib/adminApi'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useTheme } from '../../context/ThemeContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -33,6 +34,8 @@ export default function AdminHome() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { lang, setLang } = useLang()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
 
   const [users, setUsers]   = useState([])
@@ -107,7 +110,7 @@ export default function AdminHome() {
   }
 
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : 'pt-PT') : L.never
-  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const GRID = '1fr 1fr 120px 110px 110px 150px'
 
@@ -147,7 +150,7 @@ export default function AdminHome() {
       <div style={{ padding: '28px', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 800, color: G, margin: 0 }}>{L.users}</h2>
-          <button onClick={openCreate} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+          <button onClick={openCreate} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
             {L.new}
           </button>
         </div>
@@ -165,61 +168,61 @@ export default function AdminHome() {
 
         {/* Form */}
         {editingId && (
-          <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
+          <div style={{ background: t.cardBg, border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1.4fr 130px auto', gap: '10px', alignItems: 'end' }}>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{L.email}</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '5px' }}>{L.email}</div>
                 <input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="nome@email.com" style={inputStyle} />
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{L.name}</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '5px' }}>{L.name}</div>
                 <input value={form.display_name} onChange={e=>setForm(f=>({...f,display_name:e.target.value}))} placeholder="Lúcia Cílio" style={inputStyle} />
               </div>
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{L.role}</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '5px' }}>{L.role}</div>
                 <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}>
                   <option value="user">{L.userRole}</option>
                   <option value="admin">{L.admin}</option>
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-                <button onClick={submit} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.invite : L.save)}</button>
-                <button onClick={closeForm} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+                <button onClick={submit} disabled={saving} style={{ padding: '8px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.invite : L.save)}</button>
+                <button onClick={closeForm} style={{ padding: '8px 12px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
               </div>
             </div>
             {editingId === 'new' && (
-              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '10px' }}>✉️ {L.inviteHint}</div>
+              <div style={{ fontSize: '11px', color: t.subtle, marginTop: '10px' }}>✉️ {L.inviteHint}</div>
             )}
           </div>
         )}
 
         {/* Table */}
         <div className="table-scroll">
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
+        <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
             {[L.email, L.name, L.role, L.created, L.lastLogin, ''].map((h,i) => (
-              <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+              <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
             ))}
           </div>
 
-          {loading && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.loading}</div>}
-          {!loading && users.length === 0 && !err && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.empty}</div>}
-          {!loading && err && <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '12px' }}>{L.apiHint}</div>}
+          {loading && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.loading}</div>}
+          {!loading && users.length === 0 && !err && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.empty}</div>}
+          {!loading && err && <div style={{ padding: '24px', textAlign: 'center', color: t.subtle, fontSize: '12px' }}>{L.apiHint}</div>}
 
           {!loading && users.map((u, i) => {
             const rs = ROLE_STYLE[u.role] || ROLE_STYLE.user
             const isSelf = u.id === user?.id
             return (
-              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '13px 20px', borderBottom: i < users.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px' }}>
+              <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '13px 20px', borderBottom: i < users.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: 600, color: G, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {u.email}{isSelf && <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: '6px' }}>(eu)</span>}
+                  {u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>(eu)</span>}
                 </div>
-                <div style={{ fontSize: '12px', color: '#4a6355' }}>{u.display_name || '—'}</div>
+                <div style={{ fontSize: '12px', color: t.text }}>{u.display_name || '—'}</div>
                 <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: rs.bg, color: rs.color }}>{u.role === 'admin' ? L.admin : L.userRole}</span></div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>{fmtDate(u.created_at)}</div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>{fmtDate(u.last_sign_in_at)}</div>
+                <div style={{ fontSize: '12px', color: t.textMuted }}>{fmtDate(u.created_at)}</div>
+                <div style={{ fontSize: '12px', color: t.textMuted }}>{fmtDate(u.last_sign_in_at)}</div>
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                  <button onClick={() => openEdit(u)} style={{ padding: '5px 10px', background: BG, border: '1px solid #dde8de', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: '#4a6355' }}>{L.edit}</button>
+                  <button onClick={() => openEdit(u)} style={{ padding: '5px 10px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: t.text }}>{L.edit}</button>
                   <button onClick={() => remove(u)} disabled={isSelf || busyId === u.id} title={isSelf ? '' : L.del} style={{ padding: '5px 10px', background: isSelf ? '#f1f5f9' : '#fee2e2', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: isSelf ? 'not-allowed' : 'pointer', color: isSelf ? '#cbd5e1' : '#991b1b' }}>
                     {busyId === u.id ? '…' : L.del}
                   </button>

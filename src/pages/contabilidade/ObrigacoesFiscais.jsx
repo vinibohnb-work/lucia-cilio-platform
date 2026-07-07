@@ -3,6 +3,7 @@ import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useTheme } from '../../context/ThemeContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -23,6 +24,8 @@ const EMPTY = { obligation_type: '', client: '', country: '', deadline: new Date
 
 export default function ObrigacoesFiscais() {
   const { lang } = useLang()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
   const [items, setItems]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -72,7 +75,7 @@ export default function ObrigacoesFiscais() {
   const filterBtnStyle = (val) => ({
     padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
     border: `1px solid ${filter === val ? G : '#dde8de'}`,
-    background: filter === val ? G : '#fff', color: filter === val ? '#fff' : '#64748b',
+    background: filter === val ? t.accent : t.cardBg, color: filter === val ? '#fff' : '#64748b',
   })
 
   const pendingCount = items.filter(o => o.status === 'pending').length
@@ -97,7 +100,7 @@ export default function ObrigacoesFiscais() {
     if (error) { alert(error.message); load() }
   }
 
-  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const GRID = '2fr 1fr 140px 120px 110px 90px'
 
@@ -115,7 +118,7 @@ export default function ObrigacoesFiscais() {
             {presentCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
           </select>
         </div>
-        <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+        <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
           {L.new}
         </button>
       </div>
@@ -132,7 +135,7 @@ export default function ObrigacoesFiscais() {
 
       {/* Add form */}
       {showForm && (
-        <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
+        <div style={{ background: t.cardBg, border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr 150px auto', gap: '10px', alignItems: 'end' }}>
             {[
               [L.type, <input value={form.obligation_type} onChange={e=>setForm(f=>({...f,obligation_type:e.target.value}))} placeholder={L.typePh} style={inputStyle} />],
@@ -146,13 +149,13 @@ export default function ObrigacoesFiscais() {
               [L.deadline, <input type="date" value={form.deadline} onChange={e=>setForm(f=>({...f,deadline:e.target.value}))} style={inputStyle} />],
             ].map(([label, field], i) => (
               <div key={i}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{label}</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '5px' }}>{label}</div>
                 {field}
               </div>
             ))}
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={addItem} disabled={saving} style={{ padding: '8px 14px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer' }}>{saving?'…':L.save}</button>
-              <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+              <button onClick={addItem} disabled={saving} style={{ padding: '8px 14px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer' }}>{saving?'…':L.save}</button>
+              <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
             </div>
           </div>
         </div>
@@ -160,15 +163,15 @@ export default function ObrigacoesFiscais() {
 
       {/* List */}
       <div className="table-scroll">
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '720px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
+      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '720px' : 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
           {[L.type, L.client, L.country, L.deadline, L.status, ''].map((h,i) => (
-            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
 
-        {loading && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.loading}</div>}
-        {!loading && visible.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.empty}</div>}
+        {loading && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.loading}</div>}
+        {!loading && visible.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.empty}</div>}
 
         {!loading && visible.map((o, i) => {
           const st = STATUS_STYLE[o.status] || {}
@@ -176,10 +179,10 @@ export default function ObrigacoesFiscais() {
           const isDone = o.status === 'done'
           const dateColor = isDone ? '#64748b' : days < 0 ? '#991b1b' : days <= 14 ? '#e53e3e' : G
           return (
-            <div key={o.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px' }}>
+            <div key={o.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#1a2e1a', lineHeight: 1.4 }}>{o.obligation_type}</div>
-              <div style={{ fontSize: '12px', color: '#4a6355', fontWeight: 500 }}>{o.client || '—'}</div>
-              <div style={{ fontSize: '12px', color: '#4a6355' }}>{countryName(o.country, lang) || '—'}</div>
+              <div style={{ fontSize: '12px', color: t.text, fontWeight: 500 }}>{o.client || '—'}</div>
+              <div style={{ fontSize: '12px', color: t.text }}>{countryName(o.country, lang) || '—'}</div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: dateColor }}>{o.deadline.split('-').reverse().join('/')}</div>
                 {!isDone && (

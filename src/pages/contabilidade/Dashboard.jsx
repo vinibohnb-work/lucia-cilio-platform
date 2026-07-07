@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
 import { getCompanySettings } from '../../lib/companySettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useTheme } from '../../context/ThemeContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -19,6 +20,9 @@ const fmt2 = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFract
 
 export default function Dashboard() {
   const { lang } = useLang()
+  const { t, night } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
+  const GREEN = t.pos, RED = t.neg
   const navigate = useNavigate()
   const isMobile = useIsMobile()
   const [entries, setEntries] = useState([])
@@ -175,7 +179,7 @@ export default function Dashboard() {
     product: 'Produto', service: 'Serviço',
   }
 
-  if (loading) return <div style={{ padding: '40px', color: '#94a3b8', fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
 
   const yearNet = revenue - (fixedTotal + varC)
   const netLabel = isQuarter ? `${lang === 'de' ? 'Ergebnis' : 'Resultado'} ${periodLabel}` : L.yearNet
@@ -193,7 +197,7 @@ export default function Dashboard() {
   })
   const qBtn = (active) => ({
     padding: '6px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
-    border: `1px solid ${active ? G : '#dde8de'}`, background: active ? G : '#fff', color: active ? '#fff' : '#64748b',
+    border: `1px solid ${active ? G : '#dde8de'}`, background: active ? t.accent : t.cardBg, color: active ? '#fff' : '#64748b',
   })
 
   return (
@@ -201,7 +205,7 @@ export default function Dashboard() {
 
       {/* Toggle período */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '4px', background: '#fff', borderRadius: '10px', padding: '4px', border: '1px solid #dde8de' }}>
+        <div style={{ display: 'flex', gap: '4px', background: t.cardBg, borderRadius: '10px', padding: '4px', border: `1px solid ${t.cardBorder}` }}>
           <button style={segBtn(!isQuarter)} onClick={() => setPeriod('year')}>{L.annual}</button>
           <button style={segBtn(isQuarter)} onClick={() => setPeriod('quarter')}>{L.quarterly}</button>
         </div>
@@ -223,9 +227,9 @@ export default function Dashboard() {
           { label: L.variable,value: varC,                color: '#c2410c', bg: '#fff7ed' },
           { label: netLabel,  value: yearNet,             color: yearNet>=0?G:RED, bg: '#fff' },
         ].map(k => (
-          <div key={k.label} style={{ background: k.bg, borderRadius: '14px', padding: '18px 20px', border: '1px solid #dde8de' }}>
+          <div key={k.label} style={{ background: k.bg, borderRadius: '14px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
             <div style={{ fontSize: '22px', fontWeight: 900, color: k.color }}>{fmt(k.value)}</div>
-            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{k.label}</div>
+            <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{k.label}</div>
           </div>
         ))}
       </div>
@@ -243,7 +247,7 @@ export default function Dashboard() {
           <span style={{ fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
             {L.predictedFixed} · {periodLabel}: <strong>{fmt2(periodPredicted)}</strong> · {pendingCountPeriod}
           </span>
-          <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
             {L.predictedCta}
           </button>
         </div>
@@ -251,7 +255,7 @@ export default function Dashboard() {
 
       {/* ── Apuramento de IVA ── */}
       {hasIva && (
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '18px 22px', marginBottom: '20px' }}>
+        <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '18px 22px', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: '0 0 14px' }}>{L.ivaTitle} · {periodLabel}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '10px' : '16px' }}>
             {[
@@ -259,8 +263,8 @@ export default function Dashboard() {
               { label: L.ivaDed, value: ivaDedutivel, color: '#1d4ed8', bg: '#eff6ff' },
               { label: ivaApagar >= 0 ? L.ivaPay : L.ivaRec, value: Math.abs(ivaApagar), color: ivaApagar >= 0 ? '#c2410c' : '#065f46', bg: ivaApagar >= 0 ? '#fff7ed' : '#f0fdf4', strong: true },
             ].map(c => (
-              <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: '1px solid #dde8de' }}>
-                <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+              <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: `1px solid ${t.cardBorder}` }}>
+                <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
                 <div style={{ fontSize: c.strong ? '22px' : '19px', fontWeight: 900, color: c.color }}>{fmt2(c.value)}</div>
               </div>
             ))}
@@ -270,10 +274,10 @@ export default function Dashboard() {
 
       {/* ── Reserva para IR ── */}
       {revenue > 0 && (
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '18px 22px', marginBottom: '20px' }}>
+        <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '18px 22px', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
             <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.irTitle} · {periodLabel}</h3>
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>{irPct}% {L.irHint}</span>
+            <span style={{ fontSize: '11px', color: t.subtle }}>{irPct}% {L.irHint}</span>
           </div>
           {irBase > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '10px' : '16px' }}>
@@ -282,14 +286,14 @@ export default function Dashboard() {
                 { label: `${L.irReserve} (${irPct}%)`, value: irReserve, color: '#b45309', bg: '#fffbeb', strong: true },
                 { label: netLabel, value: yearNet - irReserve, color: (yearNet - irReserve) >= 0 ? '#065f46' : RED, bg: '#f0fdf4' },
               ].map(c => (
-                <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: '1px solid #dde8de' }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+                <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: `1px solid ${t.cardBorder}` }}>
+                  <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
                   <div style={{ fontSize: c.strong ? '22px' : '19px', fontWeight: 900, color: c.color }}>{fmt2(c.value)}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ fontSize: '13px', color: '#94a3b8' }}>{L.irNoResult}</div>
+            <div style={{ fontSize: '13px', color: t.subtle }}>{L.irNoResult}</div>
           )}
         </div>
       )}
@@ -320,7 +324,7 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.6fr 1fr', gap: '16px', alignItems: 'stretch' }}>
 
         {/* ── Timeline ── */}
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '20px 22px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.timeline} · {periodLabel}</h3>
             <div style={{ display: 'flex', gap: '14px' }}>
@@ -349,19 +353,19 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
             {monthly.map((m, i) => (
-              <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{m.label}</div>
+              <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: '10px', color: t.subtle, fontWeight: 600 }}>{m.label}</div>
             ))}
           </div>
         </div>
 
         {/* ── Breakeven ── */}
-        <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px' }}>
+        <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '20px 22px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: '0 0 4px' }}>{L.breakeven}</h3>
-          <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 18px' }}>{L.beHint}</p>
+          <p style={{ fontSize: '11px', color: t.subtle, margin: '0 0 18px' }}>{L.beHint}</p>
 
           {/* Breakeven value */}
-          <div style={{ background: BG, borderRadius: '12px', padding: '16px', textAlign: 'center', marginBottom: '16px', border: '1px solid #dde8de' }}>
-            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>{L.bePoint}</div>
+          <div style={{ background: BG, borderRadius: '12px', padding: '16px', textAlign: 'center', marginBottom: '16px', border: `1px solid ${t.cardBorder}` }}>
+            <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>{L.bePoint}</div>
             <div style={{ fontSize: '28px', fontWeight: 900, color: G }}>{fmt2(breakeven)}</div>
           </div>
 
@@ -377,7 +381,7 @@ export default function Dashboard() {
               <div style={{ width: `${progressBE}%`, height: '100%', background: aboveBE ? `linear-gradient(90deg,${GREEN},${G})` : `linear-gradient(90deg,${GOLD},${RED})`, borderRadius: '99px', transition: 'width .4s' }} />
             </div>
             {!aboveBE && breakeven > 0 && (
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px' }}>
+              <div style={{ fontSize: '11px', color: t.textMuted, marginTop: '8px' }}>
                 {L.needRevenue}: <strong style={{ color: RED }}>{fmt2(breakeven - revenue)}</strong>
               </div>
             )}
@@ -390,8 +394,8 @@ export default function Dashboard() {
             { label: L.variable,value: varC,       color: '#c2410c' },
             { label: L.cmRatio, value: `${Math.round(cmRatio*100)}%`, color: G, isText: true },
           ].map(r => (
-            <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #f0f4f1' }}>
-              <span style={{ fontSize: '12px', color: '#4a6355' }}>{r.label}</span>
+            <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${t.rowBorder}` }}>
+              <span style={{ fontSize: '12px', color: t.text }}>{r.label}</span>
               <span style={{ fontSize: '13px', fontWeight: 800, color: r.color }}>{r.isText ? r.value : fmt2(r.value)}</span>
             </div>
           ))}
@@ -400,11 +404,11 @@ export default function Dashboard() {
       </div>
 
       {/* ── Receita por produto/serviço ── */}
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px', marginTop: '16px' }}>
+      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '20px 22px', marginTop: '16px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: '0 0 16px' }}>{L.byProduct}</h3>
 
         {productRows.length === 0 && (
-          <div style={{ fontSize: '13px', color: '#94a3b8', padding: '8px 0' }}>{L.noProducts}</div>
+          <div style={{ fontSize: '13px', color: t.subtle, padding: '8px 0' }}>{L.noProducts}</div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -420,7 +424,7 @@ export default function Dashboard() {
                     </span>
                   </span>
                   <span style={{ fontSize: '13px', fontWeight: 800, color: G, flexShrink: 0 }}>
-                    {fmt2(r.total)} <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>· {Math.round(pct)}%</span>
+                    {fmt2(r.total)} <span style={{ fontSize: '11px', color: t.subtle, fontWeight: 600 }}>· {Math.round(pct)}%</span>
                   </span>
                 </div>
                 <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
@@ -431,9 +435,9 @@ export default function Dashboard() {
           })}
 
           {unassignedRev > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #f0f4f1' }}>
-              <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>{L.unassigned}</span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>{fmt2(unassignedRev)}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: `1px solid ${t.rowBorder}` }}>
+              <span style={{ fontSize: '12px', color: t.subtle, fontStyle: 'italic' }}>{L.unassigned}</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: t.subtle }}>{fmt2(unassignedRev)}</span>
             </div>
           )}
         </div>
@@ -445,7 +449,7 @@ export default function Dashboard() {
 
 function Legend({ color, label }) {
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: t.textMuted, fontWeight: 600 }}>
       <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: color }} />
       {label}
     </span>

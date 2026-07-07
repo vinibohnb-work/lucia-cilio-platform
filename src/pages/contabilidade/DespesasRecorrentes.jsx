@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
 
@@ -33,6 +34,8 @@ const EMPTY = { description: '', category: '', amount: '', periodicity: 'monthly
 
 export default function DespesasRecorrentes() {
   const { lang } = useLang()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
   const year = 2026
   const [templates, setTemplates] = useState([])
@@ -166,18 +169,18 @@ export default function DespesasRecorrentes() {
     load()
   }
 
-  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
 
-  if (loading) return <div style={{ padding: '40px', color: '#94a3b8', fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
 
   return (
     <div style={{ width: '100%', maxWidth: '1000px' }}>
       <h2 style={{ fontSize: '20px', fontWeight: 900, color: G, margin: '0 0 4px' }}>{L.title}</h2>
-      <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 20px' }}>{L.subtitle}</p>
+      <p style={{ fontSize: '13px', color: t.textMuted, margin: '0 0 20px' }}>{L.subtitle}</p>
 
       {/* ── Confirmar este mês ── */}
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '20px 22px', marginBottom: '18px' }}>
+      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '20px 22px', marginBottom: '18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.thisMonth}</h3>
           <select value={period} onChange={e => setPeriod(e.target.value)} style={{ ...selectStyle, width: 'auto', padding: '7px 12px' }}>
@@ -186,7 +189,7 @@ export default function DespesasRecorrentes() {
         </div>
 
         {dueTemplates.length === 0 && (
-          <div style={{ padding: '18px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.noDue}</div>
+          <div style={{ padding: '18px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.noDue}</div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -198,7 +201,7 @@ export default function DespesasRecorrentes() {
               <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', padding: '12px 14px', borderRadius: '10px', background: isConfirmed ? '#f0fdf4' : BG, border: `1px solid ${isConfirmed ? '#bbf7d0' : '#dde8de'}` }}>
                 <div style={{ flex: 1, minWidth: '160px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: G }}>{t.description}</div>
-                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11px', color: t.textMuted, marginTop: '2px' }}>
                     {cat && <span style={{ color: COST_TYPE[cat.costType].color, fontWeight: 600 }}>{catLabel(t.category)}</span>}
                     <span style={{ marginLeft: cat ? '8px' : 0 }}>{L.predicted}: <strong>€ {fmt(t.amount)}</strong></span>
                   </div>
@@ -207,12 +210,12 @@ export default function DespesasRecorrentes() {
                   <>
                     <span style={{ fontSize: '13px', fontWeight: 800, color: '#065f46' }}>€ {fmt(ce.amount)}</span>
                     <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#d1fae5', color: '#065f46' }}>{L.confirmed}</span>
-                    <button onClick={() => undoMonth(t)} disabled={busyId===t.id} style={{ padding: '6px 12px', background: '#fff', border: '1px solid #dde8de', borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#64748b' }}>{L.undo}</button>
+                    <button onClick={() => undoMonth(t)} disabled={busyId===t.id} style={{ padding: '6px 12px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: t.textMuted }}>{L.undo}</button>
                   </>
                 ) : (
                   <>
                     <input type="number" step="0.01" min="0" value={actuals[t.id] ?? ''} onChange={e => setActuals(a => ({ ...a, [t.id]: e.target.value }))} placeholder={fmt(t.amount)} style={{ ...inputStyle, width: '110px' }} />
-                    <button onClick={() => confirmMonth(t)} disabled={busyId===t.id} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: busyId===t.id?'wait':'pointer' }}>{busyId===t.id ? '…' : L.confirm}</button>
+                    <button onClick={() => confirmMonth(t)} disabled={busyId===t.id} style={{ padding: '8px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: busyId===t.id?'wait':'pointer' }}>{busyId===t.id ? '…' : L.confirm}</button>
                   </>
                 )}
               </div>
@@ -221,9 +224,9 @@ export default function DespesasRecorrentes() {
         </div>
 
         {dueTemplates.length > 0 && (
-          <div style={{ display: 'flex', gap: '20px', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #f0f4f1', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '12px', color: '#4a6355' }}>{L.totalPred}: <strong style={{ color: GOLD }}>€ {fmt(totalPredicted)}</strong></span>
-            <span style={{ fontSize: '12px', color: '#4a6355' }}>{L.totalConf}: <strong style={{ color: '#065f46' }}>€ {fmt(totalConfirmed)}</strong></span>
+          <div style={{ display: 'flex', gap: '20px', marginTop: '16px', paddingTop: '14px', borderTop: `1px solid ${t.rowBorder}`, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: t.text }}>{L.totalPred}: <strong style={{ color: GOLD }}>€ {fmt(totalPredicted)}</strong></span>
+            <span style={{ fontSize: '12px', color: t.text }}>{L.totalConf}: <strong style={{ color: '#065f46' }}>€ {fmt(totalConfirmed)}</strong></span>
           </div>
         )}
       </div>
@@ -231,11 +234,11 @@ export default function DespesasRecorrentes() {
       {/* ── Modelos ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.templates}</h3>
-        <button onClick={openCreate} style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.new}</button>
+        <button onClick={openCreate} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.new}</button>
       </div>
 
       {showForm && (
-        <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '14px' }}>
+        <div style={{ background: t.cardBg, border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '14px' }}>
           <div style={{ fontSize: '12px', fontWeight: 800, color: editingId ? GOLD : G, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {editingId ? `${L.edit} — ${form.description || ''}` : L.new}
           </div>
@@ -250,38 +253,38 @@ export default function DespesasRecorrentes() {
               [`${L.endM} (${L.endHint})`, '170px', <input type="month" value={form.end_month} onChange={e=>setForm(f=>({...f,end_month:e.target.value}))} style={inputStyle} />],
             ].map(([lb, minW, field], i) => (
               <div key={i} style={{ flex: `1 1 ${minW}`, minWidth: minW }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px' }}>{lb}</div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '5px' }}>{lb}</div>
                 {field}
               </div>
             ))}
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={saveTemplate} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving?'…':L.save}</button>
-              <button onClick={closeForm} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+              <button onClick={saveTemplate} disabled={saving} style={{ padding: '8px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving?'…':L.save}</button>
+              <button onClick={closeForm} style={{ padding: '8px 12px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
             </div>
           </div>
         </div>
       )}
 
       <div className="table-scroll">
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '860px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 110px', padding: '12px 20px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
+      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '860px' : 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 110px', padding: '12px 20px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
           {[L.desc, L.category, L.amount, L.period_, L.dueDay, L.validity, ''].map((h,i) => (
-            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
-        {templates.length === 0 && <div style={{ padding: '28px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.none}</div>}
+        {templates.length === 0 && <div style={{ padding: '28px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.none}</div>}
         {templates.map((t, i) => (
-          <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 110px', padding: '13px 20px', borderBottom: i < templates.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', opacity: t.active ? 1 : 0.5 }}>
+          <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 110px', padding: '13px 20px', borderBottom: i < templates.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px', opacity: t.active ? 1 : 0.5 }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: G }}>{t.description}</div>
-            <div style={{ fontSize: '12px', color: '#4a6355' }}>{catLabel(t.category)}</div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#4a6355' }}>€ {fmt(t.amount)}</div>
-            <div style={{ fontSize: '12px', color: '#4a6355' }}>{t.periodicity==='monthly'?L.monthly:t.periodicity==='quarterly'?L.quarterly:L.annual}</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>{t.due_day || '—'}</div>
-            <div style={{ fontSize: '11px', color: '#64748b' }}>
+            <div style={{ fontSize: '12px', color: t.text }}>{catLabel(t.category)}</div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: t.text }}>€ {fmt(t.amount)}</div>
+            <div style={{ fontSize: '12px', color: t.text }}>{t.periodicity==='monthly'?L.monthly:t.periodicity==='quarterly'?L.quarterly:L.annual}</div>
+            <div style={{ fontSize: '12px', color: t.textMuted }}>{t.due_day || '—'}</div>
+            <div style={{ fontSize: '11px', color: t.textMuted }}>
               {t.start_month ? `${L.since} ${t.start_month}` : '—'}{t.end_month ? ` · ${t.end_month}` : ` · ${L.noEnd}`}
             </div>
             <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-              <button onClick={() => openEdit(t)} title={L.edit} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 11px', background: BG, border: '1px solid #dde8de', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: '#4a6355' }}>
+              <button onClick={() => openEdit(t)} title={L.edit} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 11px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: t.text }}>
                 <span style={{ fontSize: '13px', lineHeight: 1 }}>✏️</span>{!isMobile && L.edit}
               </button>
               <button onClick={() => removeTemplate(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px 4px', lineHeight: 1 }} title={L.del}>✕</button>

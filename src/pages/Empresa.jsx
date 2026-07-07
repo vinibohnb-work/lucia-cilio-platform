@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLang } from '../context/LangContext'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useTheme } from '../context/ThemeContext'
 import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } from '../lib/companySettings'
 
 const G = '#0a2f1a'
@@ -12,6 +13,8 @@ const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','Augus
 
 export default function Empresa() {
   const { lang } = useLang()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
   const [form, setForm] = useState(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
@@ -79,18 +82,18 @@ export default function Empresa() {
     setSaved(true)
   }
 
-  const label = (txt) => <div style={{ fontSize: '12px', fontWeight: 700, color: '#4a6355', marginBottom: '6px' }}>{txt}</div>
-  const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: '1px solid #dde8de', fontSize: '14px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box', color: '#1a2e1a' }
+  const label = (txt) => <div style={{ fontSize: '12px', fontWeight: 700, color: t.text, marginBottom: '6px' }}>{txt}</div>
+  const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, fontSize: '14px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box', color: '#1a2e1a' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const card = { background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', padding: '22px 24px' }
+  const card = { background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '22px 24px' }
   const grid2 = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }
 
-  if (loading) return <div style={{ padding: '40px', color: '#94a3b8', fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
 
   return (
     <div style={{ width: '100%', maxWidth: '760px' }}>
       <h2 style={{ fontSize: '20px', fontWeight: 900, color: G, margin: '0 0 4px' }}>{L.title}</h2>
-      <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 22px' }}>{L.subtitle}</p>
+      <p style={{ fontSize: '13px', color: t.textMuted, margin: '0 0 22px' }}>{L.subtitle}</p>
 
       {/* Geral */}
       <div style={{ ...card, marginBottom: '16px' }}>
@@ -134,7 +137,7 @@ export default function Empresa() {
           <div>
             {label(L.irReserve)}
             <input type="number" min="0" max="100" step="1" value={form.ir_reserve_pct} onChange={e => update('ir_reserve_pct', e.target.value)} style={inputStyle} />
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '5px' }}>{L.irHint}</div>
+            <div style={{ fontSize: '11px', color: t.subtle, marginTop: '5px' }}>{L.irHint}</div>
           </div>
           <div>
             {label(L.ssRegime)}
@@ -155,7 +158,7 @@ export default function Empresa() {
 
       {/* Ações */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '12px 26px', background: G, color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '14px', cursor: saving ? 'wait' : 'pointer' }}>
+        <button onClick={handleSave} disabled={saving} style={{ padding: '12px 26px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '14px', cursor: saving ? 'wait' : 'pointer' }}>
           {saving ? L.saving : L.save}
         </button>
         {saved && <span style={{ fontSize: '13px', fontWeight: 700, color: '#065f46' }}>{L.saved}</span>}

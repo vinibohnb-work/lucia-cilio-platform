@@ -6,6 +6,7 @@ import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCa
 import InfoTooltip from '../../components/InfoTooltip'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
+import { useTheme } from '../../context/ThemeContext'
 
 // IVA contido num montante total (com IVA): total × taxa/(100+taxa)
 const vatFromGross = (gross, rate) => (rate > 0 ? Number(gross) * rate / (100 + rate) : 0)
@@ -48,6 +49,8 @@ const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', 
 
 export default function LivroCaixa() {
   const { lang } = useLang()
+  const { t } = useTheme()
+  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
   const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState([])
@@ -180,13 +183,13 @@ export default function LivroCaixa() {
     vat: 'IVA', vatExempt: 'isento', predictedOut: 'Saídas previstas', predictedOutSub: 'recorrentes a confirmar',
   }
 
-  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: '1px solid #dde8de', fontSize: '13px', background: '#fff', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const GRID = '108px 64px 1fr 96px 92px 88px 92px 34px'
 
   const fieldWrap = (label, node, minW, extra) => (
     <div style={{ flex: `1 1 ${minW}`, minWidth: minW }}>
-      <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
         {label}{extra}
       </div>
       {node}
@@ -204,7 +207,7 @@ export default function LivroCaixa() {
           <option value="all">{L.all}</option>
           {months.map((m,i) => <option key={i} value={String(i+1).padStart(2,'0')}>{m} 2026</option>)}
         </select>
-        <button onClick={() => exportCSV(filtered, lang)} style={{ padding: '8px 14px', background: BG, border: '1px solid #dde8de', borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: '#4a6355' }}>
+        <button onClick={() => exportCSV(filtered, lang)} style={{ padding: '8px 14px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: '#4a6355' }}>
           ⬇ {L.export}
         </button>
       </div>
@@ -217,12 +220,12 @@ export default function LivroCaixa() {
           { label: L.expense, value: totalOut, color: '#e53e3e', bg: '#fee2e2' },
           { label: L.predictedOut, sub: L.predictedOutSub, value: predictedOut, color: '#b45309', bg: '#fffbeb' },
         ].map(c => (
-          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 18px', border: '1px solid #dde8de', textAlign: 'center' }}>
+          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 18px', border: `1px solid ${t.cardBorder}`, textAlign: 'center' }}>
             <div style={{ fontSize: '20px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</div>
-            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: '10px', color: t.textMuted, fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {c.sub ? '🔁 ' : ''}{c.label}
             </div>
-            {c.sub && <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '2px' }}>({c.sub})</div>}
+            {c.sub && <div style={{ fontSize: '9px', color: t.subtle, marginTop: '2px' }}>({c.sub})</div>}
           </div>
         ))}
       </div>
@@ -233,8 +236,8 @@ export default function LivroCaixa() {
           { label: L.cash, value: cashBal, color: '#92400e', bg: '#f5edd6', icon: '💵' },
           { label: L.bank, value: bankBal, color: '#1d4ed8', bg: '#eff6ff', icon: '🏦' },
         ].map(c => (
-          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 20px', border: '1px solid #dde8de', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.icon} {c.label}</span>
+          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 20px', border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '12px', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.icon} {c.label}</span>
             <span style={{ fontSize: '20px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</span>
           </div>
         ))}
@@ -242,7 +245,7 @@ export default function LivroCaixa() {
 
       {/* Add form */}
       {showForm && (
-        <div style={{ background: '#fff', border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
+        <div style={{ background: t.cardBg, border: `2px solid ${GOLD}`, borderRadius: '12px', padding: '18px 20px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
             {fieldWrap(L.date, <input type="date" value={form.entry_date} onChange={e=>setForm(f=>({...f,entry_date:e.target.value}))} style={inputStyle} />, '130px')}
             {fieldWrap(L.doc, <input value={form.doc} onChange={e=>setForm(f=>({...f,doc:e.target.value}))} placeholder="001" style={inputStyle} />, '80px')}
@@ -284,8 +287,8 @@ export default function LivroCaixa() {
             )}
 
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={addEntry} disabled={saving} style={{ padding: '8px 16px', background: G, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : L.save}</button>
-              <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: '1px solid #dde8de', borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: '#64748b' }}>✕</button>
+              <button onClick={addEntry} disabled={saving} style={{ padding: '8px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : L.save}</button>
+              <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
             </div>
           </div>
         </div>
@@ -293,23 +296,23 @@ export default function LivroCaixa() {
 
       {/* Table */}
       <div className="table-scroll">
-      <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #dde8de', overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '11px 18px', background: BG, borderBottom: '1px solid #dde8de', gap: '8px' }}>
+      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '11px 18px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
           {[L.date, L.doc, L.desc, L.type, L.amount, L.dest, L.running, ''].map((h,i) => (
-            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
 
-        {loading && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.loading}</div>}
-        {!loading && withBalance.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>{L.noEntries}</div>}
+        {loading && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.loading}</div>}
+        {!loading && withBalance.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.noEntries}</div>}
 
         {!loading && withBalance.map((e, i) => {
           const cat = e.category ? getCategory(e.category) : null
           const linked = e.catalog_item_id ? catalog.find(c => c.id === e.catalog_item_id) : null
           return (
-            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 18px', borderBottom: i < withBalance.length-1 ? '1px solid #f0f4f1' : 'none', alignItems: 'center', gap: '8px', background: e.type === 'saida' ? '#fffbfb' : '#fff' }}>
+            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 18px', borderBottom: i < withBalance.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px', background: e.type === 'saida' ? t.softCardBg : 'transparent' }}>
               <div style={{ fontSize: '12px', color: '#4a6355' }}>{e.entry_date.split('-').reverse().join('/')}</div>
-              <div style={{ fontSize: '11px', color: '#94a3b8' }}>{e.doc}</div>
+              <div style={{ fontSize: '11px', color: t.subtle }}>{e.doc}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#1a2e1a' }}>{e.description}</div>
                 {(cat || linked || e.vat_amount > 0) && (
