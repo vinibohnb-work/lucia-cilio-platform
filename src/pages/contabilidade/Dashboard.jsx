@@ -6,6 +6,7 @@ import { getCategory } from '../../data/expenseCategories'
 import { getCompanySettings } from '../../lib/companySettings'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
+import { FlagPT } from '../../components/Flag'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -302,7 +303,7 @@ export default function Dashboard() {
       {isQuarter && settings?.country !== 'DE' && (
         <div style={{ background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <span style={{ fontSize: '16px' }}>🇵🇹</span>
+            <FlagPT size={20} />
             <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0 }}>{L.ssTitle} · {periodLabel}</h3>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '12px' : '16px' }}>

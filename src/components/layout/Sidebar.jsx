@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
 import { getCompanySettings } from '../../lib/companySettings'
+import Flag from '../Flag'
 
 // ── Ícones (stroke = currentColor) ─────────────────────────────────────────
 const Icon = ({ d, size = 17, sw = 1.7, children }) => (
@@ -134,7 +135,7 @@ export default function Sidebar() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
             {['pt','de'].map(code => (
-              <span key={code} onClick={() => setLang(code)} style={{ padding: '5px 11px', cursor: 'pointer', background: lang === code ? t.accent : 'transparent', color: lang === code ? '#0a2f1a' : t.sidebarSub }}>{code.toUpperCase()}</span>
+              <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 11px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>
             ))}
           </div>
           <button onClick={toggle} title={night ? (lang==='de'?'Heller Modus':'Modo claro') : (lang==='de'?'Nachtmodus':'Modo noturno')} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>

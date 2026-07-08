@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useLang } from '../context/LangContext'
 import { t } from '../i18n/translations'
+import Flag from '../components/Flag'
 
 const G = '#0a2f1a'
 const GM = '#164e2b'
@@ -45,9 +46,9 @@ export default function Landing() {
           <a href="#contacto" style={{ fontSize: '13px', fontWeight: 600, color: G, textDecoration: 'none', opacity: .75 }}>{t(lang,'land_nav_contact')}</a>
           {/* Language toggle */}
           <div style={{ display: 'flex', gap: '4px', background: BG, borderRadius: '8px', padding: '3px', border: '1px solid #dde8de' }}>
-            {[['pt','🇵🇹'],['de','🇩🇪']].map(([code, flag]) => (
-              <button key={code} onClick={() => setLang(code)} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', background: lang === code ? G : 'transparent', color: lang === code ? '#fff' : '#64748b' }}>
-                {flag} {code.toUpperCase()}
+            {['pt','de'].map(code => (
+              <button key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer', background: lang === code ? G : 'transparent', color: lang === code ? '#fff' : '#64748b' }}>
+                <Flag code={code} size={18} /> {code.toUpperCase()}
               </button>
             ))}
           </div>
