@@ -32,13 +32,14 @@ export default async function handler(req, res) {
       const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
       if (error) throw error
       const ids = data.users.map(u => u.id)
-      const { data: profs } = await admin.from('profiles').select('id, role').in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000'])
-      const roleById = Object.fromEntries((profs || []).map(p => [p.id, p.role]))
+      const { data: profs } = await admin.from('profiles').select('id, role, platform').in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000'])
+      const profById = Object.fromEntries((profs || []).map(p => [p.id, p]))
       const users = data.users.map(u => ({
         id: u.id,
         email: u.email,
         display_name: u.user_metadata?.display_name || u.user_metadata?.full_name || u.user_metadata?.name || '',
-        role: roleById[u.id] || 'user',
+        role: profById[u.id]?.role || 'user',
+        platform: profById[u.id]?.platform || 'accounting',
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
       })).sort((a, b) => (a.email || '').localeCompare(b.email || ''))
@@ -47,7 +48,7 @@ export default async function handler(req, res) {
 
     // ── CRIAR (convite por email) ──
     if (req.method === 'POST') {
-      const { email, display_name, role, redirectTo } = req.body || {}
+      const { email, display_name, role, platform, redirectTo } = req.body || {}
       if (!email) return res.status(400).json({ error: 'Email é obrigatório.' })
       // Envia email de convite; o utilizador define a password na página redirectTo.
       const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
@@ -55,13 +56,17 @@ export default async function handler(req, res) {
         redirectTo: redirectTo || undefined,
       })
       if (error) throw error
-      await admin.from('profiles').upsert({ id: data.user.id, role: role === 'admin' ? 'admin' : 'user' })
+      await admin.from('profiles').upsert({
+        id: data.user.id,
+        role: role === 'admin' ? 'admin' : 'user',
+        platform: platform === 'esg' ? 'esg' : 'accounting',
+      })
       return res.status(200).json({ ok: true, id: data.user.id, invited: true })
     }
 
     // ── EDITAR ──
     if (req.method === 'PATCH') {
-      const { id, email, password, display_name, role } = req.body || {}
+      const { id, email, password, display_name, role, platform } = req.body || {}
       if (!id) return res.status(400).json({ error: 'ID em falta.' })
       if (id === callerId && role && role !== 'admin') {
         return res.status(400).json({ error: 'Não pode remover o seu próprio acesso de administrador.' })
@@ -74,7 +79,10 @@ export default async function handler(req, res) {
         const { error } = await admin.auth.admin.updateUserById(id, attrs)
         if (error) throw error
       }
-      if (role) await admin.from('profiles').upsert({ id, role })
+      const profPatch = {}
+      if (role) profPatch.role = role
+      if (platform) profPatch.platform = platform === 'esg' ? 'esg' : 'accounting'
+      if (Object.keys(profPatch).length) await admin.from('profiles').upsert({ id, ...profPatch })
       return res.status(200).json({ ok: true })
     }
 

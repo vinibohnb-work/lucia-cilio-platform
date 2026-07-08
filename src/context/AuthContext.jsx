@@ -3,20 +3,21 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext()
 
-async function fetchRole(userId) {
-  if (!userId) return null
+async function fetchProfile(userId) {
+  if (!userId) return { role: null, platform: null }
   const { data, error } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, platform')
     .eq('id', userId)
     .single()
-  if (error) return 'user' // fallback (ex: antes da migração 003)
-  return data?.role || 'user'
+  if (error) return { role: 'user', platform: 'accounting' } // fallback (ex: antes das migrações)
+  return { role: data?.role || 'user', platform: data?.platform || 'accounting' }
 }
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [role, setRole]       = useState(null)
+  const [platform, setPlatform] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -26,10 +27,10 @@ export function AuthProvider({ children }) {
       if (!active) return
       setSession(sess)
       if (sess?.user) {
-        const r = await fetchRole(sess.user.id)
-        if (active) setRole(r)
+        const { role: r, platform: p } = await fetchProfile(sess.user.id)
+        if (active) { setRole(r); setPlatform(p) }
       } else {
-        setRole(null)
+        setRole(null); setPlatform(null)
       }
       if (active) setLoading(false)
     }
@@ -47,6 +48,7 @@ export function AuthProvider({ children }) {
     session,
     user: session?.user ?? null,
     role,
+    platform,
     isAdmin: role === 'admin',
     loading,
     signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),

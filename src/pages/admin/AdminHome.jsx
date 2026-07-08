@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { listUsers, createUser, updateUser, deleteUser } from '../../lib/adminApi'
 
-const EMPTY = { email: '', display_name: '', role: 'user' }
+const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting' }
 
 export default function AdminHome() {
   const { user } = useAuth()
@@ -25,6 +25,7 @@ export default function AdminHome() {
   const L = lang === 'de' ? {
     eyebrow: 'Verwaltung', title: 'Benutzerverwaltung',
     new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
+    platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer', created: 'Erstellt',
     lastLogin: 'Letzter Login', save: 'Speichern', invite: 'Einladung senden',
     edit: 'Bearbeiten', del: 'Löschen', loading: 'Wird geladen…', empty: 'Keine Benutzer.', never: 'nie',
@@ -35,6 +36,7 @@ export default function AdminHome() {
   } : {
     eyebrow: 'Administração', title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
+    platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador', created: 'Criado',
     lastLogin: 'Último acesso', save: 'Guardar', invite: 'Enviar convite',
     edit: 'Editar', del: 'Eliminar', loading: 'A carregar…', empty: 'Sem utilizadores.', never: 'nunca',
@@ -52,14 +54,14 @@ export default function AdminHome() {
   useEffect(() => { load() }, [load])
 
   function openCreate() { setForm(EMPTY); setEditingId('new'); setErr(''); setNotice('') }
-  function openEdit(u) { setForm({ email: u.email, display_name: u.display_name, role: u.role }); setEditingId(u.id); setErr(''); setNotice('') }
+  function openEdit(u) { setForm({ email: u.email, display_name: u.display_name, role: u.role, platform: u.platform || 'accounting' }); setEditingId(u.id); setErr(''); setNotice('') }
   function closeForm() { setEditingId(null); setForm(EMPTY) }
 
   async function submit() {
     setSaving(true); setErr(''); setNotice('')
     try {
-      if (editingId === 'new') { await createUser({ email: form.email, display_name: form.display_name, role: form.role }); setNotice(L.invited(form.email)) }
-      else { await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role }) }
+      if (editingId === 'new') { await createUser({ email: form.email, display_name: form.display_name, role: form.role, platform: form.platform }); setNotice(L.invited(form.email)) }
+      else { await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role, platform: form.platform }) }
       closeForm(); await load()
     } catch (e) { setErr(e.message) }
     setSaving(false)
@@ -75,7 +77,8 @@ export default function AdminHome() {
   const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, fontSize: '13px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const roleStyle = { admin: { bg: t.chipBg, ink: t.chipText }, user: { bg: t.chipBg, ink: t.chipText } }
-  const GRID = '1fr 1fr 120px 110px 110px 150px'
+  const platLabel = (p) => (p === 'esg' ? L.platEsg : L.platAcc)
+  const GRID = '1.2fr 1fr 100px 110px 100px 90px 130px'
 
   return (
     <div style={{ width: '100%' }}>
@@ -96,9 +99,12 @@ export default function AdminHome() {
       {/* Form */}
       {editingId && (
         <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', padding: '20px 22px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1.4fr 130px auto', gap: '12px', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1.3fr 140px 120px auto', gap: '12px', alignItems: 'end' }}>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.email}</div><input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="nome@email.com" style={inputStyle} /></div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.name}</div><input value={form.display_name} onChange={e=>setForm(f=>({...f,display_name:e.target.value}))} placeholder="Lúcia Cílio" style={inputStyle} /></div>
+            <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.platform}</div>
+              <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="esg">{L.platEsg}</option></select>
+            </div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.role}</div>
               <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option></select>
             </div>
@@ -115,7 +121,7 @@ export default function AdminHome() {
       <div className="table-scroll">
       <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '13px 22px', background: t.headBg, gap: '12px', fontSize: '10.5px', letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 600, color: t.textMuted }}>
-          {[L.email, L.name, L.role, L.created, L.lastLogin, ''].map((h,i) => <div key={i}>{h}</div>)}
+          {[L.email, L.name, L.platform, L.role, L.created, L.lastLogin, ''].map((h,i) => <div key={i}>{h}</div>)}
         </div>
         {loading && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.loading}</div>}
         {!loading && users.length === 0 && !err && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.empty}</div>}
@@ -127,6 +133,7 @@ export default function AdminHome() {
             <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 22px', borderTop: `1px solid ${t.rowBorder}`, alignItems: 'center', gap: '12px', fontSize: '13px' }}>
               <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>(eu)</span>}</div>
               <div style={{ color: t.text }}>{u.display_name || '—'}</div>
+              <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: (u.platform==='esg'?'#e8f0fb':'#eaf5ee'), color: (u.platform==='esg'?'#1e60c8':'#0a7a3e') }}>{platLabel(u.platform)}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: rs.bg, color: rs.ink }}>{u.role === 'admin' ? L.admin : L.userRole}</span></div>
               <div style={{ color: t.textMuted }}>{fmtDate(u.created_at)}</div>
               <div style={{ color: t.textMuted }}>{fmtDate(u.last_sign_in_at)}</div>

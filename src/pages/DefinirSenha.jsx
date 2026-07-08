@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
+import { homePathFor } from '../lib/platformHome'
 import Flag from '../components/Flag'
 
 const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -11,7 +12,7 @@ const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="non
 
 export default function DefinirSenha() {
   const navigate = useNavigate()
-  const { session, loading: authLoading } = useAuth()
+  const { session, role, platform, loading: authLoading } = useAuth()
   const { lang, setLang } = useLang()
   const { t, night, toggle } = useTheme()
 
@@ -43,7 +44,7 @@ export default function DefinirSenha() {
     const { error } = await supabase.auth.updateUser({ password: pw })
     setSaving(false)
     if (error) { setError(error.message); return }
-    navigate('/contabilidade/dashboard', { replace: true })
+    navigate(homePathFor(role, platform), { replace: true })
   }
 
   const inputStyle = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: '10px', fontSize: '14px', background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.heading, outline: 'none' }

@@ -24,33 +24,53 @@ const IconObrig = () => <Icon><rect x="3.5" y="4.5" width="17" height="16" rx="2
 const IconEmpresa = () => <Icon><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/></Icon>
 const IconAdmin = () => <Icon><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></Icon>
 const IconRucklagen = () => <Icon><path d="M12 3 4 6v6c0 4.5 3.2 7.5 8 9 4.8-1.5 8-4.5 8-9V6z"/><path d="M9.3 12h5.4M12 9.3v5.4" strokeWidth="1.5"/></Icon>
+// ESG
+const IconDiag = () => <Icon><path d="M12 21c4-2.5 6-6 6-11a6 6 0 0 0-12 0c0 5 2 8.5 6 11z" transform="scale(1)"/><path d="M12 3c0 6 0 12 0 16" strokeWidth="1.4"/></Icon>
+const IconMaterial = () => <Icon><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/></Icon>
+const IconKpi = () => <Icon><path d="M4 20V4M4 20h16"/><path d="M8 16l3-4 3 2 4-6" strokeWidth="1.6"/></Icon>
+const IconProjetos = () => <Icon><path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.2h6.5a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></Icon>
+const IconRelatorios = () => <Icon><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18M8.5 13h7M8.5 16.5h7" strokeWidth="1.4"/></Icon>
 const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
 const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
 const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
 
-const SECTIONS = [
-  { key: 'section_acc', items: [
-    { to: '/contabilidade/dashboard',    Icon: IconPainel,   labelKey: 'nav_dash' },
-    { to: '/contabilidade/caixa',        Icon: IconCaixa,    labelKey: 'nav_caixa' },
-    { to: '/contabilidade/catalogo',     Icon: IconCatalogo, labelKey: 'nav_catalogo' },
-    { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations', badge: 2 },
-  ]},
-  { key: 'section_mgmt', items: [
-    { to: '/contabilidade/precificacao', Icon: IconPreco,    labelKey: 'nav_preco' },
-    { to: '/contabilidade/clientes',     Icon: IconClientes, labelKey: 'nav_clients' },
-    { to: '/contabilidade/empresa',      Icon: IconEmpresa,  labelKey: 'nav_empresa' },
-  ]},
-]
+const NAV = {
+  accounting: [
+    { key: 'section_acc', items: [
+      { to: '/contabilidade/dashboard',    Icon: IconPainel,   labelKey: 'nav_dash' },
+      { to: '/contabilidade/caixa',        Icon: IconCaixa,    labelKey: 'nav_caixa' },
+      { to: '/contabilidade/catalogo',     Icon: IconCatalogo, labelKey: 'nav_catalogo' },
+      { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations', badge: 2 },
+    ]},
+    { key: 'section_mgmt', items: [
+      { to: '/contabilidade/precificacao', Icon: IconPreco,    labelKey: 'nav_preco' },
+      { to: '/contabilidade/clientes',     Icon: IconClientes, labelKey: 'nav_clients' },
+      { to: '/contabilidade/empresa',      Icon: IconEmpresa,  labelKey: 'nav_empresa' },
+    ]},
+  ],
+  esg: [
+    { key: 'section_esg', items: [
+      { to: '/esg/diagnostico',   Icon: IconDiag,        labelKey: 'nav_esg_diag' },
+      { to: '/esg/materialidade', Icon: IconMaterial,    labelKey: 'nav_esg_material' },
+      { to: '/esg/kpis',          Icon: IconKpi,         labelKey: 'nav_esg_kpis' },
+      { to: '/esg/projetos',      Icon: IconProjetos,    labelKey: 'nav_projects' },
+      { to: '/esg/relatorios',    Icon: IconRelatorios,  labelKey: 'nav_esg_reports' },
+    ]},
+  ],
+}
 
 export default function Sidebar() {
   const { lang, setLang } = useLang()
   const { mobileOpen, setMobileOpen } = useSidebar()
-  const { user, signOut, isAdmin } = useAuth()
+  const { user, signOut, isAdmin, platform } = useAuth()
   const { t, night, toggle } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const [country, setCountry] = useState(null)
   useEffect(() => { getCompanySettings().then(cs => setCountry(cs?.country || 'PT')) }, [])
+
+  const activePlatform = platform === 'esg' ? 'esg' : 'accounting'
+  const sections = NAV[activePlatform]
 
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
   async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
@@ -78,7 +98,8 @@ export default function Sidebar() {
     </NavLink>
   )
 
-  const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung' } }
+  const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung' }, section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung' } }
+  const mgmtKey = activePlatform === 'esg' ? 'section_esg' : 'section_mgmt'
 
   return (
     <aside style={{
@@ -100,7 +121,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        {SECTIONS.map((sec, si) => (
+        {sections.map((sec, si) => (
           <div key={sec.key} style={{ marginTop: si ? '20px' : 0 }}>
             <div style={{ padding: '0 24px', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 8px', color: t.sectionLabel }}>
               {sectionLabel[sec.key][lang] || sectionLabel[sec.key].pt}
@@ -108,7 +129,7 @@ export default function Sidebar() {
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>
               {sec.items.map(navRow)}
               {sec.key === 'section_mgmt' && country === 'DE' && navRow({ to: '/contabilidade/rucklagen', Icon: IconRucklagen, labelKey: 'nav_rucklagen' })}
-              {sec.key === 'section_mgmt' && isAdmin && navRow({ to: '/admin', Icon: IconAdmin, labelKey: 'nav_admin' })}
+              {sec.key === mgmtKey && isAdmin && navRow({ to: '/admin', Icon: IconAdmin, labelKey: 'nav_admin' })}
             </nav>
           </div>
         ))}

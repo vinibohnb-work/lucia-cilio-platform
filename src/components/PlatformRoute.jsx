@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { homePathFor } from '../lib/platformHome'
 
@@ -12,17 +12,17 @@ const Loading = () => (
   </div>
 )
 
-// Protege rotas por role. requireRole: 'admin' | 'user' | undefined (qualquer autenticado)
-export default function RoleRoute({ requireRole, children }) {
+// Protege rotas por plataforma. O admin acede a tudo; os restantes só à sua.
+export default function PlatformRoute({ requirePlatform, children }) {
   const { session, role, platform, loading } = useAuth()
 
   if (loading) return <Loading />
   if (!session) return <Navigate to="/login" replace />
 
-  if (requireRole === 'admin' && role !== 'admin') {
-    // Um utilizador normal não acede à área de admin → vai para a sua plataforma
+  if (role !== 'admin' && requirePlatform && platform !== requirePlatform) {
     return <Navigate to={homePathFor(role, platform)} replace />
   }
 
-  return children
+  // Como layout route (sem children) → renderiza as rotas aninhadas.
+  return children || <Outlet />
 }

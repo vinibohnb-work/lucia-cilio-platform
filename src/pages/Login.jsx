@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
+import { homePathFor } from '../lib/platformHome'
 import Flag from '../components/Flag'
 
 const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -11,7 +12,7 @@ const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="non
 
 export default function Login() {
   const navigate = useNavigate()
-  const { signIn, session, isAdmin, loading: authLoading } = useAuth()
+  const { signIn, session, role, platform, loading: authLoading } = useAuth()
   const { lang, setLang } = useLang()
   const { t, night, toggle } = useTheme()
 
@@ -22,8 +23,8 @@ export default function Login() {
   const [loading, setLoading]   = useState(false)
 
   useEffect(() => {
-    if (!authLoading && session) navigate(isAdmin ? '/admin' : '/contabilidade/dashboard', { replace: true })
-  }, [authLoading, session, isAdmin, navigate])
+    if (!authLoading && session) navigate(homePathFor(role, platform), { replace: true })
+  }, [authLoading, session, role, platform, navigate])
 
   const L = lang === 'de' ? {
     subtitle: 'Office Consulting', email: 'E-Mail', password: 'Passwort',
@@ -42,10 +43,14 @@ export default function Login() {
     setError(''); setLoading(true)
     const { data, error } = await signIn(email.trim(), password)
     if (error) { setLoading(false); setError(error.message?.toLowerCase().includes('invalid') ? L.invalid : L.generic); return }
-    let role = 'user'
-    try { const { data: prof } = await supabase.from('profiles').select('role').eq('id', data.user.id).single(); if (prof?.role) role = prof.role } catch { /* pré-migração */ }
+    let r = 'user', p = 'accounting'
+    try {
+      const { data: prof } = await supabase.from('profiles').select('role, platform').eq('id', data.user.id).single()
+      if (prof?.role) r = prof.role
+      if (prof?.platform) p = prof.platform
+    } catch { /* pré-migração */ }
     setLoading(false)
-    navigate(role === 'admin' ? '/admin' : '/contabilidade/dashboard', { replace: true })
+    navigate(homePathFor(r, p), { replace: true })
   }
 
   const inputStyle = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: '10px', fontSize: '14px', background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.heading, outline: 'none' }

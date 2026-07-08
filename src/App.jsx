@@ -12,6 +12,9 @@ import DefinirSenha from './pages/DefinirSenha'
 // Auth guards
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRoute from './components/RoleRoute'
+import PlatformRoute from './components/PlatformRoute'
+import { useAuth } from './context/AuthContext'
+import { homePathFor } from './lib/platformHome'
 
 // Admin
 import AdminHome from './pages/admin/AdminHome'
@@ -29,6 +32,19 @@ import Catalogo from './pages/contabilidade/Catalogo'
 import DespesasRecorrentes from './pages/contabilidade/DespesasRecorrentes'
 import RucklagenSteuern from './pages/contabilidade/RucklagenSteuern'
 import Empresa from './pages/Empresa'
+
+// ESG pages
+import DiagnosticoESG from './pages/esg/Diagnostico'
+import Materialidade from './pages/esg/Materialidade'
+import KPIs from './pages/esg/KPIs'
+import ProjetosESG from './pages/esg/ProjetosESG'
+import RelatoriosESG from './pages/esg/RelatoriosESG'
+
+// Fallback: leva cada utilizador à sua plataforma (nunca vê um seletor)
+function HomeRedirect() {
+  const { role, platform } = useAuth()
+  return <Navigate to={homePathFor(role, platform)} replace />
+}
 
 function AppLayout() {
   const { collapsed, mobileOpen, setMobileOpen } = useSidebar()
@@ -58,17 +74,30 @@ function AppLayout() {
           padding: isMobile ? 'calc(env(safe-area-inset-top) + 64px) 14px 40px' : '30px 34px 40px',
         }}>
           <Routes>
-            <Route path="/contabilidade/dashboard"     element={<Dashboard />} />
-            <Route path="/contabilidade/caixa"         element={<LivroCaixa />} />
-            <Route path="/contabilidade/recorrentes"   element={<DespesasRecorrentes />} />
-            <Route path="/contabilidade/catalogo"      element={<Catalogo />} />
-            <Route path="/contabilidade/precificacao"  element={<Precificacao />} />
-            <Route path="/contabilidade/clientes"      element={<Clientes />} />
-            <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
-            <Route path="/contabilidade/empresa"       element={<Empresa />} />
-            <Route path="/contabilidade/rucklagen"     element={<RucklagenSteuern />} />
-            <Route path="/admin"                       element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
-            <Route path="*"                            element={<Dashboard />} />
+            {/* Plataforma Contabilidade */}
+            <Route element={<PlatformRoute requirePlatform="accounting" />}>
+              <Route path="/contabilidade/dashboard"     element={<Dashboard />} />
+              <Route path="/contabilidade/caixa"         element={<LivroCaixa />} />
+              <Route path="/contabilidade/recorrentes"   element={<DespesasRecorrentes />} />
+              <Route path="/contabilidade/catalogo"      element={<Catalogo />} />
+              <Route path="/contabilidade/precificacao"  element={<Precificacao />} />
+              <Route path="/contabilidade/clientes"      element={<Clientes />} />
+              <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
+              <Route path="/contabilidade/empresa"       element={<Empresa />} />
+              <Route path="/contabilidade/rucklagen"     element={<RucklagenSteuern />} />
+            </Route>
+
+            {/* Plataforma ESG */}
+            <Route element={<PlatformRoute requirePlatform="esg" />}>
+              <Route path="/esg/diagnostico"   element={<DiagnosticoESG />} />
+              <Route path="/esg/materialidade" element={<Materialidade />} />
+              <Route path="/esg/kpis"          element={<KPIs />} />
+              <Route path="/esg/projetos"      element={<ProjetosESG />} />
+              <Route path="/esg/relatorios"    element={<RelatoriosESG />} />
+            </Route>
+
+            <Route path="/admin" element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
+            <Route path="*"      element={<HomeRedirect />} />
           </Routes>
         </main>
       </div>
