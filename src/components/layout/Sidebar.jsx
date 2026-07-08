@@ -85,7 +85,7 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{ padding: '0 24px 22px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
-        <div style={{ width: '40px', height: '40px', flex: 'none', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: t.fontDisplay, fontWeight: 700, fontSize: '22px', color: t.logoInk, background: t.logoBg, border: t.logoBorder }}>lc</div>
+        <img src="/logo.png" alt="LC" style={{ width: '42px', height: '42px', flex: 'none', objectFit: 'contain' }} />
         <div>
           <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '19px', lineHeight: 1, color: '#f3ecdb' }}>Lúcia Cílio</div>
           <div style={{ fontSize: '9px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.sidebarSub }}>Office Consulting</div>

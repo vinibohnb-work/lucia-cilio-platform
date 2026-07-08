@@ -60,7 +60,7 @@ export default function DefinirSenha() {
 
       <div style={{ width: '400px', maxWidth: '100%', borderRadius: '20px', padding: '40px 38px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.loginShadow }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '26px' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: t.fontDisplay, fontWeight: 700, fontSize: '30px', marginBottom: '16px', color: t.logoInk, background: t.logoBg, border: t.logoBorder }}>lc</div>
+          <img src="/logo.png" alt="LC" style={{ width: '68px', height: '68px', objectFit: 'contain', marginBottom: '14px' }} />
           <h1 style={{ fontFamily: t.fontDisplay, fontSize: '24px', fontWeight: 600, color: t.heading, margin: '0 0 6px' }}>{L.title}</h1>
           <p style={{ fontSize: '13px', color: t.textMuted, margin: 0 }}>{L.subtitle}</p>
         </div>
