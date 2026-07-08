@@ -448,6 +448,7 @@ export default function Dashboard() {
 }
 
 function Legend({ color, label }) {
+  const { t } = useTheme()
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: t.textMuted, fontWeight: 600 }}>
       <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: color }} />
