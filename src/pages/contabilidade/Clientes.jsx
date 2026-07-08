@@ -14,7 +14,7 @@ const SERVICE_STYLE = {
 }
 const STATUS_STYLE = {
   active:   { bg: '#d1fae5', color: '#065f46' },
-  inactive: { bg: '#f1f5f9', color: t.textMuted },
+  inactive: { bg: '#f1f5f9', color: '#8a9990' },
 }
 
 const EMPTY = { name: '', country: '', sector: '', service: 'acc', status: 'active' }
