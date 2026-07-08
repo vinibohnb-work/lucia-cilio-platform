@@ -27,8 +27,8 @@ const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigit
 
 function exportCSV(entries, lang) {
   const header = lang === 'de'
-    ? 'Datum;Belegnr.;Beschreibung;Kategorie;Einnahme;Ausgabe;MwSt.-Satz;MwSt.-Betrag;Konto\n'
-    : 'Data;Doc.;Descrição;Categoria;Entrada;Saída;Taxa IVA;Valor IVA;Destino\n'
+    ? 'Datum;Belegnr.;Beschreibung;Menge;Kategorie;Einnahme;Ausgabe;MwSt.-Satz;MwSt.-Betrag;Konto\n'
+    : 'Data;Doc.;Descrição;Qtd.;Categoria;Entrada;Saída;Taxa IVA;Valor IVA;Destino\n'
   const rows = entries.map(e => {
     const inc = e.type === 'entrada' ? Number(e.amount).toFixed(2) : ''
     const exp = e.type === 'saida'   ? Number(e.amount).toFixed(2) : ''
@@ -36,7 +36,8 @@ function exportCSV(entries, lang) {
     const cat = e.category ? (getCategory(e.category)?.[lang]?.label || '') : ''
     const vr = e.vat_rate != null ? `${e.vat_rate}%` : ''
     const va = e.vat_amount != null ? Number(e.vat_amount).toFixed(2) : ''
-    return `${e.entry_date};${e.doc||''};${e.description};${cat};${inc};${exp};${vr};${va};${dest}`
+    const qty = e.quantity != null ? e.quantity : 1
+    return `${e.entry_date};${e.doc||''};${e.description};${qty};${cat};${inc};${exp};${vr};${va};${dest}`
   }).join('\n')
   const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -45,7 +46,7 @@ function exportCSV(entries, lang) {
   URL.revokeObjectURL(url)
 }
 
-const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', description: '', type: 'entrada', amount: '', destination: 'caixa', category: '', catalog_item_id: '', vat_rate: '' }
+const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', description: '', type: 'entrada', amount: '', quantity: '1', destination: 'caixa', category: '', catalog_item_id: '', vat_rate: '' }
 
 export default function LivroCaixa() {
   const { lang } = useLang()
@@ -128,12 +129,27 @@ export default function LivroCaixa() {
 
   function pickCatalog(id) {
     const it = catalog.find(c => c.id === id)
-    setForm(f => ({
-      ...f,
-      catalog_item_id: id,
-      description: it && !f.description ? it.name : f.description,
-      amount: it && it.price != null && !f.amount ? String(it.price) : f.amount,
-    }))
+    setForm(f => {
+      const qty = parseFloat(String(f.quantity).replace(',', '.')) || 1
+      return {
+        ...f,
+        catalog_item_id: id,
+        description: it && !f.description ? it.name : f.description,
+        // Ao escolher um produto/serviço com preço, calcula total = preço × quantidade
+        amount: it && it.price != null ? String((Number(it.price) * qty).toFixed(2)) : f.amount,
+      }
+    })
+  }
+
+  // Alterar quantidade recalcula o total quando há produto/serviço com preço associado
+  function setQuantity(q) {
+    setForm(f => {
+      const it = catalog.find(c => c.id === f.catalog_item_id)
+      const qty = parseFloat(String(q).replace(',', '.')) || 0
+      const next = { ...f, quantity: q }
+      if (it && it.price != null) next.amount = String((Number(it.price) * qty).toFixed(2))
+      return next
+    })
   }
 
   async function addEntry() {
@@ -147,6 +163,7 @@ export default function LivroCaixa() {
       description: form.description,
       type: form.type,
       amount: gross,
+      quantity: parseFloat(String(form.quantity).replace(',', '.')) || 1,
       destination: form.destination,
       category: form.type === 'saida' ? (form.category || null) : null,
       catalog_item_id: form.catalog_item_id || null,
@@ -166,7 +183,7 @@ export default function LivroCaixa() {
   const L = lang === 'de' ? {
     export: 'CSV exportieren', balance: 'Kassenbestand', income: 'Einnahmen', expense: 'Ausgaben',
     cash: 'Kasse', bank: 'Bank', date: 'Datum', doc: 'Belegnr.', desc: 'Beschreibung', type: 'Art',
-    amount: 'Betrag (€)', dest: 'Konto', running: 'Bestand', entrada: 'Einnahme', saida: 'Ausgabe',
+    amount: 'Betrag (€)', qty: 'Menge', dest: 'Konto', running: 'Bestand', entrada: 'Einnahme', saida: 'Ausgabe',
     caixa: 'Kasse', banco: 'Bank', save: 'Speichern', all: 'Alle Monate',
     noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
@@ -175,7 +192,7 @@ export default function LivroCaixa() {
   } : {
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
-    amount: 'Valor (€)', dest: 'Destino', running: 'Saldo', entrada: 'Entrada', saida: 'Saída',
+    amount: 'Valor (€)', qty: 'Qtd.', dest: 'Destino', running: 'Saldo', entrada: 'Entrada', saida: 'Saída',
     caixa: 'Caixa', banco: 'Banco', save: 'Guardar', all: 'Todos os meses',
     noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
     loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
@@ -256,6 +273,7 @@ export default function LivroCaixa() {
                 <option value="saida">{L.saida}</option>
               </select>
             ), '110px')}
+            {fieldWrap(L.qty, <input type="number" step="1" min="0" value={form.quantity} onChange={e=>setQuantity(e.target.value)} placeholder="1" style={inputStyle} />, '70px')}
             {fieldWrap(L.amount, <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />, '100px')}
             {fieldWrap(L.vat, (
               <select value={form.vat_rate === '' ? String(defaultRate) : form.vat_rate} onChange={e=>setForm(f=>({...f,vat_rate:e.target.value}))} style={selectStyle}>
@@ -315,8 +333,13 @@ export default function LivroCaixa() {
               <div style={{ fontSize: '11px', color: t.subtle }}>{e.doc}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#1a2e1a' }}>{e.description}</div>
-                {(cat || linked || e.vat_amount > 0) && (
+                {(cat || linked || e.vat_amount > 0 || Number(e.quantity) > 1) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                    {Number(e.quantity) > 1 && (
+                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: '#f1f5f9', color: '#475569' }}>
+                        × {Number(e.quantity) % 1 === 0 ? Number(e.quantity) : fmt(e.quantity)}
+                      </span>
+                    )}
                     {cat && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: COST_TYPE[cat.costType].bg, color: COST_TYPE[cat.costType].color }}>
                         {cat[lang].label}
