@@ -27,6 +27,7 @@ import ObrigacoesFiscais from './pages/contabilidade/ObrigacoesFiscais'
 import Precificacao from './pages/contabilidade/Precificacao'
 import Catalogo from './pages/contabilidade/Catalogo'
 import DespesasRecorrentes from './pages/contabilidade/DespesasRecorrentes'
+import RucklagenSteuern from './pages/contabilidade/RucklagenSteuern'
 import Empresa from './pages/Empresa'
 
 function AppLayout() {
@@ -65,6 +66,7 @@ function AppLayout() {
             <Route path="/contabilidade/clientes"      element={<Clientes />} />
             <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
             <Route path="/contabilidade/empresa"       element={<Empresa />} />
+            <Route path="/contabilidade/rucklagen"     element={<RucklagenSteuern />} />
             <Route path="/admin"                       element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
             <Route path="*"                            element={<Dashboard />} />
           </Routes>

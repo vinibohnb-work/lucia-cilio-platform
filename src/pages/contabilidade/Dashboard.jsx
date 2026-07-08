@@ -298,8 +298,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Base Segurança Social (apenas trimestral) ── */}
-      {isQuarter && (
+      {/* ── Base Segurança Social (apenas trimestral, só Portugal) ── */}
+      {isQuarter && settings?.country !== 'DE' && (
         <div style={{ background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <span style={{ fontSize: '16px' }}>🇵🇹</span>

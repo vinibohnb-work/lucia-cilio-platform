@@ -15,6 +15,9 @@ export const DEFAULT_SETTINGS = {
   ir_reserve_pct: 25,
   ss_regime: '',
   fiscal_year_start_month: 1,
+  de_krankenv: 0,
+  de_rentenv: 0,
+  de_sonstige: 0,
 }
 
 export async function getCompanySettings() {

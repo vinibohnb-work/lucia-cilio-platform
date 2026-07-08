@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useSidebar } from '../../context/SidebarContext'
@@ -5,6 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
+import { getCompanySettings } from '../../lib/companySettings'
 
 // ── Ícones (stroke = currentColor) ─────────────────────────────────────────
 const Icon = ({ d, size = 17, sw = 1.7, children }) => (
@@ -20,6 +22,7 @@ const IconClientes = () => <Icon><circle cx="9" cy="8" r="3.3"/><path d="M3.5 20
 const IconObrig = () => <Icon><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/></Icon>
 const IconEmpresa = () => <Icon><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/></Icon>
 const IconAdmin = () => <Icon><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></Icon>
+const IconRucklagen = () => <Icon><path d="M12 3 4 6v6c0 4.5 3.2 7.5 8 9 4.8-1.5 8-4.5 8-9V6z"/><path d="M9.3 12h5.4M12 9.3v5.4" strokeWidth="1.5"/></Icon>
 const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
 const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
 const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -45,6 +48,8 @@ export default function Sidebar() {
   const { t, night, toggle } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
+  const [country, setCountry] = useState(null)
+  useEffect(() => { getCompanySettings().then(cs => setCountry(cs?.country || 'PT')) }, [])
 
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
   async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
@@ -101,6 +106,7 @@ export default function Sidebar() {
             </div>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>
               {sec.items.map(navRow)}
+              {sec.key === 'section_mgmt' && country === 'DE' && navRow({ to: '/contabilidade/rucklagen', Icon: IconRucklagen, labelKey: 'nav_rucklagen' })}
               {sec.key === 'section_mgmt' && isAdmin && navRow({ to: '/admin', Icon: IconAdmin, labelKey: 'nav_admin' })}
             </nav>
           </div>
