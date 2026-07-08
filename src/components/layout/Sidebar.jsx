@@ -108,7 +108,7 @@ export default function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: 'auto', padding: '18px 20px 0', borderTop: `1px solid ${t.sidebarBorder}` }}>
+      <div style={{ marginTop: 'auto', padding: '18px 20px 22px', borderTop: `1px solid ${t.sidebarBorder}` }}>
         {/* Utilizador */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px 12px' }}>
           <div style={{ width: '30px', height: '30px', flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, fontFamily: t.fontDisplay, background: t.avatarBg, color: t.avatarInk, border: t.avatarBorder }}>

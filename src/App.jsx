@@ -65,6 +65,7 @@ function AppLayout() {
             <Route path="/contabilidade/clientes"      element={<Clientes />} />
             <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
             <Route path="/contabilidade/empresa"       element={<Empresa />} />
+            <Route path="/admin"                       element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
             <Route path="*"                            element={<Dashboard />} />
           </Routes>
         </main>
@@ -122,11 +123,6 @@ export default function App() {
               <Route path="/"                      element={<Navigate to="/login" replace />} />
               <Route path="/login"                 element={<Login />} />
               <Route path="/definir-senha"         element={<DefinirSenha />} />
-              <Route path="/admin/*" element={
-                <RoleRoute requireRole="admin">
-                  <AdminHome />
-                </RoleRoute>
-              } />
               <Route path="/*" element={
                 <ProtectedRoute>
                   <AppLayout />
