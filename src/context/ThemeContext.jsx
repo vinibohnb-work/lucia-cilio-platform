@@ -28,5 +28,7 @@ export function ThemeProvider({ children }) {
 }
 
 export function useTheme() {
-  return useContext(ThemeContext)
+  const ctx = useContext(ThemeContext)
+  // Fallback defensivo: nunca devolver undefined (evita crash ao desestruturar t)
+  return ctx || { theme: 'light', night: false, t: THEMES.light, toggle: () => {}, setTheme: () => {} }
 }
