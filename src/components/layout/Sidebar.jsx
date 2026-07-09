@@ -70,7 +70,8 @@ export default function Sidebar() {
   useEffect(() => { getCompanySettings().then(cs => setCountry(cs?.country || 'PT')) }, [])
 
   const activePlatform = platform === 'esg' ? 'esg' : 'accounting'
-  const sections = NAV[activePlatform]
+  // O admin acede a ambas as plataformas → vê as duas no menu.
+  const sections = isAdmin ? [...NAV.accounting, ...NAV.esg] : NAV[activePlatform]
 
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
   async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
