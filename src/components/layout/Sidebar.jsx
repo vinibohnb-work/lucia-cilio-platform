@@ -69,12 +69,18 @@ export default function Sidebar() {
   const [country, setCountry] = useState(null)
   useEffect(() => { getCompanySettings().then(cs => setCountry(cs?.country || 'PT')) }, [])
 
-  const activePlatform = platform === 'esg' ? 'esg' : 'accounting'
-  // O admin acede a ambas as plataformas → vê as duas no menu.
-  const sections = isAdmin ? [...NAV.accounting, ...NAV.esg] : NAV[activePlatform]
+  // O admin acede a ambas as plataformas e alterna via toggle (persistido).
+  const [adminView, setAdminView] = useState(() => localStorage.getItem('lc-admin-platform') || 'accounting')
+  const viewPlatform = isAdmin ? adminView : (platform === 'esg' ? 'esg' : 'accounting')
+  const sections = NAV[viewPlatform] || NAV.accounting
 
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
   async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
+  function switchAdminView(p) {
+    setAdminView(p); localStorage.setItem('lc-admin-platform', p)
+    navigate(p === 'esg' ? '/esg/diagnostico' : '/contabilidade/dashboard')
+    if (isMobile) setMobileOpen(false)
+  }
 
   const W = isMobile ? 264 : 238
 
@@ -100,7 +106,7 @@ export default function Sidebar() {
   )
 
   const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung' }, section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung' } }
-  const mgmtKey = activePlatform === 'esg' ? 'section_esg' : 'section_mgmt'
+  const mgmtKey = viewPlatform === 'esg' ? 'section_esg' : 'section_mgmt'
 
   return (
     <aside style={{
@@ -138,8 +144,8 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div style={{ marginTop: 'auto', padding: '18px 20px 22px', borderTop: `1px solid ${t.sidebarBorder}` }}>
-        {/* Utilizador */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px 12px' }}>
+        {/* Utilizador + sair */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px 14px' }}>
           <div style={{ width: '30px', height: '30px', flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, fontFamily: t.fontDisplay, background: t.avatarBg, color: t.avatarInk, border: t.avatarBorder }}>
             {(user?.user_metadata?.display_name || user?.email || 'LC').slice(0,2).toUpperCase()}
           </div>
@@ -148,11 +154,22 @@ export default function Sidebar() {
               {user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Utilizador'}
             </div>
           </div>
+          <button onClick={handleLogout} title={lang === 'de' ? 'Abmelden' : 'Terminar sessão'} style={{ flex: 'none', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent', border: `1px solid ${t.sidebarBorder}`, color: t.sidebarSub }}>
+            <IconLogout />
+          </button>
         </div>
-        {/* Logout */}
-        <div onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 6px 14px', fontSize: '12.5px', cursor: 'pointer', color: t.sidebarSub }}>
-          <IconLogout />{lang === 'de' ? 'Abmelden' : 'Terminar sessão'}
-        </div>
+        {/* Alternar plataforma (apenas admin) */}
+        {isAdmin && (
+          <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
+            {[['accounting', lang === 'de' ? 'Buchhaltung' : 'Contábil'], ['esg', 'ESG']].map(([p, lbl]) => (
+              <button key={p} onClick={() => switchAdminView(p)} style={{
+                flex: 1, padding: '7px 8px', borderRadius: '7px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: 'none',
+                background: viewPlatform === p ? t.accent : 'transparent',
+                color: viewPlatform === p ? '#0a2f1a' : t.sidebarSub,
+              }}>{lbl}</button>
+            ))}
+          </div>
+        )}
         {/* Idioma + tema */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
