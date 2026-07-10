@@ -44,6 +44,7 @@ const NAV = {
     ]},
     { key: 'section_mgmt', items: [
       { to: '/contabilidade/precificacao', Icon: IconPreco,    labelKey: 'nav_preco' },
+      { to: '/contabilidade/planeamento',  Icon: IconKpi,      labelKey: 'nav_plano' },
       { to: '/contabilidade/clientes',     Icon: IconClientes, labelKey: 'nav_clients' },
       { to: '/contabilidade/empresa',      Icon: IconEmpresa,  labelKey: 'nav_empresa' },
     ]},

@@ -31,6 +31,7 @@ import Precificacao from './pages/contabilidade/Precificacao'
 import Catalogo from './pages/contabilidade/Catalogo'
 import DespesasRecorrentes from './pages/contabilidade/DespesasRecorrentes'
 import RucklagenSteuern from './pages/contabilidade/RucklagenSteuern'
+import PlaneamentoMensal from './pages/contabilidade/PlaneamentoMensal'
 import Empresa from './pages/Empresa'
 
 // ESG pages
@@ -85,6 +86,7 @@ function AppLayout() {
               <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
               <Route path="/contabilidade/empresa"       element={<Empresa />} />
               <Route path="/contabilidade/rucklagen"     element={<RucklagenSteuern />} />
+              <Route path="/contabilidade/planeamento"   element={<PlaneamentoMensal />} />
             </Route>
 
             {/* Plataforma ESG */}
