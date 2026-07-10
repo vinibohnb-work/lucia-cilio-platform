@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { getCompanySettings, saveCompanySettings } from '../../lib/companySettings'
+import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 import { FlagDE } from '../../components/Flag'
 
 const fmt2 = (n) => `${(Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
@@ -37,6 +38,8 @@ export default function RucklagenSteuern() {
   const [renten, setRenten]     = useState('')
   const [sonstige, setSonstige] = useState('')
   const [savingMsg, setSavingMsg] = useState('')
+  const [famvLimit, setFamvLimit] = useState('565')
+  const [plan, setPlan] = useState(null)
 
   // Totais do período (ano corrente)
   const [einnahmen, setEinnahmen] = useState(0)
@@ -47,10 +50,12 @@ export default function RucklagenSteuern() {
   useEffect(() => {
     (async () => {
       setLoading(true)
-      const [{ data: ce }, cs] = await Promise.all([
+      const [{ data: ce }, cs, { data: mp }] = await Promise.all([
         supabase.from('cash_entries').select('type,amount,vat_amount,entry_date,private'),
         getCompanySettings(),
+        supabase.from('monthly_plans').select('*').maybeSingle(),
       ])
+      setPlan(mp || null)
       // Exclui movimentos privados: não contam para Gewinn nem Umsatzsteuer (EÜR)
       const rows = (ce || []).filter(e => !e.private && e.entry_date?.slice(0, 4) === String(year))
       let inc = 0, exp = 0, ustI = 0, vst = 0
@@ -65,6 +70,7 @@ export default function RucklagenSteuern() {
         setKranken(cs.de_krankenv ? String(cs.de_krankenv) : '')
         setRenten(cs.de_rentenv ? String(cs.de_rentenv) : '')
         setSonstige(cs.de_sonstige ? String(cs.de_sonstige) : '')
+        if (cs.de_famv_limit != null) setFamvLimit(String(cs.de_famv_limit))
       }
       setLoading(false)
     })()
@@ -100,6 +106,11 @@ export default function RucklagenSteuern() {
     glance: 'Auf einen Blick', glanceSub: 'Dieser Betrag ist nicht frei verfügbar.',
     forTax: 'Für Steuern reserviert', forVorsorge: 'Für Vorsorge (monatlich)', total: 'Gesamt (aktuell)',
     tip: 'Tipp', tipText: 'Passe deine Rücklagen regelmäßig an deine tatsächliche Situation und deinen Gewinn an.',
+    famvTitle: 'Familienversicherung – Check', famvLimitL: 'Grenze pro Monat', famvProfit: 'Monatsgewinn',
+    famvSrcPlan: 'aus Monatsplanung', famvSrcReal: 'Ø aus Kassenbuch (laufendes Jahr)',
+    famvOk: 'OK – unter Grenze', famvWarn: 'Achtung – über Grenze',
+    famvDist: 'Abstand zur Grenze', famvRatio: 'Monatsgewinn / Grenze',
+    famvNote: 'Für Selbständige zählt grundsätzlich der regelmäßige Gewinn, nicht der Umsatz. Die Krankenkasse entscheidet im Einzelfall — Angaben prüfen lassen.',
     goal: 'Ziel dieses Moduls',
     goalText: 'Wir zeigen, wie viel Geld du reservieren solltest, damit du liquide bleibst und keine Überraschungen erlebst.',
     avail: 'Verfügbar', availSub: '(frei nutzbar)', resFin: 'Reserviert für Finanzamt', resVor: 'Reserviert für Vorsorge',
@@ -131,6 +142,11 @@ export default function RucklagenSteuern() {
     glance: 'Em resumo', glanceSub: 'Este montante não está livre para uso.',
     forTax: 'Reservado para impostos', forVorsorge: 'Para previdência (mensal)', total: 'Total (atual)',
     tip: 'Dica', tipText: 'Ajusta as tuas reservas regularmente à tua situação real e ao teu lucro.',
+    famvTitle: 'Familienversicherung – Verificação', famvLimitL: 'Limite por mês', famvProfit: 'Lucro mensal',
+    famvSrcPlan: 'do Planeamento Mensal', famvSrcReal: 'média real do Livro de Caixa (ano corrente)',
+    famvOk: 'OK – abaixo do limite', famvWarn: 'Atenção – acima do limite',
+    famvDist: 'Distância ao limite', famvRatio: 'Lucro mensal / limite',
+    famvNote: 'Para independentes conta o lucro regular, não a faturação. A Krankenkasse (seguradora de saúde) decide caso a caso — confirmar os valores.',
     goal: 'Objetivo deste módulo',
     goalText: 'Mostramos quanto dinheiro deves reservar para te manteres líquido e não teres surpresas.',
     avail: 'Disponível', availSub: '(uso livre)', resFin: 'Reservado p/ Finanzamt', resVor: 'Reservado p/ previdência',
@@ -148,6 +164,14 @@ export default function RucklagenSteuern() {
   const vorsorge = num(kranken) + num(renten) + num(sonstige)
   const fuerSteuer = steuerRuecklage + (isRegel ? zahllastPos : 0)
   const gesamt = fuerSteuer + vorsorge
+
+  // ── Familienversicherung: lucro mensal (plano, senão média real) vs limite ──
+  const planTotals = plan?.items?.length
+    ? computePlanTotals(plan.items, overheadPerHour(plan.monthly_fixed, plan.productive_hours), pct, plan.reserve_basis)
+    : null
+  const monthsElapsed = year === new Date().getFullYear() ? new Date().getMonth() + 1 : 12
+  const famvProfit = planTotals ? planTotals.profit : gewinn / monthsElapsed
+  const famv = famvCheck(famvProfit, famvLimit)
 
   async function persist(partial) {
     setSavingMsg('')
@@ -311,6 +335,42 @@ export default function RucklagenSteuern() {
                 <span style={{ fontSize: '14px', fontWeight: 800, color: t.heading }}>{L.vorsorgeTotal}</span>
                 <span style={money(t.heading)}>{fmt2(vorsorge)}</span>
               </div>
+            </div>
+          </div>
+
+          {/* 4. Familienversicherung Check */}
+          <div style={card}>
+            <SectionHead n="4" title={L.famvTitle} />
+            <div style={{ padding: '20px 22px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.1fr', gap: '16px', alignItems: 'stretch' }}>
+                <div>
+                  <div style={capLabel}>{L.famvProfit}</div>
+                  <div style={money(t.heading)}>{fmt2(famvProfit)}</div>
+                  <div style={sub}>{planTotals ? L.famvSrcPlan : L.famvSrcReal}</div>
+                </div>
+                <div>
+                  <div style={capLabel}>{L.famvLimitL}</div>
+                  <div style={{ position: 'relative', width: '140px' }}>
+                    <input inputMode="decimal" value={famvLimit} onChange={e => setFamvLimit(e.target.value)}
+                      onBlur={() => persist({ de_famv_limit: num(famvLimit) })}
+                      style={{ ...inputStyle, width: '100%', paddingRight: '26px' }} />
+                    <span style={{ position: 'absolute', right: '11px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: t.subtle, pointerEvents: 'none' }}>€</span>
+                  </div>
+                  <div style={{ ...sub, marginTop: '5px' }}>{L.famvRatio}: {(famv.ratio * 100).toFixed(0)}%</div>
+                </div>
+                <div style={{ background: famv.ok ? tone.green.bg : (night ? 'rgba(229,62,62,.14)' : '#fdeaea'), borderRadius: '12px', padding: '14px 16px' }}>
+                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: t.text, marginBottom: '4px', lineHeight: 1.3 }}>
+                    {famv.ok ? '🟢 ' : '🔴 '}{famv.ok ? L.famvOk : L.famvWarn}
+                  </div>
+                  <div style={money(famv.ok ? tone.green.ink : t.neg)}>{fmt2(famv.distance)}</div>
+                  <div style={sub}>{L.famvDist}</div>
+                </div>
+              </div>
+              {/* Barra lucro/limite */}
+              <div style={{ marginTop: '14px', height: '9px', borderRadius: '20px', background: night ? 'rgba(255,255,255,.1)' : '#e6ede8', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${Math.min(100, famv.ratio * 100)}%`, background: famv.ok ? tone.green.ink : t.neg, transition: 'width .3s' }} />
+              </div>
+              <div style={{ marginTop: '14px' }}><InfoBar text={L.famvNote} toneKey={famv.ok ? 'green' : 'yellow'} /></div>
             </div>
           </div>
 
