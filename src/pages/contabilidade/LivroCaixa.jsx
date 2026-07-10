@@ -7,6 +7,7 @@ import InfoTooltip from '../../components/InfoTooltip'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
+import { entryTypeLabel } from '../../lib/cashEntry'
 
 // IVA contido num montante total (com IVA): total × taxa/(100+taxa)
 const vatFromGross = (gross, rate) => (rate > 0 ? Number(gross) * rate / (100 + rate) : 0)
@@ -27,8 +28,8 @@ const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigit
 
 function exportCSV(entries, lang) {
   const header = lang === 'de'
-    ? 'Datum;Belegnr.;Beschreibung;Menge;Kategorie;Einnahme;Ausgabe;MwSt.-Satz;MwSt.-Betrag;Konto\n'
-    : 'Data;Doc.;Descrição;Qtd.;Categoria;Entrada;Saída;Taxa IVA;Valor IVA;Destino\n'
+    ? 'Datum;Belegnr.;Beschreibung;Art;Menge;Kategorie;Einnahme;Ausgabe;MwSt.-Satz;MwSt.-Betrag;Konto\n'
+    : 'Data;Doc.;Descrição;Tipo;Qtd.;Categoria;Entrada;Saída;Taxa IVA;Valor IVA;Destino\n'
   const rows = entries.map(e => {
     const inc = e.type === 'entrada' ? Number(e.amount).toFixed(2) : ''
     const exp = e.type === 'saida'   ? Number(e.amount).toFixed(2) : ''
@@ -37,7 +38,7 @@ function exportCSV(entries, lang) {
     const vr = e.vat_rate != null ? `${e.vat_rate}%` : ''
     const va = e.vat_amount != null ? Number(e.vat_amount).toFixed(2) : ''
     const qty = e.quantity != null ? e.quantity : 1
-    return `${e.entry_date};${e.doc||''};${e.description};${qty};${cat};${inc};${exp};${vr};${va};${dest}`
+    return `${e.entry_date};${e.doc||''};${e.description};${entryTypeLabel(e, lang)};${qty};${cat};${inc};${exp};${vr};${va};${dest}`
   }).join('\n')
   const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -156,17 +157,21 @@ export default function LivroCaixa() {
     if (!form.description || !form.amount || !form.entry_date) return
     setSaving(true)
     const gross = parseFloat(form.amount)
-    const rate = formRate
+    // Movimentos privados (EÜR): afetam o saldo mas não lucro/IVA/reservas
+    const isPriv = form.type === 'einlage' || form.type === 'entnahme'
+    const baseType = (form.type === 'entrada' || form.type === 'einlage') ? 'entrada' : 'saida'
+    const rate = isPriv ? 0 : formRate
     const { error } = await supabase.from('cash_entries').insert({
       entry_date: form.entry_date,
       doc: form.doc || null,
       description: form.description,
-      type: form.type,
+      type: baseType,
+      private: isPriv,
       amount: gross,
       quantity: parseFloat(String(form.quantity).replace(',', '.')) || 1,
       destination: form.destination,
-      category: form.type === 'saida' ? (form.category || null) : null,
-      catalog_item_id: form.catalog_item_id || null,
+      category: !isPriv && baseType === 'saida' ? (form.category || null) : null,
+      catalog_item_id: isPriv ? null : (form.catalog_item_id || null),
       vat_rate: rate,
       vat_amount: Number(vatFromGross(gross, rate).toFixed(2)),
     })
@@ -184,6 +189,8 @@ export default function LivroCaixa() {
     export: 'CSV exportieren', balance: 'Kassenbestand', income: 'Einnahmen', expense: 'Ausgaben',
     cash: 'Kasse', bank: 'Bank', date: 'Datum', doc: 'Belegnr.', desc: 'Beschreibung', type: 'Art',
     amount: 'Betrag (€)', qty: 'Menge', dest: 'Konto', running: 'Bestand', entrada: 'Einnahme', saida: 'Ausgabe',
+    einlage: 'Privateinlage', entnahme: 'Privatentnahme',
+    privHint: 'Privater Vorgang: zählt für den Kassenbestand, aber nicht für Gewinn, MwSt. oder Rücklagen.',
     caixa: 'Kasse', banco: 'Bank', save: 'Speichern', all: 'Alle Monate',
     noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
@@ -193,6 +200,8 @@ export default function LivroCaixa() {
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
     amount: 'Valor (€)', qty: 'Qtd.', dest: 'Destino', running: 'Saldo', entrada: 'Entrada', saida: 'Saída',
+    einlage: 'Privateinlage (entrada privada)', entnahme: 'Privatentnahme (saída privada)',
+    privHint: 'Movimento privado: conta para o saldo de caixa, mas não para o lucro, IVA nem reservas.',
     caixa: 'Caixa', banco: 'Banco', save: 'Guardar', all: 'Todos os meses',
     noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
     loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
@@ -268,14 +277,16 @@ export default function LivroCaixa() {
             {fieldWrap(L.doc, <input value={form.doc} onChange={e=>setForm(f=>({...f,doc:e.target.value}))} placeholder="001" style={inputStyle} />, '80px')}
             {fieldWrap(L.desc, <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={lang==='de'?'Beschreibung…':'Descrição…'} style={inputStyle} />, '180px')}
             {fieldWrap(L.type, (
-              <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value, category: e.target.value==='entrada' ? '' : f.category}))} style={selectStyle}>
+              <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value, category: e.target.value!=='saida' ? '' : f.category}))} style={selectStyle}>
                 <option value="entrada">{L.entrada}</option>
                 <option value="saida">{L.saida}</option>
+                <option value="einlage">{L.einlage}</option>
+                <option value="entnahme">{L.entnahme}</option>
               </select>
-            ), '110px')}
+            ), '130px')}
             {fieldWrap(L.qty, <input type="number" step="1" min="0" value={form.quantity} onChange={e=>setQuantity(e.target.value)} placeholder="1" style={inputStyle} />, '70px')}
             {fieldWrap(L.amount, <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />, '100px')}
-            {fieldWrap(L.vat, (
+            {form.type !== 'einlage' && form.type !== 'entnahme' && fieldWrap(L.vat, (
               <select value={form.vat_rate === '' ? String(defaultRate) : form.vat_rate} onChange={e=>setForm(f=>({...f,vat_rate:e.target.value}))} style={selectStyle}>
                 {vatOptions.map(r => <option key={r} value={r}>{r === 0 ? `0% (${L.vatExempt})` : `${r}%`}</option>)}
               </select>
@@ -286,7 +297,7 @@ export default function LivroCaixa() {
                 <option value="banco">{L.banco}</option>
               </select>
             ), '110px')}
-            {fieldWrap(L.catalog, (
+            {form.type !== 'einlage' && form.type !== 'entnahme' && fieldWrap(L.catalog, (
               <select value={form.catalog_item_id} onChange={e=>pickCatalog(e.target.value)} style={selectStyle}>
                 <option value="">{L.catalogNone}</option>
                 {catalog.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -309,6 +320,11 @@ export default function LivroCaixa() {
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 12px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
             </div>
           </div>
+          {(form.type === 'einlage' || form.type === 'entnahme') && (
+            <div style={{ marginTop: '10px', fontSize: '11.5px', color: '#5b21b6', background: '#ede9fe', borderRadius: '8px', padding: '8px 12px', fontWeight: 600 }}>
+              👤 {L.privHint}
+            </div>
+          )}
         </div>
       )}
 
@@ -359,7 +375,7 @@ export default function LivroCaixa() {
                   </div>
                 )}
               </div>
-              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: e.type==='entrada'?'#d1fae5':'#fee2e2', color: e.type==='entrada'?'#065f46':'#991b1b' }}>{e.type==='entrada'?L.entrada:L.saida}</span></div>
+              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: e.private ? '#ede9fe' : (e.type==='entrada'?'#d1fae5':'#fee2e2'), color: e.private ? '#5b21b6' : (e.type==='entrada'?'#065f46':'#991b1b') }}>{e.private ? '👤 ' : ''}{entryTypeLabel(e, lang)}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: e.type==='entrada'?'#065f46':'#e53e3e', textAlign: 'right' }}>{e.type==='entrada'?'+':'−'} € {fmt(e.amount)}</div>
               <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: e.destination==='caixa'?'#f5edd6':'#eff6ff', color: e.destination==='caixa'?'#92400e':'#1d4ed8' }}>{e.destination==='caixa'?L.caixa:L.banco}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: e.balance>=0?G:'#e53e3e', textAlign: 'right' }}>€ {fmt(e.balance)}</div>

@@ -48,10 +48,11 @@ export default function RucklagenSteuern() {
     (async () => {
       setLoading(true)
       const [{ data: ce }, cs] = await Promise.all([
-        supabase.from('cash_entries').select('type,amount,vat_amount,entry_date'),
+        supabase.from('cash_entries').select('type,amount,vat_amount,entry_date,private'),
         getCompanySettings(),
       ])
-      const rows = (ce || []).filter(e => e.entry_date?.slice(0, 4) === String(year))
+      // Exclui movimentos privados: não contam para Gewinn nem Umsatzsteuer (EÜR)
+      const rows = (ce || []).filter(e => !e.private && e.entry_date?.slice(0, 4) === String(year))
       let inc = 0, exp = 0, ustI = 0, vst = 0
       rows.forEach(e => {
         if (e.type === 'entrada') { inc += Number(e.amount || 0); ustI += Number(e.vat_amount || 0) }

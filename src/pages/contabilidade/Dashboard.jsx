@@ -4,6 +4,7 @@ import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
 import { getCompanySettings } from '../../lib/companySettings'
+import { businessOnly } from '../../lib/cashEntry'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { FlagPT } from '../../components/Flag'
@@ -45,7 +46,9 @@ export default function Dashboard() {
         supabase.from('recurring_expenses').select('*').eq('active', true),
         getCompanySettings(),
       ])
-      setEntries(ce || [])
+      // Movimentos privados (Privatentnahme/Privateinlage) não entram em
+      // lucro, IVA, reservas nem gráficos — o Dashboard é uma visão de resultados.
+      setEntries(businessOnly(ce))
       setCatalog(ci || [])
       setRecurring(re || [])
       setSettings(cs)
