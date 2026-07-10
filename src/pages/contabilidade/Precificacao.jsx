@@ -3,6 +3,7 @@ import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
+import { computeTreatment } from '../../lib/treatmentCalc'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -362,11 +363,124 @@ function ProdutoCalculator({ lang, irDefault }) {
   )
 }
 
+// ── Tipo: Tratamento (Preiskalkulation pro Behandlung — modelo da Célia) ──
+function TratamentoCalculator({ lang, irDefault, settings }) {
+  const isDE = lang === 'de'
+  const isMobile = useIsMobile()
+  const { t } = useTheme()
+  const GOLD = t.accent, BG = t.softCardBg
+
+  const [minutePrice, setMinutePrice] = useState(2)
+  const [durationMin, setDurationMin] = useState(90)
+  const [material, setMaterial] = useState(5)
+  const [monthlyFixed, setMonthlyFixed] = useState(550)
+  const [productiveHours, setProductiveHours] = useState(100)
+  const [profitPct, setProfitPct] = useState(20)
+  const [reservePct, setReservePct] = useState(irDefault || 20)
+  const [currentPrice, setCurrentPrice] = useState(75)
+  const [reserveBasis, setReserveBasis] = useState('gewinn')
+
+  const vatRegime = settings?.vat_regime || 'exempt'
+  const vatPct = Number(settings?.vat_default_rate) || (isDE ? 19 : 23)
+  const r = computeTreatment({ minutePrice, durationMin, material, monthlyFixed, productiveHours, profitPct, reservePct, vatPct, vatRegime, currentPrice, reserveBasis })
+
+  const L = isDE ? {
+    minutePrice: 'Minutenpreis (€)', duration: 'Behandlungsdauer (Min.)', material: 'Materialkosten (€)',
+    monthlyFixed: 'Fixkosten monatlich (€)', productiveHours: 'Produktive Stunden/Monat',
+    profit: 'Gewinnaufschlag (%)', reserve: 'Rücklage (%)', currentPrice: 'Aktuell verlangter Preis (€)',
+    basis: 'Rücklage berechnen auf', gewinn: 'Gewinn', umsatz: 'Umsatz',
+    hourValue: 'Stundenwert', overheadH: 'Gemeinkosten pro Stunde', overheadShare: 'Gemeinkostenanteil Behandlung',
+    labor: 'Arbeitswert', minBase: 'Selbstkosten / Mindestbasis', priceNet: 'Empfohlener Preis netto',
+    priceGross: 'Empfohlener Preis brutto', diff: 'Differenz zu Mindestbasis', resCur: 'Rücklage aus aktuellem Preis',
+    result: 'Kalkulation', regelNote: `inkl. ${vatPct}% USt (Regelbesteuerung)`, kleinNote: 'Kleinunternehmer — keine USt',
+    warnBelow: 'Achtung: aktueller Preis liegt UNTER den Selbstkosten.', okAbove: 'Aktueller Preis deckt die Selbstkosten.',
+    markup: 'Aufschläge',
+  } : {
+    minutePrice: 'Preço por minuto (€)', duration: 'Duração do tratamento (min)', material: 'Materiais (€)',
+    monthlyFixed: 'Custos fixos mensais (€)', productiveHours: 'Horas produtivas/mês',
+    profit: 'Margem de lucro (%)', reserve: 'Reserva (%)', currentPrice: 'Preço atual cobrado (€)',
+    basis: 'Reserva calculada sobre', gewinn: 'Lucro', umsatz: 'Faturação',
+    hourValue: 'Valor da hora', overheadH: 'Custo indireto por hora', overheadShare: 'Custo indireto do tratamento',
+    labor: 'Valor do trabalho', minBase: 'Custo próprio / base mínima', priceNet: 'Preço recomendado (líquido)',
+    priceGross: 'Preço recomendado (final)', diff: 'Diferença vs. base mínima', resCur: 'Reserva do preço atual',
+    result: 'Cálculo', regelNote: `inclui ${vatPct}% de IVA`, kleinNote: 'Isento — sem IVA',
+    warnBelow: 'Atenção: o preço atual está ABAIXO do custo próprio.', okAbove: 'O preço atual cobre o custo próprio.',
+    markup: 'Margem + Reserva',
+  }
+
+  const inputSm = { padding: '7px 9px', border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontSize: '13px', background: t.cardBg, width: '100%', boxSizing: 'border-box' }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
+      <div style={{ background: t.cardBg, borderRadius: '12px', padding: '20px', border: `1px solid ${t.cardBorder}` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr', gap: '14px' }}>
+          {[
+            [L.minutePrice, minutePrice, setMinutePrice, 0.1],
+            [L.duration, durationMin, setDurationMin, 5],
+            [L.material, material, setMaterial, 0.5],
+            [L.monthlyFixed, monthlyFixed, setMonthlyFixed, 10],
+            [L.productiveHours, productiveHours, setProductiveHours, 1],
+            [L.profit, profitPct, setProfitPct, 1],
+            [L.reserve, reservePct, setReservePct, 1, irDefault ? `${isDE ? 'Vorschlag' : 'sugestão'}: ${irDefault}%` : null],
+            [L.currentPrice, currentPrice, setCurrentPrice, 1],
+          ].map(([label, val, set, step, hint]) => (
+            <div key={label}>
+              <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
+              <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
+              {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
+            </div>
+          ))}
+          <div>
+            <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{L.basis}</div>
+            <select value={reserveBasis} onChange={e => setReserveBasis(e.target.value)} style={{ ...inputSm, cursor: 'pointer' }}>
+              <option value="gewinn">{L.gewinn}</option>
+              <option value="umsatz">{L.umsatz}</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ marginTop: '14px', padding: '12px 14px', background: BG, borderRadius: '10px', fontSize: '12px', color: t.text, display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <span>{L.hourValue}: <strong>€ {fmt(r.hourValue)}</strong></span>
+          <span>{L.overheadH}: <strong>€ {fmt(r.overheadPerHour)}</strong></span>
+          <span>{L.overheadShare}: <strong>€ {fmt(r.overheadShare)}</strong></span>
+          <span>{L.labor}: <strong>€ {fmt(r.laborValue)}</strong></span>
+        </div>
+        {/* Comparação com o preço atual */}
+        <div style={{ marginTop: '10px', padding: '12px 14px', borderRadius: '10px', fontSize: '12.5px', fontWeight: 600, background: r.diffToMinBase < 0 ? '#fee2e2' : '#d1fae5', color: r.diffToMinBase < 0 ? '#991b1b' : '#065f46' }}>
+          {r.diffToMinBase < 0 ? '⚠️ ' : '✓ '}{r.diffToMinBase < 0 ? L.warnBelow : L.okAbove}
+          {' '}({L.diff}: € {fmt(r.diffToMinBase)} · {L.resCur}: € {fmt(r.reserveFromCurrent)})
+        </div>
+      </div>
+      <div style={{ background: t.highlightBg, borderRadius: '16px', padding: '24px', color: t.highlightValue }}>
+        <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,.5)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>{L.result}</div>
+        {[
+          { label: L.minBase, value: r.minBase, muted: false },
+          { label: `${L.markup} (${profitPct}% + ${reservePct}%)`, value: r.priceNet - r.minBase, muted: true },
+          { label: L.priceNet, value: r.priceNet, muted: false },
+        ].map(row => (
+          <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <span style={{ fontSize: '12px', color: row.muted ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.85)', fontWeight: 500 }}>{row.label}</span>
+            <span style={{ fontSize: '14px', fontWeight: row.muted ? 600 : 800, color: row.muted ? 'rgba(255,255,255,.7)' : '#fff' }}>€ {fmt(row.value)}</span>
+          </div>
+        ))}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,.2)', margin: '14px 0' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '13px', color: '#fff', fontWeight: 700 }}>{L.priceGross}</span>
+          <span style={{ fontSize: '26px', fontWeight: 900, color: GOLD }}>€ {fmt(r.priceGross)}</span>
+        </div>
+        <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,.5)', marginTop: '6px', textAlign: 'right' }}>
+          {vatRegime === 'normal' ? L.regelNote : L.kleinNote}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────
 const TYPES = {
-  evento:  { pt: 'Evento / Catering',   de: 'Event / Catering',       icon: '🍽️' },
-  servico: { pt: 'Serviço por Hora',    de: 'Stundenbasierter Dienst', icon: '⏱️' },
-  produto: { pt: 'Produto / Revenda',   de: 'Produkt / Handel',        icon: '📦' },
+  evento:     { pt: 'Evento / Catering',   de: 'Event / Catering',        icon: '🍽️' },
+  servico:    { pt: 'Serviço por Hora',    de: 'Stundenbasierter Dienst', icon: '⏱️' },
+  produto:    { pt: 'Produto / Revenda',   de: 'Produkt / Handel',        icon: '📦' },
+  tratamento: { pt: 'Tratamento',          de: 'Behandlung',              icon: '💅' },
 }
 
 export default function Precificacao() {
@@ -375,9 +489,13 @@ export default function Precificacao() {
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const [type, setType] = useState('evento')
   const [irDefault, setIrDefault] = useState(0)
+  const [settings, setSettings] = useState(null)
 
   useEffect(() => {
-    getCompanySettings().then(cs => { if (cs?.ir_reserve_pct != null) setIrDefault(Number(cs.ir_reserve_pct)) })
+    getCompanySettings().then(cs => {
+      setSettings(cs)
+      if (cs?.ir_reserve_pct != null) setIrDefault(Number(cs.ir_reserve_pct))
+    })
   }, [])
 
   const tabStyle = (key) => ({
@@ -404,9 +522,10 @@ export default function Precificacao() {
       </div>
 
       {/* Calculator */}
-      {type === 'evento'  && <EventoCalculator  lang={lang} irDefault={irDefault} key={lang} />}
-      {type === 'servico' && <ServicoCalculator lang={lang} irDefault={irDefault} key={lang} />}
-      {type === 'produto' && <ProdutoCalculator lang={lang} irDefault={irDefault} key={lang} />}
+      {type === 'evento'     && <EventoCalculator     lang={lang} irDefault={irDefault} key={lang} />}
+      {type === 'servico'    && <ServicoCalculator    lang={lang} irDefault={irDefault} key={lang} />}
+      {type === 'produto'    && <ProdutoCalculator    lang={lang} irDefault={irDefault} key={lang} />}
+      {type === 'tratamento' && <TratamentoCalculator lang={lang} irDefault={irDefault} settings={settings} key={lang} />}
 
     </div>
   )
