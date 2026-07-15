@@ -138,7 +138,7 @@ function AppLayout() {
           onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
         >
           <span style={{ fontSize: '18px', lineHeight: 1, color: t.accent }}>+</span>
-          {lang === 'de' ? 'Neue Buchung' : 'Nova Entrada'}
+          {lang === 'de' ? 'Neue Buchung' : lang === 'en' ? 'New Entry' : 'Nova Entrada'}
         </button>
       )}
     </div>

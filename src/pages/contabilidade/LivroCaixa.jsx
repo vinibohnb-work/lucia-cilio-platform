@@ -23,17 +23,20 @@ const BG = '#f2f6f3'
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 function exportCSV(entries, lang) {
   const header = lang === 'de'
     ? 'Datum;Belegnr.;Beschreibung;Art;Menge;Kategorie;Einnahme;Ausgabe;MwSt.-Satz;MwSt.-Betrag;Konto\n'
+    : lang === 'en'
+    ? 'Date;Doc.;Description;Type;Qty.;Category;Income;Expense;VAT Rate;VAT Amount;Account\n'
     : 'Data;Doc.;Descrição;Tipo;Qtd.;Categoria;Entrada;Saída;Taxa IVA;Valor IVA;Destino\n'
   const rows = entries.map(e => {
     const inc = e.type === 'entrada' ? Number(e.amount).toFixed(2) : ''
     const exp = e.type === 'saida'   ? Number(e.amount).toFixed(2) : ''
-    const dest = lang === 'de' ? (e.destination === 'caixa' ? 'Kasse' : 'Bank') : (e.destination === 'caixa' ? 'Caixa' : 'Banco')
+    const dest = lang === 'de' ? (e.destination === 'caixa' ? 'Kasse' : 'Bank') : lang === 'en' ? (e.destination === 'caixa' ? 'Cash' : 'Bank') : (e.destination === 'caixa' ? 'Caixa' : 'Banco')
     const cat = e.category ? (getCategory(e.category)?.[lang]?.label || '') : ''
     const vr = e.vat_rate != null ? `${e.vat_rate}%` : ''
     const va = e.vat_amount != null ? Number(e.vat_amount).toFixed(2) : ''
@@ -65,7 +68,7 @@ export default function LivroCaixa() {
   const [showForm, setShowForm] = useState(false)
   const [filterMonth, setFilterMonth] = useState('all')
 
-  const months = lang === 'de' ? MONTHS_DE : MONTHS_PT
+  const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
 
   // Taxa de IVA por defeito e opções conforme a empresa
   const isExempt = settings?.vat_regime === 'exempt'
@@ -196,6 +199,17 @@ export default function LivroCaixa() {
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
     catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
     vat: 'MwSt.', vatExempt: 'befreit', predictedOut: 'Geplante Ausgaben', predictedOutSub: 'wiederkehrend, offen',
+  } : lang === 'en' ? {
+    export: 'Export CSV', balance: 'Current Balance', income: 'Total Income', expense: 'Total Expenses',
+    cash: 'In Cash', bank: 'In Bank', date: 'Date', doc: 'Doc.', desc: 'Description', type: 'Type',
+    amount: 'Amount (€)', qty: 'Qty.', dest: 'Account', running: 'Balance', entrada: 'Income', saida: 'Expense',
+    einlage: 'Private deposit (Privateinlage)', entnahme: 'Private withdrawal (Privatentnahme)',
+    privHint: 'Private movement: counts toward the cash balance, but not toward profit, VAT or reserves.',
+    caixa: 'Cash', banco: 'Bank', save: 'Save', all: 'All months',
+    noEntries: 'No entries yet. Add one via "+ New Entry" at the top.',
+    loading: 'Loading…', total: 'Total', category: 'Category', catalog: 'Product/Service',
+    catalogNone: '— none —', catHint: 'Choose the expense category.', costType: 'Cost type',
+    vat: 'VAT', vatExempt: 'exempt', predictedOut: 'Planned expenses', predictedOutSub: 'recurring, to confirm',
   } : {
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',

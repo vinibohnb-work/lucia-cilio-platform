@@ -11,6 +11,7 @@ const BG = '#f2f6f3'
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const daysInMonth = (y, m) => new Date(y, m, 0).getDate()
 
@@ -49,7 +50,7 @@ export default function DespesasRecorrentes() {
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)) // 'YYYY-MM'
   const [actuals, setActuals] = useState({}) // id -> valor a confirmar
 
-  const months = lang === 'de' ? MONTHS_DE : MONTHS_PT
+  const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
   const monthNum = parseInt(period.slice(5, 7), 10)
 
   const load = useCallback(async () => {
@@ -77,6 +78,19 @@ export default function DespesasRecorrentes() {
     loading: 'Wird geladen…', selectCat: '— Kategorie —', costType: 'Kostenart',
     totalPred: 'Geplant (offen)', totalConf: 'Bestätigt',
     startM: 'Beginn', endM: 'Ende', validity: 'Gültigkeit', noEnd: 'ohne Ende', endHint: 'leer = ohne Ende', since: 'ab',
+  } : lang === 'en' ? {
+    title: 'Recurring Expenses',
+    subtitle: 'Define fixed costs and confirm the actual amount spent each month.',
+    new: '+ New Expense', desc: 'Description', category: 'Category', amount: 'Amount (€)',
+    period_: 'Frequency', monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Yearly',
+    dueDay: 'Due day', dest: 'Account', caixa: 'Cash', banco: 'Bank',
+    save: 'Save', active: 'Active', del: 'Delete',
+    templates: 'Templates', thisMonth: 'Confirm this month',
+    predicted: 'Planned', confirm: 'Confirm', confirmed: 'Confirmed ✓', undo: 'Undo',
+    none: 'No recurring expenses yet.', noDue: 'Nothing due this month.',
+    loading: 'Loading…', selectCat: '— Category —', costType: 'Cost type',
+    totalPred: 'Planned (open)', totalConf: 'Confirmed',
+    startM: 'Start', endM: 'End', validity: 'Validity', noEnd: 'no end', endHint: 'empty = no end', since: 'since',
   } : {
     title: 'Despesas Recorrentes',
     subtitle: 'Defina os custos fixos e confirme o valor real gasto em cada mês.',

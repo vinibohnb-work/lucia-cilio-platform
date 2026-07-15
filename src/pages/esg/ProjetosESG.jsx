@@ -23,6 +23,8 @@ export default function ProjetosESG() {
 
   const phaseList = lang === 'de'
     ? ['Diagnose', 'Wesentlichkeit', 'KPIs', 'Bericht']
+    : lang === 'en'
+    ? ['Assessment', 'Materiality', 'KPIs', 'Report']
     : ['Diagnóstico', 'Materialidade', 'KPIs', 'Relatório']
 
   return (
@@ -31,7 +33,7 @@ export default function ProjetosESG() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div style={{ fontSize: '13px', color: '#64748b' }}>
-          {projects.length} {lang === 'de' ? 'Projekte insgesamt' : 'projetos no total'}
+          {projects.length} {lang === 'de' ? 'Projekte insgesamt' : lang === 'en' ? 'projects in total' : 'projetos no total'}
         </div>
         <button style={{ padding: '9px 18px', background: G, color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
           {t(lang, 'proj_new')}
@@ -88,7 +90,7 @@ export default function ProjetosESG() {
       {/* Phase legend */}
       <div style={{ marginTop: '22px', padding: '16px 20px', background: '#fff', borderRadius: '12px', border: '1px solid #dde8de', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginRight: '4px' }}>
-          {lang === 'de' ? 'Phasen:' : 'Fases:'}
+          {lang === 'de' ? 'Phasen:' : lang === 'en' ? 'Phases:' : 'Fases:'}
         </span>
         {phaseList.map((ph, i) => (
           <span key={ph} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>

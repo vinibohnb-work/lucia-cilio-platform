@@ -22,6 +22,28 @@ export function FlagDE({ size = 20 }) {
   )
 }
 
+export function FlagEN({ size = 20 }) {
+  // Union Jack simplificado, recortado à moldura 20×14.
+  return (
+    <svg width={size} height={size * 0.7} viewBox="0 0 60 42" style={{ borderRadius: '2px', display: 'block', boxShadow: 'inset 0 0 0 1.5px rgba(0,0,0,.15)' }}>
+      <clipPath id="uk-clip"><rect width="60" height="42" rx="2" /></clipPath>
+      <g clipPath="url(#uk-clip)">
+        <rect width="60" height="42" fill="#012169" />
+        {/* diagonais brancas (St Andrew + St Patrick) */}
+        <path d="M0,0 L60,42 M60,0 L0,42" stroke="#fff" strokeWidth="8" />
+        {/* diagonais vermelhas (St Patrick) */}
+        <path d="M0,0 L60,42 M60,0 L0,42" stroke="#C8102E" strokeWidth="3" />
+        {/* cruz branca (St George) */}
+        <path d="M30,0 V42 M0,21 H60" stroke="#fff" strokeWidth="12" />
+        {/* cruz vermelha */}
+        <path d="M30,0 V42 M0,21 H60" stroke="#C8102E" strokeWidth="7" />
+      </g>
+    </svg>
+  )
+}
+
 export default function Flag({ code, size = 20 }) {
-  return code === 'de' ? <FlagDE size={size} /> : <FlagPT size={size} />
+  if (code === 'de') return <FlagDE size={size} />
+  if (code === 'en') return <FlagEN size={size} />
+  return <FlagPT size={size} />
 }

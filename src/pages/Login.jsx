@@ -31,6 +31,11 @@ export default function Login() {
     enter: 'Anmelden', entering: 'Wird angemeldet…',
     invalid: 'E-Mail oder Passwort ungültig.', generic: 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
     contact: 'Zugang auf Einladung · keine öffentliche Registrierung', show: 'Anzeigen', hide: 'Verbergen',
+  } : lang === 'en' ? {
+    subtitle: 'Office Consulting', email: 'Email', password: 'Password',
+    enter: 'Sign in', entering: 'Signing in…',
+    invalid: 'Invalid email or password.', generic: 'Could not sign in. Please try again.',
+    contact: 'Invite-only access · no public sign-up', show: 'Show', hide: 'Hide',
   } : {
     subtitle: 'Office Consulting', email: 'E-mail', password: 'Palavra-passe',
     enter: 'Entrar', entering: 'A entrar…',
@@ -61,8 +66,8 @@ export default function Login() {
       {/* Idioma + tema */}
       <div style={{ position: 'absolute', top: 'calc(26px + env(safe-area-inset-top))', right: '30px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
-          {['pt','de'].map(code => (
-            <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 11px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>
+          {['pt','de','en'].map(code => (
+            <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 9px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>
           ))}
         </div>
         <button onClick={toggle} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>

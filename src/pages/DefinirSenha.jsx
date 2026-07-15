@@ -29,6 +29,11 @@ export default function DefinirSenha() {
     pw: 'Passwort', pw2: 'Passwort bestätigen', save: 'Festlegen & anmelden', saving: 'Wird gespeichert…',
     show: 'Anzeigen', hide: 'Verbergen', mismatch: 'Die Passwörter stimmen nicht überein.', short: 'Mindestens 6 Zeichen.',
     invalid: 'Link ungültig oder abgelaufen. Bitten Sie um eine neue Einladung.', checking: 'Einladung wird geprüft…',
+  } : lang === 'en' ? {
+    title: 'Set your password', subtitle: 'Set your access password to continue.',
+    pw: 'Password', pw2: 'Confirm password', save: 'Set & sign in', saving: 'Saving…',
+    show: 'Show', hide: 'Hide', mismatch: 'The passwords do not match.', short: 'At least 6 characters.',
+    invalid: 'Link invalid or expired. Please request a new invitation.', checking: 'Verifying invitation…',
   } : {
     title: 'Definir palavra-passe', subtitle: 'Defina a sua palavra-passe de acesso para continuar.',
     pw: 'Palavra-passe', pw2: 'Confirmar palavra-passe', save: 'Definir e entrar', saving: 'A guardar…',
@@ -55,7 +60,7 @@ export default function DefinirSenha() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', fontFamily: t.fontBody, background: t.loginBg, position: 'relative' }}>
       <div style={{ position: 'absolute', top: 'calc(26px + env(safe-area-inset-top))', right: '30px', display: 'flex', gap: '12px' }}>
         <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
-          {['pt','de'].map(code => <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 11px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>)}
+          {['pt','de','en'].map(code => <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 9px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>)}
         </div>
         <button onClick={toggle} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>{night ? <MoonIcon /> : <SunIcon />}</button>
       </div>

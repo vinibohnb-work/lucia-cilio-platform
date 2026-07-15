@@ -10,6 +10,7 @@ const BG = '#f2f6f3'
 
 const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
+const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 export default function Empresa() {
   const { lang } = useLang()
@@ -29,7 +30,7 @@ export default function Empresa() {
     })()
   }, [])
 
-  const months = lang === 'de' ? MONTHS_DE : MONTHS_PT
+  const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
   const isExempt = form.vat_regime === 'exempt'
   const rates = VAT_RATES[form.country] || VAT_RATES.PT
 
@@ -44,6 +45,17 @@ export default function Empresa() {
     ssSelf: 'Selbstständig', ssCompany: 'Gesellschaft',
     fyStart: 'Geschäftsjahresbeginn', save: 'Speichern', saving: 'Wird gespeichert…',
     saved: 'Gespeichert ✓', loading: 'Wird geladen…',
+  } : lang === 'en' ? {
+    title: 'Company Details', subtitle: 'Basis for VAT, tax calendar and tax reserve.',
+    section_general: 'General', section_tax: 'Taxes',
+    name: 'Company name', namePh: 'e.g. Lúcia Cílio, Unip. Lda',
+    country: 'Country', currency: 'Currency',
+    vatRegime: 'VAT scheme', normal: 'Standard', exempt: 'Exempt',
+    vatRate: 'VAT rate (default)', irReserve: 'Income tax reserve (%)',
+    irHint: 'Suggested: 20–30%', ssRegime: 'Social security scheme', ssNone: '— none —',
+    ssSelf: 'Self-employed', ssCompany: 'Company',
+    fyStart: 'Fiscal year start', save: 'Save', saving: 'Saving…',
+    saved: 'Saved ✓', loading: 'Loading…',
   } : {
     title: 'Dados da Empresa', subtitle: 'Base para IVA, calendário fiscal e reserva de imposto.',
     section_general: 'Geral', section_tax: 'Fiscalidade',

@@ -45,7 +45,7 @@ export default function PlaneamentoMensal() {
   }, [])
   useEffect(() => { load() }, [load])
 
-  const L = lang === 'de' ? {
+  let L = lang === 'de' ? {
     eyebrow: 'Planung', title: 'Monatsplanung',
     subtitle: 'Behandlungen/Leistungen pro Monat planen: Umsatz, Kosten, Gewinn (EÜR) und Rücklage.',
     service: 'Behandlung/Leistung', duration: 'Dauer Min.', price: 'Preis netto', qty: 'Anzahl/Monat',
@@ -69,6 +69,19 @@ export default function PlaneamentoMensal() {
     save: 'Guardar', saving: 'A guardar…', saved: 'Guardado ✓',
     saveErr: 'Falha ao guardar (é necessária a migração 014).', loading: 'A carregar…',
     hint: 'O custo indireto de cada linha = (duração ÷ 60) × custo indireto/hora × quantidade.',
+  }
+  if (lang === 'en') L = {
+    eyebrow: 'Planning', title: 'Monthly Plan',
+    subtitle: 'Plan treatments/services per month: revenue, costs, profit (EÜR) and reserve.',
+    service: 'Treatment/Service', duration: 'Duration (min)', price: 'Net price', qty: 'Qty./month',
+    material: 'Material/unit', revenue: 'Revenue', matTotal: 'Total material', overhead: 'Indirect costs',
+    profit: 'Profit (EÜR)', reserve: 'Reserve', after: 'After reserve', total: 'TOTAL',
+    addRow: '+ Row', fromCatalog: 'From catalog…', remove: 'Remove',
+    settings: 'Planning basis', monthlyFixed: 'Monthly fixed costs (€)', productiveHours: 'Productive hours/month',
+    ohPerHour: 'Indirect cost per hour', reservePctL: 'Reserve (%)', basis: 'Reserve on', gewinn: 'Profit', umsatz: 'Revenue',
+    save: 'Save', saving: 'Saving…', saved: 'Saved ✓',
+    saveErr: 'Save failed (migration 014 required).', loading: 'Loading…',
+    hint: 'Each row indirect cost = (duration ÷ 60) × indirect cost/hour × quantity.',
   }
 
   const oh = overheadPerHour(monthlyFixed, productiveHours)

@@ -106,7 +106,7 @@ export default function Sidebar() {
     </NavLink>
   )
 
-  const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung' }, section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung' } }
+  const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' }, section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung', en: 'ESG Consulting' } }
   const mgmtKey = viewPlatform === 'esg' ? 'section_esg' : 'section_mgmt'
 
   return (
@@ -155,14 +155,14 @@ export default function Sidebar() {
               {user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Utilizador'}
             </div>
           </div>
-          <button onClick={handleLogout} title={lang === 'de' ? 'Abmelden' : 'Terminar sessão'} style={{ flex: 'none', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent', border: `1px solid ${t.sidebarBorder}`, color: t.sidebarSub }}>
+          <button onClick={handleLogout} title={lang === 'de' ? 'Abmelden' : lang === 'en' ? 'Sign out' : 'Terminar sessão'} style={{ flex: 'none', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'transparent', border: `1px solid ${t.sidebarBorder}`, color: t.sidebarSub }}>
             <IconLogout />
           </button>
         </div>
         {/* Alternar plataforma (apenas admin) */}
         {isAdmin && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
-            {[['accounting', lang === 'de' ? 'Buchhaltung' : 'Contábil'], ['esg', 'ESG']].map(([p, lbl]) => (
+            {[['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contábil'], ['esg', 'ESG']].map(([p, lbl]) => (
               <button key={p} onClick={() => switchAdminView(p)} style={{
                 flex: 1, padding: '7px 8px', borderRadius: '7px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: 'none',
                 background: viewPlatform === p ? t.accent : 'transparent',
@@ -174,8 +174,8 @@ export default function Sidebar() {
         {/* Idioma + tema */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
-            {['pt','de'].map(code => (
-              <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 11px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>
+            {['pt','de','en'].map(code => (
+              <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 9px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>
             ))}
           </div>
           <button onClick={toggle} title={night ? (lang==='de'?'Heller Modus':'Modo claro') : (lang==='de'?'Nachtmodus':'Modo noturno')} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>

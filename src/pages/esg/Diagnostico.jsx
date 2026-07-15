@@ -28,6 +28,15 @@ export default function Diagnostico() {
     cantAnswer: 'Ich kann nicht antworten', naUnavailable: 'Informationen derzeit nicht verfügbar',
     naUnclear: 'Frage ist nicht klar',
     disclaimer: 'Vorausgefüllte Werte können von der Plattform stammen. Alle Angaben dienen der Vorbereitung des ESG-Ratings.',
+  } : lang === 'en' ? {
+    eyebrow: 'ESG Assessment', title: 'Sustainability Questionnaire',
+    subtitle: 'Creditreform "Advanced" 2023 · aligned with ESRS/EFRAG. 28 questions (10 Environment, 7 Social, 11 Governance).',
+    refYear: 'Reference year', progress: 'Answered', save: 'Save', saving: 'Saving…',
+    saved: 'Saved ✓', saveErr: 'Save failed (migration 012 required).', loading: 'Loading…',
+    yes: 'Yes', no: 'No', planned: 'Planned', unit: 'Unit',
+    cantAnswer: 'I cannot answer', naUnavailable: 'Information currently unavailable',
+    naUnclear: 'The question is not clear',
+    disclaimer: 'Pre-filled values may come from the platform. All data serves to prepare the ESG rating.',
   } : {
     eyebrow: 'Diagnóstico ESG', title: 'Questionário de Sustentabilidade',
     subtitle: 'Creditreform "Advanced" 2023 · alinhado ao ESRS/EFRAG. 28 perguntas (10 Ambiente, 7 Social, 11 Governança).',
@@ -132,7 +141,7 @@ export default function Diagnostico() {
     const a = answers[q.id] || {}
     const na = a.na || null
     const disabled = !!na
-    const primary = lang === 'de' ? q.de : q.pt
+    const primary = q[lang] || q.pt
     const secondary = lang === 'de' ? q.pt : q.de
     let lastSub = null
     return (
@@ -230,7 +239,7 @@ export default function Diagnostico() {
               border: `1px solid ${active ? p.color : t.cardBorder}`, background: active ? p.bg : t.cardBg,
             }}>
               <span style={{ width: '22px', height: '22px', borderRadius: '6px', background: p.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>{p.letter}</span>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: active ? p.color : t.textMuted }}>{lang === 'de' ? p.de : p.pt}</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: active ? p.color : t.textMuted }}>{p[lang] || p.pt}</span>
               <span style={{ fontSize: '11px', fontWeight: 700, color: t.subtle }}>{answeredIn(p.key)}/{questionsByPillar(p.key).length}</span>
             </button>
           )
@@ -239,7 +248,7 @@ export default function Diagnostico() {
 
       {/* Intro do pilar */}
       <div style={{ background: activePillarObj.bg, borderRadius: '12px', padding: '13px 16px', marginBottom: '16px', fontSize: '12.5px', color: t.text, lineHeight: 1.5 }}>
-        {lang === 'de' ? activePillarObj.introDe : activePillarObj.introPt}
+        {lang === 'de' ? activePillarObj.introDe : lang === 'en' ? activePillarObj.introEn : activePillarObj.introPt}
       </div>
 
       {/* Perguntas do pilar ativo */}

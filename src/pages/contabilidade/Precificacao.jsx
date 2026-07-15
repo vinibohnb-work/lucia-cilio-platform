@@ -58,6 +58,14 @@ function EventoCalculator({ lang, irDefault }) {
     costLabel: 'Gesamtkosten', priceNoIva: 'Preis ohne MwSt.', ivaLabel: `MwSt. (${ivaRate}%)`,
     priceWithIva: 'Gesamtpreis mit MwSt.', name: 'Name',
     ir: 'IR-Rücklage (%)', irAmount: 'IR-Rücklage', irHint: 'Vorschlag',
+  } : lang === 'en' ? {
+    guests: 'Guests', adults: 'Adults', children: 'Children (50%)', menuPrice: 'Price/person (€)',
+    menuTotal: 'Menu Cost', staff: 'Staff', hours: 'Hours', rate: '€/hour',
+    addPerson: '+ Add person', extraCosts: 'Additional costs (€)', margin: 'Profit margin (%)',
+    ivaRate: 'VAT (%)', round: 'Round (to €10)', perPerson: 'Per person',
+    costLabel: 'Total Costs', priceNoIva: 'Price excl. VAT', ivaLabel: `VAT (${ivaRate}%)`,
+    priceWithIva: 'Final price incl. VAT', name: 'Name',
+    ir: 'Income tax reserve (%)', irAmount: 'Income tax reserve', irHint: 'suggested',
   } : {
     guests: 'Convidados', adults: 'Adultos', children: 'Crianças (50%)', menuPrice: 'Preço/adulto (€)',
     menuTotal: 'Custo do Menu', staff: 'Equipa', hours: 'Horas', rate: '€/hora',
@@ -121,7 +129,7 @@ function EventoCalculator({ lang, irDefault }) {
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
             <button onClick={addStaff} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: G, fontWeight: 700, padding: 0 }}>{L.addPerson}</button>
-            <span style={{ fontSize: '12px', color: t.text }}>{lang === 'de' ? 'Personal gesamt' : 'Total equipa'}: <strong>€ {fmt(staffTotal)}</strong></span>
+            <span style={{ fontSize: '12px', color: t.text }}>{lang === 'de' ? 'Personal gesamt' : lang === 'en' ? 'Staff total' : 'Total equipa'}: <strong>€ {fmt(staffTotal)}</strong></span>
           </div>
         </div>
 
@@ -152,7 +160,7 @@ function EventoCalculator({ lang, irDefault }) {
       <div style={{ position: 'sticky', top: '20px' }}>
         <div style={{ background: t.highlightBg, borderRadius: '16px', padding: '24px', color: t.highlightValue }}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,.5)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>
-            {lang === 'de' ? 'Kalkulation' : 'Resultado'}
+            {lang === 'de' ? 'Kalkulation' : lang === 'en' ? 'Result' : 'Resultado'}
           </div>
 
           {[
@@ -212,6 +220,12 @@ function ServicoCalculator({ lang, irDefault }) {
     labor: 'Arbeitskosten', costs: 'Gesamtkosten', priceNoIva: 'Preis ohne MwSt.',
     ivaLabel: `MwSt. (${ivaRate}%)`, priceWithIva: 'Gesamtpreis',
     ir: 'IR-Rücklage (%)', irAmount: 'IR-Rücklage', irHint: 'Vorschlag',
+  } : lang === 'en' ? {
+    hours: 'Work hours', rate: 'Rate/hour (€)', materials: 'Materials (€)',
+    fixedCosts: 'Allocated fixed costs (€)', margin: 'Profit margin (%)', ivaRate: 'VAT (%)',
+    labor: 'Labor cost', costs: 'Total costs', priceNoIva: 'Price excl. VAT',
+    ivaLabel: `VAT (${ivaRate}%)`, priceWithIva: 'Final price',
+    ir: 'Income tax reserve (%)', irAmount: 'Income tax reserve', irHint: 'suggested',
   } : {
     hours: 'Horas de trabalho', rate: 'Valor/hora (€)', materials: 'Materiais (€)',
     fixedCosts: 'Custos fixos prop. (€)', margin: 'Margem de lucro (%)', ivaRate: 'IVA (%)',
@@ -302,6 +316,13 @@ function ProdutoCalculator({ lang, irDefault }) {
     priceNoIva: 'Verkaufspreis ohne MwSt.', ivaLabel: `MwSt. (${ivaRate}%)`,
     priceWithIva: 'Endverkaufspreis', withDiscount: `Preis mit ${discount}% Rabatt`,
     ir: 'IR-Rücklage (%)', irAmount: 'IR-Rücklage', irHint: 'Vorschlag',
+  } : lang === 'en' ? {
+    buyPrice: 'Purchase cost (€)', indirect: 'Indirect costs (%)', margin: 'Profit margin (%)',
+    discount: 'Possible discount (%)', ivaRate: 'VAT (%)',
+    indirectAmt: 'Indirect costs', costPrice: 'Total cost', minPrice: 'Minimum selling price',
+    priceNoIva: 'Price excl. VAT', ivaLabel: `VAT (${ivaRate}%)`,
+    priceWithIva: 'Final price incl. VAT', withDiscount: `Price with ${discount}% discount`,
+    ir: 'Income tax reserve (%)', irAmount: 'Income tax reserve', irHint: 'suggested',
   } : {
     buyPrice: 'Custo de compra (€)', indirect: 'Custos indiretos (%)', margin: 'Margem de lucro (%)',
     discount: 'Desconto possível (%)', ivaRate: 'IVA (%)',
@@ -340,7 +361,7 @@ function ProdutoCalculator({ lang, irDefault }) {
       </div>
       <div style={{ background: t.highlightBg, borderRadius: '16px', padding: '24px', color: t.highlightValue }}>
         <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,.5)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>
-          {isDE ? 'MB-Kalkulation' : 'Resultado'}
+          {isDE ? 'MB-Kalkulation' : lang === 'en' ? 'Result' : 'Resultado'}
         </div>
         {[
           { label: L.costPrice,   value: costPrice,    muted: true },
@@ -395,6 +416,17 @@ function TratamentoCalculator({ lang, irDefault, settings }) {
     result: 'Kalkulation', regelNote: `inkl. ${vatPct}% USt (Regelbesteuerung)`, kleinNote: 'Kleinunternehmer — keine USt',
     warnBelow: 'Achtung: aktueller Preis liegt UNTER den Selbstkosten.', okAbove: 'Aktueller Preis deckt die Selbstkosten.',
     markup: 'Aufschläge',
+  } : lang === 'en' ? {
+    minutePrice: 'Price per minute (€)', duration: 'Treatment duration (min)', material: 'Materials (€)',
+    monthlyFixed: 'Monthly fixed costs (€)', productiveHours: 'Productive hours/month',
+    profit: 'Profit margin (%)', reserve: 'Reserve (%)', currentPrice: 'Current price charged (€)',
+    basis: 'Reserve calculated on', gewinn: 'Profit', umsatz: 'Revenue',
+    hourValue: 'Hourly value', overheadH: 'Indirect cost per hour', overheadShare: 'Treatment indirect cost',
+    labor: 'Labor value', minBase: 'Own cost / minimum base', priceNet: 'Recommended price (net)',
+    priceGross: 'Recommended price (final)', diff: 'Difference vs. minimum base', resCur: 'Reserve from current price',
+    result: 'Calculation', regelNote: `incl. ${vatPct}% VAT`, kleinNote: 'Small business — no VAT',
+    warnBelow: 'Warning: current price is BELOW own cost.', okAbove: 'Current price covers own cost.',
+    markup: 'Margin + Reserve',
   } : {
     minutePrice: 'Preço por minuto (€)', duration: 'Duração do tratamento (min)', material: 'Materiais (€)',
     monthlyFixed: 'Custos fixos mensais (€)', productiveHours: 'Horas produtivas/mês',
@@ -421,7 +453,7 @@ function TratamentoCalculator({ lang, irDefault, settings }) {
             [L.monthlyFixed, monthlyFixed, setMonthlyFixed, 10],
             [L.productiveHours, productiveHours, setProductiveHours, 1],
             [L.profit, profitPct, setProfitPct, 1],
-            [L.reserve, reservePct, setReservePct, 1, irDefault ? `${isDE ? 'Vorschlag' : 'sugestão'}: ${irDefault}%` : null],
+            [L.reserve, reservePct, setReservePct, 1, irDefault ? `${isDE ? 'Vorschlag' : lang === 'en' ? 'suggested' : 'sugestão'}: ${irDefault}%` : null],
             [L.currentPrice, currentPrice, setCurrentPrice, 1],
           ].map(([label, val, set, step, hint]) => (
             <div key={label}>
@@ -477,10 +509,10 @@ function TratamentoCalculator({ lang, irDefault, settings }) {
 
 // ── Main Component ─────────────────────────────────────────────────────────
 const TYPES = {
-  evento:     { pt: 'Evento / Catering',   de: 'Event / Catering',        icon: '🍽️' },
-  servico:    { pt: 'Serviço por Hora',    de: 'Stundenbasierter Dienst', icon: '⏱️' },
-  produto:    { pt: 'Produto / Revenda',   de: 'Produkt / Handel',        icon: '📦' },
-  tratamento: { pt: 'Tratamento',          de: 'Behandlung',              icon: '💅' },
+  evento:     { pt: 'Evento / Catering',   de: 'Event / Catering',        en: 'Event / Catering',   icon: '🍽️' },
+  servico:    { pt: 'Serviço por Hora',    de: 'Stundenbasierter Dienst', en: 'Hourly Service',     icon: '⏱️' },
+  produto:    { pt: 'Produto / Revenda',   de: 'Produkt / Handel',        en: 'Product / Resale',   icon: '📦' },
+  tratamento: { pt: 'Tratamento',          de: 'Behandlung',              en: 'Treatment',          icon: '💅' },
 }
 
 export default function Precificacao() {

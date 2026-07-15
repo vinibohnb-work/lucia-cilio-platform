@@ -19,5 +19,6 @@ export function entryTypeLabel(e, lang) {
       : 'Privatentnahme'
   }
   if (lang === 'de') return e.type === 'entrada' ? 'Einnahme' : 'Ausgabe'
+  if (lang === 'en') return e.type === 'entrada' ? 'Income' : 'Expense'
   return e.type === 'entrada' ? 'Entrada' : 'Saída'
 }

@@ -42,6 +42,11 @@ export default function Catalogo() {
     product: 'Produkt', service: 'Dienstleistung', all: 'Alle',
     save: 'Speichern', loading: 'Wird geladen…', empty: 'Noch keine Einträge. Fügen Sie den ersten hinzu.',
     namePh: 'z.B. Beratungsstunde, Menü A…', intro: 'Produkte und Dienstleistungen, die Sie mit Buchungen verknüpfen können.',
+  } : lang === 'en' ? {
+    new: '+ New Item', name: 'Name', kind: 'Type', price: 'Price (€)',
+    product: 'Product', service: 'Service', all: 'All',
+    save: 'Save', loading: 'Loading…', empty: 'No items yet. Add the first one.',
+    namePh: 'e.g. Consulting hour, Menu A…', intro: 'Products and services you can link to Cash Book entries.',
   } : {
     new: '+ Novo Item', name: 'Designação', kind: 'Tipo', price: 'Preço (€)',
     product: 'Produto', service: 'Serviço', all: 'Todos',

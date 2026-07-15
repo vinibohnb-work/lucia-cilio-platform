@@ -46,6 +46,11 @@ export default function Clientes() {
     active: 'Aktiv', inactive: 'Inaktiv', esg: 'ESG', acc: 'Buchhaltung', both: 'ESG + Buchh.',
     all: 'Alle Länder', save: 'Speichern', loading: 'Wird geladen…', empty: 'Noch keine Mandanten. Fügen Sie den ersten hinzu.',
     total: 'Insgesamt', countries: 'Länder', sectorPh: 'z.B. Bau, Industrie…', selectCountry: '— Land wählen —',
+  } : lang === 'en' ? {
+    new: '+ New Client', name: 'Name', country: 'Country', sector: 'Sector', service: 'Service', status: 'Status',
+    active: 'Active', inactive: 'Inactive', esg: 'ESG', acc: 'Accounting', both: 'ESG + Acc.',
+    all: 'All countries', save: 'Save', loading: 'Loading…', empty: 'No clients yet. Add the first one.',
+    total: 'Total', countries: 'Countries', sectorPh: 'e.g. Construction, Industry…', selectCountry: '— Select country —',
   } : {
     new: '+ Novo Cliente', name: 'Nome', country: 'País', sector: 'Setor', service: 'Serviço', status: 'Estado',
     active: 'Ativo', inactive: 'Inativo', esg: 'ESG', acc: 'Contabilidade', both: 'ESG + Cont.',

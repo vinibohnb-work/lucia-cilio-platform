@@ -57,6 +57,13 @@ export default function ObrigacoesFiscais() {
     empty: 'Noch keine Termine. Fügen Sie den ersten hinzu.', typePh: 'z.B. Umsatzsteuervoranmeldung',
     days: 'Tage', today: 'Heute', overdue: 'überfällig', markDone: 'Als erledigt markieren',
     alert1: 'offene Frist', alert2: 'offene Fristen', allCountries: 'Alle Länder', selectCountry: '— Land wählen —',
+  } : lang === 'en' ? {
+    new: '+ New Obligation', pending: 'Pending', done: 'Submitted', deadline: 'Deadline',
+    country: 'Country', client: 'Client', type: 'Obligation', status: 'Status',
+    all: 'All', save: 'Save', loading: 'Loading…',
+    empty: 'No obligations yet. Add the first one.', typePh: 'e.g. VAT return, income tax…',
+    days: 'days', today: 'Today', overdue: 'overdue', markDone: 'Mark as submitted',
+    alert1: 'pending obligation', alert2: 'pending obligations', allCountries: 'All countries', selectCountry: '— Select country —',
   } : {
     new: '+ Nova Obrigação', pending: 'Pendente', done: 'Entregue', deadline: 'Prazo',
     country: 'País', client: 'Cliente', type: 'Obrigação', status: 'Estado',

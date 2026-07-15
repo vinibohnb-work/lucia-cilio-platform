@@ -33,6 +33,17 @@ export default function AdminHome() {
     invited: (e) => `Einladung an ${e} gesendet.`,
     confirmDel: (e) => `Benutzer „${e}" wirklich löschen?`,
     apiHint: 'Benutzerverwaltung benötigt die bereitgestellte Version (Vercel).',
+  } : lang === 'en' ? {
+    eyebrow: 'Administration', title: 'User Management',
+    new: '+ New User', email: 'Email', name: 'Display name',
+    platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG',
+    role: 'Role', admin: 'Administrator', userRole: 'User', created: 'Created',
+    lastLogin: 'Last login', save: 'Save', invite: 'Send invitation',
+    edit: 'Edit', del: 'Delete', loading: 'Loading…', empty: 'No users.', never: 'never',
+    inviteHint: 'An email will be sent with a link for the user to set their password.',
+    invited: (e) => `Invitation sent to ${e}.`,
+    confirmDel: (e) => `Delete user "${e}"?`,
+    apiHint: 'User management requires the published version (Vercel).',
   } : {
     eyebrow: 'Administração', title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
@@ -73,7 +84,7 @@ export default function AdminHome() {
     setBusyId(null)
   }
 
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : 'pt-PT') : L.never
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT') : L.never
   const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, fontSize: '13px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const roleStyle = { admin: { bg: t.chipBg, ink: t.chipText }, user: { bg: t.chipBg, ink: t.chipText } }
@@ -131,7 +142,7 @@ export default function AdminHome() {
           const rs = roleStyle[u.role] || roleStyle.user
           return (
             <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 22px', borderTop: `1px solid ${t.rowBorder}`, alignItems: 'center', gap: '12px', fontSize: '13px' }}>
-              <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>(eu)</span>}</div>
+              <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>({lang === 'de' ? 'ich' : lang === 'en' ? 'me' : 'eu'})</span>}</div>
               <div style={{ color: t.text }}>{u.display_name || '—'}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: (u.platform==='esg'?'#e8f0fb':'#eaf5ee'), color: (u.platform==='esg'?'#1e60c8':'#0a7a3e') }}>{platLabel(u.platform)}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: rs.bg, color: rs.ink }}>{u.role === 'admin' ? L.admin : L.userRole}</span></div>

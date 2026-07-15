@@ -17,6 +17,7 @@ const RED = '#e53e3e'
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const fmt = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 const fmt2 = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -56,7 +57,7 @@ export default function Dashboard() {
     })()
   }, [])
 
-  const months = lang === 'de' ? MONTHS_DE : MONTHS_PT
+  const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
 
   // ── Período (ano inteiro ou trimestre) ──
   const isQuarter = period === 'quarter'
@@ -159,6 +160,28 @@ export default function Dashboard() {
     predictedFixed: 'Geplante Fixkosten (offen)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
     ivaTitle: 'MwSt.', ivaLiq: 'MwSt. (Verkäufe)', ivaDed: 'Vorsteuer (Einkäufe)', ivaPay: 'MwSt.-Zahllast', ivaRec: 'MwSt.-Guthaben',
     irTitle: 'Steuerrücklage', irBase: 'Ergebnis (Basis)', irReserve: 'Zurückzulegen', irHint: 'auf das Periodenergebnis', irNoResult: 'Kein positives Ergebnis — nichts zurückzulegen.',
+  } : lang === 'en' ? {
+    timeline: 'Cash Flow by Month', breakeven: 'Break-even Analysis',
+    income: 'Income', expense: 'Expenses', net: 'Net',
+    revenue: 'Revenue', fixed: 'Fixed Costs', variable: 'Variable Costs',
+    cmRatio: 'Contribution Margin', bePoint: 'Break-even Point',
+    above: 'Above break-even ✓', below: 'Below break-even',
+    needRevenue: 'Revenue needed to reach break-even', loading: 'Loading…',
+    noData: 'No data yet. Add entries in the Cash Book.',
+    beHint: 'Minimum revenue to cover all costs.',
+    yearNet: 'Year result', surplus: 'Surplus',
+    byProduct: 'Revenue by Product/Service', share: 'Share',
+    unassigned: 'No product assigned', noProducts: 'No income linked to products/services yet.',
+    quarterly: 'Quarter', annual: 'Year',
+    ssTitle: 'Social Security base (PT)',
+    ssHint: 'Quarterly income — basis for the quarterly Social Security return in Portugal.',
+    ssIncome: 'Quarterly income', ssBase: 'Contribution base (70%)',
+    ssEst: 'Estimated contribution (21.4%)',
+    ssNote: 'Estimate for service providers (70% × 21.4%). Confirm your classification.',
+    predictedFixed: 'Planned fixed costs (open)', predictedCta: 'Confirm →', predicted: 'Planned',
+    ivaTitle: 'VAT', ivaLiq: 'VAT charged (sales)', ivaDed: 'Deductible VAT (purchases)', ivaPay: 'VAT payable', ivaRec: 'VAT refundable',
+    irTitle: 'Income tax reserve', irBase: 'Result (base)', irReserve: 'To reserve', irHint: 'on the period result', irNoResult: 'No positive result — nothing to reserve.',
+    product: 'Product', service: 'Service',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
     income: 'Entradas', expense: 'Saídas', net: 'Líquido',
@@ -186,7 +209,7 @@ export default function Dashboard() {
   if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
 
   const yearNet = revenue - (fixedTotal + varC)
-  const netLabel = isQuarter ? `${lang === 'de' ? 'Ergebnis' : 'Resultado'} ${periodLabel}` : L.yearNet
+  const netLabel = isQuarter ? `${lang === 'de' ? 'Ergebnis' : lang === 'en' ? 'Result' : 'Resultado'} ${periodLabel}` : L.yearNet
   const ssBase = revenue * 0.70
   // Reserva de IR: % da empresa sobre o resultado positivo do período
   const irPct = settings?.ir_reserve_pct != null ? Number(settings.ir_reserve_pct) : 25
