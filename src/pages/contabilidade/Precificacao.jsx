@@ -200,14 +200,19 @@ function ServicoCalculator({ lang, irDefault }) {
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const [hours,     setHours    ] = useState(10)
   const [rate,      setRate     ] = useState(50)
-  const [materials, setMaterials] = useState(0)
+  const [materialItems, setMaterialItems] = useState([{ name: '', qty: '', unit: '' }])
   const [fixedCosts,setFixedCosts] = useState(30)
   const [margin,    setMargin   ] = useState(20)
   const [ivaRate,   setIvaRate  ] = useState(isDE ? 19 : 23)
   const [irPct,     setIrPct    ] = useState(0)
 
+  const updateMat = (i, field, value) => setMaterialItems(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m))
+  const addMat = () => setMaterialItems(prev => [...prev, { name: '', qty: '', unit: '' }])
+  const removeMat = (i) => setMaterialItems(prev => prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev)
+  const materialsTotal = materialItems.reduce((s, m) => s + p(m.qty) * p(m.unit), 0)
+
   const laborCost  = p(hours) * p(rate)
-  const totalCosts = laborCost + p(materials) + p(fixedCosts)
+  const totalCosts = laborCost + materialsTotal + p(fixedCosts)
   const withMargin = totalCosts * (1 + p(margin) / 100)
   const irAmt      = withMargin * p(irPct) / 100
   const baseNoIva  = withMargin + irAmt
@@ -215,23 +220,29 @@ function ServicoCalculator({ lang, irDefault }) {
   const total      = baseNoIva + ivaAmt
 
   const L = isDE ? {
-    hours: 'Arbeitsstunden', rate: 'Stundensatz (€)', materials: 'Materialkosten (€)',
+    hours: 'Arbeitsstunden', rate: 'Stundensatz (€)',
     fixedCosts: 'Fixkosten anteilig (€)', margin: 'Gewinnmarge (%)', ivaRate: 'MwSt. (%)',
     labor: 'Arbeitskosten', costs: 'Gesamtkosten', priceNoIva: 'Preis ohne MwSt.',
     ivaLabel: `MwSt. (${ivaRate}%)`, priceWithIva: 'Gesamtpreis',
     ir: 'IR-Rücklage (%)', irAmount: 'IR-Rücklage', irHint: 'Vorschlag',
+    matTitle: 'Materialverbrauch', matName: 'Material', matQty: 'Menge', matUnit: 'Kosten/Einheit (€)',
+    matTotal: 'Material gesamt', addMat: '+ Material',
   } : lang === 'en' ? {
-    hours: 'Work hours', rate: 'Rate/hour (€)', materials: 'Materials (€)',
+    hours: 'Work hours', rate: 'Rate/hour (€)',
     fixedCosts: 'Allocated fixed costs (€)', margin: 'Profit margin (%)', ivaRate: 'VAT (%)',
     labor: 'Labor cost', costs: 'Total costs', priceNoIva: 'Price excl. VAT',
     ivaLabel: `VAT (${ivaRate}%)`, priceWithIva: 'Final price',
     ir: 'Income tax reserve (%)', irAmount: 'Income tax reserve', irHint: 'suggested',
+    matTitle: 'Material consumed', matName: 'Material', matQty: 'Qty', matUnit: 'Cost/unit (€)',
+    matTotal: 'Material total', addMat: '+ Material',
   } : {
-    hours: 'Horas de trabalho', rate: 'Valor/hora (€)', materials: 'Materiais (€)',
+    hours: 'Horas de trabalho', rate: 'Valor/hora (€)',
     fixedCosts: 'Custos fixos prop. (€)', margin: 'Margem de lucro (%)', ivaRate: 'IVA (%)',
     labor: 'Custo de mão-de-obra', costs: 'Total de custos', priceNoIva: 'Preço sem IVA',
     ivaLabel: `IVA (${ivaRate}%)`, priceWithIva: 'Preço final com IVA',
     ir: 'Reserva IR (%)', irAmount: 'Reserva IR', irHint: 'sugestão',
+    matTitle: 'Material consumido', matName: 'Material', matQty: 'Qtd.', matUnit: 'Custo/unid. (€)',
+    matTotal: 'Total de material', addMat: '+ Material',
   }
 
   const inputSm = { padding: '7px 9px', border: `1px solid ${t.cardBorder}`, borderRadius: '7px', fontSize: '13px', background: t.cardBg, width: '100%', boxSizing: 'border-box' }
@@ -243,7 +254,6 @@ function ServicoCalculator({ lang, irDefault }) {
           {[
             [L.hours, hours, setHours, 1],
             [L.rate, rate, setRate, 0.5],
-            [L.materials, materials, setMaterials, 0.5],
             [L.fixedCosts, fixedCosts, setFixedCosts, 0.5],
             [L.margin, margin, setMargin, 1],
             [L.ivaRate, ivaRate, setIvaRate, 1],
@@ -256,15 +266,38 @@ function ServicoCalculator({ lang, irDefault }) {
             </div>
           ))}
         </div>
+
+        {/* Material consumido (lista itemizada) */}
+        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: `1px solid ${t.cardBorder}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: G, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.matTitle}</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: GOLD }}>{L.matTotal}: € {fmt(materialsTotal)}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 110px 28px', gap: '8px', marginBottom: '5px' }}>
+            {[L.matName, L.matQty, L.matUnit, ''].map((h, i) => <div key={i} style={{ fontSize: '10px', color: t.textMuted, fontWeight: 700 }}>{h}</div>)}
+          </div>
+          {materialItems.map((m, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 110px 28px', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
+              <input value={m.name} onChange={e => updateMat(i, 'name', e.target.value)} placeholder={L.matName} style={inputSm} />
+              <input type="number" min="0" step="1" value={m.qty} onChange={e => updateMat(i, 'qty', e.target.value)} placeholder="0" style={inputSm} />
+              <input type="number" min="0" step="0.5" value={m.unit} onChange={e => updateMat(i, 'unit', e.target.value)} placeholder="0,00" style={inputSm} />
+              <button onClick={() => removeMat(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: t.subtle, padding: 0 }}>✕</button>
+            </div>
+          ))}
+          <button onClick={addMat} style={{ marginTop: '4px', padding: '6px 12px', background: BG, border: `1px dashed ${t.cardBorder}`, borderRadius: '7px', fontWeight: 700, fontSize: '11.5px', cursor: 'pointer', color: t.textMuted }}>{L.addMat}</button>
+        </div>
+
         <div style={{ marginTop: '14px', padding: '12px 14px', background: BG, borderRadius: '10px', fontSize: '12px', color: t.text }}>
           {L.labor}: <strong>€ {fmt(laborCost)}</strong>
+          &ensp;·&ensp;
+          {L.matTotal}: <strong>€ {fmt(materialsTotal)}</strong>
           &ensp;·&ensp;
           {L.costs}: <strong>€ {fmt(totalCosts)}</strong>
         </div>
       </div>
       <div style={{ background: t.highlightBg, borderRadius: '16px', padding: '24px', color: t.highlightValue }}>
         <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,.5)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '20px' }}>
-          {lang === 'de' ? 'Kalkulation' : 'Resultado'}
+          {lang === 'de' ? 'Kalkulation' : lang === 'en' ? 'Result' : 'Resultado'}
         </div>
         {[
           { label: L.costs,      value: totalCosts, muted: true },
