@@ -21,6 +21,7 @@ import AdminHome from './pages/admin/AdminHome'
 
 // Internal layout
 import Sidebar from './components/layout/Sidebar'
+import FiscalBell from './components/FiscalBell'
 
 // Internal pages
 import Dashboard from './pages/contabilidade/Dashboard'
@@ -62,6 +63,7 @@ function AppLayout() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: t.appBg, fontFamily: t.fontBody }}>
       <Sidebar />
+      <FiscalBell />
       {/* Backdrop do drawer no mobile */}
       {isMobile && mobileOpen && (
         <div

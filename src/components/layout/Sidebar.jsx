@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
 import { getCompanySettings } from '../../lib/companySettings'
+import { useFiscalAlerts } from '../../hooks/useFiscalAlerts'
 import Flag from '../Flag'
 
 // ── Ícones (stroke = currentColor) ─────────────────────────────────────────
@@ -40,7 +41,7 @@ const NAV = {
       { to: '/contabilidade/dashboard',    Icon: IconPainel,   labelKey: 'nav_dash' },
       { to: '/contabilidade/caixa',        Icon: IconCaixa,    labelKey: 'nav_caixa' },
       { to: '/contabilidade/catalogo',     Icon: IconCatalogo, labelKey: 'nav_catalogo' },
-      { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations', badge: 2 },
+      { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations' },
     ]},
     { key: 'section_mgmt', items: [
       { to: '/contabilidade/precificacao', Icon: IconPreco,    labelKey: 'nav_preco' },
@@ -69,6 +70,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const [country, setCountry] = useState(null)
   useEffect(() => { getCompanySettings().then(cs => setCountry(cs?.country || 'PT')) }, [])
+  const { count: alertCount } = useFiscalAlerts(14)
 
   // O admin acede a ambas as plataformas e alterna via toggle (persistido).
   const [adminView, setAdminView] = useState(() => localStorage.getItem('lc-admin-platform') || 'accounting')
@@ -85,7 +87,10 @@ export default function Sidebar() {
 
   const W = isMobile ? 264 : 238
 
-  const navRow = (item) => (
+  const navRow = (item) => {
+    // Badge dinâmico: obrigações fiscais vencidas / a vencer
+    const badge = item.to === '/contabilidade/obrigacoes' ? (alertCount || null) : item.badge
+    return (
     <NavLink key={item.to} to={item.to} onClick={closeOnMobile}
       style={({ isActive }) => ({
         position: 'relative', display: 'flex', alignItems: 'center', gap: '12px',
@@ -100,11 +105,12 @@ export default function Sidebar() {
           <span style={{ position: 'absolute', left: 0, top: '9px', bottom: '9px', width: '3px', borderRadius: '3px', background: isActive ? t.accent : 'transparent' }} />
           <span style={{ color: isActive ? t.accent : 'currentColor', display: 'flex' }}><item.Icon /></span>
           {translate(lang, item.labelKey)}
-          {item.badge && <span style={{ marginLeft: 'auto', fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '20px', background: t.badgeBg, color: t.badgeInk }}>{item.badge}</span>}
+          {badge && <span style={{ marginLeft: 'auto', fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '20px', background: t.badgeBg, color: t.badgeInk }}>{badge}</span>}
         </>
       )}
     </NavLink>
-  )
+    )
+  }
 
   const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' }, section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung', en: 'ESG Consulting' } }
   const mgmtKey = viewPlatform === 'esg' ? 'section_esg' : 'section_mgmt'
