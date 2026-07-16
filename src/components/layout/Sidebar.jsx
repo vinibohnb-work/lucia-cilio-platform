@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useSidebar } from '../../context/SidebarContext'
 import { useAuth } from '../../context/AuthContext'
@@ -59,6 +59,11 @@ const NAV = {
       { to: '/esg/relatorios',    Icon: IconRelatorios,  labelKey: 'nav_esg_reports' },
     ]},
   ],
+  management: [
+    { key: 'section_gestao', items: [
+      { to: '/gestao/acessos', Icon: IconAdmin, labelKey: 'nav_acessos' },
+    ]},
+  ],
 }
 
 export default function Sidebar() {
@@ -68,20 +73,22 @@ export default function Sidebar() {
   const { t, night, toggle } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [country, setCountry] = useState(null)
   useEffect(() => { getCompanySettings().then(cs => setCountry(cs?.country || 'PT')) }, [])
   const { count: alertCount } = useFiscalAlerts(14)
 
-  // O admin acede a ambas as plataformas e alterna via toggle (persistido).
-  const [adminView, setAdminView] = useState(() => localStorage.getItem('lc-admin-platform') || 'accounting')
-  const viewPlatform = isAdmin ? adminView : (platform === 'esg' ? 'esg' : 'accounting')
+  // O admin acede às três plataformas; a plataforma ativa segue o URL (o toggle
+  // apenas navega). Utilizadores normais veem só a sua plataforma.
+  const platformFromPath = pathname.startsWith('/gestao') ? 'management' : pathname.startsWith('/esg') ? 'esg' : 'accounting'
+  const viewPlatform = isAdmin ? platformFromPath : (platform === 'esg' ? 'esg' : 'accounting')
   const sections = NAV[viewPlatform] || NAV.accounting
 
+  const PLATFORM_HOME = { management: '/gestao/acessos', accounting: '/contabilidade/dashboard', esg: '/esg/diagnostico' }
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
   async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
   function switchAdminView(p) {
-    setAdminView(p); localStorage.setItem('lc-admin-platform', p)
-    navigate(p === 'esg' ? '/esg/diagnostico' : '/contabilidade/dashboard')
+    navigate(PLATFORM_HOME[p] || '/contabilidade/dashboard')
     if (isMobile) setMobileOpen(false)
   }
 
@@ -112,8 +119,12 @@ export default function Sidebar() {
     )
   }
 
-  const sectionLabel = { section_acc: { pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' }, section_mgmt: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' }, section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung', en: 'ESG Consulting' } }
-  const mgmtKey = viewPlatform === 'esg' ? 'section_esg' : 'section_mgmt'
+  const sectionLabel = {
+    section_acc: { pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' },
+    section_mgmt: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' },
+    section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung', en: 'ESG Consulting' },
+    section_gestao: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' },
+  }
 
   return (
     <aside style={{
@@ -143,7 +154,6 @@ export default function Sidebar() {
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>
               {sec.items.map(navRow)}
               {sec.key === 'section_mgmt' && country === 'DE' && navRow({ to: '/contabilidade/rucklagen', Icon: IconRucklagen, labelKey: 'nav_rucklagen' })}
-              {sec.key === mgmtKey && isAdmin && navRow({ to: '/admin', Icon: IconAdmin, labelKey: 'nav_admin' })}
             </nav>
           </div>
         ))}
@@ -168,9 +178,13 @@ export default function Sidebar() {
         {/* Alternar plataforma (apenas admin) */}
         {isAdmin && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
-            {[['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contábil'], ['esg', 'ESG']].map(([p, lbl]) => (
+            {[
+              ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],
+              ['accounting', lang === 'de' ? 'Buchh.' : lang === 'en' ? 'Acc.' : 'Contábil'],
+              ['esg', 'ESG'],
+            ].map(([p, lbl]) => (
               <button key={p} onClick={() => switchAdminView(p)} style={{
-                flex: 1, padding: '7px 8px', borderRadius: '7px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: 'none',
+                flex: 1, padding: '7px 4px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
                 background: viewPlatform === p ? t.accent : 'transparent',
                 color: viewPlatform === p ? '#0a2f1a' : t.sidebarSub,
               }}>{lbl}</button>

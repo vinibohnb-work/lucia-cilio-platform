@@ -100,8 +100,10 @@ function AppLayout() {
               <Route path="/esg/relatorios"    element={<RelatoriosESG />} />
             </Route>
 
-            <Route path="/admin" element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
-            <Route path="*"      element={<HomeRedirect />} />
+            {/* Plataforma Gestão (apenas admin, por agora) */}
+            <Route path="/gestao/acessos" element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
+            <Route path="/admin"          element={<Navigate to="/gestao/acessos" replace />} />
+            <Route path="*"               element={<HomeRedirect />} />
           </Routes>
         </main>
       </div>
