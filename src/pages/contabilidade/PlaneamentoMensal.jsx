@@ -116,9 +116,10 @@ export default function PlaneamentoMensal() {
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const inputStyle = { padding: '7px 9px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' }
-  const GRID = '1.6fr 90px 100px 90px 100px 110px 110px 110px 110px 110px 110px 34px'
+  const GRID = 'minmax(150px, 1.4fr) 62px 78px 56px 82px 90px 90px 92px 92px 92px 96px 28px'
+  const TABLE_MIN = 1120
   const headCell = { fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.6px', textTransform: 'uppercase' }
-  const numCell = { fontSize: '12.5px', fontWeight: 700, textAlign: 'right' }
+  const numCell = { fontSize: '12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
 
   if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
 
@@ -170,18 +171,18 @@ export default function PlaneamentoMensal() {
 
       {/* Tabela do plano */}
       <div className="table-scroll">
-      <div style={{ ...card, overflow: 'hidden', minWidth: isMobile ? '1080px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '8px', padding: '11px 16px', background: t.headBg || t.softCardBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-          {[L.service, L.duration, L.price, L.qty, L.material, L.revenue, L.matTotal, L.overhead, L.profit, L.reserve, L.after, ''].map((h, i) => <div key={i} style={{ ...headCell, textAlign: i >= 5 && i <= 10 ? 'right' : 'left' }}>{h}</div>)}
+      <div style={{ ...card, overflow: 'hidden', minWidth: `${TABLE_MIN}px` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '7px', padding: '11px 14px', background: t.headBg || t.softCardBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+          {[L.service, L.duration, L.price, L.qty, L.material, L.revenue, L.matTotal, L.overhead, L.profit, L.reserve, L.after, ''].map((h, i) => <div key={i} style={{ ...headCell, textAlign: i >= 5 && i <= 10 ? 'right' : 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h}</div>)}
         </div>
         {rows.map((r, i) => {
           const c = totals.rows[i]
           return (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: GRID, gap: '8px', padding: '9px 16px', borderBottom: `1px solid ${t.rowBorder || t.cardBorder}`, alignItems: 'center' }}>
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: GRID, gap: '7px', padding: '9px 14px', borderBottom: `1px solid ${t.rowBorder || t.cardBorder}`, alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <input value={r.name} onChange={e => updateRow(i, 'name', e.target.value)} placeholder={L.service} style={{ ...inputStyle, flex: 1 }} />
                 {catalog.length > 0 && (
-                  <select value="" onChange={e => pickFromCatalog(i, e.target.value)} title={L.fromCatalog} style={{ ...inputStyle, width: '34px', cursor: 'pointer', padding: '7px 4px' }}>
+                  <select value="" onChange={e => pickFromCatalog(i, e.target.value)} title={L.fromCatalog} style={{ ...inputStyle, width: '30px', flex: 'none', cursor: 'pointer', padding: '7px 2px' }}>
                     <option value="">▾</option>
                     {catalog.map(ci => <option key={ci.id} value={ci.id}>{ci.name}</option>)}
                   </select>
@@ -202,7 +203,7 @@ export default function PlaneamentoMensal() {
           )
         })}
         {/* Totais */}
-        <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '8px', padding: '12px 16px', background: t.softCardBg, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '7px', padding: '12px 14px', background: t.softCardBg, alignItems: 'center' }}>
           <div style={{ fontSize: '11px', fontWeight: 800, color: t.heading, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{L.total}</div>
           <div /><div /><div /><div />
           <div style={{ ...numCell, fontWeight: 900, color: t.heading }}>€ {fmt(totals.revenue)}</div>
