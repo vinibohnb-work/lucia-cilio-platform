@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { listUsers, createUser, updateUser, deleteUser } from '../../lib/adminApi'
+import { listUsers, createUser, updateUser, deleteUser, resendInvite } from '../../lib/adminApi'
 
 const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting' }
 
@@ -33,6 +33,7 @@ export default function AdminHome() {
     invited: (e) => `Einladung an ${e} gesendet.`,
     confirmDel: (e) => `Benutzer „${e}" wirklich löschen?`,
     apiHint: 'Benutzerverwaltung benötigt die bereitgestellte Version (Vercel).',
+    resend: 'Einladung erneut senden', pendingTag: 'ausstehend', resent: (e) => `Neue Einladung an ${e} gesendet.`,
   } : lang === 'en' ? {
     eyebrow: 'Administration', title: 'User Management',
     new: '+ New User', email: 'Email', name: 'Display name',
@@ -44,6 +45,7 @@ export default function AdminHome() {
     invited: (e) => `Invitation sent to ${e}.`,
     confirmDel: (e) => `Delete user "${e}"?`,
     apiHint: 'User management requires the published version (Vercel).',
+    resend: 'Resend invitation', pendingTag: 'pending', resent: (e) => `New invitation sent to ${e}.`,
   } : {
     eyebrow: 'Administração', title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
@@ -55,6 +57,7 @@ export default function AdminHome() {
     invited: (e) => `Convite enviado para ${e}.`,
     confirmDel: (e) => `Eliminar o utilizador "${e}"?`,
     apiHint: 'A gestão de utilizadores requer a versão publicada (Vercel).',
+    resend: 'Reenviar convite', pendingTag: 'pendente', resent: (e) => `Novo convite enviado para ${e}.`,
   }
 
   const load = useCallback(async () => {
@@ -81,6 +84,11 @@ export default function AdminHome() {
     if (!window.confirm(L.confirmDel(u.email))) return
     setBusyId(u.id); setErr('')
     try { await deleteUser(u.id); await load() } catch (e) { setErr(e.message) }
+    setBusyId(null)
+  }
+  async function resend(u) {
+    setBusyId(u.id); setErr(''); setNotice('')
+    try { await resendInvite(u.id); setNotice(L.resent(u.email)); await load() } catch (e) { setErr(e.message) }
     setBusyId(null)
   }
 
@@ -147,8 +155,11 @@ export default function AdminHome() {
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: (u.platform==='esg'?'#e8f0fb':'#eaf5ee'), color: (u.platform==='esg'?'#1e60c8':'#0a7a3e') }}>{platLabel(u.platform)}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: rs.bg, color: rs.ink }}>{u.role === 'admin' ? L.admin : L.userRole}</span></div>
               <div style={{ color: t.textMuted }}>{fmtDate(u.created_at)}</div>
-              <div style={{ color: t.textMuted }}>{fmtDate(u.last_sign_in_at)}</div>
+              <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span>}</div>
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                {!u.last_sign_in_at && !isSelf && (
+                  <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} style={{ padding: '5px 9px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accent }}>{busyId === u.id ? '…' : '✉️'}</button>
+                )}
                 <button onClick={() => openEdit(u)} style={{ padding: '5px 11px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: t.text }}>{L.edit}</button>
                 <button onClick={() => remove(u)} disabled={isSelf || busyId === u.id} style={{ padding: '5px 11px', background: isSelf ? t.segBg : t.dueLate.bg, border: 'none', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: isSelf ? 'not-allowed' : 'pointer', color: isSelf ? t.subtle : t.dueLate.ink }}>{busyId === u.id ? '…' : L.del}</button>
               </div>

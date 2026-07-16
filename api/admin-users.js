@@ -46,6 +46,35 @@ export default async function handler(req, res) {
       return res.status(200).json({ users })
     }
 
+    // ── REENVIAR CONVITE ──
+    // Só para quem ainda não ativou a conta (nunca fez login). Gera um novo
+    // convite (novo prazo de 24h), preservando perfil e plataforma.
+    if (req.method === 'POST' && req.body?.resend) {
+      const { id, redirectTo } = req.body
+      if (!id) return res.status(400).json({ error: 'ID em falta.' })
+      const { data: u, error: getErr } = await admin.auth.admin.getUserById(id)
+      if (getErr || !u?.user) return res.status(404).json({ error: 'Utilizador não encontrado.' })
+      if (u.user.last_sign_in_at) {
+        return res.status(400).json({ error: 'Este utilizador já ativou a conta — não é necessário reenviar.' })
+      }
+      const email = u.user.email
+      const display_name = u.user.user_metadata?.display_name || ''
+      const { data: prof } = await admin.from('profiles').select('role, platform').eq('id', id).single()
+      // Recria o convite: apaga o registo pendente e convida de novo (novo link).
+      await admin.auth.admin.deleteUser(id)
+      const { data: inv, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { display_name },
+        redirectTo: redirectTo || undefined,
+      })
+      if (invErr) throw invErr
+      await admin.from('profiles').upsert({
+        id: inv.user.id,
+        role: prof?.role === 'admin' ? 'admin' : 'user',
+        platform: prof?.platform === 'esg' ? 'esg' : 'accounting',
+      })
+      return res.status(200).json({ ok: true, resent: true, id: inv.user.id })
+    }
+
     // ── CRIAR (convite por email) ──
     if (req.method === 'POST') {
       const { email, display_name, role, platform, redirectTo } = req.body || {}

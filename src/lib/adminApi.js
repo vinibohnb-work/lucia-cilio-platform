@@ -33,6 +33,14 @@ export async function createUser(payload) {
   return handle(res)
 }
 
+// Reenvia o convite (novo prazo) a um utilizador que ainda não ativou a conta.
+export async function resendInvite(id) {
+  const base = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '')
+  const redirectTo = `${base}/definir-senha`
+  const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ resend: true, id, redirectTo }) })
+  return handle(res)
+}
+
 export async function updateUser(payload) {
   const res = await fetch(ENDPOINT, { method: 'PATCH', headers: await authHeaders(), body: JSON.stringify(payload) })
   return handle(res)
