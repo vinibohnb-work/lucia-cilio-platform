@@ -20,6 +20,7 @@ const T = {
     nav_esg_reports: 'Relatórios ESG',
     nav_admin: 'Administração',
     nav_acessos: 'Gestão de Acessos',
+    nav_clientes_ativos: 'Clientes Ativos',
     nav_recorrentes: 'Despesas Recorrentes',
     role_label: 'TOC · Consultora ESG',
     // Topbar
@@ -131,6 +132,7 @@ const T = {
     nav_esg_reports: 'ESG-Berichte',
     nav_admin: 'Verwaltung',
     nav_acessos: 'Zugriffsverwaltung',
+    nav_clientes_ativos: 'Aktive Mandanten',
     nav_recorrentes: 'Wiederkehrende Ausgaben',
     role_label: 'TOC · ESG-Beraterin',
     // Topbar
@@ -242,6 +244,7 @@ const T = {
     nav_esg_reports: 'ESG Reports',
     nav_admin: 'Administration',
     nav_acessos: 'Access Management',
+    nav_clientes_ativos: 'Active Clients',
     nav_recorrentes: 'Recurring Expenses',
     role_label: 'Accountant · ESG Consultant',
     // Topbar

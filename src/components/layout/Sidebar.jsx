@@ -62,7 +62,8 @@ const NAV = {
   ],
   management: [
     { key: 'section_gestao', items: [
-      { to: '/gestao/acessos', Icon: IconAdmin, labelKey: 'nav_acessos' },
+      { to: '/gestao/clientes', Icon: IconClientes, labelKey: 'nav_clientes_ativos' },
+      { to: '/gestao/acessos',  Icon: IconAdmin,    labelKey: 'nav_acessos' },
     ]},
   ],
 }
@@ -87,7 +88,7 @@ export default function Sidebar() {
   const viewPlatform = isAdmin ? platformFromPath : (platform === 'esg' ? 'esg' : 'accounting')
   const sections = NAV[viewPlatform] || NAV.accounting
 
-  const PLATFORM_HOME = { management: '/gestao/acessos', accounting: '/contabilidade/dashboard', esg: '/esg/diagnostico' }
+  const PLATFORM_HOME = { management: '/gestao/clientes', accounting: '/contabilidade/dashboard', esg: '/esg/diagnostico' }
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
   async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
   function switchAdminView(p) {

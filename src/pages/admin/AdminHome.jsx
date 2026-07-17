@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useViewAs } from '../../context/ViewAsContext'
 import { listUsers, createUser, updateUser, deleteUser, resendInvite } from '../../lib/adminApi'
 
 const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting' }
@@ -14,13 +12,6 @@ export default function AdminHome() {
   const { lang } = useLang()
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const navigate = useNavigate()
-  const { setViewAs } = useViewAs()
-
-  function viewData(u) {
-    setViewAs({ id: u.id, name: u.display_name || u.email, platform: u.platform || 'accounting' })
-    navigate(u.platform === 'esg' ? '/esg/diagnostico' : '/contabilidade/dashboard')
-  }
 
   const [users, setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
@@ -109,7 +100,7 @@ export default function AdminHome() {
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const roleStyle = { admin: { bg: t.chipBg, ink: t.chipText }, user: { bg: t.chipBg, ink: t.chipText } }
   const platLabel = (p) => (p === 'esg' ? L.platEsg : L.platAcc)
-  const GRID = '1.1fr 1fr 96px 104px 92px 100px 224px'
+  const GRID = '1.2fr 1fr 100px 110px 96px 104px 188px'
 
   return (
     <div style={{ width: '100%' }}>
@@ -169,11 +160,6 @@ export default function AdminHome() {
               <div style={{ color: t.textMuted }}>{fmtDate(u.created_at)}</div>
               <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span>}</div>
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                {!isSelf && (
-                  <button onClick={() => viewData(u)} title={L.view} aria-label={L.view} style={{ flex: 'none', width: '30px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '7px', cursor: 'pointer', color: t.text, padding: 0 }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                )}
                 {!u.last_sign_in_at && !isSelf && (
                   <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} aria-label={L.resend} style={{ flex: 'none', width: '30px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.chipBg, border: `1px solid ${t.accent}`, borderRadius: '7px', cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accent, padding: 0 }}>
                     {busyId === u.id ? '…' : (

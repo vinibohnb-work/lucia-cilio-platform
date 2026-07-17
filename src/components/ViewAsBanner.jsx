@@ -15,7 +15,7 @@ export default function ViewAsBanner() {
     ? { label: 'Viewing as', readonly: 'read-only', exit: 'Exit' }
     : { label: 'A visualizar como', readonly: 'só leitura', exit: 'Sair' }
 
-  function exit() { clearViewAs(); navigate('/gestao/acessos') }
+  function exit() { clearViewAs(); navigate('/gestao/clientes') }
 
   return (
     <div style={{

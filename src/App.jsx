@@ -20,6 +20,7 @@ import { homePathFor } from './lib/platformHome'
 
 // Admin
 import AdminHome from './pages/admin/AdminHome'
+import ClientesAtivos from './pages/gestao/ClientesAtivos'
 
 // Internal layout
 import Sidebar from './components/layout/Sidebar'
@@ -105,8 +106,9 @@ function AppLayout() {
             </Route>
 
             {/* Plataforma Gestão (apenas admin, por agora) */}
-            <Route path="/gestao/acessos" element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
-            <Route path="/admin"          element={<Navigate to="/gestao/acessos" replace />} />
+            <Route path="/gestao/clientes" element={<RoleRoute requireRole="admin"><ClientesAtivos /></RoleRoute>} />
+            <Route path="/gestao/acessos"  element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
+            <Route path="/admin"           element={<Navigate to="/gestao/clientes" replace />} />
             <Route path="*"               element={<HomeRedirect />} />
           </Routes>
         </main>
