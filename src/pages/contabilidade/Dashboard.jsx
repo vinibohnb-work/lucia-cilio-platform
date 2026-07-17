@@ -163,6 +163,8 @@ export default function Dashboard() {
     predictedFixed: 'Geplante Fixkosten (offen)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
     ivaTitle: 'MwSt.', ivaLiq: 'MwSt. (Verkäufe)', ivaDed: 'Vorsteuer (Einkäufe)', ivaPay: 'MwSt.-Zahllast', ivaRec: 'MwSt.-Guthaben',
     irTitle: 'Steuerrücklage', irBase: 'Ergebnis (Basis)', irReserve: 'Zurückzulegen', irHint: 'auf das Periodenergebnis', irNoResult: 'Kein positives Ergebnis — nichts zurückzulegen.',
+    famvWarn: (pct, limit) => `Achtung: Ihr Monatsgewinn liegt bei ${pct}% der Familienversicherungs-Grenze (${limit} €/Monat).`,
+    famvCta: 'Details ansehen →',
   } : lang === 'en' ? {
     timeline: 'Cash Flow by Month', breakeven: 'Break-even Analysis',
     income: 'Income', expense: 'Expenses', net: 'Net',
@@ -184,6 +186,8 @@ export default function Dashboard() {
     predictedFixed: 'Planned fixed costs (open)', predictedCta: 'Confirm →', predicted: 'Planned',
     ivaTitle: 'VAT', ivaLiq: 'VAT charged (sales)', ivaDed: 'Deductible VAT (purchases)', ivaPay: 'VAT payable', ivaRec: 'VAT refundable',
     irTitle: 'Income tax reserve', irBase: 'Result (base)', irReserve: 'To reserve', irHint: 'on the period result', irNoResult: 'No positive result — nothing to reserve.',
+    famvWarn: (pct, limit) => `Warning: your monthly profit is at ${pct}% of the family insurance limit (€${limit}/month).`,
+    famvCta: 'View details →',
     product: 'Product', service: 'Service',
   } : {
     timeline: 'Fluxo de Caixa por Mês', breakeven: 'Análise de Break-even',
@@ -206,6 +210,8 @@ export default function Dashboard() {
     predictedFixed: 'Custos fixos previstos (por confirmar)', predictedCta: 'Confirmar →', predicted: 'Previsto',
     ivaTitle: 'IVA', ivaLiq: 'IVA liquidado (vendas)', ivaDed: 'IVA dedutível (compras)', ivaPay: 'IVA a entregar', ivaRec: 'IVA a recuperar',
     irTitle: 'Reserva para IR', irBase: 'Resultado (base)', irReserve: 'A reservar', irHint: 'sobre o resultado do período', irNoResult: 'Sem resultado positivo — nada a reservar.',
+    famvWarn: (pct, limit) => `Atenção: o teu lucro mensal está em ${pct}% do limite da Familienversicherung (${limit} €/mês).`,
+    famvCta: 'Ver detalhes →',
     product: 'Produto', service: 'Serviço',
   }
 
@@ -219,6 +225,16 @@ export default function Dashboard() {
   const irBase = Math.max(0, yearNet)
   const irReserve = irBase * irPct / 100
   const ssEst  = ssBase * 0.214
+
+  // Aviso do limite de lucro (Familienversicherung, clientes DE): média mensal
+  // real do ano corrente vs limite configurado; alerta a partir de 80%.
+  const nowYear = String(new Date().getFullYear())
+  const famvLimit = Number(settings?.de_famv_limit) || 0
+  const famvMonthly = entries
+    .filter(e => e.entry_date?.slice(0, 4) === nowYear)
+    .reduce((s, e) => s + (e.type === 'entrada' ? 1 : -1) * Number(e.amount || 0), 0) / (new Date().getMonth() + 1)
+  const famvRatio = famvLimit > 0 ? famvMonthly / famvLimit : 0
+  const showFamvWarn = settings?.country === 'DE' && famvLimit > 0 && famvRatio >= 0.8
 
   // Toggle do período
   const segBtn = (active) => ({
@@ -248,6 +264,19 @@ export default function Dashboard() {
         )}
         <span style={{ marginLeft: 'auto', fontSize: '12px', fontWeight: 700, color: GOLD }}>{periodLabel}</span>
       </div>
+
+      {/* ── Aviso: limite de lucro Familienversicherung (DE, ≥80%) ── */}
+      {showFamvWarn && (
+        <div style={{ background: famvRatio >= 1 ? '#fdeaea' : '#fffbeb', border: `1px solid ${famvRatio >= 1 ? '#f5b5b5' : '#fcd34d'}`, borderRadius: '12px', padding: '13px 17px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '11px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '17px' }}>{famvRatio >= 1 ? '🔴' : '⚠️'}</span>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: famvRatio >= 1 ? '#991b1b' : '#92400e', flex: 1, minWidth: '220px' }}>
+            {L.famvWarn(Math.round(famvRatio * 100), famvLimit)}
+          </span>
+          <button onClick={() => navigate('/contabilidade/rucklagen')} style={{ padding: '7px 14px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
+            {L.famvCta}
+          </button>
+        </div>
+      )}
 
       {/* KPIs topo */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? '10px' : '14px', marginBottom: '20px' }}>

@@ -45,10 +45,11 @@ const NAV = {
       { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations' },
     ]},
     { key: 'section_mgmt', items: [
-      { to: '/contabilidade/precificacao', Icon: IconPreco,    labelKey: 'nav_preco' },
-      { to: '/contabilidade/planeamento',  Icon: IconKpi,      labelKey: 'nav_plano' },
-      { to: '/contabilidade/clientes',     Icon: IconClientes, labelKey: 'nav_clients' },
-      { to: '/contabilidade/empresa',      Icon: IconEmpresa,  labelKey: 'nav_empresa' },
+      { to: '/contabilidade/precificacao', Icon: IconPreco,      labelKey: 'nav_preco' },
+      { to: '/contabilidade/planeamento',  Icon: IconKpi,        labelKey: 'nav_plano' },
+      { to: '/contabilidade/clientes',     Icon: IconClientes,   labelKey: 'nav_clients' },
+      { to: '/contabilidade/empresa',      Icon: IconEmpresa,    labelKey: 'nav_empresa' },
+      { to: '/consultoria',                Icon: IconRelatorios, labelKey: 'nav_consultoria' },
     ]},
   ],
   esg: [
@@ -58,12 +59,14 @@ const NAV = {
       { to: '/esg/kpis',          Icon: IconKpi,         labelKey: 'nav_esg_kpis' },
       { to: '/esg/projetos',      Icon: IconProjetos,    labelKey: 'nav_projects' },
       { to: '/esg/relatorios',    Icon: IconRelatorios,  labelKey: 'nav_esg_reports' },
+      { to: '/consultoria',       Icon: IconCaixa,       labelKey: 'nav_consultoria' },
     ]},
   ],
   management: [
     { key: 'section_gestao', items: [
-      { to: '/gestao/clientes', Icon: IconClientes, labelKey: 'nav_clientes_ativos' },
-      { to: '/gestao/acessos',  Icon: IconAdmin,    labelKey: 'nav_acessos' },
+      { to: '/gestao/clientes',      Icon: IconClientes,   labelKey: 'nav_clientes_ativos' },
+      { to: '/gestao/consultorias',  Icon: IconRelatorios, labelKey: 'nav_gestao_consult' },
+      { to: '/gestao/acessos',       Icon: IconAdmin,      labelKey: 'nav_acessos' },
     ]},
   ],
 }
