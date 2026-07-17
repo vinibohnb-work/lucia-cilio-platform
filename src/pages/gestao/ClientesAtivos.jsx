@@ -83,6 +83,7 @@ export default function ClientesAtivos() {
     esgProgress: 'ESG-Diagnose', view: 'Vollständige Ansicht', loading: 'Wird geladen…', empty: 'Noch keine Mandanten.',
     apiHint: 'Benötigt die bereitgestellte Version (Vercel).',
     limitLabel: 'Gewinn / Grenze (Monat)', fromPlan: 'aus Monatsplanung', fromReal: 'Ø real',
+    file: 'Daten & Verlauf', viewShort: 'Plattform',
     alertTitle: 'Gewinngrenze (Familienversicherung)',
     alertNear: (n, list) => `${n} Mandant(en) nähern sich der Gewinngrenze oder liegen darüber: ${list}`,
   } : lang === 'en' ? {
@@ -92,6 +93,7 @@ export default function ClientesAtivos() {
     esgProgress: 'ESG assessment', view: 'Full view', loading: 'Loading…', empty: 'No clients yet.',
     apiHint: 'Requires the published version (Vercel).',
     limitLabel: 'Profit / limit (month)', fromPlan: 'from Monthly Plan', fromReal: 'real avg.',
+    file: 'Data & History', viewShort: 'Platform',
     alertTitle: 'Profit limit (family insurance)',
     alertNear: (n, list) => `${n} client(s) approaching or above the profit limit: ${list}`,
   } : {
@@ -101,6 +103,7 @@ export default function ClientesAtivos() {
     esgProgress: 'Diagnóstico ESG', view: 'Visualização completa', loading: 'A carregar…', empty: 'Ainda não há clientes.',
     apiHint: 'Requer a versão publicada (Vercel).',
     limitLabel: 'Lucro / limite (mês)', fromPlan: 'do Planeamento Mensal', fromReal: 'média real',
+    file: 'Dados & Histórico', viewShort: 'Plataforma',
     alertTitle: 'Limite de lucro (Familienversicherung)',
     alertNear: (n, list) => `${n} cliente(s) a aproximar-se do limite de lucro ou acima dele: ${list}`,
   }
@@ -210,11 +213,19 @@ export default function ClientesAtivos() {
                 </div>
               )}
 
-              {/* Ação: ver como */}
-              <button onClick={() => viewClient(u)} style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', borderRadius: '10px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                {L.view}
-              </button>
+              {/* Ações: plataforma completa (quando ativada) + ficha interna */}
+              <div style={{ marginTop: 'auto', display: 'flex', gap: '8px' }}>
+                {activated && (
+                  <button onClick={() => viewClient(u)} title={L.view} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '10px 8px', borderRadius: '10px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ flexShrink: 0 }}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                    {L.viewShort}
+                  </button>
+                )}
+                <button onClick={() => navigate(`/gestao/clientes/${u.id}`)} title={L.file} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '10px 8px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.softCardBg, color: t.heading, fontWeight: 700, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ flexShrink: 0 }}><path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.2h6.5a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>
+                  {L.file}
+                </button>
+              </div>
             </div>
           )
         })}

@@ -7,6 +7,7 @@ import { useEffectiveUserId } from '../context/ViewAsContext'
 
 const KIND_STYLE = {
   note:           { bg: '#f1f5f9', ink: '#475569' },
+  meeting:        { bg: '#ede9fe', ink: '#5b21b6' },
   recommendation: { bg: '#fffbeb', ink: '#92400e' },
   report:         { bg: '#e8f0fb', ink: '#1e60c8' },
 }
@@ -24,20 +25,20 @@ export default function Consultoria() {
   const L = lang === 'de' ? {
     eyebrow: 'Beratung', title: 'Beratung & Berichte',
     subtitle: 'Notizen, Empfehlungen und Berichte, die Ihre Beraterin mit Ihnen geteilt hat.',
-    note: 'Notiz', recommendation: 'Empfehlung', report: 'Bericht', open: 'Öffnen ↗',
+    note: 'Notiz', meeting: 'Besprechung', recommendation: 'Empfehlung', report: 'Bericht', open: 'Öffnen ↗',
     loading: 'Wird geladen…', empty: 'Noch keine geteilten Einträge.',
   } : lang === 'en' ? {
     eyebrow: 'Consulting', title: 'Consulting & Reports',
     subtitle: 'Notes, recommendations and reports your consultant shared with you.',
-    note: 'Note', recommendation: 'Recommendation', report: 'Report', open: 'Open ↗',
+    note: 'Note', meeting: 'Meeting', recommendation: 'Recommendation', report: 'Report', open: 'Open ↗',
     loading: 'Loading…', empty: 'No shared entries yet.',
   } : {
     eyebrow: 'Consultoria', title: 'Consultoria & Relatórios',
     subtitle: 'Notas, recomendações e relatórios que a tua consultora partilhou contigo.',
-    note: 'Nota', recommendation: 'Recomendação', report: 'Relatório', open: 'Abrir ↗',
+    note: 'Nota', meeting: 'Reunião', recommendation: 'Recomendação', report: 'Relatório', open: 'Abrir ↗',
     loading: 'A carregar…', empty: 'Ainda não há registos partilhados.',
   }
-  const kindLabel = { note: L.note, recommendation: L.recommendation, report: L.report }
+  const kindLabel = { note: L.note, meeting: L.meeting, recommendation: L.recommendation, report: L.report }
 
   const load = useCallback(async () => {
     if (!eid) return

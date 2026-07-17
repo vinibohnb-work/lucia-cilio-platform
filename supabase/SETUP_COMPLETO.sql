@@ -255,12 +255,16 @@ create table if not exists public.consulting_notes (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users (id) on delete cascade,
   author_id  uuid references auth.users (id) on delete set null,
-  kind       text not null default 'note' check (kind in ('note','recommendation','report')),
+  kind       text not null default 'note' check (kind in ('note','meeting','recommendation','report')),
   title      text not null,
   body       text,
   link_url   text,
   created_at timestamptz not null default now()
 );
+-- Garante que bases já criadas com o constraint antigo aceitam o tipo 'meeting'.
+alter table public.consulting_notes drop constraint if exists consulting_notes_kind_check;
+alter table public.consulting_notes add constraint consulting_notes_kind_check
+  check (kind in ('note','meeting','recommendation','report'));
 create index if not exists idx_consulting_user on public.consulting_notes (user_id, created_at desc);
 alter table public.consulting_notes enable row level security;
 drop policy if exists "notes_read_own" on public.consulting_notes;

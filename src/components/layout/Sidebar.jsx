@@ -64,9 +64,8 @@ const NAV = {
   ],
   management: [
     { key: 'section_gestao', items: [
-      { to: '/gestao/clientes',      Icon: IconClientes,   labelKey: 'nav_clientes_ativos' },
-      { to: '/gestao/consultorias',  Icon: IconRelatorios, labelKey: 'nav_gestao_consult' },
-      { to: '/gestao/acessos',       Icon: IconAdmin,      labelKey: 'nav_acessos' },
+      { to: '/gestao/clientes', Icon: IconClientes, labelKey: 'nav_clientes_ativos' },
+      { to: '/gestao/acessos',  Icon: IconAdmin,    labelKey: 'nav_acessos' },
     ]},
   ],
 }
