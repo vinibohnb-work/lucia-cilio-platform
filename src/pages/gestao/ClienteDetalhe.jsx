@@ -10,6 +10,7 @@ import { listUsers } from '../../lib/adminApi'
 import { ESG_QUESTIONS, ESG_TOTAL } from '../../data/esgQuestions'
 import { isAnswered } from '../../lib/esgKpis'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
+import DocsBrowser from '../../components/DocsBrowser'
 
 const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 const KIND_STYLE = {
@@ -45,7 +46,7 @@ export default function ClienteDetalhe() {
     summary: 'Übersicht', revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen',
     clientsN: 'Mandanten', esgProgress: 'ESG-Diagnose', refYear: 'Bezugsjahr',
     limitLabel: 'Gewinn / Grenze (Monat)', fromPlan: 'aus Monatsplanung', fromReal: 'Ø real',
-    history: 'Beratung & Verlauf', new: '+ Neuer Eintrag',
+    docs: 'Dokumente', history: 'Beratung & Verlauf', new: '+ Neuer Eintrag',
     kind: 'Typ', note: 'Notiz', meeting: 'Besprechung', recommendation: 'Empfehlung', report: 'Bericht',
     titleL: 'Titel', body: 'Inhalt', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Speichern', del: 'Löschen', open: 'Öffnen ↗', loading: 'Wird geladen…',
@@ -58,7 +59,7 @@ export default function ClienteDetalhe() {
     summary: 'Overview', revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines',
     clientsN: 'Clients', esgProgress: 'ESG assessment', refYear: 'Ref. year',
     limitLabel: 'Profit / limit (month)', fromPlan: 'from Monthly Plan', fromReal: 'real avg.',
-    history: 'Consulting & History', new: '+ New entry',
+    docs: 'Documents', history: 'Consulting & History', new: '+ New entry',
     kind: 'Type', note: 'Note', meeting: 'Meeting', recommendation: 'Recommendation', report: 'Report',
     titleL: 'Title', body: 'Content', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Save', del: 'Delete', open: 'Open ↗', loading: 'Loading…',
@@ -71,7 +72,7 @@ export default function ClienteDetalhe() {
     summary: 'Resumo', revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes',
     clientsN: 'Clientes', esgProgress: 'Diagnóstico ESG', refYear: 'Ano ref.',
     limitLabel: 'Lucro / limite (mês)', fromPlan: 'do Planeamento Mensal', fromReal: 'média real',
-    history: 'Consultoria & Histórico', new: '+ Novo registo',
+    docs: 'Documentos', history: 'Consultoria & Histórico', new: '+ Novo registo',
     kind: 'Tipo', note: 'Nota', meeting: 'Reunião', recommendation: 'Recomendação', report: 'Relatório',
     titleL: 'Título', body: 'Conteúdo', link: 'Ligação (opcional)', linkPh: 'https://…',
     save: 'Guardar', del: 'Eliminar', open: 'Abrir ↗', loading: 'A carregar…',
@@ -235,6 +236,12 @@ export default function ClienteDetalhe() {
             </div>
           )
         })()}
+      </div>
+
+      {/* Documentos (repositório tipo Drive) */}
+      <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accent, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.docs}</div>
+        <DocsBrowser userId={id} />
       </div>
 
       {/* Consultoria & Histórico */}

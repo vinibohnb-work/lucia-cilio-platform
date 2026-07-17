@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { supabase } from '../lib/supabase'
 import { useEffectiveUserId } from '../context/ViewAsContext'
+import DocsBrowser from '../components/DocsBrowser'
 
 const KIND_STYLE = {
   note:           { bg: '#f1f5f9', ink: '#475569' },
@@ -26,17 +27,17 @@ export default function Consultoria() {
     eyebrow: 'Beratung', title: 'Beratung & Berichte',
     subtitle: 'Notizen, Empfehlungen und Berichte, die Ihre Beraterin mit Ihnen geteilt hat.',
     note: 'Notiz', meeting: 'Besprechung', recommendation: 'Empfehlung', report: 'Bericht', open: 'Öffnen ↗',
-    loading: 'Wird geladen…', empty: 'Noch keine geteilten Einträge.',
+    loading: 'Wird geladen…', empty: 'Noch keine geteilten Einträge.', docs: 'Dokumente',
   } : lang === 'en' ? {
     eyebrow: 'Consulting', title: 'Consulting & Reports',
     subtitle: 'Notes, recommendations and reports your consultant shared with you.',
     note: 'Note', meeting: 'Meeting', recommendation: 'Recommendation', report: 'Report', open: 'Open ↗',
-    loading: 'Loading…', empty: 'No shared entries yet.',
+    loading: 'Loading…', empty: 'No shared entries yet.', docs: 'Documents',
   } : {
     eyebrow: 'Consultoria', title: 'Consultoria & Relatórios',
     subtitle: 'Notas, recomendações e relatórios que a tua consultora partilhou contigo.',
     note: 'Nota', meeting: 'Reunião', recommendation: 'Recomendação', report: 'Relatório', open: 'Abrir ↗',
-    loading: 'A carregar…', empty: 'Ainda não há registos partilhados.',
+    loading: 'A carregar…', empty: 'Ainda não há registos partilhados.', docs: 'Documentos',
   }
   const kindLabel = { note: L.note, meeting: L.meeting, recommendation: L.recommendation, report: L.report }
 
@@ -63,6 +64,12 @@ export default function Consultoria() {
       </div>
 
       {notes.length === 0 && <div style={{ padding: '30px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.empty}</div>}
+
+      {/* Documentos partilhados (leitura) */}
+      <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accent, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.docs}</div>
+        <DocsBrowser userId={eid} readOnly />
+      </div>
 
       {notes.map(n => {
         const ks = KIND_STYLE[n.kind] || KIND_STYLE.note

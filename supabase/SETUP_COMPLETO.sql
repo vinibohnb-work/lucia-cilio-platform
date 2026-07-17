@@ -272,6 +272,22 @@ create policy "notes_read_own" on public.consulting_notes for select using (auth
 drop policy if exists "notes_admin_all" on public.consulting_notes;
 create policy "notes_admin_all" on public.consulting_notes for all using (public.is_admin()) with check (public.is_admin());
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- 9. DOCUMENTOS DOS CLIENTES (Storage, bucket privado 'client-docs')
+-- ─────────────────────────────────────────────────────────────────────────
+insert into storage.buckets (id, name, public)
+values ('client-docs', 'client-docs', false)
+on conflict (id) do nothing;
+
+drop policy if exists "client_docs_admin_all" on storage.objects;
+create policy "client_docs_admin_all" on storage.objects
+  for all using (bucket_id = 'client-docs' and public.is_admin())
+  with check (bucket_id = 'client-docs' and public.is_admin());
+
+drop policy if exists "client_docs_read_own" on storage.objects;
+create policy "client_docs_read_own" on storage.objects
+  for select using (bucket_id = 'client-docs' and (storage.foldername(name))[1] = auth.uid()::text);
+
 -- ============================================================================
 -- FIM. Para tornar alguém admin (depois de criar o login):
 --   update public.profiles set role = 'admin'
