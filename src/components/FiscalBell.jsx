@@ -4,6 +4,7 @@ import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useFiscalAlerts } from '../hooks/useFiscalAlerts'
+import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
 
 // Sino de notificações de obrigações fiscais (vencidas / a vencer).
 // Aparece apenas quando há alertas. Clicar num item abre Obrigações Fiscais.
@@ -12,10 +13,13 @@ export default function FiscalBell() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
-  const { alerts, count } = useFiscalAlerts(14)
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
+  const { alerts, count } = useFiscalAlerts(14, eid)
   const [open, setOpen] = useState(false)
 
-  if (count === 0) return null
+  // Durante "Ver como", o banner ocupa o topo — evita sobreposição.
+  if (isViewing || count === 0) return null
 
   const L = lang === 'de'
     ? { title: 'Steuertermine', overdue: 'überfällig', today: 'heute', inDays: (d) => `in ${d} Tagen`, all: 'Alle ansehen →' }

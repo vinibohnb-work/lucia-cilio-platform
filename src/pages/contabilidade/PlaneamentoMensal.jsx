@@ -6,6 +6,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { getCompanySettings } from '../../lib/companySettings'
 import { overheadPerHour, computePlanTotals } from '../../lib/planCalc'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 const fmt = (n) => (Number(n) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const EMPTY_ROW = { name: '', durationMin: '', price: '', qty: '', material: '' }
@@ -15,6 +16,8 @@ export default function PlaneamentoMensal() {
   const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
 
   const [rows, setRows] = useState([{ ...EMPTY_ROW }])
   const [monthlyFixed, setMonthlyFixed] = useState('')
@@ -27,11 +30,12 @@ export default function PlaneamentoMensal() {
   const [msg, setMsg] = useState('')
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
     const [{ data: plan }, { data: ci }, cs] = await Promise.all([
-      supabase.from('monthly_plans').select('*').maybeSingle(),
-      supabase.from('catalog_items').select('id,name,kind,price').order('name'),
-      getCompanySettings(),
+      supabase.from('monthly_plans').select('*').eq('user_id', eid).maybeSingle(),
+      supabase.from('catalog_items').select('id,name,kind,price').eq('user_id', eid).order('name'),
+      getCompanySettings(eid),
     ])
     if (plan) {
       setRows(plan.items?.length ? plan.items : [{ ...EMPTY_ROW }])
@@ -42,7 +46,7 @@ export default function PlaneamentoMensal() {
     setCatalog(ci || [])
     if (cs?.ir_reserve_pct != null) setReservePct(Number(cs.ir_reserve_pct))
     setLoading(false)
-  }, [])
+  }, [eid])
   useEffect(() => { load() }, [load])
 
   let L = lang === 'de' ? {
@@ -99,7 +103,7 @@ export default function PlaneamentoMensal() {
   function removeRow(i) { setRows(prev => prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev) }
 
   async function save() {
-    if (!user) return
+    if (isViewing || !user) return
     setSaving(true); setMsg('')
     const items = rows.filter(r => r.name || r.price || r.qty)
     const { error } = await supabase.from('monthly_plans').upsert({
@@ -134,7 +138,7 @@ export default function PlaneamentoMensal() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {msg && <span style={{ fontSize: '12px', fontWeight: 700, color: msg === L.saved ? '#0a7a3e' : t.neg }}>{msg}</span>}
-          <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>
+          {!isViewing && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
         </div>
       </div>
 
@@ -198,7 +202,7 @@ export default function PlaneamentoMensal() {
               <div style={{ ...numCell, color: c.profit >= 0 ? '#0a7a3e' : t.neg }}>€ {fmt(c.profit)}</div>
               <div style={{ ...numCell, color: '#a9781a' }}>€ {fmt(c.reserve)}</div>
               <div style={{ ...numCell, color: t.heading }}>€ {fmt(c.afterReserve)}</div>
-              <button onClick={() => removeRow(i)} title={L.remove} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: t.subtle, padding: '2px', lineHeight: 1 }}>✕</button>
+              {!isViewing ? <button onClick={() => removeRow(i)} title={L.remove} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: t.subtle, padding: '2px', lineHeight: 1 }}>✕</button> : <div />}
             </div>
           )
         })}
@@ -217,7 +221,7 @@ export default function PlaneamentoMensal() {
       </div>
       </div>
 
-      <button onClick={addRow} style={{ marginTop: '12px', padding: '9px 16px', background: t.cardBg, border: `1px dashed ${t.cardBorder}`, borderRadius: '9px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', color: t.textMuted }}>{L.addRow}</button>
+      {!isViewing && <button onClick={addRow} style={{ marginTop: '12px', padding: '9px 16px', background: t.cardBg, border: `1px dashed ${t.cardBorder}`, borderRadius: '9px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', color: t.textMuted }}>{L.addRow}</button>}
     </div>
   )
 }

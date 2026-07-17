@@ -3,6 +3,7 @@ import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -22,6 +23,8 @@ export default function Catalogo() {
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
   const [items, setItems]   = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -30,11 +33,12 @@ export default function Catalogo() {
   const [showForm, setShowForm] = useState(false)
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
-    const { data, error } = await supabase.from('catalog_items').select('*').order('created_at', { ascending: true })
+    const { data, error } = await supabase.from('catalog_items').select('*').eq('user_id', eid).order('created_at', { ascending: true })
     if (!error) setItems(data || [])
     setLoading(false)
-  }, [])
+  }, [eid])
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
@@ -63,6 +67,7 @@ export default function Catalogo() {
   })
 
   async function addItem() {
+    if (isViewing) return
     if (!form.name) return
     setSaving(true)
     const { error } = await supabase.from('catalog_items').insert({
@@ -74,6 +79,7 @@ export default function Catalogo() {
     setForm(EMPTY); setShowForm(false); load()
   }
   async function removeItem(id) {
+    if (isViewing) return
     setItems(prev => prev.filter(i => i.id !== id))
     const { error } = await supabase.from('catalog_items').delete().eq('id', id)
     if (error) { alert(error.message); load() }
@@ -89,9 +95,9 @@ export default function Catalogo() {
       {/* Intro + header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '16px' }}>
         <p style={{ fontSize: '13px', color: t.textMuted, margin: 0 }}>{L.intro}</p>
-        <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        {!isViewing && <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
           {L.new}
-        </button>
+        </button>}
       </div>
 
       {/* Filter */}
@@ -142,7 +148,7 @@ export default function Catalogo() {
               <div style={{ fontSize: '13px', fontWeight: 700, color: G }}>{it.name}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: ks.bg, color: ks.color }}>{it.kind === 'product' ? L.product : L.service}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: t.text }}>{fmt(it.price)}</div>
-              <button onClick={() => removeItem(it.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>
+              {!isViewing && <button onClick={() => removeItem(it.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>}
             </div>
           )
         })}

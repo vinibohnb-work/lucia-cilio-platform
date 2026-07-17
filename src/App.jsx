@@ -3,7 +3,9 @@ import { LangProvider, useLang } from './context/LangContext'
 import { SidebarProvider, useSidebar } from './context/SidebarContext'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
+import { ViewAsProvider, useViewAs } from './context/ViewAsContext'
 import { useIsMobile } from './hooks/useIsMobile'
+import ViewAsBanner from './components/ViewAsBanner'
 
 // Public pages
 import Login from './pages/Login'
@@ -57,8 +59,9 @@ function AppLayout() {
   const navigate = useNavigate()
   const ml = isMobile ? '0' : '238px'
 
-  // FAB "Nova Entrada" apenas no Dashboard e no Livro de Caixa
-  const showFab = pathname.startsWith('/contabilidade/dashboard') || pathname.startsWith('/contabilidade/caixa')
+  const { isViewing } = useViewAs()
+  // FAB "Nova Entrada" apenas no Dashboard e no Livro de Caixa (e não em "Ver como")
+  const showFab = !isViewing && (pathname.startsWith('/contabilidade/dashboard') || pathname.startsWith('/contabilidade/caixa'))
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: t.appBg, fontFamily: t.fontBody }}>
@@ -72,6 +75,7 @@ function AppLayout() {
         />
       )}
       <div style={{ marginLeft: ml, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', transition: 'margin-left .22s ease' }}>
+        <ViewAsBanner />
         <main style={{
           flex: 1, background: t.mainBg, minWidth: 0, color: t.text, fontFamily: t.fontBody,
           padding: isMobile ? 'calc(env(safe-area-inset-top) + 64px) 14px 40px' : '30px 34px 40px',
@@ -154,6 +158,7 @@ export default function App() {
     <ThemeProvider>
     <LangProvider>
       <AuthProvider>
+        <ViewAsProvider>
         <SidebarProvider>
           <BrowserRouter>
             <Routes>
@@ -168,6 +173,7 @@ export default function App() {
             </Routes>
           </BrowserRouter>
         </SidebarProvider>
+        </ViewAsProvider>
       </AuthProvider>
     </LangProvider>
     </ThemeProvider>

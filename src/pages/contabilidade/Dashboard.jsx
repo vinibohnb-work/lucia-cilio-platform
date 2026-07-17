@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
 import { getCompanySettings } from '../../lib/companySettings'
 import { businessOnly } from '../../lib/cashEntry'
+import { useEffectiveUserId } from '../../context/ViewAsContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { FlagPT } from '../../components/Flag'
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const GREEN = t.pos, RED = t.neg
   const navigate = useNavigate()
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
   const [entries, setEntries] = useState([])
   const [catalog, setCatalog] = useState([])
   const [loading, setLoading] = useState(true)
@@ -39,13 +41,14 @@ export default function Dashboard() {
   const [settings, setSettings] = useState(null)
 
   useEffect(() => {
+    if (!eid) return
     (async () => {
       setLoading(true)
       const [{ data: ce }, { data: ci }, { data: re }, cs] = await Promise.all([
-        supabase.from('cash_entries').select('*'),
-        supabase.from('catalog_items').select('id,name,kind'),
-        supabase.from('recurring_expenses').select('*').eq('active', true),
-        getCompanySettings(),
+        supabase.from('cash_entries').select('*').eq('user_id', eid),
+        supabase.from('catalog_items').select('id,name,kind').eq('user_id', eid),
+        supabase.from('recurring_expenses').select('*').eq('user_id', eid).eq('active', true),
+        getCompanySettings(eid),
       ])
       // Movimentos privados (Privatentnahme/Privateinlage) não entram em
       // lucro, IVA, reservas nem gráficos — o Dashboard é uma visão de resultados.
@@ -55,7 +58,7 @@ export default function Dashboard() {
       setSettings(cs)
       setLoading(false)
     })()
-  }, [])
+  }, [eid])
 
   const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
 

@@ -8,6 +8,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
 import { entryTypeLabel } from '../../lib/cashEntry'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 // IVA contido num montante total (com IVA): total × taxa/(100+taxa)
 const vatFromGross = (gross, rate) => (rate > 0 ? Number(gross) * rate / (100 + rate) : 0)
@@ -57,6 +58,8 @@ export default function LivroCaixa() {
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
   const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState([])
   const [catalog, setCatalog] = useState([])
@@ -77,24 +80,26 @@ export default function LivroCaixa() {
   const formRate = form.vat_rate === '' ? defaultRate : Number(form.vat_rate)
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
     const [{ data: ce }, { data: ci }, { data: re }, cs] = await Promise.all([
-      supabase.from('cash_entries').select('*').order('entry_date', { ascending: true }).order('created_at', { ascending: true }),
-      supabase.from('catalog_items').select('id,name,kind,price').order('name', { ascending: true }),
-      supabase.from('recurring_expenses').select('*').eq('active', true),
-      getCompanySettings(),
+      supabase.from('cash_entries').select('*').eq('user_id', eid).order('entry_date', { ascending: true }).order('created_at', { ascending: true }),
+      supabase.from('catalog_items').select('id,name,kind,price').eq('user_id', eid).order('name', { ascending: true }),
+      supabase.from('recurring_expenses').select('*').eq('user_id', eid).eq('active', true),
+      getCompanySettings(eid),
     ])
     setEntries(ce || [])
     setCatalog(ci || [])
     setRecurring(re || [])
     setSettings(cs)
     setLoading(false)
-  }, [])
+  }, [eid])
   useEffect(() => { load() }, [load])
 
   // Abrir formulário quando vier do botão "+ Nova Entrada" do cabeçalho (?new=1)
   useEffect(() => {
     if (searchParams.get('new') === '1') {
+      if (isViewing) { searchParams.delete('new'); setSearchParams(searchParams, { replace: true }); return }
       setForm({ ...EMPTY_FORM })
       setShowForm(true)
       searchParams.delete('new')
@@ -157,6 +162,7 @@ export default function LivroCaixa() {
   }
 
   async function addEntry() {
+    if (isViewing) return
     if (!form.description || !form.amount || !form.entry_date) return
     setSaving(true)
     const gross = parseFloat(form.amount)
@@ -183,6 +189,7 @@ export default function LivroCaixa() {
     setForm({ ...EMPTY_FORM }); setShowForm(false); load()
   }
   async function removeEntry(id) {
+    if (isViewing) return
     setEntries(prev => prev.filter(e => e.id !== id))
     const { error } = await supabase.from('cash_entries').delete().eq('id', id)
     if (error) { alert(error.message); load() }
@@ -393,7 +400,7 @@ export default function LivroCaixa() {
               <div style={{ fontSize: '13px', fontWeight: 700, color: e.type==='entrada'?'#065f46':'#e53e3e', textAlign: 'right' }}>{e.type==='entrada'?'+':'−'} € {fmt(e.amount)}</div>
               <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: e.destination==='caixa'?'#f5edd6':'#eff6ff', color: e.destination==='caixa'?'#92400e':'#1d4ed8' }}>{e.destination==='caixa'?L.caixa:L.banco}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: e.balance>=0?G:'#e53e3e', textAlign: 'right' }}>€ {fmt(e.balance)}</div>
-              <button onClick={() => removeEntry(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', borderRadius: '4px', lineHeight: 1 }} title="Remover">✕</button>
+              {!isViewing && <button onClick={() => removeEntry(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', borderRadius: '4px', lineHeight: 1 }} title="Remover">✕</button>}
             </div>
           )
         })}

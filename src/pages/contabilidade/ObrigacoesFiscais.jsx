@@ -6,6 +6,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { getCompanySettings } from '../../lib/companySettings'
 import { generateFiscalCalendar } from '../../lib/fiscalCalendar'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -40,14 +41,17 @@ export default function ObrigacoesFiscais() {
   const [generating, setGenerating] = useState(false)
   const [genMsg, setGenMsg]   = useState('')
 
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
   const countryOptions = useMemo(() => getCountryOptions(lang), [lang])
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
-    const { data, error } = await supabase.from('fiscal_obligations').select('*').order('deadline', { ascending: true })
+    const { data, error } = await supabase.from('fiscal_obligations').select('*').eq('user_id', eid).order('deadline', { ascending: true })
     if (!error) setItems(data || [])
     setLoading(false)
-  }, [])
+  }, [eid])
   useEffect(() => { load() }, [load])
 
   const presentCountries = useMemo(() => {
@@ -102,6 +106,7 @@ export default function ObrigacoesFiscais() {
   const pendingCount = items.filter(o => o.status === 'pending').length
 
   async function addItem() {
+    if (isViewing) return
     if (!form.obligation_type || !form.deadline || !form.country) return
     setSaving(true)
     const { error } = await supabase.from('fiscal_obligations').insert({ ...form, country: form.country.toUpperCase(), client: form.client || null })
@@ -110,12 +115,14 @@ export default function ObrigacoesFiscais() {
     setForm(EMPTY); setShowForm(false); load()
   }
   async function toggleStatus(o) {
+    if (isViewing) return
     const next = o.status === 'done' ? 'pending' : 'done'
     setItems(prev => prev.map(x => x.id === o.id ? { ...x, status: next } : x))
     const { error } = await supabase.from('fiscal_obligations').update({ status: next }).eq('id', o.id)
     if (error) { alert(error.message); load() }
   }
   async function removeItem(id) {
+    if (isViewing) return
     setItems(prev => prev.filter(o => o.id !== id))
     const { error } = await supabase.from('fiscal_obligations').delete().eq('id', id)
     if (error) { alert(error.message); load() }
@@ -124,9 +131,10 @@ export default function ObrigacoesFiscais() {
   // Gera o calendário fiscal do ano a partir dos Dados da Empresa (país/regime),
   // ignorando os prazos já gerados (por `code`).
   async function generateCalendar() {
+    if (isViewing) return
     setGenerating(true); setGenMsg('')
     try {
-      const settings = await getCompanySettings()
+      const settings = await getCompanySettings(eid)
       const generated = generateFiscalCalendar(settings, Number(genYear))
       const existingCodes = new Set(items.filter(o => o.code).map(o => o.code))
       const toInsert = generated.filter(g => !existingCodes.has(g.code)).map(g => ({ ...g, status: 'pending' }))
@@ -160,6 +168,7 @@ export default function ObrigacoesFiscais() {
             {presentCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
           </select>
         </div>
+        {!isViewing && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <input type="number" value={genYear} onChange={e => setGenYear(e.target.value)} title={L.genHint} style={{ ...selectStyle, width: '84px', padding: '8px 10px' }} />
           <button onClick={generateCalendar} disabled={generating} title={L.genHint} style={{ padding: '9px 14px', background: BG, color: '#4a6355', border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: generating ? 'wait' : 'pointer' }}>
@@ -169,6 +178,7 @@ export default function ObrigacoesFiscais() {
             {L.new}
           </button>
         </div>
+        )}
       </div>
       {genMsg && <div style={{ fontSize: '12px', fontWeight: 700, color: genMsg === L.genErr ? t.neg : '#0a7a3e', marginBottom: '14px' }}>{genMsg}</div>}
 
@@ -244,11 +254,11 @@ export default function ObrigacoesFiscais() {
                 )}
               </div>
               <div>
-                <button onClick={() => toggleStatus(o)} title={L.markDone} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: 'pointer' }}>
+                <button onClick={() => toggleStatus(o)} disabled={isViewing} title={L.markDone} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: isViewing ? 'default' : 'pointer' }}>
                   {isDone ? `✓ ${L.done}` : L.pending}
                 </button>
               </div>
-              <button onClick={() => removeItem(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1, justifySelf: 'start' }} title="Remover">✕</button>
+              {!isViewing && <button onClick={() => removeItem(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1, justifySelf: 'start' }} title="Remover">✕</button>}
             </div>
           )
         })}

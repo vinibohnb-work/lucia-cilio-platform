@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -38,6 +39,8 @@ export default function DespesasRecorrentes() {
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
   const year = 2026
   const [templates, setTemplates] = useState([])
   const [confirmed, setConfirmed] = useState([]) // cash_entries recorrentes do período
@@ -54,15 +57,16 @@ export default function DespesasRecorrentes() {
   const monthNum = parseInt(period.slice(5, 7), 10)
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
     const [{ data: tpls }, { data: ce }] = await Promise.all([
-      supabase.from('recurring_expenses').select('*').order('created_at', { ascending: true }),
-      supabase.from('cash_entries').select('id,amount,recurring_expense_id,period').not('recurring_expense_id', 'is', null).eq('period', period),
+      supabase.from('recurring_expenses').select('*').eq('user_id', eid).order('created_at', { ascending: true }),
+      supabase.from('cash_entries').select('id,amount,recurring_expense_id,period').eq('user_id', eid).not('recurring_expense_id', 'is', null).eq('period', period),
     ])
     setTemplates(tpls || [])
     setConfirmed(ce || [])
     setLoading(false)
-  }, [period])
+  }, [period, eid])
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
@@ -132,6 +136,7 @@ export default function DespesasRecorrentes() {
   function closeForm() { setShowForm(false); setEditingId(null); setForm(EMPTY) }
 
   async function saveTemplate() {
+    if (isViewing) return
     if (!form.description || form.amount === '') return
     setSaving(true)
     const payload = {
@@ -153,12 +158,14 @@ export default function DespesasRecorrentes() {
   }
 
   async function removeTemplate(id) {
+    if (isViewing) return
     setTemplates(prev => prev.filter(t => t.id !== id))
     const { error } = await supabase.from('recurring_expenses').delete().eq('id', id)
     if (error) { alert(error.message); load() }
   }
 
   async function confirmMonth(t) {
+    if (isViewing) return
     const val = actuals[t.id] !== undefined && actuals[t.id] !== '' ? parseFloat(actuals[t.id]) : Number(t.amount)
     setBusyId(t.id)
     const day = Math.min(t.due_day || 1, daysInMonth(year, monthNum))
@@ -174,6 +181,7 @@ export default function DespesasRecorrentes() {
   }
 
   async function undoMonth(t) {
+    if (isViewing) return
     const ce = confirmedByTpl[t.id]
     if (!ce) return
     setBusyId(t.id)
@@ -248,7 +256,7 @@ export default function DespesasRecorrentes() {
       {/* ── Modelos ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.templates}</h3>
-        <button onClick={openCreate} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.new}</button>
+        {!isViewing && <button onClick={openCreate} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.new}</button>}
       </div>
 
       {showForm && (

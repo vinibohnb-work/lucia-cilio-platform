@@ -8,6 +8,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
 import { getCompanySettings } from '../../lib/companySettings'
 import { useFiscalAlerts } from '../../hooks/useFiscalAlerts'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import Flag from '../Flag'
 
 // ── Ícones (stroke = currentColor) ─────────────────────────────────────────
@@ -74,9 +75,11 @@ export default function Sidebar() {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
   const [country, setCountry] = useState(null)
-  useEffect(() => { getCompanySettings().then(cs => setCountry(cs?.country || 'PT')) }, [])
-  const { count: alertCount } = useFiscalAlerts(14)
+  useEffect(() => { if (eid) getCompanySettings(eid).then(cs => setCountry(cs?.country || 'PT')) }, [eid])
+  const { count: alertCount } = useFiscalAlerts(14, eid)
 
   // O admin acede às três plataformas; a plataforma ativa segue o URL (o toggle
   // apenas navega). Utilizadores normais veem só a sua plataforma.
@@ -175,8 +178,8 @@ export default function Sidebar() {
             <IconLogout />
           </button>
         </div>
-        {/* Alternar plataforma (apenas admin) */}
-        {isAdmin && (
+        {/* Alternar plataforma (apenas admin, e não durante "Ver como") */}
+        {isAdmin && !isViewing && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
             {[
               ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],

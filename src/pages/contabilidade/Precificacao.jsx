@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
 import { computeTreatment } from '../../lib/treatmentCalc'
+import { useEffectiveUserId } from '../../context/ViewAsContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -552,16 +553,18 @@ export default function Precificacao() {
   const { lang } = useLang()
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
+  const eid = useEffectiveUserId()
   const [type, setType] = useState('evento')
   const [irDefault, setIrDefault] = useState(0)
   const [settings, setSettings] = useState(null)
 
   useEffect(() => {
-    getCompanySettings().then(cs => {
+    if (!eid) return
+    getCompanySettings(eid).then(cs => {
       setSettings(cs)
       if (cs?.ir_reserve_pct != null) setIrDefault(Number(cs.ir_reserve_pct))
     })
-  }, [])
+  }, [eid])
 
   const tabStyle = (key) => ({
     display: 'flex', alignItems: 'center', gap: '8px',

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 const BRAND_G = '#0a2f1a'
 
@@ -24,6 +25,8 @@ export default function Clientes() {
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -34,11 +37,12 @@ export default function Clientes() {
   const countryOptions = useMemo(() => getCountryOptions(lang), [lang])
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
-    const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: true })
+    const { data, error } = await supabase.from('clients').select('*').eq('user_id', eid).order('created_at', { ascending: true })
     if (!error) setClients(data || [])
     setLoading(false)
-  }, [])
+  }, [eid])
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
@@ -67,6 +71,7 @@ export default function Clientes() {
   const visible = filter === 'all' ? clients : clients.filter(c => (c.country || '').toUpperCase() === filter)
 
   async function addClient() {
+    if (isViewing) return
     if (!form.name || !form.country) return
     setSaving(true)
     const { error } = await supabase.from('clients').insert({ ...form, country: form.country.toUpperCase(), sector: form.sector || null })
@@ -75,6 +80,7 @@ export default function Clientes() {
     setForm(EMPTY); setShowForm(false); load()
   }
   async function removeClient(id) {
+    if (isViewing) return
     setClients(prev => prev.filter(c => c.id !== id))
     const { error } = await supabase.from('clients').delete().eq('id', id)
     if (error) { alert(error.message); load() }
@@ -94,9 +100,9 @@ export default function Clientes() {
           <option value="all">{L.all}</option>
           {presentCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
         </select>
-        <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+        {!isViewing && <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
           {L.new}
-        </button>
+        </button>}
       </div>
 
       {/* Add form */}
@@ -150,7 +156,7 @@ export default function Clientes() {
               <div style={{ fontSize: '12px', color: t.text }}>{c.sector || '—'}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: svc.bg, color: svc.color }}>{L[c.service]}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color }}>{c.status==='active'?L.active:L.inactive}</span></div>
-              <button onClick={() => removeClient(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>
+              {!isViewing && <button onClick={() => removeClient(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>}
             </div>
           )
         })}

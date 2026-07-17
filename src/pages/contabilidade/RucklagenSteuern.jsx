@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { getCompanySettings, saveCompanySettings } from '../../lib/companySettings'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 import { FlagDE } from '../../components/Flag'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 const fmt2 = (n) => `${(Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) ? n : 0 }
@@ -27,6 +28,8 @@ export default function RucklagenSteuern() {
   const { lang } = useLang()
   const { t, night } = useTheme()
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
 
   const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -48,12 +51,13 @@ export default function RucklagenSteuern() {
   const [vorsteuer, setVorsteuer] = useState(0)   // abziehbare Vorsteuer
 
   useEffect(() => {
+    if (!eid) return
     (async () => {
       setLoading(true)
       const [{ data: ce }, cs, { data: mp }] = await Promise.all([
-        supabase.from('cash_entries').select('type,amount,vat_amount,entry_date,private'),
-        getCompanySettings(),
-        supabase.from('monthly_plans').select('*').maybeSingle(),
+        supabase.from('cash_entries').select('type,amount,vat_amount,entry_date,private').eq('user_id', eid),
+        getCompanySettings(eid),
+        supabase.from('monthly_plans').select('*').eq('user_id', eid).maybeSingle(),
       ])
       setPlan(mp || null)
       // Exclui movimentos privados: não contam para Gewinn nem Umsatzsteuer (EÜR)
@@ -74,7 +78,7 @@ export default function RucklagenSteuern() {
       }
       setLoading(false)
     })()
-  }, [year])
+  }, [year, eid])
 
   const L = lang === 'de' ? {
     flag: '🇩🇪', title: 'Deutschland – Rücklagen & Steuern',
@@ -210,6 +214,7 @@ export default function RucklagenSteuern() {
   const famv = famvCheck(famvProfit, famvLimit)
 
   async function persist(partial) {
+    if (isViewing) return
     setSavingMsg('')
     const { error } = await saveCompanySettings({
       ir_reserve_pct: Number(pct),

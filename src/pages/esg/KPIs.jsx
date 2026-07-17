@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { computeKpis, DEMO_ANSWERS } from '../../lib/esgKpis'
+import { useEffectiveUserId } from '../../context/ViewAsContext'
 
 const E = '#0a7a3e', S = '#1e60c8', G = '#a9781a'
 const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString('pt-PT', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -24,6 +25,7 @@ export default function KPIs() {
   const { lang } = useLang()
   const { t, night } = useTheme()
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
 
   const [answers, setAnswers] = useState(null)
   const [year, setYear] = useState(null)
@@ -31,14 +33,15 @@ export default function KPIs() {
   const [useDemo, setUseDemo] = useState(false)
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
-    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').maybeSingle()
+    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).maybeSingle()
     const hasReal = data && data.answers && Object.keys(data.answers).length > 0
     setAnswers(hasReal ? data.answers : null)
     setYear(data?.reference_year || 2023)
     setUseDemo(!hasReal)
     setLoading(false)
-  }, [])
+  }, [eid])
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {

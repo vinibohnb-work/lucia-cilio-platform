@@ -5,12 +5,15 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { ESG_PILLARS, ESG_QUESTIONS, ESG_TOTAL, questionsByPillar } from '../../data/esgQuestions'
+import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
 export default function Diagnostico() {
   const { lang } = useLang()
   const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
 
   const [answers, setAnswers] = useState({})
   const [year, setYear] = useState(2023)
@@ -49,11 +52,12 @@ export default function Diagnostico() {
   }
 
   const load = useCallback(async () => {
+    if (!eid) return
     setLoading(true)
-    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').maybeSingle()
+    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).maybeSingle()
     if (data) { setAnswers(data.answers || {}); if (data.reference_year) setYear(data.reference_year) }
     setLoading(false)
-  }, [])
+  }, [eid])
   useEffect(() => { load() }, [load])
 
   // ── Escritas no estado ──
@@ -77,7 +81,7 @@ export default function Diagnostico() {
   const answeredIn = (key) => questionsByPillar(key).filter(isAnswered).length
 
   async function save() {
-    if (!user) return
+    if (isViewing || !user) return
     setSaving(true); setMsg('')
     const { error } = await supabase.from('esg_diagnostics').upsert(
       { user_id: user.id, reference_year: Number(year), answers, updated_at: new Date().toISOString() },
@@ -213,7 +217,7 @@ export default function Diagnostico() {
             <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.refYear}</div>
             <input type="number" value={year} onChange={e => setYear(e.target.value)} style={{ ...inputStyle, width: '92px' }} />
           </div>
-          <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>
+          {!isViewing && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
         </div>
       </div>
 

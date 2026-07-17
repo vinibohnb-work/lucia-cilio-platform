@@ -3,6 +3,7 @@ import { useLang } from '../context/LangContext'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useTheme } from '../context/ThemeContext'
 import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } from '../lib/companySettings'
+import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -17,18 +18,21 @@ export default function Empresa() {
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
+  const eid = useEffectiveUserId()
+  const { isViewing } = useViewAs()
   const [form, setForm] = useState(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
+    if (!eid) return
     (async () => {
-      const data = await getCompanySettings()
+      const data = await getCompanySettings(eid)
       if (data) setForm({ ...DEFAULT_SETTINGS, ...data })
       setLoading(false)
     })()
-  }, [])
+  }, [eid])
 
   const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
   const isExempt = form.vat_regime === 'exempt'
@@ -80,6 +84,7 @@ export default function Empresa() {
   }
 
   async function handleSave() {
+    if (isViewing) return
     setSaving(true); setSaved(false)
     const payload = {
       ...form,
@@ -169,12 +174,14 @@ export default function Empresa() {
       </div>
 
       {/* Ações */}
+      {!isViewing && (
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         <button onClick={handleSave} disabled={saving} style={{ padding: '12px 26px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '14px', cursor: saving ? 'wait' : 'pointer' }}>
           {saving ? L.saving : L.save}
         </button>
         {saved && <span style={{ fontSize: '13px', fontWeight: 700, color: '#065f46' }}>{L.saved}</span>}
       </div>
+      )}
     </div>
   )
 }
