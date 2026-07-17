@@ -21,6 +21,8 @@ $$;
 grant execute on function public.is_admin() to authenticated, anon;
 
 -- Política de leitura para admins em todas as tabelas de dados de utilizador.
+-- Ignora tabelas que ainda não existam (ex.: migração de uma delas por correr).
+-- É re-executável: corre de novo depois de criares novas tabelas.
 do $$
 declare tbl text;
 begin
@@ -29,7 +31,8 @@ begin
     'monthly_plans','fiscal_obligations','esg_diagnostics','clients'
   ]
   loop
-    if not exists (select 1 from pg_policies where tablename = tbl and policyname = 'admin_read_all') then
+    if to_regclass('public.' || tbl) is not null
+       and not exists (select 1 from pg_policies where tablename = tbl and policyname = 'admin_read_all') then
       execute format('create policy admin_read_all on public.%I for select using (public.is_admin())', tbl);
     end if;
   end loop;
