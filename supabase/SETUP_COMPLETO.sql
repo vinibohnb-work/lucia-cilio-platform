@@ -288,6 +288,28 @@ drop policy if exists "client_docs_read_own" on storage.objects;
 create policy "client_docs_read_own" on storage.objects
   for select using (bucket_id = 'client-docs' and (storage.foldername(name))[1] = auth.uid()::text);
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- 10. CRM DE PROSPEÇÃO (Gestão, apenas admins)
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists public.crm_leads (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  company     text,
+  contact     text,
+  notes       text,
+  stage       text not null default 'mapeado' check (stage in
+    ('mapeado','abordagem','conectado','reuniao','proposta','fechado','perdido','futuro')),
+  attempts    int not null default 0,
+  lost_reason text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists idx_crm_stage on public.crm_leads (stage, updated_at desc);
+alter table public.crm_leads enable row level security;
+drop policy if exists "crm_admin_all" on public.crm_leads;
+create policy "crm_admin_all" on public.crm_leads
+  for all using (public.is_admin()) with check (public.is_admin());
+
 -- ============================================================================
 -- FIM. Para tornar alguém admin (depois de criar o login):
 --   update public.profiles set role = 'admin'
