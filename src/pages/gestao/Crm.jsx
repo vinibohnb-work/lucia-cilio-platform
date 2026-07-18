@@ -160,7 +160,7 @@ export default function Crm() {
 
       {/* Board */}
       {!loading && (
-      <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '14px', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: '8px', overflowX: isMobile ? 'auto' : 'visible', paddingBottom: '14px', alignItems: 'flex-start' }}>
         {STAGES.map(stage => {
           const tone = STAGE_TONE[stage]
           const [title, sub] = L.stages[stage]
@@ -171,15 +171,15 @@ export default function Crm() {
               onDragOver={e => { e.preventDefault(); setOverStage(stage) }}
               onDragLeave={() => setOverStage(s => (s === stage ? null : s))}
               onDrop={e => { e.preventDefault(); setOverStage(null); if (dragId) moveTo(dragId, stage); setDragId(null) }}
-              style={{ flex: '0 0 236px', width: '236px', borderRadius: '14px', background: isOver ? t.softCardBg : 'transparent', outline: isOver ? `2px dashed ${t.accent}` : 'none', transition: 'background .12s' }}
+              style={{ flex: isMobile ? '0 0 200px' : '1 1 0', width: isMobile ? '200px' : 'auto', minWidth: isMobile ? '200px' : 0, borderRadius: '12px', background: isOver ? t.softCardBg : 'transparent', outline: isOver ? `2px dashed ${t.accent}` : 'none', transition: 'background .12s' }}
             >
               {/* Cabeçalho da coluna */}
-              <div style={{ background: tone.bg, color: tone.ink, borderRadius: '12px', padding: '10px 14px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ background: tone.bg, color: tone.ink, borderRadius: '10px', padding: '8px 10px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }} title={sub}>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: 800 }}>{title}</div>
-                  <div style={{ fontSize: '10px', opacity: .8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
+                  <div style={{ fontSize: '12px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
+                  <div style={{ fontSize: '9.5px', opacity: .8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
                 </div>
-                <span style={{ flex: 'none', minWidth: '22px', height: '22px', padding: '0 6px', borderRadius: '20px', background: 'rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>{cards.length}</span>
+                <span style={{ flex: 'none', minWidth: '20px', height: '20px', padding: '0 5px', borderRadius: '20px', background: 'rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10.5px', fontWeight: 800 }}>{cards.length}</span>
               </div>
 
               {/* Form (novo nesta etapa ou edição) */}
@@ -204,7 +204,7 @@ export default function Crm() {
                   onDragEnd={() => { setDragId(null); setOverStage(null) }}
                   style={{
                     background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow,
-                    borderRadius: '12px', padding: '11px 13px', marginBottom: '9px', cursor: 'grab',
+                    borderRadius: '10px', padding: '9px 10px', marginBottom: '7px', cursor: 'grab',
                     opacity: dragId === lead.id ? 0.45 : 1,
                   }}
                 >
@@ -222,7 +222,7 @@ export default function Crm() {
                     <div style={{ fontSize: '11px', color: '#991b1b', fontStyle: 'italic', marginTop: '6px' }}>“{lead.lost_reason}”</div>
                   )}
                   {stage === 'abordagem' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginTop: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: t.softCardBg, color: t.heading }}>📞 {lead.attempts || 0} {L.attempts.toLowerCase()}</span>
                       <button onClick={() => addAttempt(lead)} style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: 'transparent', border: `1px dashed ${t.cardBorder}`, color: t.textMuted, cursor: 'pointer' }}>{L.addAttempt}</button>
                     </div>
