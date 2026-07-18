@@ -310,6 +310,38 @@ drop policy if exists "crm_admin_all" on public.crm_leads;
 create policy "crm_admin_all" on public.crm_leads
   for all using (public.is_admin()) with check (public.is_admin());
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- 11. FINANCEIRO DA GESTÃO (contratos + recebimentos dos clientes da Lúcia)
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists public.client_billing (
+  id          uuid primary key default gen_random_uuid(),
+  client_name text not null,
+  user_id     uuid references auth.users (id) on delete set null,
+  service     text,
+  amount      numeric(12,2) not null default 0,
+  periodicity text not null default 'monthly' check (periodicity in ('monthly','quarterly','annual','once')),
+  start_month text,
+  active      boolean not null default true,
+  notes       text,
+  created_at  timestamptz not null default now()
+);
+create table if not exists public.billing_payments (
+  id         uuid primary key default gen_random_uuid(),
+  billing_id uuid not null references public.client_billing (id) on delete cascade,
+  period     text not null,
+  amount     numeric(12,2) not null default 0,
+  paid_at    date not null default current_date,
+  unique (billing_id, period)
+);
+alter table public.client_billing   enable row level security;
+alter table public.billing_payments enable row level security;
+drop policy if exists "billing_admin_all" on public.client_billing;
+create policy "billing_admin_all" on public.client_billing
+  for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "payments_admin_all" on public.billing_payments;
+create policy "payments_admin_all" on public.billing_payments
+  for all using (public.is_admin()) with check (public.is_admin());
+
 -- ============================================================================
 -- FIM. Para tornar alguém admin (depois de criar o login):
 --   update public.profiles set role = 'admin'
