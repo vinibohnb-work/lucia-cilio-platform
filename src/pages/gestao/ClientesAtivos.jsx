@@ -134,6 +134,7 @@ export default function ClientesAtivos() {
       {/* Alerta agregado: clientes ≥80% do limite de lucro (Familienversicherung) */}
       {!loading && (() => {
         const near = clients
+          .filter(u => u.platform !== 'esg')
           .map(u => ({ u, famv: stats[u.id]?.famv }))
           .filter(x => x.famv && x.famv.ratio >= 0.8)
           .sort((a, b) => b.famv.ratio - a.famv.ratio)
@@ -158,7 +159,8 @@ export default function ClientesAtivos() {
         {!loading && clients.map(u => {
           const s = stats[u.id] || {}
           const isEsg = u.platform === 'esg'
-          const activated = !!u.last_sign_in_at
+          // Conta ativada = email confirmado ou já entrou (contas seed/demo não têm login prévio)
+          const activated = !!(u.last_sign_in_at || u.email_confirmed_at)
           return (
             <div key={u.id} style={card}>
               {/* Cabeçalho do cartão */}
@@ -178,8 +180,8 @@ export default function ClientesAtivos() {
                 <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: activated ? '#d1fae5' : '#fef3c7', color: activated ? '#065f46' : '#92400e' }}>{activated ? `● ${L.active}` : `○ ${L.pending}`}</span>
               </div>
 
-              {/* Semáforo de limite de lucro (clientes DE) */}
-              {s.famv && (() => {
+              {/* Semáforo de limite de lucro (clientes DE de Contabilidade) */}
+              {!isEsg && s.famv && (() => {
                 const pct = Math.round(s.famv.ratio * 100)
                 const tone = !s.famv.ok ? { bg: '#fdeaea', ink: '#991b1b', dot: '🔴' }
                   : s.famv.ratio >= 0.8 ? { bg: '#fffbeb', ink: '#92400e', dot: '🟡' }

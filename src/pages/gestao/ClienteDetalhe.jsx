@@ -173,7 +173,7 @@ export default function ClienteDetalhe() {
   )
 
   const isEsg = client.platform === 'esg'
-  const activated = !!client.last_sign_in_at
+  const activated = !!(client.last_sign_in_at || client.email_confirmed_at)
   const s = stats || {}
 
   return (
@@ -224,7 +224,7 @@ export default function ClienteDetalhe() {
             </>
           )}
         </div>
-        {s.famv && (() => {
+        {!isEsg && s.famv && (() => {
           const pct = Math.round(s.famv.ratio * 100)
           const tone = !s.famv.ok ? { bg: '#fdeaea', ink: '#991b1b', dot: '🔴' } : s.famv.ratio >= 0.8 ? { bg: '#fffbeb', ink: '#92400e', dot: '🟡' } : { bg: '#eaf5ee', ink: '#0a7a3e', dot: '🟢' }
           return (
