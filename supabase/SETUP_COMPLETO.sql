@@ -342,6 +342,26 @@ drop policy if exists "payments_admin_all" on public.billing_payments;
 create policy "payments_admin_all" on public.billing_payments
   for all using (public.is_admin()) with check (public.is_admin());
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- 12. MATERIALIDADE ESG (dupla materialidade simplificada + metas)
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists public.esg_materiality (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  topics     jsonb not null default '{}'::jsonb,
+  threshold  numeric(3,1) not null default 3.5,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique (user_id)
+);
+alter table public.esg_materiality enable row level security;
+drop policy if exists "materiality_own" on public.esg_materiality;
+create policy "materiality_own" on public.esg_materiality
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "admin_read_all" on public.esg_materiality;
+create policy "admin_read_all" on public.esg_materiality
+  for select using (public.is_admin());
+
 -- ============================================================================
 -- FIM. Para tornar alguém admin (depois de criar o login):
 --   update public.profiles set role = 'admin'
