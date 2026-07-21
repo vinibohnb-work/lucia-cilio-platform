@@ -86,10 +86,14 @@ export default function Sidebar() {
   useEffect(() => { if (eid) getCompanySettings(eid).then(cs => setCountry(cs?.country || 'PT')) }, [eid])
   const { count: alertCount } = useFiscalAlerts(14, eid)
 
-  // O admin acede às três plataformas; a plataforma ativa segue o URL (o toggle
-  // apenas navega). Utilizadores normais veem só a sua plataforma.
+  // O admin acede às três plataformas; utilizadores 'both' às duas (Contab.+ESG).
+  // A plataforma ativa segue o URL (o toggle apenas navega).
   const platformFromPath = pathname.startsWith('/gestao') ? 'management' : pathname.startsWith('/esg') ? 'esg' : 'accounting'
-  const viewPlatform = isAdmin ? platformFromPath : (platform === 'esg' ? 'esg' : 'accounting')
+  const viewPlatform = isAdmin
+    ? platformFromPath
+    : platform === 'both'
+      ? (platformFromPath === 'management' ? 'accounting' : platformFromPath)
+      : (platform === 'esg' ? 'esg' : 'accounting')
   const sections = NAV[viewPlatform] || NAV.accounting
 
   const PLATFORM_HOME = { management: '/gestao/clientes', accounting: '/contabilidade/dashboard', esg: '/esg/diagnostico' }
@@ -183,14 +187,17 @@ export default function Sidebar() {
             <IconLogout />
           </button>
         </div>
-        {/* Alternar plataforma (apenas admin, e não durante "Ver como") */}
-        {isAdmin && !isViewing && (
+        {/* Alternar plataforma (admin: 3 áreas · cliente 'both': Contab.+ESG) */}
+        {(isAdmin || platform === 'both') && !isViewing && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
-            {[
+            {(isAdmin ? [
               ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],
               ['accounting', lang === 'de' ? 'Buchh.' : lang === 'en' ? 'Acc.' : 'Contábil'],
               ['esg', 'ESG'],
-            ].map(([p, lbl]) => (
+            ] : [
+              ['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contabilidade'],
+              ['esg', 'ESG'],
+            ]).map(([p, lbl]) => (
               <button key={p} onClick={() => switchAdminView(p)} style={{
                 flex: 1, padding: '7px 4px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
                 background: viewPlatform === p ? t.accent : 'transparent',

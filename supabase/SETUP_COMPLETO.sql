@@ -14,12 +14,10 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 alter table public.profiles add column if not exists platform text not null default 'accounting';
-do $$
-begin
-  if not exists (select 1 from pg_constraint where conname = 'profiles_platform_chk') then
-    alter table public.profiles add constraint profiles_platform_chk check (platform in ('accounting','esg'));
-  end if;
-end $$;
+-- Recria o constraint para aceitar também 'both' (acesso às duas plataformas).
+alter table public.profiles drop constraint if exists profiles_platform_chk;
+alter table public.profiles add constraint profiles_platform_chk
+  check (platform in ('accounting','esg','both'));
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 2. TABELAS BASE

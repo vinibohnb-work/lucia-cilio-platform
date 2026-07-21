@@ -3,5 +3,6 @@
 export function homePathFor(role, platform) {
   if (role === 'admin') return '/gestao/clientes'
   if (platform === 'esg') return '/esg/diagnostico'
+  // 'accounting' e 'both' aterram na Contabilidade ('both' alterna pelo toggle)
   return '/contabilidade/dashboard'
 }

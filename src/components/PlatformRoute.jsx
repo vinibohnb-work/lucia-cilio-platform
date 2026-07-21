@@ -19,7 +19,8 @@ export default function PlatformRoute({ requirePlatform, children }) {
   if (loading) return <Loading />
   if (!session) return <Navigate to="/login" replace />
 
-  if (role !== 'admin' && requirePlatform && platform !== requirePlatform) {
+  // 'both' acede a ambas as plataformas (tal como o admin).
+  if (role !== 'admin' && platform !== 'both' && requirePlatform && platform !== requirePlatform) {
     return <Navigate to={homePathFor(role, platform)} replace />
   }
 

@@ -14,6 +14,9 @@ export default async function handler(req, res) {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
+  // Plataformas válidas ('both' = acesso a Contabilidade + ESG)
+  const sanePlatform = (p) => (['accounting', 'esg', 'both'].includes(p) ? p : 'accounting')
+
   // ── 1. Autenticar quem chama ──
   const token = (req.headers.authorization || '').replace('Bearer ', '').trim()
   if (!token) return res.status(401).json({ error: 'Sessão em falta.' })
@@ -71,7 +74,7 @@ export default async function handler(req, res) {
       await admin.from('profiles').upsert({
         id: inv.user.id,
         role: prof?.role === 'admin' ? 'admin' : 'user',
-        platform: prof?.platform === 'esg' ? 'esg' : 'accounting',
+        platform: sanePlatform(prof?.platform),
       })
       return res.status(200).json({ ok: true, resent: true, id: inv.user.id })
     }
@@ -89,7 +92,7 @@ export default async function handler(req, res) {
       await admin.from('profiles').upsert({
         id: data.user.id,
         role: role === 'admin' ? 'admin' : 'user',
-        platform: platform === 'esg' ? 'esg' : 'accounting',
+        platform: sanePlatform(platform),
       })
       return res.status(200).json({ ok: true, id: data.user.id, invited: true })
     }
@@ -111,7 +114,7 @@ export default async function handler(req, res) {
       }
       const profPatch = {}
       if (role) profPatch.role = role
-      if (platform) profPatch.platform = platform === 'esg' ? 'esg' : 'accounting'
+      if (platform) profPatch.platform = sanePlatform(platform)
       if (Object.keys(profPatch).length) await admin.from('profiles').upsert({ id, ...profPatch })
       return res.status(200).json({ ok: true })
     }

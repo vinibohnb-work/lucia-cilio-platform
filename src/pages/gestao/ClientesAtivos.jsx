@@ -78,7 +78,7 @@ export default function ClientesAtivos() {
 
   const L = lang === 'de' ? {
     eyebrow: 'Verwaltung', title: 'Aktive Mandanten', subtitle: 'Übersicht der Mandanten und Schnellzugang zur vollständigen Ansicht.',
-    platAcc: 'Buchhaltung', platEsg: 'ESG', active: 'aktiv', pending: 'ausstehend',
+    platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchh. + ESG', active: 'aktiv', pending: 'ausstehend',
     revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen', clientsN: 'Mandanten',
     esgProgress: 'ESG-Diagnose', view: 'Vollständige Ansicht', loading: 'Wird geladen…', empty: 'Noch keine Mandanten.',
     apiHint: 'Benötigt die bereitgestellte Version (Vercel).',
@@ -88,7 +88,7 @@ export default function ClientesAtivos() {
     alertNear: (n, list) => `${n} Mandant(en) nähern sich der Gewinngrenze oder liegen darüber: ${list}`,
   } : lang === 'en' ? {
     eyebrow: 'Management', title: 'Active Clients', subtitle: 'Overview of clients and quick access to the full view.',
-    platAcc: 'Accounting', platEsg: 'ESG', active: 'active', pending: 'pending',
+    platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Acc. + ESG', active: 'active', pending: 'pending',
     revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines', clientsN: 'Clients',
     esgProgress: 'ESG assessment', view: 'Full view', loading: 'Loading…', empty: 'No clients yet.',
     apiHint: 'Requires the published version (Vercel).',
@@ -98,7 +98,7 @@ export default function ClientesAtivos() {
     alertNear: (n, list) => `${n} client(s) approaching or above the profit limit: ${list}`,
   } : {
     eyebrow: 'Gestão', title: 'Clientes Ativos', subtitle: 'Visão geral dos clientes e acesso rápido à visualização completa.',
-    platAcc: 'Contabilidade', platEsg: 'ESG', active: 'ativo', pending: 'pendente',
+    platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contab. + ESG', active: 'ativo', pending: 'pendente',
     revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes', clientsN: 'Clientes',
     esgProgress: 'Diagnóstico ESG', view: 'Visualização completa', loading: 'A carregar…', empty: 'Ainda não há clientes.',
     apiHint: 'Requer a versão publicada (Vercel).',
@@ -159,6 +159,9 @@ export default function ClientesAtivos() {
         {!loading && clients.map(u => {
           const s = stats[u.id] || {}
           const isEsg = u.platform === 'esg'
+          const isBoth = u.platform === 'both'
+          const showAcc = !isEsg
+          const showEsg = isEsg || isBoth
           // Conta ativada = email confirmado ou já entrou (contas seed/demo não têm login prévio)
           const activated = !!(u.last_sign_in_at || u.email_confirmed_at)
           return (
@@ -176,7 +179,7 @@ export default function ClientesAtivos() {
 
               {/* Chips: plataforma + estado */}
               <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: isEsg ? '#e8f0fb' : '#eaf5ee', color: isEsg ? '#1e60c8' : '#0a7a3e' }}>{isEsg ? L.platEsg : L.platAcc}</span>
+                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: isEsg ? '#e8f0fb' : isBoth ? '#ede9fe' : '#eaf5ee', color: isEsg ? '#1e60c8' : isBoth ? '#5b21b6' : '#0a7a3e' }}>{isEsg ? L.platEsg : isBoth ? L.platBoth : L.platAcc}</span>
                 <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: activated ? '#d1fae5' : '#fef3c7', color: activated ? '#065f46' : '#92400e' }}>{activated ? `● ${L.active}` : `○ ${L.pending}`}</span>
               </div>
 
@@ -200,18 +203,19 @@ export default function ClientesAtivos() {
                 )
               })()}
 
-              {/* Indicadores por plataforma */}
-              {isEsg ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {miniStat(L.esgProgress, s.esgAnswered != null ? `${s.esgAnswered}/${ESG_TOTAL}` : '—', t.accent)}
-                  {miniStat(lang === 'de' ? 'Bezugsjahr' : lang === 'en' ? 'Ref. year' : 'Ano ref.', s.esgYear || '—')}
-                </div>
-              ) : (
+              {/* Indicadores por plataforma ('both' mostra os dois blocos) */}
+              {showAcc && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {miniStat(L.revenue, fmt(s.revenue), '#0a7a3e')}
                   {miniStat(L.balance, fmt(s.saldo), (s.saldo || 0) >= 0 ? t.heading : t.neg)}
                   {miniStat(L.obligations, s.pending || 0, (s.pending || 0) > 0 ? '#b45309' : t.heading)}
                   {miniStat(L.clientsN, s.clients || 0)}
+                </div>
+              )}
+              {showEsg && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {miniStat(L.esgProgress, s.esgAnswered != null ? `${s.esgAnswered}/${ESG_TOTAL}` : '—', t.accent)}
+                  {miniStat(lang === 'de' ? 'Bezugsjahr' : lang === 'en' ? 'Ref. year' : 'Ano ref.', s.esgYear || '—')}
                 </div>
               )}
 

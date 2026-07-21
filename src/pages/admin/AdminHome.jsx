@@ -25,7 +25,7 @@ export default function AdminHome() {
   const L = lang === 'de' ? {
     eyebrow: 'Verwaltung', title: 'Benutzerverwaltung',
     new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
-    platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG',
+    platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer', created: 'Erstellt',
     lastLogin: 'Letzter Login', save: 'Speichern', invite: 'Einladung senden',
     edit: 'Bearbeiten', del: 'Löschen', loading: 'Wird geladen…', empty: 'Keine Benutzer.', never: 'nie',
@@ -38,7 +38,7 @@ export default function AdminHome() {
   } : lang === 'en' ? {
     eyebrow: 'Administration', title: 'User Management',
     new: '+ New User', email: 'Email', name: 'Display name',
-    platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG',
+    platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG',
     role: 'Role', admin: 'Administrator', userRole: 'User', created: 'Created',
     lastLogin: 'Last login', save: 'Save', invite: 'Send invitation',
     edit: 'Edit', del: 'Delete', loading: 'Loading…', empty: 'No users.', never: 'never',
@@ -51,7 +51,7 @@ export default function AdminHome() {
   } : {
     eyebrow: 'Administração', title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
-    platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG',
+    platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador', created: 'Criado',
     lastLogin: 'Último acesso', save: 'Guardar', invite: 'Enviar convite',
     edit: 'Editar', del: 'Eliminar', loading: 'A carregar…', empty: 'Sem utilizadores.', never: 'nunca',
@@ -99,7 +99,8 @@ export default function AdminHome() {
   const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, fontSize: '13px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const roleStyle = { admin: { bg: t.chipBg, ink: t.chipText }, user: { bg: t.chipBg, ink: t.chipText } }
-  const platLabel = (p) => (p === 'esg' ? L.platEsg : L.platAcc)
+  const platLabel = (p) => (p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : L.platAcc)
+  const platChip = (p) => p === 'esg' ? { bg: '#e8f0fb', ink: '#1e60c8' } : p === 'both' ? { bg: '#ede9fe', ink: '#5b21b6' } : { bg: '#eaf5ee', ink: '#0a7a3e' }
   const GRID = '1.2fr 1fr 100px 110px 96px 104px 188px'
 
   return (
@@ -125,7 +126,7 @@ export default function AdminHome() {
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.email}</div><input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="nome@email.com" style={inputStyle} /></div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.name}</div><input value={form.display_name} onChange={e=>setForm(f=>({...f,display_name:e.target.value}))} placeholder="Lúcia Cílio" style={inputStyle} /></div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.platform}</div>
-              <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="esg">{L.platEsg}</option></select>
+              <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
             </div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.role}</div>
               <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option></select>
@@ -157,7 +158,7 @@ export default function AdminHome() {
             <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 22px', borderTop: `1px solid ${t.rowBorder}`, alignItems: 'center', gap: '12px', fontSize: '13px' }}>
               <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>({lang === 'de' ? 'ich' : lang === 'en' ? 'me' : 'eu'})</span>}</div>
               <div style={{ color: t.text }}>{u.display_name || '—'}</div>
-              <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: (u.platform==='esg'?'#e8f0fb':'#eaf5ee'), color: (u.platform==='esg'?'#1e60c8':'#0a7a3e') }}>{platLabel(u.platform)}</span></div>
+              <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: platChip(u.platform).bg, color: platChip(u.platform).ink, whiteSpace: 'nowrap' }}>{platLabel(u.platform)}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: rs.bg, color: rs.ink }}>{u.role === 'admin' ? L.admin : L.userRole}</span></div>
               <div style={{ color: t.textMuted }}>{fmtDate(u.created_at)}</div>
               <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : isPending ? <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span> : '—'}</div>

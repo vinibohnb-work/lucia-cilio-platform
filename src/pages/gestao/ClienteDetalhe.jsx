@@ -42,7 +42,7 @@ export default function ClienteDetalhe() {
 
   const L = lang === 'de' ? {
     back: '← Aktive Mandanten', eyebrow: 'Mandantenakte',
-    platAcc: 'Buchhaltung', platEsg: 'ESG', active: 'aktiv', pending: 'ausstehend',
+    platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG', active: 'aktiv', pending: 'ausstehend',
     summary: 'Übersicht', revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen',
     clientsN: 'Mandanten', esgProgress: 'ESG-Diagnose', refYear: 'Bezugsjahr',
     limitLabel: 'Gewinn / Grenze (Monat)', fromPlan: 'aus Monatsplanung', fromReal: 'Ø real',
@@ -55,7 +55,7 @@ export default function ClienteDetalhe() {
     view: 'Vollständige Ansicht',
   } : lang === 'en' ? {
     back: '← Active Clients', eyebrow: 'Client File',
-    platAcc: 'Accounting', platEsg: 'ESG', active: 'active', pending: 'pending',
+    platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG', active: 'active', pending: 'pending',
     summary: 'Overview', revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines',
     clientsN: 'Clients', esgProgress: 'ESG assessment', refYear: 'Ref. year',
     limitLabel: 'Profit / limit (month)', fromPlan: 'from Monthly Plan', fromReal: 'real avg.',
@@ -68,7 +68,7 @@ export default function ClienteDetalhe() {
     view: 'Full view',
   } : {
     back: '← Clientes Ativos', eyebrow: 'Ficha do Cliente',
-    platAcc: 'Contabilidade', platEsg: 'ESG', active: 'ativo', pending: 'pendente',
+    platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG', active: 'ativo', pending: 'pendente',
     summary: 'Resumo', revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes',
     clientsN: 'Clientes', esgProgress: 'Diagnóstico ESG', refYear: 'Ano ref.',
     limitLabel: 'Lucro / limite (mês)', fromPlan: 'do Planeamento Mensal', fromReal: 'média real',
@@ -173,6 +173,9 @@ export default function ClienteDetalhe() {
   )
 
   const isEsg = client.platform === 'esg'
+  const isBoth = client.platform === 'both'
+  const showAcc = !isEsg
+  const showEsg = isEsg || isBoth
   const activated = !!(client.last_sign_in_at || client.email_confirmed_at)
   const s = stats || {}
 
@@ -202,7 +205,7 @@ export default function ClienteDetalhe() {
 
       {/* Chips */}
       <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '16px' }}>
-        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: isEsg ? '#e8f0fb' : '#eaf5ee', color: isEsg ? '#1e60c8' : '#0a7a3e' }}>{isEsg ? L.platEsg : L.platAcc}</span>
+        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: isEsg ? '#e8f0fb' : isBoth ? '#ede9fe' : '#eaf5ee', color: isEsg ? '#1e60c8' : isBoth ? '#5b21b6' : '#0a7a3e' }}>{isEsg ? L.platEsg : isBoth ? L.platBoth : L.platAcc}</span>
         <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: activated ? '#d1fae5' : '#fef3c7', color: activated ? '#065f46' : '#92400e' }}>{activated ? `● ${L.active}` : `○ ${L.pending}`}</span>
       </div>
 
@@ -210,17 +213,18 @@ export default function ClienteDetalhe() {
       <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
         <div style={{ fontSize: '11px', fontWeight: 800, color: t.accent, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.summary}</div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '10px' }}>
-          {isEsg ? (
-            <>
-              {miniStat(L.esgProgress, s.esgAnswered != null ? `${s.esgAnswered}/${ESG_TOTAL}` : '—', t.accent)}
-              {miniStat(L.refYear, s.esgYear || '—')}
-            </>
-          ) : (
+          {showAcc && (
             <>
               {miniStat(L.revenue, fmt(s.revenue), '#0a7a3e')}
               {miniStat(L.balance, fmt(s.saldo), (s.saldo || 0) >= 0 ? t.heading : t.neg)}
               {miniStat(L.obligations, s.pending || 0, (s.pending || 0) > 0 ? '#b45309' : t.heading)}
               {miniStat(L.clientsN, s.clients || 0)}
+            </>
+          )}
+          {showEsg && (
+            <>
+              {miniStat(L.esgProgress, s.esgAnswered != null ? `${s.esgAnswered}/${ESG_TOTAL}` : '—', t.accent)}
+              {miniStat(L.refYear, s.esgYear || '—')}
             </>
           )}
         </div>
