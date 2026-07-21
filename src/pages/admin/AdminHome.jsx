@@ -101,7 +101,7 @@ export default function AdminHome() {
   const roleStyle = { admin: { bg: t.chipBg, ink: t.chipText }, user: { bg: t.chipBg, ink: t.chipText } }
   const platLabel = (p) => (p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : L.platAcc)
   const platChip = (p) => p === 'esg' ? { bg: '#e8f0fb', ink: '#1e60c8' } : p === 'both' ? { bg: '#ede9fe', ink: '#5b21b6' } : { bg: '#eaf5ee', ink: '#0a7a3e' }
-  const GRID = '1.2fr 1fr 100px 110px 96px 104px 188px'
+  const GRID = '1.1fr 0.9fr 158px 108px 90px 100px 188px'
 
   return (
     <div style={{ width: '100%' }}>
@@ -142,7 +142,7 @@ export default function AdminHome() {
 
       {/* Tabela */}
       <div className="table-scroll">
-      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
+      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, overflow: 'hidden', minWidth: isMobile ? '860px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '13px 22px', background: t.headBg, gap: '12px', fontSize: '10.5px', letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 600, color: t.textMuted }}>
           {[L.email, L.name, L.platform, L.role, L.created, L.lastLogin, ''].map((h,i) => <div key={i}>{h}</div>)}
         </div>
