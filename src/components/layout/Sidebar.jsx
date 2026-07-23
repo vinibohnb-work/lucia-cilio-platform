@@ -81,7 +81,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const eid = useEffectiveUserId()
-  const { isViewing } = useViewAs()
+  const { isViewing, viewAs } = useViewAs()
   const [country, setCountry] = useState(null)
   useEffect(() => { if (eid) getCompanySettings(eid).then(cs => setCountry(cs?.country || 'PT')) }, [eid])
   const { count: alertCount } = useFiscalAlerts(14, eid)
@@ -187,10 +187,11 @@ export default function Sidebar() {
             <IconLogout />
           </button>
         </div>
-        {/* Alternar plataforma (admin: 3 áreas · cliente 'both': Contab.+ESG) */}
-        {(isAdmin || platform === 'both') && !isViewing && (
+        {/* Alternar plataforma — admin: 3 áreas · cliente 'both': Contab.+ESG ·
+            durante "Ver como" de um cliente 'both': as 2 plataformas dele */}
+        {(isViewing ? viewAs?.platform === 'both' : (isAdmin || platform === 'both')) && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
-            {(isAdmin ? [
+            {(isAdmin && !isViewing ? [
               ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],
               ['accounting', lang === 'de' ? 'Buchh.' : lang === 'en' ? 'Acc.' : 'Contábil'],
               ['esg', 'ESG'],
