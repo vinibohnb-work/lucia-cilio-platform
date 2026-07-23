@@ -92,7 +92,8 @@ export default function ClienteDetalhe() {
         const [{ data: ce }, { data: fo }, { data: esg }, { data: cl }, { data: cs }, { data: mp }, { data: cn }] = await Promise.all([
           supabase.from('cash_entries').select('type,amount,private,entry_date').eq('user_id', id),
           supabase.from('fiscal_obligations').select('status').eq('user_id', id),
-          supabase.from('esg_diagnostics').select('answers,reference_year').eq('user_id', id).maybeSingle(),
+          // Diagnóstico multi-ano: mostra sempre o ano mais recente
+          supabase.from('esg_diagnostics').select('answers,reference_year').eq('user_id', id).order('reference_year', { ascending: false }).limit(1).maybeSingle(),
           supabase.from('clients').select('id').eq('user_id', id),
           supabase.from('company_settings').select('country,de_famv_limit').eq('user_id', id).maybeSingle(),
           supabase.from('monthly_plans').select('items,monthly_fixed,productive_hours').eq('user_id', id).maybeSingle(),

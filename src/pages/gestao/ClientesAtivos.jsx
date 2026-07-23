@@ -31,10 +31,13 @@ export default function ClientesAtivos() {
       const list = users.filter(u => u.role !== 'admin')
       setClients(list)
       // Indicadores por utilizador (admin lê todas as linhas via RLS)
+      // Nota: o saldo é acumulado desde sempre, por isso cash_entries não pode
+      // ser filtrado por data. Só se filtra o que não altera o resultado.
       const [{ data: ce }, { data: fo }, { data: esg }, { data: cl }, { data: cs }, { data: mp }] = await Promise.all([
         supabase.from('cash_entries').select('user_id,type,amount,private,entry_date'),
-        supabase.from('fiscal_obligations').select('user_id,status'),
-        supabase.from('esg_diagnostics').select('user_id,answers,reference_year'),
+        supabase.from('fiscal_obligations').select('user_id,status').eq('status', 'pending'),
+        // Multi-ano: ordem ascendente para o ano mais recente ficar por último (vence)
+        supabase.from('esg_diagnostics').select('user_id,answers,reference_year').order('reference_year', { ascending: true }),
         supabase.from('clients').select('user_id'),
         supabase.from('company_settings').select('user_id,country,de_famv_limit'),
         supabase.from('monthly_plans').select('user_id,items,monthly_fixed,productive_hours'),

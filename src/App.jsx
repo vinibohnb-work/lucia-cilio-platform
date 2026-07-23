@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { LangProvider, useLang } from './context/LangContext'
 import { SidebarProvider, useSidebar } from './context/SidebarContext'
@@ -18,36 +19,36 @@ import PlatformRoute from './components/PlatformRoute'
 import { useAuth } from './context/AuthContext'
 import { homePathFor } from './lib/platformHome'
 
-// Admin
-import AdminHome from './pages/admin/AdminHome'
-import ClientesAtivos from './pages/gestao/ClientesAtivos'
-import ClienteDetalhe from './pages/gestao/ClienteDetalhe'
-import Crm from './pages/gestao/Crm'
-import Financeiro from './pages/gestao/Financeiro'
-import Consultoria from './pages/Consultoria'
-
-// Internal layout
+// Internal layout (sempre presente — não faz sentido dividir)
 import Sidebar from './components/layout/Sidebar'
 import FiscalBell from './components/FiscalBell'
 
-// Internal pages
-import Dashboard from './pages/contabilidade/Dashboard'
-import Clientes from './pages/contabilidade/Clientes'
-import LivroCaixa from './pages/contabilidade/LivroCaixa'
-import ObrigacoesFiscais from './pages/contabilidade/ObrigacoesFiscais'
-import Precificacao from './pages/contabilidade/Precificacao'
-import Catalogo from './pages/contabilidade/Catalogo'
-import DespesasRecorrentes from './pages/contabilidade/DespesasRecorrentes'
-import RucklagenSteuern from './pages/contabilidade/RucklagenSteuern'
-import PlaneamentoMensal from './pages/contabilidade/PlaneamentoMensal'
-import Empresa from './pages/Empresa'
+// ── Páginas carregadas a pedido (code splitting por rota) ──
+// Cada plataforma só descarrega o seu próprio código: o arranque deixa de
+// puxar as três plataformas de uma vez.
+const AdminHome           = lazy(() => import('./pages/admin/AdminHome'))
+const ClientesAtivos      = lazy(() => import('./pages/gestao/ClientesAtivos'))
+const ClienteDetalhe      = lazy(() => import('./pages/gestao/ClienteDetalhe'))
+const Crm                 = lazy(() => import('./pages/gestao/Crm'))
+const Financeiro          = lazy(() => import('./pages/gestao/Financeiro'))
+const Consultoria         = lazy(() => import('./pages/Consultoria'))
 
-// ESG pages
-import DiagnosticoESG from './pages/esg/Diagnostico'
-import Materialidade from './pages/esg/Materialidade'
-import KPIs from './pages/esg/KPIs'
-import ProjetosESG from './pages/esg/ProjetosESG'
-import RelatoriosESG from './pages/esg/RelatoriosESG'
+const Dashboard           = lazy(() => import('./pages/contabilidade/Dashboard'))
+const Clientes            = lazy(() => import('./pages/contabilidade/Clientes'))
+const LivroCaixa          = lazy(() => import('./pages/contabilidade/LivroCaixa'))
+const ObrigacoesFiscais   = lazy(() => import('./pages/contabilidade/ObrigacoesFiscais'))
+const Precificacao        = lazy(() => import('./pages/contabilidade/Precificacao'))
+const Catalogo            = lazy(() => import('./pages/contabilidade/Catalogo'))
+const DespesasRecorrentes = lazy(() => import('./pages/contabilidade/DespesasRecorrentes'))
+const RucklagenSteuern    = lazy(() => import('./pages/contabilidade/RucklagenSteuern'))
+const PlaneamentoMensal   = lazy(() => import('./pages/contabilidade/PlaneamentoMensal'))
+const Empresa             = lazy(() => import('./pages/Empresa'))
+
+const DiagnosticoESG      = lazy(() => import('./pages/esg/Diagnostico'))
+const Materialidade       = lazy(() => import('./pages/esg/Materialidade'))
+const KPIs                = lazy(() => import('./pages/esg/KPIs'))
+const ProjetosESG         = lazy(() => import('./pages/esg/ProjetosESG'))
+const RelatoriosESG       = lazy(() => import('./pages/esg/RelatoriosESG'))
 
 // Fallback: leva cada utilizador à sua plataforma (nunca vê um seletor)
 function HomeRedirect() {
@@ -85,6 +86,7 @@ function AppLayout() {
           flex: 1, background: t.mainBg, minWidth: 0, color: t.text, fontFamily: t.fontBody,
           padding: isMobile ? 'calc(env(safe-area-inset-top) + 64px) 14px 40px' : '30px 34px 40px',
         }}>
+          <Suspense fallback={<div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>…</div>}>
           <Routes>
             {/* Plataforma Contabilidade */}
             <Route element={<PlatformRoute requirePlatform="accounting" />}>
@@ -121,6 +123,7 @@ function AppLayout() {
             <Route path="/admin"                element={<Navigate to="/gestao/clientes" replace />} />
             <Route path="*"               element={<HomeRedirect />} />
           </Routes>
+          </Suspense>
         </main>
       </div>
 
