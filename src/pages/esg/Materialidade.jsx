@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -13,6 +14,13 @@ import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, topicHint, isMaterial } from
 // "é onde nós temos que trabalhar" — e cada tema material pode receber uma meta.
 
 const EMPTY_GOAL = { baseline: '', target: '', deadline: '', how: '' }
+const EMPTY_FIN = { impact: '', investment: '', saving: '', note: '' }
+
+// Payback simples em anos (investimento ÷ poupança anual)
+const paybackYears = (fin) => {
+  const inv = Number(fin?.investment), sav = Number(fin?.saving)
+  return inv > 0 && sav > 0 ? inv / sav : null
+}
 
 export default function Materialidade() {
   const { lang } = useLang()
@@ -29,6 +37,9 @@ export default function Materialidade() {
   const [msg, setMsg] = useState('')
   const [goalOpen, setGoalOpen] = useState(null) // key do tema com o form de meta aberto
   const [goalForm, setGoalForm] = useState(EMPTY_GOAL)
+  const [finOpen, setFinOpen] = useState(null)   // key do tema com o form financeiro aberto
+  const [finForm, setFinForm] = useState(EMPTY_FIN)
+  const navigate = useNavigate()
 
   const L = lang === 'de' ? {
     eyebrow: 'Wesentlichkeit', title: 'Doppelte Wesentlichkeit',
@@ -39,6 +50,9 @@ export default function Materialidade() {
     materialList: 'Wesentliche Themen', noMaterial: 'Noch keine Themen im wesentlichen Quadranten.',
     goal: 'Ziel definieren', goalEdit: 'Ziel bearbeiten', baseline: 'Ausgangswert (heute)', target: 'Zielwert',
     deadline: 'Frist', how: 'Wie? (Maßnahmen)', saveGoal: 'Ziel speichern', removeGoal: 'Ziel entfernen',
+    fin: 'Finanzen', finImpact: 'Finanzielle Auswirkung (1–5)', invest: 'Investition (€)', saving: 'Einsparung/Jahr (€)',
+    payback: 'Payback', yrs: 'Jahre', finNote: 'Notiz (finanziell)', saveFin: 'Speichern', removeFin: 'Entfernen',
+    toProject: 'Projekt erstellen →',
     save: 'Speichern', saving: 'Wird gespeichert…', saved: 'Gespeichert ✓',
     saveErr: 'Speichern fehlgeschlagen (Migration 022 nötig).', loading: 'Wird geladen…',
     scored: 'Bewertet', legendHint: 'Punkt anklicken = Thema in der Liste unten.',
@@ -51,6 +65,9 @@ export default function Materialidade() {
     materialList: 'Material topics', noMaterial: 'No topics in the material quadrant yet.',
     goal: 'Set goal', goalEdit: 'Edit goal', baseline: 'Baseline (today)', target: 'Target',
     deadline: 'Deadline', how: 'How? (actions)', saveGoal: 'Save goal', removeGoal: 'Remove goal',
+    fin: 'Financials', finImpact: 'Financial impact (1–5)', invest: 'Investment (€)', saving: 'Saving/year (€)',
+    payback: 'Payback', yrs: 'years', finNote: 'Note (financial)', saveFin: 'Save', removeFin: 'Remove',
+    toProject: 'Create project →',
     save: 'Save', saving: 'Saving…', saved: 'Saved ✓',
     saveErr: 'Save failed (migration 022 required).', loading: 'Loading…',
     scored: 'Scored', legendHint: 'Each dot is a topic listed below.',
@@ -63,6 +80,9 @@ export default function Materialidade() {
     materialList: 'Temas materiais', noMaterial: 'Ainda não há temas no quadrante material.',
     goal: 'Definir meta', goalEdit: 'Editar meta', baseline: 'Valor atual (hoje)', target: 'Meta',
     deadline: 'Prazo', how: 'Como? (ações)', saveGoal: 'Guardar meta', removeGoal: 'Remover meta',
+    fin: 'Financeiro', finImpact: 'Impacto financeiro (1–5)', invest: 'Investimento (€)', saving: 'Poupança/ano (€)',
+    payback: 'Payback', yrs: 'anos', finNote: 'Nota (financeira)', saveFin: 'Guardar', removeFin: 'Remover',
+    toProject: 'Criar projeto →',
     save: 'Guardar', saving: 'A guardar…', saved: 'Guardado ✓',
     saveErr: 'Falha ao guardar (é necessária a migração 022).', loading: 'A carregar…',
     scored: 'Pontuados', legendHint: 'Cada ponto é um tema listado abaixo.',
@@ -103,6 +123,7 @@ export default function Materialidade() {
     const g = topics[key]?.goal || EMPTY_GOAL
     setGoalForm({ ...EMPTY_GOAL, ...g })
     setGoalOpen(goalOpen === key ? null : key)
+    setFinOpen(null)
   }
   function saveGoal(key) {
     const next = { ...topics, [key]: { ...(topics[key] || {}), goal: { ...goalForm } } }
@@ -112,6 +133,23 @@ export default function Materialidade() {
     const cur = { ...(topics[key] || {}) }; delete cur.goal
     const next = { ...topics, [key]: cur }
     setTopics(next); setGoalOpen(null); save(next)
+  }
+
+  // ── Dimensão financeira (o "mais um matrix" da Lúcia) ──
+  function openFin(key) {
+    const f = topics[key]?.financial || EMPTY_FIN
+    setFinForm({ ...EMPTY_FIN, ...f })
+    setFinOpen(finOpen === key ? null : key)
+    setGoalOpen(null)
+  }
+  function saveFin(key) {
+    const next = { ...topics, [key]: { ...(topics[key] || {}), financial: { ...finForm } } }
+    setTopics(next); setFinOpen(null); save(next)
+  }
+  function removeFin(key) {
+    const cur = { ...(topics[key] || {}) }; delete cur.financial
+    const next = { ...topics, [key]: cur }
+    setTopics(next); setFinOpen(null); save(next)
   }
 
   // ── Estilos ──
@@ -287,6 +325,9 @@ export default function Materialidade() {
             {material.map(({ topic, e }) => {
               const meta = TOPIC_PILLAR_META[topic.pillar]
               const hasGoal = !!(e.goal && (e.goal.target || e.goal.how))
+              const fin = e.financial
+              const hasFin = !!(fin && (fin.impact || fin.investment || fin.saving))
+              const pb = paybackYears(fin)
               return (
                 <div key={topic.key} style={{ padding: '10px 0', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -294,11 +335,60 @@ export default function Materialidade() {
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.heading, flex: 1, minWidth: '110px' }}>{topicLabel(topic, lang)}</span>
                     <span style={{ fontSize: '10.5px', fontWeight: 700, color: t.subtle }}>{e.company}×{e.stakeholder}</span>
                     {!isViewing && (
-                      <button onClick={() => openGoal(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasGoal ? meta.color : t.cardBorder}`, background: hasGoal ? meta.bg : 'transparent', color: hasGoal ? meta.color : t.textMuted }}>
-                        🎯 {hasGoal ? L.goalEdit : L.goal}
-                      </button>
+                      <>
+                        <button onClick={() => openGoal(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasGoal ? meta.color : t.cardBorder}`, background: hasGoal ? meta.bg : 'transparent', color: hasGoal ? meta.color : t.textMuted }}>
+                          🎯 {hasGoal ? L.goalEdit : L.goal}
+                        </button>
+                        <button onClick={() => openFin(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasFin ? '#0a7a3e' : t.cardBorder}`, background: hasFin ? '#eaf5ee' : 'transparent', color: hasFin ? '#0a7a3e' : t.textMuted }}>
+                          💶 {L.fin}
+                        </button>
+                        <button onClick={() => navigate(`/esg/projetos?topic=${topic.key}`)} title={L.toProject} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>
+                          🚀
+                        </button>
+                      </>
                     )}
                   </div>
+                  {/* Resumo financeiro */}
+                  {hasFin && finOpen !== topic.key && (
+                    <div style={{ fontSize: '11px', color: t.text, marginTop: '6px', lineHeight: 1.5, background: t.softCardBg, borderRadius: '8px', padding: '7px 10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      {fin.impact && <span>{L.finImpact.split(' (')[0]}: <strong>{fin.impact}/5</strong></span>}
+                      {fin.investment && <span>{L.invest.split(' (')[0]}: <strong>€ {Number(fin.investment).toLocaleString('pt-PT')}</strong></span>}
+                      {fin.saving && <span>{L.saving.split('/')[0]}: <strong>€ {Number(fin.saving).toLocaleString('pt-PT')}/{L.yrs === 'anos' ? 'ano' : L.yrs === 'Jahre' ? 'Jahr' : 'yr'}</strong></span>}
+                      {pb != null && <span style={{ color: '#0a7a3e', fontWeight: 700 }}>{L.payback}: {pb.toFixed(1)} {L.yrs}</span>}
+                      {fin.note && <span style={{ color: t.textMuted, width: '100%' }}>→ {fin.note}</span>}
+                    </div>
+                  )}
+                  {/* Form financeiro */}
+                  {finOpen === topic.key && !isViewing && (
+                    <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '7px', background: t.softCardBg, borderRadius: '10px', padding: '10px' }}>
+                      <div>
+                        <div style={{ fontSize: '9.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.finImpact}</div>
+                        <div style={{ display: 'flex', gap: '3px' }}>
+                          {[1, 2, 3, 4, 5].map(v => (
+                            <button key={v} onClick={() => setFinForm(f => ({ ...f, impact: v }))} style={{
+                              width: '26px', height: '24px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+                              border: `1px solid ${Number(finForm.impact) === v ? '#0a7a3e' : t.inputBorder}`,
+                              background: Number(finForm.impact) >= v && finForm.impact ? '#0a7a3e' : 'transparent',
+                              color: Number(finForm.impact) >= v && finForm.impact ? '#fff' : t.subtle,
+                            }}>{v}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
+                        <input type="number" value={finForm.investment} onChange={e2 => setFinForm(f => ({ ...f, investment: e2.target.value }))} placeholder={L.invest} style={inputStyle} />
+                        <input type="number" value={finForm.saving} onChange={e2 => setFinForm(f => ({ ...f, saving: e2.target.value }))} placeholder={L.saving} style={inputStyle} />
+                      </div>
+                      {paybackYears(finForm) != null && (
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: '#0a7a3e' }}>{L.payback}: {paybackYears(finForm).toFixed(1)} {L.yrs}</div>
+                      )}
+                      <input value={finForm.note} onChange={e2 => setFinForm(f => ({ ...f, note: e2.target.value }))} placeholder={L.finNote} style={inputStyle} />
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button onClick={() => saveFin(topic.key)} style={{ flex: 1, padding: '7px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '11.5px', cursor: 'pointer' }}>{L.saveFin}</button>
+                        {hasFin && <button onClick={() => removeFin(topic.key)} style={{ padding: '7px 11px', background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontWeight: 600, fontSize: '11.5px', cursor: 'pointer', color: t.neg }}>{L.removeFin}</button>}
+                        <button onClick={() => setFinOpen(null)} style={{ padding: '7px 10px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '8px', fontWeight: 600, fontSize: '11.5px', cursor: 'pointer', color: t.textMuted }}>✕</button>
+                      </div>
+                    </div>
+                  )}
                   {hasGoal && goalOpen !== topic.key && (
                     <div style={{ fontSize: '11px', color: t.text, marginTop: '6px', lineHeight: 1.5, background: t.softCardBg, borderRadius: '8px', padding: '7px 10px' }}>
                       {e.goal.baseline && <span>{L.baseline}: <strong>{e.goal.baseline}</strong> · </span>}

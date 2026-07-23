@@ -3,8 +3,7 @@
 // A forma das respostas é a mesma gravada por Diagnostico.jsx:
 //   answers[qId] = { na, value, unit }                         (simples)
 //   answers[qId] = { na, fields: { key: { value, unit } } }    (grupo)
-// Inclui DEMO_ANSWERS — um perfil PME realista para materializar a página
-// antes de existir um diagnóstico real preenchido.
+// Os KPIs são sempre calculados a partir de dados reais (sem fallback fictício).
 // ============================================================================
 import { ESG_QUESTIONS, questionsByPillar } from '../data/esgQuestions'
 
@@ -104,43 +103,4 @@ export function computeKpis(answers) {
   }
 
   return { env, social, gov, completeness }
-}
-
-// ── Respostas simuladas (perfil PME de serviços, ano 2023) ──
-export const DEMO_ANSWERS = {
-  1:  { value: 'yes' },
-  2:  { fields: {
-        erdgas: { value: '5200', unit: 'kWh' },
-        diesel: { value: '820', unit: 'Litros' },
-        benzin: { value: '310', unit: 'Litros' },
-        elet_total: { value: '4400', unit: 'kWh' },
-        elet_renov: { value: '45' },
-        elet_auto: { value: '12' },
-      } },
-  3:  { value: '380', unit: 'gCO₂/kWh' },
-  4:  { value: 'yes' },
-  5:  { fields: { total: { value: '12', unit: 't CO₂' }, scope1: { value: '4', unit: 't CO₂' }, scope2: { value: '6', unit: 't CO₂' }, scope3: { value: '2', unit: 't CO₂' } } },
-  6:  { value: 'yes' },
-  7:  { value: 'no' },
-  8:  { value: '57', unit: 'm³' },
-  9:  { fields: { total: { value: '2.4', unit: 't' }, total_recic: { value: '60' }, perigosos: { value: '0.2', unit: 't' }, perigosos_recic: { value: '50' } } },
-  10: { fields: { total: { value: '200000', unit: 'Euro' }, elegivel: { value: '30' }, alinhado: { value: '12' } } },
-  11: { value: '18', unit: 'FTE' },
-  12: { fields: { todos: { value: '65' }, liderancas: { value: '50' }, alta_gestao: { value: '33' }, controle: { value: '40' } } },
-  13: { value: '-8' },
-  14: { fields: { com_afastamento: { value: '1' }, fatais: { value: '0' } } },
-  15: { fields: { todos: { value: '2' }, por_iniciativa: { value: '1' } } },
-  16: { value: '12', unit: 'horas' },
-  17: { value: '450', unit: 'Euro' },
-  18: { value: '2' },
-  19: { value: '8', unit: 'anos' },
-  20: { value: 'yes' },
-  21: { value: 'yes' },
-  22: { value: 'no' },
-  23: { value: 'planned' },
-  24: { value: 'no' },
-  25: { value: 'no' },
-  26: { value: 'no' },
-  27: { value: 'yes' },
-  28: { value: 'no' },
 }

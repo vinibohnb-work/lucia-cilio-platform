@@ -162,6 +162,56 @@ const cafelisboa = {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// FASE 6 DO PLANO ESG — ano anterior (2024), dimensão financeira e projetos.
+// ════════════════════════════════════════════════════════════════════════════
+
+// GrünBau 2024: ligeiramente pior que 2025 (para os ▲▼ aparecerem nos KPIs)
+gruenbau.prevYear = 2024
+gruenbau.answersPrev = { ...gruenbau.answers,
+  2:  { fields: { erdgas: { value: '13500', unit: 'kWh' }, diesel: { value: '3800', unit: 'Litros' }, benzin: { value: '700', unit: 'Litros' }, elet_total: { value: '36000', unit: 'kWh' }, elet_renov: { value: '48' }, elet_auto: { value: '10' } } },
+  5:  { fields: { total: { value: '98', unit: 't CO₂' }, scope1: { value: '48', unit: 't CO₂' }, scope2: { value: '30', unit: 't CO₂' }, scope3: { value: '20', unit: 't CO₂' } } },
+  6:  { value: 'no' },
+  9:  { fields: { total: { value: '36', unit: 't' }, total_recic: { value: '45' }, perigosos: { value: '3', unit: 't' }, perigosos_recic: { value: '30' } } },
+  12: { fields: { todos: { value: '18' }, liderancas: { value: '10' }, alta_gestao: { value: '0' }, controle: { value: '0' } } },
+  14: { fields: { com_afastamento: { value: '3' }, fatais: { value: '0' } } },
+  16: { value: '10', unit: 'horas' },
+  22: { value: 'no' }, 23: { value: 'no' }, 28: { value: 'no' },
+}
+// Dimensão financeira dos temas materiais ("mais um matrix")
+gruenbau.financials = {
+  clima:    { impact: 4, investment: '50000', saving: '10700', note: 'Frota elétrica + fotovoltaico' },
+  residuos: { impact: 3, investment: '6000', saving: '4000', note: 'Separação em obra reduz custos de deposição' },
+  equipa:   { impact: 3, investment: '3500', saving: '', note: 'Formação de segurança + EPI' },
+  anticorr: { impact: 2, investment: '', saving: '', note: 'Requisito para concursos públicos' },
+}
+gruenbau.projects = [
+  { topic_key: 'clima', name: 'Frota elétrica (fase 1)', description: 'Substituição de 2 carrinhas a diesel por elétricas.', status: 'active', start_month: '2026-03', progress: 35, investment: 32000, annual_saving: 6500, expected_impact: '85 t CO₂ → 60 t CO₂' },
+  { topic_key: 'clima', name: 'Fotovoltaico no armazém', description: 'Instalação de 30 kWp no telhado do armazém.', status: 'planned', start_month: '2026-09', progress: 0, investment: 18000, annual_saving: 4200, expected_impact: 'Autogeração 20% → 45%' },
+  { topic_key: 'residuos', name: 'Separação de resíduos em obra', description: 'Contentores separados + parceiro de reciclagem.', status: 'active', start_month: '2026-01', progress: 60, investment: 6000, annual_saving: 4000, expected_impact: '58% → 80% reciclado' },
+]
+
+// Café Lisboa 2024: início do caminho (pior que 2025)
+cafelisboa.prevYear = 2024
+cafelisboa.answersPrev = { ...cafelisboa.answers,
+  2:  { fields: { fluessiggas: { value: '1400', unit: 'kWh' }, elet_total: { value: '9800', unit: 'kWh' }, elet_renov: { value: '40' }, elet_auto: { value: '0' } } },
+  5:  { fields: { total: { value: '11', unit: 't CO₂' }, scope1: { value: '3', unit: 't CO₂' }, scope2: { value: '5', unit: 't CO₂' }, scope3: { value: '3', unit: 't CO₂' } } },
+  8:  { value: '290', unit: 'm³' },
+  9:  { fields: { total: { value: '7', unit: 't' }, total_recic: { value: '30' }, perigosos: { value: '0', unit: 't' }, perigosos_recic: { value: '0' } } },
+  16: { value: '4', unit: 'horas' },
+  21: { value: 'no' },
+}
+cafelisboa.financials = {
+  residuos: { impact: 3, investment: '1200', saving: '900', note: 'Compostáveis custam mais, mas retornáveis poupam' },
+  agua:     { impact: 4, investment: '800', saving: '600', note: 'Fatura de água pesa no custo fixo' },
+  equipa:   { impact: 2, investment: '500', saving: '', note: 'Formação barista reduz rotatividade' },
+  clientes: { impact: 3, investment: '', saving: '', note: 'Confiança do bairro = receita recorrente' },
+}
+cafelisboa.projects = [
+  { topic_key: 'residuos', name: 'Copos compostáveis + retornáveis', description: 'Fornecedor local + desconto para copo próprio.', status: 'active', start_month: '2026-04', progress: 50, investment: 1200, annual_saving: 900, expected_impact: '100% descartáveis → 100% compostáveis' },
+  { topic_key: 'agua', name: 'Torneiras temporizadas', description: 'Torneiras temporizadas + máquina de lavar eficiente.', status: 'planned', start_month: '2026-10', progress: 0, investment: 800, annual_saving: 600, expected_impact: '260 m³ → 200 m³' },
+]
+
+// ════════════════════════════════════════════════════════════════════════════
 // DADOS CONTÁBEIS (módulo Contabilidade) — genéricos, para demonstração.
 // Meses cobertos: 2026-03 a 2026-07 (hoje = 2026-07). O gerador expande cada
 // padrão mensal em lançamentos individuais no Livro de Caixa.
@@ -351,17 +401,32 @@ async function seed(demo) {
   const uid = user.id
 
   const acc = ACC_BY_EMAIL[demo.email]
+  // Materialidade: junta a dimensão financeira aos temas (fase 3 do plano ESG)
+  const topics = { ...demo.topics }
+  Object.entries(demo.financials || {}).forEach(([key, fin]) => {
+    topics[key] = { ...(topics[key] || {}), financial: fin }
+  })
   const steps = [
     // Acesso às duas plataformas (Contabilidade + ESG)
     ['perfil (both)',       admin.from('profiles').upsert({ id: uid, role: 'user', platform: 'both' })],
     ['dados da empresa',    admin.from('company_settings').upsert({ user_id: uid, company_name: demo.name, country: demo.country, updated_at: new Date().toISOString(), ...(acc?.settings || {}) }, { onConflict: 'user_id' })],
-    ['diagnóstico (28 Q)',  admin.from('esg_diagnostics').upsert({ user_id: uid, reference_year: demo.referenceYear, answers: demo.answers, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })],
-    ['materialidade (16 T)', admin.from('esg_materiality').upsert({ user_id: uid, topics: demo.topics, threshold: demo.threshold, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })],
+    // Multi-ano (requer migração 024): ano de referência + ano anterior
+    [`diagnóstico ${demo.referenceYear}`, admin.from('esg_diagnostics').upsert({ user_id: uid, reference_year: demo.referenceYear, answers: demo.answers, updated_at: new Date().toISOString() }, { onConflict: 'user_id,reference_year' })],
+    [`diagnóstico ${demo.prevYear}`,      admin.from('esg_diagnostics').upsert({ user_id: uid, reference_year: demo.prevYear, answers: demo.answersPrev, updated_at: new Date().toISOString() }, { onConflict: 'user_id,reference_year' })],
+    ['materialidade (16 T + financeiro)', admin.from('esg_materiality').upsert({ user_id: uid, topics, threshold: demo.threshold, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })],
   ]
   for (const [label, promise] of steps) {
     const { error } = await promise
     if (error) throw new Error(`${label}: ${error.message}`)
     console.log(`  ✓ ${label}`)
+  }
+  // Projetos ESG (limpa e reinsere — idempotente)
+  {
+    const { error: e1 } = await admin.from('esg_projects').delete().eq('user_id', uid)
+    if (e1) throw new Error(`limpar esg_projects: ${e1.message}`)
+    const { error: e2 } = await admin.from('esg_projects').insert((demo.projects || []).map(p => ({ ...p, user_id: uid })))
+    if (e2) throw new Error(`projetos ESG: ${e2.message}`)
+    console.log(`  ✓ projetos ESG (${(demo.projects || []).length})`)
   }
   await seedAccounting(uid, demo)
 }

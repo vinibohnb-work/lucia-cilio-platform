@@ -16,7 +16,8 @@ export default function Diagnostico() {
   const { isViewing } = useViewAs()
 
   const [answers, setAnswers] = useState({})
-  const [year, setYear] = useState(2023)
+  const [year, setYear] = useState(new Date().getFullYear())
+  const [byYear, setByYear] = useState({})   // ano → answers (todos os anos gravados)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
@@ -51,14 +52,36 @@ export default function Diagnostico() {
     disclaimer: 'Valores pré-preenchidos podem ter origem na plataforma. Todos os dados servem para preparar o rating ESG.',
   }
 
+  // Multi-ano: carrega todos os anos gravados; mostra o mais recente.
   const load = useCallback(async () => {
     if (!eid) return
     setLoading(true)
-    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).maybeSingle()
-    if (data) { setAnswers(data.answers || {}); if (data.reference_year) setYear(data.reference_year) }
+    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).order('reference_year', { ascending: false })
+    const map = {}
+    ;(data || []).forEach(r => { map[r.reference_year] = r.answers || {} })
+    setByYear(map)
+    const years = Object.keys(map).map(Number).sort((a, b) => b - a)
+    const y = years[0] || new Date().getFullYear()
+    setYear(y)
+    setAnswers(map[y] || {})
     setLoading(false)
   }, [eid])
   useEffect(() => { load() }, [load])
+
+  const yearList = [...new Set([...Object.keys(byYear).map(Number), Number(year)])].sort((a, b) => b - a)
+
+  // Trocar de ano: guarda o estado local do ano atual e carrega o do escolhido.
+  function pickYear(y) {
+    setByYear(p => ({ ...p, [year]: answers }))
+    setYear(y)
+    setAnswers(byYear[y] || {})
+  }
+  // Novo ano: copia as respostas do ano atual como ponto de partida.
+  function addYear() {
+    const next = Math.max(...yearList) + 1
+    setByYear(p => ({ ...p, [year]: answers, [next]: { ...answers } }))
+    setYear(next)
+  }
 
   // ── Escritas no estado ──
   const setSimple = (qId, patch) => setAnswers(p => ({ ...p, [qId]: { ...(p[qId] || {}), ...patch } }))
@@ -85,8 +108,9 @@ export default function Diagnostico() {
     setSaving(true); setMsg('')
     const { error } = await supabase.from('esg_diagnostics').upsert(
       { user_id: user.id, reference_year: Number(year), answers, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id' }
+      { onConflict: 'user_id,reference_year' }
     )
+    if (!error) setByYear(p => ({ ...p, [year]: answers }))
     setSaving(false)
     setMsg(error ? L.saveErr : L.saved)
     setTimeout(() => setMsg(''), 2600)
@@ -215,7 +239,15 @@ export default function Diagnostico() {
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
           <div>
             <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.refYear}</div>
-            <input type="number" value={year} onChange={e => setYear(e.target.value)} style={{ ...inputStyle, width: '92px' }} />
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <select value={year} onChange={e => pickYear(Number(e.target.value))} style={{ ...inputStyle, width: '92px', cursor: 'pointer' }}>
+                {yearList.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+              {!isViewing && (
+                <button onClick={addYear} title={lang === 'de' ? 'Neues Jahr (kopiert aktuelle Antworten)' : lang === 'en' ? 'New year (copies current answers)' : 'Novo ano (copia as respostas atuais)'}
+                  style={{ width: '38px', height: '38px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.cardBg, color: t.accent, fontSize: '18px', fontWeight: 800, cursor: 'pointer' }}>+</button>
+              )}
+            </div>
           </div>
           {!isViewing && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
         </div>

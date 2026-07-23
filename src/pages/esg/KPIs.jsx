@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { computeKpis, DEMO_ANSWERS } from '../../lib/esgKpis'
+import { computeKpis } from '../../lib/esgKpis'
+import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../data/esgTopics'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
 
 const E = '#0a7a3e', S = '#1e60c8', G = '#a9781a'
@@ -27,19 +29,24 @@ export default function KPIs() {
   const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
 
-  const [answers, setAnswers] = useState(null)
+  const [byYear, setByYear] = useState({})     // ano → answers (dados reais do diagnóstico)
   const [year, setYear] = useState(null)
+  const [materiality, setMateriality] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [useDemo, setUseDemo] = useState(false)
 
   const load = useCallback(async () => {
     if (!eid) return
     setLoading(true)
-    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).maybeSingle()
-    const hasReal = data && data.answers && Object.keys(data.answers).length > 0
-    setAnswers(hasReal ? data.answers : null)
-    setYear(data?.reference_year || 2023)
-    setUseDemo(!hasReal)
+    const [{ data: diags }, { data: mat }] = await Promise.all([
+      supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).order('reference_year', { ascending: false }),
+      supabase.from('esg_materiality').select('topics, threshold').eq('user_id', eid).maybeSingle(),
+    ])
+    const map = {}
+    ;(diags || []).forEach(r => { if (r.answers && Object.keys(r.answers).length) map[r.reference_year] = r.answers })
+    setByYear(map)
+    const years = Object.keys(map).map(Number).sort((a, b) => b - a)
+    setYear(years[0] || null)
+    setMateriality(mat || null)
     setLoading(false)
   }, [eid])
   useEffect(() => { load() }, [load])
@@ -47,8 +54,9 @@ export default function KPIs() {
   const L = lang === 'de' ? {
     eyebrow: 'ESG-Monitoring', title: 'KPIs & Monitorização',
     subtitle: 'Kennzahlen aus dem Nachhaltigkeits-Fragebogen — automatisch berechnet.',
-    demoOn: 'Demodaten', demoHint: 'Beispieldaten — noch kein Diagnose-Fragebogen ausgefüllt.',
-    real: 'Echte Daten', refYear: 'Bezugsjahr', loading: 'Wird geladen…',
+    empty: 'Noch kein Diagnose-Fragebogen ausgefüllt — die KPIs werden live aus den Antworten berechnet.',
+    emptyCta: 'Diagnose ausfüllen →', vsPrev: 'ggü.', materialTitle: 'Wesentliche Themen & Ziele', goalLbl: 'Ziel',
+    refYear: 'Bezugsjahr', loading: 'Wird geladen…',
     completeness: 'Ausfüllgrad', pillarE: 'Umwelt', pillarS: 'Soziales', pillarG: 'Unternehmensführung',
     co2: 'CO₂-Emissionen (gesamt)', employees: 'Mitarbeiter', renewElec: 'Erneuerbarer Strom', govMaturity: 'Governance-Reife',
     scopes: 'Emissionen nach Scope', energy: 'Energie & Ressourcen', elecTotal: 'Stromverbrauch', selfGen: 'Eigenerzeugung',
@@ -66,8 +74,9 @@ export default function KPIs() {
   } : lang === 'en' ? {
     eyebrow: 'ESG Monitoring', title: 'KPIs & Monitoring',
     subtitle: 'Metrics extracted from the sustainability questionnaire — calculated automatically.',
-    demoOn: 'Sample data', demoHint: 'Showing sample data — no assessment filled in yet.',
-    real: 'Real data', refYear: 'Reference year', loading: 'Loading…',
+    empty: 'No assessment filled in yet — KPIs are calculated live from the answers.',
+    emptyCta: 'Fill in the assessment →', vsPrev: 'vs', materialTitle: 'Material topics & targets', goalLbl: 'Target',
+    refYear: 'Reference year', loading: 'Loading…',
     completeness: 'Completeness', pillarE: 'Environment', pillarS: 'Social', pillarG: 'Governance',
     co2: 'CO₂ emissions (total)', employees: 'Employees', renewElec: 'Renewable electricity', govMaturity: 'Governance maturity',
     scopes: 'Emissions by Scope', energy: 'Energy & Resources', elecTotal: 'Electricity use', selfGen: 'Self-generation',
@@ -85,8 +94,9 @@ export default function KPIs() {
   } : {
     eyebrow: 'Monitorização ESG', title: 'KPIs & Monitorização',
     subtitle: 'Indicadores extraídos do questionário de sustentabilidade — calculados automaticamente.',
-    demoOn: 'Dados de exemplo', demoHint: 'A mostrar dados simulados — ainda não há diagnóstico preenchido.',
-    real: 'Dados reais', refYear: 'Ano de referência', loading: 'A carregar…',
+    empty: 'Ainda não há diagnóstico preenchido — os KPIs são calculados ao vivo a partir das respostas.',
+    emptyCta: 'Preencher o diagnóstico →', vsPrev: 'vs', materialTitle: 'Temas materiais & metas', goalLbl: 'Meta',
+    refYear: 'Ano de referência', loading: 'A carregar…',
     completeness: 'Preenchimento', pillarE: 'Ambiente', pillarS: 'Social', pillarG: 'Governança',
     co2: 'Emissões de CO₂ (total)', employees: 'Colaboradores', renewElec: 'Eletricidade renovável', govMaturity: 'Maturidade de governança',
     scopes: 'Emissões por Scope', energy: 'Energia & Recursos', elecTotal: 'Consumo de eletricidade', selfGen: 'Autogeração',
@@ -105,18 +115,57 @@ export default function KPIs() {
 
   if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
 
-  const source = useDemo ? DEMO_ANSWERS : (answers || {})
-  const k = computeKpis(source)
+  // Estado vazio: sem diagnóstico não há KPIs (dados sempre ao vivo).
+  if (!year) {
+    return (
+      <div style={{ width: '100%', fontFamily: t.fontBody }}>
+        <h1 style={{ margin: '0 0 18px', fontFamily: t.fontDisplay, fontWeight: 600, fontSize: '30px', color: t.heading }}>{L.title}</h1>
+        <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: '14px', padding: '34px 28px', textAlign: 'center' }}>
+          <div style={{ fontSize: '34px', marginBottom: '10px' }}>📊</div>
+          <div style={{ fontSize: '14px', color: t.textMuted, marginBottom: '16px', lineHeight: 1.5 }}>{L.empty}</div>
+          <Link to="/esg/diagnostico" style={{ display: 'inline-block', padding: '10px 20px', background: t.btnBg, color: t.btnInk, borderRadius: '10px', fontWeight: 700, fontSize: '13px', textDecoration: 'none' }}>{L.emptyCta}</Link>
+        </div>
+      </div>
+    )
+  }
+
+  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
+  const prevYear = years.find(y => y < year) || null
+  const k = computeKpis(byYear[year] || {})
+  const kPrev = prevYear ? computeKpis(byYear[prevYear] || {}) : null
   const track = night ? 'rgba(255,255,255,.12)' : '#e6ede8'
+
+  // Variação vs ano anterior (▲/▼). lowerIsBetter inverte a cor (ex.: CO₂).
+  const delta = (cur, prev, lowerIsBetter = false) => {
+    if (cur == null || prev == null || !kPrev) return null
+    const d = cur - prev
+    if (d === 0) return <span style={{ fontSize: '11px', fontWeight: 700, color: t.subtle }}>= {prevYear}</span>
+    const good = lowerIsBetter ? d < 0 : d > 0
+    return (
+      <span style={{ fontSize: '11px', fontWeight: 800, color: good ? '#0a7a3e' : '#c2410c' }}>
+        {d > 0 ? '▲' : '▼'} {Math.abs(d) % 1 === 0 ? Math.abs(d) : Math.abs(d).toFixed(1)} {L.vsPrev} {prevYear}
+      </span>
+    )
+  }
+
+  // Temas materiais (da Dupla Materialidade) com as respetivas metas
+  const materialTopics = materiality
+    ? ESG_TOPICS.filter(tp => isMaterial(materiality.topics?.[tp.key], Number(materiality.threshold ?? 3.5)))
+        .map(tp => ({ topic: tp, e: materiality.topics[tp.key] }))
+        .sort((a, b) => (Number(b.e.stakeholder) + Number(b.e.company)) - (Number(a.e.stakeholder) + Number(a.e.company)))
+    : []
 
   // ── blocos de estilo ──
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', padding: '18px 20px' }
   const secTitle = (txt, color) => <h3 style={{ margin: '0 0 14px', fontFamily: t.fontDisplay, fontSize: '18px', fontWeight: 600, color, display: 'flex', alignItems: 'center', gap: '9px' }}>{txt}</h3>
-  const kpiBig = (label, value, sub, color) => (
+  const kpiBig = (label, value, sub, color, d) => (
     <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '4px' }}>
       <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px' }}>{label}</div>
       <div style={{ fontSize: '26px', fontWeight: 800, color, letterSpacing: '-.5px', fontFamily: t.fontNum || t.fontDisplay }}>{value}</div>
-      {sub && <div style={{ fontSize: '11.5px', color: t.subtle }}>{sub}</div>}
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', flexWrap: 'wrap' }}>
+        {sub && <span style={{ fontSize: '11.5px', color: t.subtle }}>{sub}</span>}
+        {d}
+      </div>
     </div>
   )
   const miniStat = (label, value, sub, color = t.heading) => (
@@ -169,28 +218,41 @@ export default function KPIs() {
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '12px', color: t.textMuted }}>{L.refYear}: <strong style={{ color: t.heading }}>{year}</strong></span>
-          {answers && (
-            <button onClick={() => setUseDemo(d => !d)} style={{ padding: '7px 13px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${useDemo ? G : t.cardBorder}`, background: useDemo ? '#fbf3d9' : t.cardBg, color: useDemo ? G : t.textMuted }}>
-              {useDemo ? `● ${L.demoOn}` : `○ ${L.real}`}
-            </button>
-          )}
+          <span style={{ fontSize: '12px', color: t.textMuted, fontWeight: 600 }}>{L.refYear}</span>
+          <select value={year} onChange={e => setYear(Number(e.target.value))} style={{ padding: '8px 11px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontSize: '13px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
         </div>
       </div>
 
-      {/* Aviso de demo */}
-      {useDemo && (
-        <div style={{ background: '#fbf3d9', border: '1px solid #f0e2b4', borderRadius: '11px', padding: '11px 15px', marginBottom: '16px', fontSize: '12.5px', color: '#7a5c12', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>🧪</span>{L.demoHint}
+      {/* ⭐ Temas materiais (Dupla Materialidade) — o que os KPIs devem seguir */}
+      {materialTopics.length > 0 && (
+        <div style={{ ...card, marginBottom: '16px', borderLeft: `4px solid ${t.accent}` }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '10px' }}>⭐ {L.materialTitle}</div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {materialTopics.map(({ topic, e }) => {
+              const meta = TOPIC_PILLAR_META[topic.pillar]
+              const hasGoal = !!(e.goal && (e.goal.target || e.goal.how))
+              return (
+                <div key={topic.key} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '6px 12px', borderRadius: '20px', background: meta.bg, border: `1px solid ${meta.color}33` }}>
+                  <span style={{ width: '16px', height: '16px', borderRadius: '4px', background: meta.color, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '7.5px', fontWeight: 800 }}>{topic.abbr}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: meta.color }}>{topicLabel(topic, lang)}</span>
+                  {hasGoal && e.goal.target && (
+                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: t.textMuted }}>🎯 {L.goalLbl}: {e.goal.target}{e.goal.deadline ? ` · ${e.goal.deadline}` : ''}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
-      {/* KPIs de topo */}
+      {/* KPIs de topo (com variação vs ano anterior) */}
       <div style={{ ...grid('190px'), marginBottom: '16px' }}>
-        {kpiBig(L.co2, `${fmt(k.env.co2Total, 1)} t`, `Scope 1·2·3`, E)}
-        {kpiBig(L.employees, fmt(k.social.employees), 'FTE', S)}
-        {kpiBig(L.renewElec, k.env.elecRenewPct == null ? '—' : `${fmt(k.env.elecRenewPct)}%`, `${fmt(k.env.elecTotal)} kWh`, E)}
-        {kpiBig(L.govMaturity, `${k.gov.maturityPct}%`, L.pillarG, G)}
+        {kpiBig(L.co2, `${fmt(k.env.co2Total, 1)} t`, `Scope 1·2·3`, E, delta(k.env.co2Total, kPrev?.env.co2Total, true))}
+        {kpiBig(L.employees, fmt(k.social.employees), 'FTE', S, delta(k.social.employees, kPrev?.social.employees))}
+        {kpiBig(L.renewElec, k.env.elecRenewPct == null ? '—' : `${fmt(k.env.elecRenewPct)}%`, `${fmt(k.env.elecTotal)} kWh`, E, delta(k.env.elecRenewPct, kPrev?.env.elecRenewPct))}
+        {kpiBig(L.govMaturity, `${k.gov.maturityPct}%`, L.pillarG, G, delta(k.gov.maturityPct, kPrev?.gov.maturityPct))}
       </div>
 
       {/* Preenchimento por pilar */}
