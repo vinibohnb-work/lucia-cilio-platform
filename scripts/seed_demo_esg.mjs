@@ -161,6 +161,172 @@ const cafelisboa = {
   },
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// DADOS CONTÁBEIS (módulo Contabilidade) — genéricos, para demonstração.
+// Meses cobertos: 2026-03 a 2026-07 (hoje = 2026-07). O gerador expande cada
+// padrão mensal em lançamentos individuais no Livro de Caixa.
+// ════════════════════════════════════════════════════════════════════════════
+const ACC_MONTHS = ['2026-03', '2026-04', '2026-05', '2026-06', '2026-07']
+const round2 = (n) => Math.round(n * 100) / 100
+const vatOf = (gross, rate) => (rate > 0 ? round2(gross * rate / (100 + rate)) : 0)
+
+// Expande padrões mensais (receita/despesa) em linhas de cash_entries.
+// factors: variação por mês (comprimento = ACC_MONTHS.length) para dar realismo.
+function buildEntries({ revenue = [], expense = [], factors }) {
+  const rows = []
+  ACC_MONTHS.forEach((period, mi) => {
+    const f = factors ? factors[mi] : 1
+    const dayFor = (i) => `${period}-${String(5 + i * 4).padStart(2, '0')}`
+    revenue.forEach((r, i) => {
+      if (r.skipMonths?.includes(mi)) return
+      const amount = round2(r.amount * (r.flat ? 1 : f))
+      rows.push({ entry_date: dayFor(i), doc: r.doc || null, description: r.desc, type: 'entrada',
+        amount, destination: r.dest || 'banco', category: null, period,
+        vat_rate: r.vat ?? null, vat_amount: r.vat ? vatOf(amount, r.vat) : null, quantity: r.qty ?? 1 })
+    })
+    expense.forEach((e, i) => {
+      if (e.skipMonths?.includes(mi)) return
+      const amount = round2(e.amount * (e.flat ? 1 : f))
+      rows.push({ entry_date: dayFor(i + 2), doc: e.doc || null, description: e.desc, type: 'saida',
+        amount, destination: e.dest || 'banco', category: e.cat, period,
+        vat_rate: e.vat ?? null, vat_amount: e.vat ? vatOf(amount, e.vat) : null, quantity: 1 })
+    })
+  })
+  return rows
+}
+
+// ── CASE 1 — GrünBau GmbH (DE, IVA 19% Regelbesteuerung) ──
+const accGB = {
+  settings: { vat_regime: 'normal', vat_default_rate: 19, ir_reserve_pct: 30, ss_regime: null, de_famv_limit: 565 },
+  catalog: [
+    { name: 'Neubau – Rohbau (Projekt)', kind: 'service', price: 18500 },
+    { name: 'Altbausanierung (Rate)', kind: 'service', price: 9800 },
+    { name: 'Energetische Modernisierung', kind: 'service', price: 6400 },
+    { name: 'Nachhaltigkeitsberatung', kind: 'service', price: 2400 },
+  ],
+  clients: [
+    { name: 'Stadtwerke München', country: 'DE', sector: 'Öffentlicher Sektor', service: 'acc' },
+    { name: 'Wohnbau Genossenschaft eG', country: 'DE', sector: 'Immobilien', service: 'acc' },
+    { name: 'Familie Weber (Privat)', country: 'DE', sector: 'Privatkunde', service: 'acc' },
+  ],
+  recurring: [
+    { description: 'Miete Büro und Lager', category: 'renda', amount: 2200, periodicity: 'monthly', due_day: 5, destination: 'banco' },
+    { description: 'Betriebshaftpflichtversicherung', category: 'seguros', amount: 380, periodicity: 'monthly', due_day: 8, destination: 'banco' },
+    { description: 'Bau-Software (Lizenz)', category: 'software', amount: 120, periodicity: 'monthly', due_day: 10, destination: 'banco' },
+    { description: 'Leasing Fuhrpark', category: 'auto', amount: 640, periodicity: 'monthly', due_day: 15, destination: 'banco' },
+    { description: 'Steuerberatung', category: 'honorarios', amount: 450, periodicity: 'monthly', due_day: 20, destination: 'banco' },
+  ],
+  obligations: [
+    { obligation_type: 'Umsatzsteuer-Voranmeldung', client: null, country: 'DE', deadline: '2026-08-10', status: 'pending' },
+    { obligation_type: 'Gewerbesteuer-Vorauszahlung', client: null, country: 'DE', deadline: '2026-08-15', status: 'pending' },
+    { obligation_type: 'Umsatzsteuer-Voranmeldung', client: null, country: 'DE', deadline: '2026-07-10', status: 'done' },
+  ],
+  entries: buildEntries({
+    factors: [0.92, 1.05, 0.98, 1.12, 0.6], // julho parcial (mês corrente)
+    revenue: [
+      { desc: 'Bauprojekt – Abschlagszahlung', doc: 'RE-2026', amount: 18500, dest: 'banco', vat: 19 },
+      { desc: 'Altbausanierung – Rate', doc: 'RE-2027', amount: 9800, dest: 'banco', vat: 19 },
+      { desc: 'Energieberatung', doc: 'RE-2028', amount: 2400, dest: 'banco', vat: 19, skipMonths: [1, 4] },
+    ],
+    expense: [
+      { desc: 'Baustoffe (Zement, Stahl, Holz)', cat: 'material', amount: 8200, dest: 'banco', vat: 19 },
+      { desc: 'Löhne und Gehälter', cat: 'outros', amount: 14500, dest: 'banco', flat: true },
+      { desc: 'Diesel Fuhrpark', cat: 'auto', amount: 950, dest: 'caixa', vat: 19 },
+      { desc: 'Werkzeug und Maschinen', cat: 'equipamentos', amount: 1800, dest: 'banco', vat: 19, skipMonths: [0, 2, 4] },
+    ],
+  }),
+  plan: {
+    monthly_fixed: 3790, productive_hours: 640, reserve_basis: 'gewinn',
+    items: [
+      { name: 'Neubau – Rohbau', durationMin: '4800', price: '18500', qty: '1', material: '8200' },
+      { name: 'Altbausanierung', durationMin: '2400', price: '9800', qty: '1', material: '3900' },
+      { name: 'Energetische Modernisierung', durationMin: '1600', price: '6400', qty: '1', material: '2600' },
+      { name: 'Nachhaltigkeitsberatung', durationMin: '480', price: '2400', qty: '2', material: '0' },
+    ],
+  },
+}
+
+// ── CASE 2 — Café Lisboa Lda (PT, IVA 23%/13% regime normal) ──
+const accCL = {
+  settings: { vat_regime: 'normal', vat_default_rate: 23, ir_reserve_pct: 25, ss_regime: null },
+  catalog: [
+    { name: 'Café expresso', kind: 'product', price: 0.90 },
+    { name: 'Galão / Cappuccino', kind: 'product', price: 1.60 },
+    { name: 'Tosta mista', kind: 'product', price: 3.20 },
+    { name: 'Bolo do dia', kind: 'product', price: 2.50 },
+    { name: 'Menu almoço', kind: 'product', price: 8.50 },
+  ],
+  clients: [
+    { name: 'Coworking Baixa (coffee breaks)', country: 'PT', sector: 'Serviços', service: 'acc' },
+    { name: 'Advogados Ribeiro & Sá, Lda', country: 'PT', sector: 'Serviços', service: 'acc' },
+  ],
+  recurring: [
+    { description: 'Renda do espaço', category: 'renda', amount: 1350, periodicity: 'monthly', due_day: 5, destination: 'banco' },
+    { description: 'Eletricidade', category: 'outros', amount: 340, periodicity: 'monthly', due_day: 12, destination: 'banco' },
+    { description: 'Seguro do estabelecimento', category: 'seguros', amount: 90, periodicity: 'monthly', due_day: 8, destination: 'banco' },
+    { description: 'Avença de contabilidade', category: 'honorarios', amount: 180, periodicity: 'monthly', due_day: 20, destination: 'banco' },
+    { description: 'Licença de esplanada', category: 'impostos', amount: 240, periodicity: 'annual', due_day: 31, destination: 'banco' },
+  ],
+  obligations: [
+    { obligation_type: 'IVA – Declaração periódica', client: null, country: 'PT', deadline: '2026-08-20', status: 'pending' },
+    { obligation_type: 'Pagamento por conta (IRC)', client: null, country: 'PT', deadline: '2026-07-31', status: 'pending' },
+    { obligation_type: 'Retenção na fonte (DMR)', client: null, country: 'PT', deadline: '2026-07-20', status: 'done' },
+  ],
+  entries: buildEntries({
+    factors: [0.9, 1.0, 1.08, 1.15, 0.62], // verão mais forte; julho parcial
+    revenue: [
+      { desc: 'Vendas – cafetaria (balcão)', amount: 7200, dest: 'caixa', vat: 13 },
+      { desc: 'Vendas – take-away e retalho', amount: 2600, dest: 'caixa', vat: 23 },
+      { desc: 'Catering / coffee break (evento)', amount: 850, dest: 'banco', vat: 13, skipMonths: [0, 3] },
+    ],
+    expense: [
+      { desc: 'Fornecedor de café e leite', cat: 'material', amount: 1400, dest: 'banco', vat: 23 },
+      { desc: 'Padaria e pastelaria', cat: 'material', amount: 1100, dest: 'banco', vat: 13 },
+      { desc: 'Ordenados (2 colaboradores)', cat: 'outros', amount: 2600, dest: 'banco', flat: true },
+      { desc: 'Produtos de limpeza', cat: 'limpeza', amount: 130, dest: 'caixa', vat: 23 },
+    ],
+  }),
+  plan: {
+    monthly_fixed: 1960, productive_hours: 360, reserve_basis: 'umsatz',
+    items: [
+      { name: 'Café expresso', durationMin: '3', price: '0.90', qty: '2200', material: '0.18' },
+      { name: 'Galão / Cappuccino', durationMin: '5', price: '1.60', qty: '900', material: '0.42' },
+      { name: 'Tosta mista', durationMin: '8', price: '3.20', qty: '380', material: '1.10' },
+      { name: 'Menu almoço', durationMin: '15', price: '8.50', qty: '260', material: '3.40' },
+    ],
+  },
+}
+
+const ACC_BY_EMAIL = {
+  'demo.gruenbau@lc-demo.com': accGB,
+  'demo.cafelisboa@lc-demo.com': accCL,
+}
+
+// Semeia o módulo de Contabilidade. Idempotente: limpa as linhas de demo antes
+// de reinserir (estas tabelas não têm chave única por utilizador).
+async function seedAccounting(uid, demo) {
+  const acc = ACC_BY_EMAIL[demo.email]
+  if (!acc) return
+  for (const tbl of ['cash_entries', 'catalog_items', 'recurring_expenses', 'clients', 'fiscal_obligations']) {
+    const { error } = await admin.from(tbl).delete().eq('user_id', uid)
+    if (error) throw new Error(`limpar ${tbl}: ${error.message}`)
+  }
+  const withUid = (arr) => arr.map((r) => ({ ...r, user_id: uid }))
+  const steps = [
+    ['catálogo', admin.from('catalog_items').insert(withUid(acc.catalog))],
+    ['clientes', admin.from('clients').insert(withUid(acc.clients))],
+    ['despesas recorrentes', admin.from('recurring_expenses').insert(withUid(acc.recurring))],
+    ['obrigações fiscais', admin.from('fiscal_obligations').insert(withUid(acc.obligations.map((o) => ({ ...o, source: 'manual' }))))],
+    ['livro de caixa', admin.from('cash_entries').insert(withUid(acc.entries))],
+    ['planeamento mensal', admin.from('monthly_plans').upsert({ user_id: uid, ...acc.plan, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })],
+  ]
+  for (const [label, promise] of steps) {
+    const { error } = await promise
+    if (error) throw new Error(`${label}: ${error.message}`)
+    console.log(`  ✓ contab.: ${label}`)
+  }
+}
+
 // ── execução ──
 async function findUserByEmail(email) {
   const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
@@ -184,9 +350,11 @@ async function seed(demo) {
   }
   const uid = user.id
 
+  const acc = ACC_BY_EMAIL[demo.email]
   const steps = [
-    ['perfil (ESG)',        admin.from('profiles').upsert({ id: uid, role: 'user', platform: 'esg' })],
-    ['dados da empresa',    admin.from('company_settings').upsert({ user_id: uid, company_name: demo.name, country: demo.country, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })],
+    // Acesso às duas plataformas (Contabilidade + ESG)
+    ['perfil (both)',       admin.from('profiles').upsert({ id: uid, role: 'user', platform: 'both' })],
+    ['dados da empresa',    admin.from('company_settings').upsert({ user_id: uid, company_name: demo.name, country: demo.country, updated_at: new Date().toISOString(), ...(acc?.settings || {}) }, { onConflict: 'user_id' })],
     ['diagnóstico (28 Q)',  admin.from('esg_diagnostics').upsert({ user_id: uid, reference_year: demo.referenceYear, answers: demo.answers, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })],
     ['materialidade (16 T)', admin.from('esg_materiality').upsert({ user_id: uid, topics: demo.topics, threshold: demo.threshold, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })],
   ]
@@ -195,6 +363,7 @@ async function seed(demo) {
     if (error) throw new Error(`${label}: ${error.message}`)
     console.log(`  ✓ ${label}`)
   }
+  await seedAccounting(uid, demo)
 }
 
 try {
