@@ -185,7 +185,10 @@ gruenbau.financials = {
   anticorr: { impact: 2, investment: '', saving: '', note: 'Requisito para concursos públicos' },
 }
 gruenbau.projects = [
-  { topic_key: 'clima', name: 'Frota elétrica (fase 1)', description: 'Substituição de 2 carrinhas a diesel por elétricas.', status: 'active', start_month: '2026-03', progress: 35, investment: 32000, annual_saving: 6500, expected_impact: '85 t CO₂ → 60 t CO₂' },
+  { topic_key: 'clima', name: 'Substituição da Frota por Veículos Elétricos',
+    description: 'Substituição faseada das 6 carrinhas e viaturas ligeiras a gasóleo por veículos 100% elétricos, ao longo de 3 anos (2 por ano), com instalação de 4 pontos de carregamento no estaleiro. Reduz o Scope 1 (combustão da frota), elimina o custo de gasóleo e beneficia de menor manutenção e de incentivos fiscais à mobilidade elétrica.',
+    status: 'active', start_month: '2026-03', progress: 30, investment: 96000, annual_saving: 16800,
+    expected_impact: 'Scope 1 da frota: −28 t CO₂/ano · CO₂ total 85 t → 57 t até 2028' },
   { topic_key: 'clima', name: 'Fotovoltaico no armazém', description: 'Instalação de 30 kWp no telhado do armazém.', status: 'planned', start_month: '2026-09', progress: 0, investment: 18000, annual_saving: 4200, expected_impact: 'Autogeração 20% → 45%' },
   { topic_key: 'residuos', name: 'Separação de resíduos em obra', description: 'Contentores separados + parceiro de reciclagem.', status: 'active', start_month: '2026-01', progress: 60, investment: 6000, annual_saving: 4000, expected_impact: '58% → 80% reciclado' },
 ]
@@ -207,6 +210,10 @@ cafelisboa.financials = {
   clientes: { impact: 3, investment: '', saving: '', note: 'Confiança do bairro = receita recorrente' },
 }
 cafelisboa.projects = [
+  { topic_key: 'clima', name: 'Implantação de Painéis Fotovoltaicos',
+    description: 'Instalação de um sistema solar fotovoltaico de 8 kWp no telhado do café para autoconsumo, cobrindo os equipamentos de maior consumo (máquina de café, frigoríficos e ar condicionado). Reduz a fatura de eletricidade e a dependência da rede, aumentando a percentagem de energia renovável e a autogeração — hoje a zero.',
+    status: 'planned', start_month: '2026-10', progress: 10, investment: 9500, annual_saving: 1750,
+    expected_impact: 'Autogeração 0% → 35% · eletricidade renovável 55% → 85% · Scope 2 −2 t CO₂/ano' },
   { topic_key: 'residuos', name: 'Copos compostáveis + retornáveis', description: 'Fornecedor local + desconto para copo próprio.', status: 'active', start_month: '2026-04', progress: 50, investment: 1200, annual_saving: 900, expected_impact: '100% descartáveis → 100% compostáveis' },
   { topic_key: 'agua', name: 'Torneiras temporizadas', description: 'Torneiras temporizadas + máquina de lavar eficiente.', status: 'planned', start_month: '2026-10', progress: 0, investment: 800, annual_saving: 600, expected_impact: '260 m³ → 200 m³' },
 ]
