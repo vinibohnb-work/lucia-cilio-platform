@@ -75,6 +75,25 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
       **Porquê:** *"o meu receio é dispersar... que façamos isto de uma forma organizada"*.
 - [ ] **Agendamento do diagnóstico inicial (20 min)** a partir do formulário.
 
+## 🟡 P3 — Contabilidade (de anotações anteriores)
+
+- [ ] **Reserva pessoal** — campo na página da Empresa (quanto o empresário quer reservar
+      para si, à semelhança da reserva de IR).
+      **Nota:** não confundir com os movimentos privados do Livro de Caixa
+      (*Privatentnahme/Privateinlage*), que já existem — isto é uma **meta de reserva** configurável.
+- [ ] **Painel consolidado de reservas no Dashboard** — IVA + IR + pessoal numa lista
+      expansível (recolhida por omissão).
+      **Estado atual:** o IVA e a reserva de IR já aparecem, mas em cartões separados e sem
+      a reserva pessoal. Falta juntar e permitir expandir.
+
+## 🟡 P3 — Onboarding
+
+- [ ] **Página de onboarding de clientes** — checklist/formulário de entrada do cliente novo
+      (dados da empresa, documentos, acessos, expectativas).
+- [ ] **Botão "Fazer Onboarding"** na visão do administrador, para a Lúcia conduzir o processo
+      com o cliente (ou o próprio cliente preencher).
+      **Liga-se a:** guião de reunião e diagnóstico inicial de 20 min.
+
 ## 🟡 P3 — Gestão interna
 
 - [ ] **Dashboard macro** — próximos pagamentos, pagamentos em aberto, faturação total.
@@ -130,3 +149,14 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
 - [x] Acesso simultâneo às duas plataformas (`both`) + toggle no menu, também em "Ver como"
 - [x] Performance: code splitting por rota (arranque de 830 kB → 477 kB)
 - [x] CRM kanban, Financeiro, Clientes Ativos, ficha do cliente com documentos e histórico
+- [x] **Despesas recorrentes** (catálogo) + integração no fluxo de caixa: o Livro de Caixa mostra
+      "saídas previstas" (recorrentes devidas ainda por confirmar) e liga cada lançamento à despesa
+- [x] **Calendário fiscal automático** — gera prazos de IVA e Segurança Social a partir dos Dados
+      da Empresa, com sistema de notificações (sino + alertas por proximidade)
+- [x] **Visão do IVA** no Dashboard — IVA liquidado, dedutível e a entregar/recuperar
+- [x] **Reserva de IR** com percentagem definida pelo utilizador (editável na Empresa e na
+      Rücklagen & Steuern; por omissão 25%)
+- [x] **Material consumido** na calculadora de serviços (quantidade × custo unitário)
+- [x] **Margem de contribuição** e ponto de equilíbrio no Dashboard
+
+> Descartado por decisão do Vinícius: **versão "sem login"** — *"desconsidere, isso não é necessário"*.
