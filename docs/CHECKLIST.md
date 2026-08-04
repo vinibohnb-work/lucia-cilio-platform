@@ -9,25 +9,10 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
 
 ---
 
-## 🔴 P1 — Rápidas e de alto impacto (fazer primeiro)
+> **Fora do nosso âmbito:** revisão de nomenclatura (PT-PT / DE / EN) — a Lúcia faz esta
+> revisão e envia-nos as correções.
 
-- [ ] **Disclaimer de valores estimados** — nota visível nas páginas com cálculos fiscais:
-      *"Valores estimados com base nos lançamentos. Confirme sempre os valores finais com a
-      Autoridade Tributária ou com o seu contabilista certificado."*
-      **Porquê:** sugestão do Filipe; protege a Lúcia — *"a tua plataforma disse que eu ia pagar isto"*.
-      Hoje há notas de estimativa dispersas (Dashboard, Obrigações, Rücklagen) mas sem aviso
-      consistente nem referência às finanças/contabilista. Aplicar a: Dashboard, Rücklagen &
-      Steuern, Obrigações Fiscais, Precificação, Planeamento Mensal.
-- [ ] **Revisão de nomenclatura PT-PT** — rever todos os termos para português de Portugal.
-      **Porquê:** *"toda a nomenclatura dos pontos... que seja português daqui"*. ⚠️ A Lúcia
-      ficou de fazer esta revisão ("tenho de sentar e ver") — combinar como nos envia as correções.
-- [ ] **Revisão da nomenclatura DE e EN** — a seguir à PT.
-- [ ] **Inglês = regras de Portugal** — a versão EN deve usar a mesma configuração fiscal/Segurança
-      Social de PT (o DE mantém as regras alemãs).
-      **Porquê:** *"o inglês eu quero que seja só Portugal... não sou certificada na Inglaterra"*;
-      serve os muitos estrangeiros em Portugal. **Verificar** se hoje o EN herda regras erradas.
-
-## 🟠 P2 — CRM (o foco atual)
+## 🔴 P1 — CRM (o foco atual)
 
 - [ ] **Campo de origem do lead** (`crm_leads.source`) — Instagram · formulário · site · manual · indicação.
       **Porquê:** base para tudo o resto; a tabela ainda não tem este campo.
@@ -49,7 +34,7 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
 - [ ] **Lead "fechado" → contrato no Financeiro** (com valor).
       **Porquê:** *"o que é que passou para cliente, em que valor"*.
 
-## 🟠 P2 — Acessos e equipa
+## 🟠 P2 — Acessos e equipa (idem)
 
 - [ ] **Papel "comercial"** — acesso apenas ao CRM, para a assistente (Carla), que entra na próxima semana.
       **Porquê:** *"é possível ela ter acesso só a esta parte, CRM?"*. Hoje só existem os papéis
@@ -158,5 +143,10 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
       Rücklagen & Steuern; por omissão 25%)
 - [x] **Material consumido** na calculadora de serviços (quantidade × custo unitário)
 - [x] **Margem de contribuição** e ponto de equilíbrio no Dashboard
+- [x] **Disclaimer de valores estimados** (`EstimateNote`, trilingue) no Dashboard, Rücklagen &
+      Steuern, Obrigações Fiscais, Precificação e Planeamento Mensal
+- [x] **Inglês com as regras de Portugal** — verificado, já era o comportamento: as regras fiscais
+      seguem sempre o campo *País* da empresa (PT/DE), nunca a língua da interface; não existe
+      empresa inglesa (país limitado a PT/DE na interface e por restrição na base de dados)
 
 > Descartado por decisão do Vinícius: **versão "sem login"** — *"desconsidere, isso não é necessário"*.

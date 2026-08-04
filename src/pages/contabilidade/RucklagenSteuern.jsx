@@ -7,6 +7,7 @@ import { getCompanySettings, saveCompanySettings } from '../../lib/companySettin
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 import { FlagDE } from '../../components/Flag'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import EstimateNote from '../../components/EstimateNote'
 
 const fmt2 = (n) => `${(Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) ? n : 0 }
@@ -503,9 +504,7 @@ export default function RucklagenSteuern() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginTop: '20px', fontSize: '11.5px', color: t.subtle }}>
-        <span>ⓘ</span><span>{L.disclaimer}</span>
-      </div>
+      <EstimateNote />
     </div>
   )
 }

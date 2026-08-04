@@ -5,6 +5,7 @@ import { getCompanySettings } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
 import { computeTreatment } from '../../lib/treatmentCalc'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
+import EstimateNote from '../../components/EstimateNote'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -595,6 +596,7 @@ export default function Precificacao() {
       {type === 'produto'    && <ProdutoCalculator    lang={lang} irDefault={irDefault} key={lang} />}
       {type === 'tratamento' && <TratamentoCalculator lang={lang} irDefault={irDefault} settings={settings} key={lang} />}
 
+      <EstimateNote />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { getCompanySettings } from '../../lib/companySettings'
 import { overheadPerHour, computePlanTotals } from '../../lib/planCalc'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import EstimateNote from '../../components/EstimateNote'
 
 const fmt = (n) => (Number(n) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const EMPTY_ROW = { name: '', durationMin: '', price: '', qty: '', material: '' }
@@ -222,6 +223,8 @@ export default function PlaneamentoMensal() {
       </div>
 
       {!isViewing && <button onClick={addRow} style={{ marginTop: '12px', padding: '9px 16px', background: t.cardBg, border: `1px dashed ${t.cardBorder}`, borderRadius: '9px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', color: t.textMuted }}>{L.addRow}</button>}
+
+      <EstimateNote />
     </div>
   )
 }

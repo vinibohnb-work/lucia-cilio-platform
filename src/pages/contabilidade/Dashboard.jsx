@@ -9,6 +9,7 @@ import { useEffectiveUserId } from '../../context/ViewAsContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { FlagPT } from '../../components/Flag'
+import EstimateNote from '../../components/EstimateNote'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -502,6 +503,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <EstimateNote />
     </div>
   )
 }

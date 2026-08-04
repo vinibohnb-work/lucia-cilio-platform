@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { getCompanySettings } from '../../lib/companySettings'
 import { generateFiscalCalendar } from '../../lib/fiscalCalendar'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import EstimateNote from '../../components/EstimateNote'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -265,6 +266,7 @@ export default function ObrigacoesFiscais() {
       </div>
       </div>
 
+      <EstimateNote />
     </div>
   )
 }
