@@ -14,25 +14,32 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
 
 ## 🔴 P1 — CRM (o foco atual)
 
-- [ ] **Campo de origem do lead** (`crm_leads.source`) — Instagram · formulário · site · manual · indicação.
-      **Porquê:** base para tudo o resto; a tabela ainda não tem este campo.
-- [ ] **Temperatura do lead** (quente/morno/frio) + filtro.
-      **Porquê:** *"tipo, olha, este cliente é quente, dá para tu ligar... fazer assim um filtrozinho"*.
-- [ ] **Alerta de follow-up** — cartão fica vermelho após N dias sem contacto + notificação
-      *"falar com X"*. Guardar data do último contacto.
-      **Porquê:** combinado na reunião (exemplo dos 7 dias).
+- [x] **Campo de origem do lead** (`crm_leads.source`) — Instagram, formulário, site, LinkedIn,
+      indicação, evento, manual. Etiqueta no cartão + filtro. É a base das automações.
+- [x] **Temperatura do lead** (🔥 quente / 🌤 morno / ❄ frio) + filtro e cor na margem do cartão.
+      **Porquê:** *"este cliente é quente, dá para tu ligar... fazer assim um filtrozinho"*.
+- [x] **Alerta de follow-up** — `last_contact_at` gravado; ao fim de 7 dias sem contacto em etapa
+      ativa o cartão fica vermelho, aparece banner com a contagem e há filtro "só follow-up
+      pendente" + botão "registar contacto". Etapas fechado/perdido/futuro não contam.
+- [x] **Ranking de "cliente ideal"** — pontuação 0–100 (faturação 40 · temperatura 25 · setor
+      prioritário 20 · dor identificada 15); os cartões ordenam-se por pontuação dentro de cada
+      etapa e o detalhe aparece ao passar o rato no ★.
+      **Porquê:** conceito do Igor (preço pelo valor agregado).
+      **Nota:** os setores prioritários estão em `PRIORITY_SECTORS` (`src/lib/leadScore.js`),
+      hoje construção/imobiliário/engenharia/arquitetura/indústria — fáceis de ajustar com a Lúcia.
+- [x] **Lead "fechado" → contrato no Financeiro** — botão no cartão cria o contrato em
+      `client_billing` (mensal, mês corrente) e guarda a ligação; pede o valor se ainda não existir.
+
 - [ ] **Entrada automática de leads: formulários JotForm / landing page / e-book** → CRM,
       já numa fase definida do funil.
       **Porquê:** ela vai lançar um e-book ("o que fazer depois de abrir atividade") com formulário —
       *"todos estes dados, isto é CRM, não é? São leads"*.
+      ⚠️ **Bloqueado por decisão:** falta saber que campos os formulários vão enviar. A alinhar na
+      reunião com o Filipe. O campo `source` já está pronto para os receber.
 - [ ] **Instagram → CRM**: importar os ~250 seguidores atuais (ela limpa manualmente na plataforma)
       + automação da Meta API com mensagem inicial de abordagem.
       **Porquê:** pedido repetido em duas reuniões. ⚠️ Investigar primeiro o estado atual da API da
       Meta e os custos antes de prometer prazo.
-- [ ] **Ranking de "cliente ideal"** — faturação, setor e dor, com ordenação de aderência.
-      **Porquê:** conceito do Igor (preço pelo valor agregado) — *"se ajudava muito, é um filtro"*.
-- [ ] **Lead "fechado" → contrato no Financeiro** (com valor).
-      **Porquê:** *"o que é que passou para cliente, em que valor"*.
 
 ## 🟠 P2 — Acessos e equipa (idem)
 
