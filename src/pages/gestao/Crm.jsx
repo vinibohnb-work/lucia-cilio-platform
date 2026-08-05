@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useLang } from '../../context/LangContext'
+import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
@@ -30,6 +31,7 @@ const EMPTY = { name: '', company: '', contact: '', notes: '', source: '', tempe
 export default function Crm() {
   const { lang } = useLang()
   const { t } = useTheme()
+  const { isAdmin } = useAuth()   // o Financeiro é só do admin (ver botão de contrato)
   const isMobile = useIsMobile()
 
   const [leads, setLeads] = useState([])
@@ -367,7 +369,7 @@ export default function Crm() {
                     )}
 
                     {/* Fechado → contrato no Financeiro */}
-                    {stage === 'fechado' && (
+                    {stage === 'fechado' && (isAdmin || lead.converted_billing_id) && (
                       <div style={{ marginTop: '7px' }}>
                         {lead.converted_billing_id ? (
                           <span style={{ fontSize: '10px', fontWeight: 700, color: '#0a7a3e' }}>{L.hasContract}</span>

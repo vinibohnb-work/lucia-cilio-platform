@@ -31,6 +31,7 @@ const ClientesAtivos      = lazy(() => import('./pages/gestao/ClientesAtivos'))
 const ClienteDetalhe      = lazy(() => import('./pages/gestao/ClienteDetalhe'))
 const Crm                 = lazy(() => import('./pages/gestao/Crm'))
 const Financeiro          = lazy(() => import('./pages/gestao/Financeiro'))
+const Marketing           = lazy(() => import('./pages/gestao/Marketing'))
 const Consultoria         = lazy(() => import('./pages/Consultoria'))
 
 const Dashboard           = lazy(() => import('./pages/contabilidade/Dashboard'))
@@ -117,7 +118,8 @@ function AppLayout() {
             {/* Plataforma Gestão (apenas admin, por agora) */}
             <Route path="/gestao/clientes"      element={<RoleRoute requireRole="admin"><ClientesAtivos /></RoleRoute>} />
             <Route path="/gestao/clientes/:id"  element={<RoleRoute requireRole="admin"><ClienteDetalhe /></RoleRoute>} />
-            <Route path="/gestao/crm"           element={<RoleRoute requireRole="admin"><Crm /></RoleRoute>} />
+            <Route path="/gestao/crm"           element={<RoleRoute requireRole={['admin', 'comercial']}><Crm /></RoleRoute>} />
+            <Route path="/gestao/marketing"     element={<RoleRoute requireRole={['admin', 'marketing']}><Marketing /></RoleRoute>} />
             <Route path="/gestao/financeiro"    element={<RoleRoute requireRole="admin"><Financeiro /></RoleRoute>} />
             <Route path="/gestao/acessos"       element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
             <Route path="/admin"                element={<Navigate to="/gestao/clientes" replace />} />

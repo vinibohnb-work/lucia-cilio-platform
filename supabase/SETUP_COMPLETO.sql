@@ -10,7 +10,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 create table if not exists public.profiles (
   id         uuid primary key references auth.users (id) on delete cascade,
-  role       text not null default 'user' check (role in ('user','admin')),
+  role       text not null default 'user' check (role in ('user','admin','comercial','marketing')),
   created_at timestamptz not null default now()
 );
 alter table public.profiles add column if not exists platform text not null default 'accounting';
@@ -231,6 +231,13 @@ returns boolean language sql security definer set search_path = public stable as
 $$;
 grant execute on function public.is_admin() to authenticated, anon;
 
+-- Verificação de papel reutilizável (papéis de equipa: comercial, marketing)
+create or replace function public.has_role(roles text[])
+returns boolean language sql security definer set search_path = public stable as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = any(roles));
+$$;
+grant execute on function public.has_role(text[]) to authenticated, anon;
+
 do $$
 declare tbl text;
 begin
@@ -305,8 +312,10 @@ create table if not exists public.crm_leads (
 create index if not exists idx_crm_stage on public.crm_leads (stage, updated_at desc);
 alter table public.crm_leads enable row level security;
 drop policy if exists "crm_admin_all" on public.crm_leads;
-create policy "crm_admin_all" on public.crm_leads
-  for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "crm_admin_all" on public.crm_leads;
+create policy "crm_staff_all" on public.crm_leads
+  for all using (public.has_role(array['admin','comercial']))
+  with check (public.has_role(array['admin','comercial']));
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 11. FINANCEIRO DA GESTÃO (contratos + recebimentos dos clientes da Lúcia)

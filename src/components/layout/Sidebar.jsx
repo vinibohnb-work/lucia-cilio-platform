@@ -30,6 +30,8 @@ const IconRucklagen = () => <Icon><path d="M12 3 4 6v6c0 4.5 3.2 7.5 8 9 4.8-1.5
 const IconDiag = () => <Icon><path d="M12 21c4-2.5 6-6 6-11a6 6 0 0 0-12 0c0 5 2 8.5 6 11z" transform="scale(1)"/><path d="M12 3c0 6 0 12 0 16" strokeWidth="1.4"/></Icon>
 const IconMaterial = () => <Icon><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/></Icon>
 const IconKpi = () => <Icon><path d="M4 20V4M4 20h16"/><path d="M8 16l3-4 3 2 4-6" strokeWidth="1.6"/></Icon>
+// Megafone — Marketing
+const IconMarketing = () => <Icon><path d="M4 10v4h3l6 3.5v-11L7 10H4z"/><path d="M17 9.5a3.5 3.5 0 0 1 0 5" strokeWidth="1.6"/></Icon>
 const IconProjetos = () => <Icon><path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.2h6.5a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></Icon>
 const IconRelatorios = () => <Icon><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18M8.5 13h7M8.5 16.5h7" strokeWidth="1.4"/></Icon>
 const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
@@ -62,12 +64,14 @@ const NAV = {
       { to: '/consultoria',       Icon: IconCaixa,       labelKey: 'nav_consultoria' },
     ]},
   ],
+  // roles: quem vê cada item (ausente = todos). Papéis de equipa só veem a sua área.
   management: [
     { key: 'section_gestao', items: [
-      { to: '/gestao/clientes',   Icon: IconClientes, labelKey: 'nav_clientes_ativos' },
-      { to: '/gestao/crm',        Icon: IconKpi,      labelKey: 'nav_crm' },
-      { to: '/gestao/financeiro', Icon: IconCaixa,    labelKey: 'nav_fin_gestao' },
-      { to: '/gestao/acessos',    Icon: IconAdmin,    labelKey: 'nav_acessos' },
+      { to: '/gestao/clientes',   Icon: IconClientes, labelKey: 'nav_clientes_ativos', roles: ['admin'] },
+      { to: '/gestao/crm',        Icon: IconKpi,      labelKey: 'nav_crm',             roles: ['admin', 'comercial'] },
+      { to: '/gestao/marketing',  Icon: IconMarketing, labelKey: 'nav_marketing',      roles: ['admin', 'marketing'] },
+      { to: '/gestao/financeiro', Icon: IconCaixa,    labelKey: 'nav_fin_gestao',      roles: ['admin'] },
+      { to: '/gestao/acessos',    Icon: IconAdmin,    labelKey: 'nav_acessos',         roles: ['admin'] },
     ]},
   ],
 }
@@ -75,7 +79,7 @@ const NAV = {
 export default function Sidebar() {
   const { lang, setLang } = useLang()
   const { mobileOpen, setMobileOpen } = useSidebar()
-  const { user, signOut, isAdmin, platform } = useAuth()
+  const { user, signOut, isAdmin, platform, role } = useAuth()
   const { t, night, toggle } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
@@ -86,15 +90,23 @@ export default function Sidebar() {
   useEffect(() => { if (eid) getCompanySettings(eid).then(cs => setCountry(cs?.country || 'PT')) }, [eid])
   const { count: alertCount } = useFiscalAlerts(14, eid)
 
-  // O admin acede às três plataformas; utilizadores 'both' às duas (Contab.+ESG).
+  // O admin acede às três plataformas; utilizadores 'both' às duas (Contab.+ESG);
+  // os papéis de equipa (comercial/marketing) vivem só na Gestão.
   // A plataforma ativa segue o URL (o toggle apenas navega).
+  const isTeamRole = role === 'comercial' || role === 'marketing'
   const platformFromPath = pathname.startsWith('/gestao') ? 'management' : pathname.startsWith('/esg') ? 'esg' : 'accounting'
-  const viewPlatform = isAdmin
-    ? platformFromPath
-    : platform === 'both'
-      ? (platformFromPath === 'management' ? 'accounting' : platformFromPath)
-      : (platform === 'esg' ? 'esg' : 'accounting')
-  const sections = NAV[viewPlatform] || NAV.accounting
+  const viewPlatform = isTeamRole
+    ? 'management'
+    : isAdmin
+      ? platformFromPath
+      : platform === 'both'
+        ? (platformFromPath === 'management' ? 'accounting' : platformFromPath)
+        : (platform === 'esg' ? 'esg' : 'accounting')
+  // Itens sem `roles` são visíveis a todos; com `roles`, só a quem consta.
+  const sections = (NAV[viewPlatform] || NAV.accounting).map(sec => ({
+    ...sec,
+    items: sec.items.filter(it => !it.roles || it.roles.includes(role)),
+  })).filter(sec => sec.items.length > 0)
 
   const PLATFORM_HOME = { management: '/gestao/clientes', accounting: '/contabilidade/dashboard', esg: '/esg/diagnostico' }
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
@@ -189,7 +201,7 @@ export default function Sidebar() {
         </div>
         {/* Alternar plataforma — admin: 3 áreas · cliente 'both': Contab.+ESG ·
             durante "Ver como" de um cliente 'both': as 2 plataformas dele */}
-        {(isViewing ? viewAs?.platform === 'both' : (isAdmin || platform === 'both')) && (
+        {!isTeamRole && (isViewing ? viewAs?.platform === 'both' : (isAdmin || platform === 'both')) && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
             {(isAdmin && !isViewing ? [
               ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],

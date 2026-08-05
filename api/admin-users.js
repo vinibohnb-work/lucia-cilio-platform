@@ -16,6 +16,8 @@ export default async function handler(req, res) {
 
   // Plataformas válidas ('both' = acesso a Contabilidade + ESG)
   const sanePlatform = (p) => (['accounting', 'esg', 'both'].includes(p) ? p : 'accounting')
+  // Papéis válidos ('comercial' = só CRM · 'marketing' = só Marketing)
+  const saneRole = (r) => (['user', 'admin', 'comercial', 'marketing'].includes(r) ? r : 'user')
 
   // ── 1. Autenticar quem chama ──
   const token = (req.headers.authorization || '').replace('Bearer ', '').trim()
@@ -73,7 +75,7 @@ export default async function handler(req, res) {
       if (invErr) throw invErr
       await admin.from('profiles').upsert({
         id: inv.user.id,
-        role: prof?.role === 'admin' ? 'admin' : 'user',
+        role: saneRole(prof?.role),
         platform: sanePlatform(prof?.platform),
       })
       return res.status(200).json({ ok: true, resent: true, id: inv.user.id })
@@ -91,7 +93,7 @@ export default async function handler(req, res) {
       if (error) throw error
       await admin.from('profiles').upsert({
         id: data.user.id,
-        role: role === 'admin' ? 'admin' : 'user',
+        role: saneRole(role),
         platform: sanePlatform(platform),
       })
       return res.status(200).json({ ok: true, id: data.user.id, invited: true })
@@ -113,7 +115,7 @@ export default async function handler(req, res) {
         if (error) throw error
       }
       const profPatch = {}
-      if (role) profPatch.role = role
+      if (role) profPatch.role = saneRole(role)
       if (platform) profPatch.platform = sanePlatform(platform)
       if (Object.keys(profPatch).length) await admin.from('profiles').upsert({ id, ...profPatch })
       return res.status(200).json({ ok: true })

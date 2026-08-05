@@ -29,15 +29,6 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
       **Porquê:** pedido repetido em duas reuniões. ⚠️ Investigar primeiro o estado atual da API da
       Meta e os custos antes de prometer prazo.
 
-## 🟠 P2 — Acessos e equipa
-
-- [ ] **Papel "comercial"** — acesso apenas ao CRM, para a assistente (Carla), que entra na próxima semana.
-      **Porquê:** *"é possível ela ter acesso só a esta parte, CRM?"*. Hoje só existem os papéis
-      `user` e `admin` — é preciso um terceiro papel com âmbito restrito.
-- [ ] **Acesso limitado para o gestor de tráfego (Filipe)** — dados de marketing.
-      **Porquê:** *"a gente pode criar uma conta pra eles, dar um acesso limitado"* — mantém os
-      dados retidos na base dela mesmo que troque de fornecedor.
-
 ## 🟡 P3 — Consultoria e jornada do cliente
 
 - [ ] **Página de Consultoria** — validar com a Lúcia o desenho atual (hoje está focada em documentos).
@@ -120,6 +111,17 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
 # ✅ Concluído
 
 > Histórico, do mais recente para o mais antigo. Não mexer nos itens acima desta linha.
+
+### Acessos — papéis de equipa · migração 026
+- [x] **Papel "comercial"** (assistente Carla) — vê **apenas o CRM**; menu, rotas e RLS
+      restritos. O botão "criar contrato" fica escondido (o Financeiro é do admin).
+- [x] **Papel "marketing"** (gestor de tráfego Filipe) — vê **apenas a página de Marketing**.
+- [x] **Página `/gestao/marketing`** (placeholder) — espaço reservado para métricas Meta/Google,
+      origem dos leads, formulários/e-book e desempenho de conteúdos; conteúdo real a definir
+      com o Filipe.
+- [x] **Segurança:** ambos os papéis não acedem a dados de clientes (caixa, ESG, financeiro,
+      documentos) — as políticas `admin_read_all` continuam restritas a `is_admin()`; o CRM
+      passou a `has_role(['admin','comercial'])`. A gestão de utilizadores continua só do admin.
 
 ### CRM — perfil e follow-up · migração 025
 - [x] **Origem do lead** (`source`) — Instagram, formulário, site, LinkedIn, indicação, evento,

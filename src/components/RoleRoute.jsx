@@ -12,15 +12,17 @@ const Loading = () => (
   </div>
 )
 
-// Protege rotas por role. requireRole: 'admin' | 'user' | undefined (qualquer autenticado)
+// Protege rotas por papel. requireRole aceita um papel ou uma lista
+// (ex.: 'admin' ou ['admin','comercial']); undefined = qualquer autenticado.
 export default function RoleRoute({ requireRole, children }) {
   const { session, role, platform, loading } = useAuth()
 
   if (loading) return <Loading />
   if (!session) return <Navigate to="/login" replace />
 
-  if (requireRole === 'admin' && role !== 'admin') {
-    // Um utilizador normal não acede à área de admin → vai para a sua plataforma
+  const allowed = requireRole == null ? null : (Array.isArray(requireRole) ? requireRole : [requireRole])
+  if (allowed && !allowed.includes(role)) {
+    // Sem permissão para esta área → volta à página inicial do seu papel
     return <Navigate to={homePathFor(role, platform)} replace />
   }
 

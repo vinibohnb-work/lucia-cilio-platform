@@ -50,6 +50,10 @@ export function AuthProvider({ children }) {
     role,
     platform,
     isAdmin: role === 'admin',
+    // Papéis de equipa da Lúcia (acesso restrito a uma área da Gestão)
+    isComercial: role === 'comercial',
+    isMarketing: role === 'marketing',
+    isStaff: role === 'admin' || role === 'comercial' || role === 'marketing',
     loading,
     signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
     signOut: () => supabase.auth.signOut(),

@@ -5,9 +5,12 @@ import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useFiscalAlerts } from '../hooks/useFiscalAlerts'
 import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
+import { useAuth } from '../context/AuthContext'
 
 // Sino de notificações de obrigações fiscais (vencidas / a vencer).
 // Aparece apenas quando há alertas. Clicar num item abre Obrigações Fiscais.
+// Não se aplica aos papéis de equipa (comercial/marketing), que não têm
+// contabilidade nem acesso a Obrigações Fiscais.
 export default function FiscalBell() {
   const { lang } = useLang()
   const { t } = useTheme()
@@ -15,7 +18,9 @@ export default function FiscalBell() {
   const navigate = useNavigate()
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
-  const { alerts, count } = useFiscalAlerts(14, eid)
+  const { role } = useAuth()
+  const isTeamRole = role === 'comercial' || role === 'marketing'
+  const { alerts, count } = useFiscalAlerts(14, isTeamRole ? null : eid)
   const [open, setOpen] = useState(false)
 
   // Durante "Ver como", o banner ocupa o topo — evita sobreposição.

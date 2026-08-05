@@ -27,6 +27,7 @@ export default function AdminHome() {
     new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
     platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer', created: 'Erstellt',
+    roleComercial: 'Vertrieb (nur CRM)', roleMarketing: 'Marketing (nur Marketing)',
     lastLogin: 'Letzter Login', save: 'Speichern', invite: 'Einladung senden',
     edit: 'Bearbeiten', del: 'Löschen', loading: 'Wird geladen…', empty: 'Keine Benutzer.', never: 'nie',
     inviteHint: 'Es wird eine E-Mail mit einem Link zum Festlegen des Passworts gesendet.',
@@ -40,6 +41,7 @@ export default function AdminHome() {
     new: '+ New User', email: 'Email', name: 'Display name',
     platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG',
     role: 'Role', admin: 'Administrator', userRole: 'User', created: 'Created',
+    roleComercial: 'Sales (CRM only)', roleMarketing: 'Marketing (Marketing only)',
     lastLogin: 'Last login', save: 'Save', invite: 'Send invitation',
     edit: 'Edit', del: 'Delete', loading: 'Loading…', empty: 'No users.', never: 'never',
     inviteHint: 'An email will be sent with a link for the user to set their password.',
@@ -53,6 +55,7 @@ export default function AdminHome() {
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
     platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador', created: 'Criado',
+    roleComercial: 'Comercial (só CRM)', roleMarketing: 'Marketing (só Marketing)',
     lastLogin: 'Último acesso', save: 'Guardar', invite: 'Enviar convite',
     edit: 'Editar', del: 'Eliminar', loading: 'A carregar…', empty: 'Sem utilizadores.', never: 'nunca',
     inviteHint: 'Será enviado um e-mail com um link para o utilizador definir a palavra-passe.',
@@ -98,7 +101,13 @@ export default function AdminHome() {
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT') : L.never
   const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, fontSize: '13px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const roleStyle = { admin: { bg: t.chipBg, ink: t.chipText }, user: { bg: t.chipBg, ink: t.chipText } }
+  const roleStyle = {
+    admin:     { bg: t.chipBg, ink: t.chipText },
+    user:      { bg: t.chipBg, ink: t.chipText },
+    comercial: { bg: '#e8f0fb', ink: '#1e60c8' },
+    marketing: { bg: '#fdeef7', ink: '#9d174d' },
+  }
+  const roleLabel = (r) => r === 'admin' ? L.admin : r === 'comercial' ? L.roleComercial : r === 'marketing' ? L.roleMarketing : L.userRole
   const platLabel = (p) => (p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : L.platAcc)
   const platChip = (p) => p === 'esg' ? { bg: '#e8f0fb', ink: '#1e60c8' } : p === 'both' ? { bg: '#ede9fe', ink: '#5b21b6' } : { bg: '#eaf5ee', ink: '#0a7a3e' }
   const GRID = '1.1fr 0.9fr 158px 108px 90px 100px 188px'
@@ -129,7 +138,7 @@ export default function AdminHome() {
               <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
             </div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.role}</div>
-              <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option></select>
+              <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option><option value="comercial">{L.roleComercial}</option><option value="marketing">{L.roleMarketing}</option></select>
             </div>
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
               <button onClick={submit} disabled={saving} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.invite : L.save)}</button>
@@ -159,7 +168,7 @@ export default function AdminHome() {
               <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>({lang === 'de' ? 'ich' : lang === 'en' ? 'me' : 'eu'})</span>}</div>
               <div style={{ color: t.text }}>{u.display_name || '—'}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: platChip(u.platform).bg, color: platChip(u.platform).ink, whiteSpace: 'nowrap' }}>{platLabel(u.platform)}</span></div>
-              <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: rs.bg, color: rs.ink }}>{u.role === 'admin' ? L.admin : L.userRole}</span></div>
+              <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: rs.bg, color: rs.ink }}>{roleLabel(u.role)}</span></div>
               <div style={{ color: t.textMuted }}>{fmtDate(u.created_at)}</div>
               <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : isPending ? <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span> : '—'}</div>
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
