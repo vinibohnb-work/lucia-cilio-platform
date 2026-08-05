@@ -4,8 +4,8 @@ import { useTheme } from '../context/ThemeContext'
 // Aviso de valores estimados — pedido da Lúcia (sugestão do Filipe) para as
 // páginas com cálculos fiscais: as Finanças podem considerar regras, taxas ou
 // arredondamentos diferentes, e o valor final não pode ser imputado à plataforma.
-// Usar no fim das páginas de cálculo (Dashboard, Rücklagen, Obrigações,
-// Precificação, Planeamento Mensal).
+// Usar no topo das páginas de cálculo (Dashboard, Rücklagen, Obrigações,
+// Precificação, Planeamento Mensal), logo abaixo do cabeçalho.
 
 export default function EstimateNote({ style }) {
   const { lang } = useLang()
@@ -20,7 +20,7 @@ export default function EstimateNote({ style }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'flex-start', gap: '9px',
-      marginTop: '22px', padding: '11px 14px', borderRadius: '11px',
+      marginBottom: '18px', padding: '11px 14px', borderRadius: '11px',
       background: t.softCardBg, border: `1px solid ${t.cardBorder}`,
       fontSize: '11.5px', lineHeight: 1.5, color: t.textMuted,
       ...style,

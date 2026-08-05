@@ -579,6 +579,7 @@ export default function Precificacao() {
 
   return (
     <div style={{ width: '100%' }}>
+      <EstimateNote />
 
       {/* Type selector */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -596,7 +597,6 @@ export default function Precificacao() {
       {type === 'produto'    && <ProdutoCalculator    lang={lang} irDefault={irDefault} key={lang} />}
       {type === 'tratamento' && <TratamentoCalculator lang={lang} irDefault={irDefault} settings={settings} key={lang} />}
 
-      <EstimateNote />
     </div>
   )
 }

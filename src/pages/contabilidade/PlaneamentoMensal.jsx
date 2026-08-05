@@ -143,6 +143,8 @@ export default function PlaneamentoMensal() {
         </div>
       </div>
 
+      <EstimateNote />
+
       {/* Base do planeamento */}
       <div style={{ ...card, padding: '16px 20px', marginBottom: '16px' }}>
         <div style={{ fontSize: '11px', fontWeight: 800, color: t.accent, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '12px' }}>{L.settings}</div>
@@ -224,7 +226,6 @@ export default function PlaneamentoMensal() {
 
       {!isViewing && <button onClick={addRow} style={{ marginTop: '12px', padding: '9px 16px', background: t.cardBg, border: `1px dashed ${t.cardBorder}`, borderRadius: '9px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', color: t.textMuted }}>{L.addRow}</button>}
 
-      <EstimateNote />
     </div>
   )
 }

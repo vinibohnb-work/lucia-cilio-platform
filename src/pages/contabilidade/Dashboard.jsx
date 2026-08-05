@@ -249,6 +249,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ width: '100%' }}>
+      <EstimateNote />
 
       {/* Toggle período */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -503,7 +504,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <EstimateNote />
     </div>
   )
 }

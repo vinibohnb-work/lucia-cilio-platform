@@ -283,6 +283,8 @@ export default function RucklagenSteuern() {
         </div>
       </div>
 
+      <EstimateNote />
+
       <div style={gridMain}>
         {/* ─── Coluna principal ─── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
@@ -504,7 +506,6 @@ export default function RucklagenSteuern() {
         </div>
       </div>
 
-      <EstimateNote />
     </div>
   )
 }

@@ -157,6 +157,7 @@ export default function ObrigacoesFiscais() {
 
   return (
     <div style={{ width: '100%' }}>
+      <EstimateNote />
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
@@ -266,7 +267,6 @@ export default function ObrigacoesFiscais() {
       </div>
       </div>
 
-      <EstimateNote />
     </div>
   )
 }
