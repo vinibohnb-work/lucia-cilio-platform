@@ -63,6 +63,16 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
 
 ## 🟡 P3 — Onboarding
 
+- [ ] **Melhorar o email de convite de acesso** — hoje é o **template genérico do Supabase**,
+      sem identidade da Lúcia. É o primeiro contacto do cliente com a plataforma.
+      **A rever:** identidade visual (logótipo e cores), texto de boas-vindas em nome da Lúcia,
+      dizer **para que serve** o acesso, avisar de forma clara que o link **expira em 24 horas**
+      e o que fazer se expirar (pedir novo convite), e o idioma do email (hoje só existe uma
+      versão; a plataforma é PT/DE/EN).
+      **Onde se altera:** Supabase → Authentication → Email Templates ("Invite user"). O destino
+      já está correto (`/definir-senha`).
+      **Liga-se a:** a Lúcia já teve um convite por aceitar e foi preciso reenviar — o botão de
+      reenvio existe, mas um email mais claro reduz a necessidade dele.
 - [ ] **Página de onboarding de clientes** — checklist/formulário de entrada do cliente novo
       (dados da empresa, documentos, acessos, expectativas).
 - [ ] **Botão "Fazer Onboarding"** na visão do administrador, para a Lúcia conduzir o processo
