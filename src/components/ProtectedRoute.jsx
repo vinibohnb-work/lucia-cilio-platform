@@ -1,8 +1,9 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function ProtectedRoute({ children }) {
-  const { session, loading } = useAuth()
+  const { session, loading, mustChangePassword } = useAuth()
+  const { pathname } = useLocation()
 
   if (loading) {
     return (
@@ -17,6 +18,11 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!session) return <Navigate to="/login" replace />
+
+  // Palavra-passe temporária por trocar: só se sai daqui depois de a mudar.
+  if (mustChangePassword && pathname !== '/definir-senha') {
+    return <Navigate to="/definir-senha" replace />
+  }
 
   return children
 }

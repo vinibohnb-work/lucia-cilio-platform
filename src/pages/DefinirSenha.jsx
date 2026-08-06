@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
 import { homePathFor } from '../lib/platformHome'
+import { checkPassword, isPasswordValid, ruleLabel } from '../lib/passwordPolicy'
 import Flag from '../components/Flag'
 
 const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -12,7 +13,7 @@ const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="non
 
 export default function DefinirSenha() {
   const navigate = useNavigate()
-  const { session, role, platform, loading: authLoading } = useAuth()
+  const { session, role, platform, loading: authLoading, mustChangePassword, clearMustChangePassword } = useAuth()
   const { lang, setLang } = useLang()
   const { t, night, toggle } = useTheme()
 
@@ -26,29 +27,43 @@ export default function DefinirSenha() {
 
   const L = lang === 'de' ? {
     title: 'Passwort festlegen', subtitle: 'Legen Sie Ihr Zugangspasswort fest, um fortzufahren.',
-    pw: 'Passwort', pw2: 'Passwort bestätigen', save: 'Festlegen & anmelden', saving: 'Wird gespeichert…',
-    show: 'Anzeigen', hide: 'Verbergen', mismatch: 'Die Passwörter stimmen nicht überein.', short: 'Mindestens 6 Zeichen.',
-    invalid: 'Link ungültig oder abgelaufen. Bitten Sie um eine neue Einladung.', checking: 'Einladung wird geprüft…',
+    titleChange: 'Neues Passwort festlegen',
+    subtitleChange: 'Sie haben ein vorläufiges Passwort erhalten. Legen Sie aus Sicherheitsgründen Ihr eigenes fest, um fortzufahren.',
+    pw: 'Neues Passwort', pw2: 'Passwort bestätigen', save: 'Festlegen & fortfahren', saving: 'Wird gespeichert…',
+    show: 'Anzeigen', hide: 'Verbergen', mismatch: 'Die Passwörter stimmen nicht überein.',
+    reqs: 'Das Passwort muss enthalten:', notMet: 'Das Passwort erfüllt noch nicht alle Anforderungen.',
+    invalid: 'Link ungültig oder abgelaufen. Bitten Sie um ein neues Zugangspasswort.', checking: 'Wird geprüft…',
   } : lang === 'en' ? {
     title: 'Set your password', subtitle: 'Set your access password to continue.',
-    pw: 'Password', pw2: 'Confirm password', save: 'Set & sign in', saving: 'Saving…',
-    show: 'Show', hide: 'Hide', mismatch: 'The passwords do not match.', short: 'At least 6 characters.',
-    invalid: 'Link invalid or expired. Please request a new invitation.', checking: 'Verifying invitation…',
+    titleChange: 'Set a new password',
+    subtitleChange: 'You received a temporary password. For security, set your own before continuing.',
+    pw: 'New password', pw2: 'Confirm password', save: 'Set & continue', saving: 'Saving…',
+    show: 'Show', hide: 'Hide', mismatch: 'The passwords do not match.',
+    reqs: 'The password must contain:', notMet: 'The password does not meet all requirements yet.',
+    invalid: 'Link invalid or expired. Please ask for a new access password.', checking: 'Verifying…',
   } : {
     title: 'Definir palavra-passe', subtitle: 'Defina a sua palavra-passe de acesso para continuar.',
-    pw: 'Palavra-passe', pw2: 'Confirmar palavra-passe', save: 'Definir e entrar', saving: 'A guardar…',
-    show: 'Mostrar', hide: 'Ocultar', mismatch: 'As palavras-passe não coincidem.', short: 'Mínimo de 6 caracteres.',
-    invalid: 'Ligação inválida ou expirada. Peça um novo convite.', checking: 'A validar o convite…',
+    titleChange: 'Definir nova palavra-passe',
+    subtitleChange: 'Recebeu uma palavra-passe temporária. Por segurança, defina a sua antes de continuar.',
+    pw: 'Nova palavra-passe', pw2: 'Confirmar palavra-passe', save: 'Definir e continuar', saving: 'A guardar…',
+    show: 'Mostrar', hide: 'Ocultar', mismatch: 'As palavras-passe não coincidem.',
+    reqs: 'A palavra-passe deve conter:', notMet: 'A palavra-passe ainda não cumpre todos os requisitos.',
+    invalid: 'Ligação inválida ou expirada. Peça uma nova palavra-passe de acesso.', checking: 'A validar…',
   }
+
+  const rules = checkPassword(pw)
 
   async function handleSubmit(e) {
     e.preventDefault(); setError('')
-    if (pw.length < 6) { setError(L.short); return }
+    if (!isPasswordValid(pw)) { setError(L.notMet); return }
     if (pw !== pw2) { setError(L.mismatch); return }
     setSaving(true)
     const { error } = await supabase.auth.updateUser({ password: pw })
+    if (error) { setSaving(false); setError(error.message); return }
+    // Levanta a exigência de mudança (função de privilégio mínimo no Supabase)
+    await supabase.rpc('clear_must_change_password')
+    clearMustChangePassword?.()
     setSaving(false)
-    if (error) { setError(error.message); return }
     navigate(homePathFor(role, platform), { replace: true })
   }
 
@@ -66,10 +81,10 @@ export default function DefinirSenha() {
       </div>
 
       <div style={{ width: '400px', maxWidth: '100%', borderRadius: '20px', padding: '40px 38px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.loginShadow }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '26px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '24px' }}>
           <img src="/logo.png" alt="LC" style={{ width: '68px', height: '68px', objectFit: 'contain', marginBottom: '14px' }} />
-          <h1 style={{ fontFamily: t.fontDisplay, fontSize: '24px', fontWeight: 600, color: t.heading, margin: '0 0 6px' }}>{L.title}</h1>
-          <p style={{ fontSize: '13px', color: t.textMuted, margin: 0 }}>{L.subtitle}</p>
+          <h1 style={{ fontFamily: t.fontDisplay, fontSize: '24px', fontWeight: 600, color: t.heading, margin: '0 0 6px' }}>{mustChangePassword ? L.titleChange : L.title}</h1>
+          <p style={{ fontSize: '13px', color: t.textMuted, margin: 0, lineHeight: 1.5 }}>{mustChangePassword ? L.subtitleChange : L.subtitle}</p>
         </div>
 
         {noSession ? (
@@ -85,9 +100,23 @@ export default function DefinirSenha() {
                 <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: t.accent }}>{showPw ? L.hide : L.show}</button>
               </div>
             </div>
+
+            {/* Requisitos — visíveis desde o início e a validar em tempo real */}
+            <div style={{ background: t.softCardBg, borderRadius: '10px', padding: '11px 13px' }}>
+              <div style={{ fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '7px' }}>{L.reqs}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {rules.map(r => (
+                  <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '11.5px', color: r.ok ? '#0a7a3e' : t.subtle }}>
+                    <span style={{ width: '13px', textAlign: 'center', fontWeight: 800 }}>{r.ok ? '✓' : '○'}</span>
+                    <span>{ruleLabel(r, lang)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div>{label(L.pw2)}<input type={showPw ? 'text' : 'password'} value={pw2} onChange={e => setPw2(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={inputStyle} /></div>
             {error && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: 600 }}>{error}</div>}
-            <button type="submit" disabled={saving} style={{ marginTop: '8px', width: '100%', padding: '13px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', background: t.btnBg, color: t.btnInk }}>{saving ? L.saving : L.save}</button>
+            <button type="submit" disabled={saving} style={{ marginTop: '4px', width: '100%', padding: '13px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', background: t.btnBg, color: t.btnInk }}>{saving ? L.saving : L.save}</button>
           </form>
         )}
       </div>

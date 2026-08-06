@@ -441,6 +441,20 @@ alter table public.crm_leads add constraint crm_leads_source_chk
 update public.crm_leads set last_contact_at = updated_at where last_contact_at is null;
 create index if not exists idx_crm_followup on public.crm_leads (last_contact_at);
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- 15. PALAVRA-PASSE PRÉ-DEFINIDA (migração 027)
+-- ─────────────────────────────────────────────────────────────────────────
+alter table public.profiles
+  add column if not exists must_change_password boolean not null default false;
+
+-- Privilégio mínimo: só limpa esta coluna e só na linha do próprio utilizador
+-- (uma política de UPDATE genérica deixaria o utilizador mudar o seu `role`).
+create or replace function public.clear_must_change_password()
+returns void language sql security definer set search_path = public as $$
+  update public.profiles set must_change_password = false where id = auth.uid();
+$$;
+grant execute on function public.clear_must_change_password() to authenticated;
+
 -- ============================================================================
 -- FIM. Para tornar alguém admin (depois de criar o login):
 --   update public.profiles set role = 'admin'

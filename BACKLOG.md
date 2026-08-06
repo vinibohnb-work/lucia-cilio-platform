@@ -25,22 +25,6 @@
 
 ### Onboarding e primeiro acesso
 
-- [ ] **Rever o fluxo de convite de novos acessos — avaliar palavra-passe pré-definida**
-  *Levantado no desenvolvimento · Resp.: Vinícius*
-  Hoje o acesso é dado por **convite por email** (`inviteUserByEmail`), cujo link **expira em
-  24 horas** — limite do Supabase. Já causou problemas reais duas vezes: o acesso da Nádia
-  expirou e teve de ser reenviado (16/07), e houve um convite pendente por ativar a tempo
-  (23/07). O botão de reenvio existe por causa disto.
-  **Alternativa a avaliar:** a Lúcia definir a palavra-passe na criação da conta e entregá-la
-  ao cliente — sem link, sem prazo. A plataforma já sabe fazê-lo (foi assim que se criaram as
-  contas de demonstração), portanto é barato de implementar.
-  ⚠️ **Contrapartida a decidir com ela:** a palavra-passe passa a viajar por WhatsApp/email,
-  o que é menos seguro. Se seguirmos por aí, convém **forçar a mudança no primeiro acesso**.
-  Uma terceira via é manter o convite mas alargar a validade — pode não ser possível, o limite
-  de 24h é da plataforma.
-  **Liga-se a:** os dois itens seguintes (email de convite e requisitos da palavra-passe) — a
-  decisão deste define se ainda fazem sentido como estão.
-
 - [ ] **Melhorar o fluxo de onboarding: pedir dados da empresa e país à entrada**
   *Reunião 06/08/2026 · Resp.: Vinícius*
   O país determina todas as regras fiscais (IVA, calendário, módulo alemão) — pedi-lo no
@@ -48,19 +32,12 @@
   entrada do cliente novo (dados, documentos, acessos) e o botão **"Fazer Onboarding"** na
   visão do administrador, para a Lúcia conduzir o processo.
 
-- [ ] **Adicionar mensagem de requisitos da palavra-passe na criação**
-  *Reunião 06/08/2026 · Resp.: Vinícius*
-  Hoje a regra só aparece como erro depois de falhar, em `/definir-senha`. Confirmado na
-  reunião que é exigido **caractere especial** — a nossa validação local (6 caracteres) está
-  **dessincronizada** do que o Supabase impõe, e o utilizador leva com o erro técnico em
-  inglês. Alinhar as duas validações e mostrar os requisitos junto ao campo, nas três línguas.
-
-- [ ] **Melhorar o email de convite de acesso**
+- [ ] **Rever a comunicação de entrega das credenciais**
   *Levantado no desenvolvimento · Resp.: Vinícius*
-  É hoje o template genérico do Supabase, sem identidade da Lúcia — e é o primeiro contacto
-  do cliente com a plataforma. A rever: marca, texto de boas-vindas, para que serve o acesso,
-  aviso claro de que o link **expira em 24 horas** e o que fazer se expirar. Altera-se em
-  Supabase → Authentication → Email Templates ("Invite user"); o destino já está correto.
+  Com o fim do convite por email, deixou de haver mensagem automática: a Lúcia entrega a
+  palavra-passe temporária por WhatsApp/email à mão. Avaliar se vale um texto-modelo (com as
+  boas-vindas, o endereço da plataforma e o aviso de que terá de a trocar) que ela copie, ou
+  um email próprio enviado pela plataforma.
 
 ### Usabilidade e compreensão
 
@@ -225,6 +202,23 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Acessos — palavra-passe pré-definida · migração 027
+- [x] **Fluxo de convite substituído por palavra-passe temporária** — a conta nasce ativa, com
+  senha gerada (12 caracteres, sem ambíguos) que a Lúcia copia e entrega. Sem link, sem prazo
+  de 24h.
+  *Levantado no desenvolvimento · Resp.: Vinícius*
+- [x] **Mudança obrigatória no primeiro acesso** — `must_change_password` no perfil; enquanto
+  não trocar, qualquer rota devolve o utilizador a `/definir-senha`. A marca é levantada por
+  função de privilégio mínimo (evita que o utilizador altere o próprio `role`).
+  *Levantado no desenvolvimento · Resp.: Vinícius*
+- [x] **Requisitos da palavra-passe visíveis** — lista com validação em tempo real (8 caracteres,
+  maiúscula, minúscula, número e caractere especial), nas três línguas, na mesma fonte que a
+  validação usa.
+  *Reunião 06/08/2026 · Resp.: Vinícius*
+- [x] **"Redefinir palavra-passe"** substitui o reenvio de convite — serve para quem nunca
+  entrou e para quem se esqueceu da senha.
+  *Levantado no desenvolvimento · Resp.: Vinícius*
 
 ### Acessos — papéis de equipa · migração 026
 - [x] **Papel "comercial"** (assistente Carla) — vê apenas o CRM; menu, rotas e RLS restritos.

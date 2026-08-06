@@ -52,51 +52,43 @@ export default async function handler(req, res) {
       return res.status(200).json({ users })
     }
 
-    // ── REENVIAR CONVITE ──
-    // Só para quem ainda não ativou a conta (nunca fez login). Gera um novo
-    // convite (novo prazo de 24h), preservando perfil e plataforma.
-    if (req.method === 'POST' && req.body?.resend) {
-      const { id, redirectTo } = req.body
+    // ── REDEFINIR PALAVRA-PASSE TEMPORÁRIA ──
+    // Substitui o antigo "reenviar convite": em vez de um novo link com prazo,
+    // define uma nova palavra-passe temporária e volta a exigir a mudança no
+    // acesso seguinte. Serve para quem nunca entrou e para quem se esqueceu.
+    if (req.method === 'POST' && req.body?.resetPassword) {
+      const { id, password } = req.body
       if (!id) return res.status(400).json({ error: 'ID em falta.' })
-      const { data: u, error: getErr } = await admin.auth.admin.getUserById(id)
-      if (getErr || !u?.user) return res.status(404).json({ error: 'Utilizador não encontrado.' })
-      if (u.user.last_sign_in_at) {
-        return res.status(400).json({ error: 'Este utilizador já ativou a conta — não é necessário reenviar.' })
+      if (!password || String(password).length < 8) {
+        return res.status(400).json({ error: 'Palavra-passe temporária inválida (mínimo 8 caracteres).' })
       }
-      const email = u.user.email
-      const display_name = u.user.user_metadata?.display_name || ''
-      const { data: prof } = await admin.from('profiles').select('role, platform').eq('id', id).single()
-      // Recria o convite: apaga o registo pendente e convida de novo (novo link).
-      await admin.auth.admin.deleteUser(id)
-      const { data: inv, error: invErr } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: { display_name },
-        redirectTo: redirectTo || undefined,
-      })
-      if (invErr) throw invErr
-      await admin.from('profiles').upsert({
-        id: inv.user.id,
-        role: saneRole(prof?.role),
-        platform: sanePlatform(prof?.platform),
-      })
-      return res.status(200).json({ ok: true, resent: true, id: inv.user.id })
+      const { error } = await admin.auth.admin.updateUserById(id, { password, email_confirm: true })
+      if (error) throw error
+      await admin.from('profiles').update({ must_change_password: true }).eq('id', id)
+      return res.status(200).json({ ok: true, reset: true })
     }
 
-    // ── CRIAR (convite por email) ──
+    // ── CRIAR (palavra-passe temporária definida pelo administrador) ──
+    // Sem email de convite: a conta nasce ativa e a palavra-passe é entregue
+    // pela Lúcia. Fica marcada para exigir a mudança no primeiro acesso.
     if (req.method === 'POST') {
-      const { email, display_name, role, platform, redirectTo } = req.body || {}
+      const { email, display_name, role, platform, password } = req.body || {}
       if (!email) return res.status(400).json({ error: 'Email é obrigatório.' })
-      // Envia email de convite; o utilizador define a password na página redirectTo.
-      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: { display_name: display_name || '' },
-        redirectTo: redirectTo || undefined,
+      if (!password || String(password).length < 8) {
+        return res.status(400).json({ error: 'Palavra-passe temporária inválida (mínimo 8 caracteres).' })
+      }
+      const { data, error } = await admin.auth.admin.createUser({
+        email, password, email_confirm: true,
+        user_metadata: { display_name: display_name || '' },
       })
       if (error) throw error
       await admin.from('profiles').upsert({
         id: data.user.id,
         role: saneRole(role),
         platform: sanePlatform(platform),
+        must_change_password: true,
       })
-      return res.status(200).json({ ok: true, id: data.user.id, invited: true })
+      return res.status(200).json({ ok: true, id: data.user.id, created: true })
     }
 
     // ── EDITAR ──

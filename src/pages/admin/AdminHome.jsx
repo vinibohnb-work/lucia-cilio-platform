@@ -3,9 +3,10 @@ import { useAuth } from '../../context/AuthContext'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { listUsers, createUser, updateUser, deleteUser, resendInvite } from '../../lib/adminApi'
+import { listUsers, createUser, updateUser, deleteUser, resetPassword } from '../../lib/adminApi'
+import { generatePassword } from '../../lib/passwordPolicy'
 
-const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting' }
+const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting', password: '' }
 
 export default function AdminHome() {
   const { user } = useAuth()
@@ -34,7 +35,12 @@ export default function AdminHome() {
     invited: (e) => `Einladung an ${e} gesendet.`,
     confirmDel: (e) => `Benutzer „${e}" wirklich löschen?`,
     apiHint: 'Benutzerverwaltung benötigt die bereitgestellte Version (Vercel).',
-    resend: 'Einladung erneut senden', pendingTag: 'ausstehend', resent: (e) => `Neue Einladung an ${e} gesendet.`,
+    resend: 'Passwort zurücksetzen', pendingTag: 'ausstehend', resent: (e) => `Neues Passwort für ${e} gesetzt.`,
+    tempPw: 'Vorläufiges Passwort', regen: 'Neu erzeugen', copy: 'Kopieren', copied: 'Kopiert ✓',
+    pwHint: 'Die Person meldet sich damit an und muss beim ersten Zugriff ein eigenes Passwort festlegen.',
+    createdPw: (e, p) => `Konto ${e} erstellt. Vorläufiges Passwort: ${p}`,
+    resetPw: (e, p) => `Neues vorläufiges Passwort für ${e}: ${p}`,
+    createBtn: 'Konto erstellen',
     view: 'Daten ansehen',
   } : lang === 'en' ? {
     eyebrow: 'Administration', title: 'User Management',
@@ -48,7 +54,12 @@ export default function AdminHome() {
     invited: (e) => `Invitation sent to ${e}.`,
     confirmDel: (e) => `Delete user "${e}"?`,
     apiHint: 'User management requires the published version (Vercel).',
-    resend: 'Resend invitation', pendingTag: 'pending', resent: (e) => `New invitation sent to ${e}.`,
+    resend: 'Reset password', pendingTag: 'pending', resent: (e) => `New password set for ${e}.`,
+    tempPw: 'Temporary password', regen: 'Regenerate', copy: 'Copy', copied: 'Copied ✓',
+    pwHint: 'The person signs in with this and must set their own password on first access.',
+    createdPw: (e, p) => `Account ${e} created. Temporary password: ${p}`,
+    resetPw: (e, p) => `New temporary password for ${e}: ${p}`,
+    createBtn: 'Create account',
     view: 'View data',
   } : {
     eyebrow: 'Administração', title: 'Gestão de Utilizadores',
@@ -62,7 +73,12 @@ export default function AdminHome() {
     invited: (e) => `Convite enviado para ${e}.`,
     confirmDel: (e) => `Eliminar o utilizador "${e}"?`,
     apiHint: 'A gestão de utilizadores requer a versão publicada (Vercel).',
-    resend: 'Reenviar convite', pendingTag: 'pendente', resent: (e) => `Novo convite enviado para ${e}.`,
+    resend: 'Redefinir palavra-passe', pendingTag: 'pendente', resent: (e) => `Nova palavra-passe definida para ${e}.`,
+    tempPw: 'Palavra-passe temporária', regen: 'Gerar nova', copy: 'Copiar', copied: 'Copiado ✓',
+    pwHint: 'A pessoa entra com esta palavra-passe e é obrigada a definir a sua no primeiro acesso.',
+    createdPw: (e, p) => `Conta ${e} criada. Palavra-passe temporária: ${p}`,
+    resetPw: (e, p) => `Nova palavra-passe temporária para ${e}: ${p}`,
+    createBtn: 'Criar conta',
     view: 'Ver dados',
   }
 
@@ -73,14 +89,17 @@ export default function AdminHome() {
   }, [])
   useEffect(() => { load() }, [load])
 
-  function openCreate() { setForm(EMPTY); setEditingId('new'); setErr(''); setNotice('') }
-  function openEdit(u) { setForm({ email: u.email, display_name: u.display_name, role: u.role, platform: u.platform || 'accounting' }); setEditingId(u.id); setErr(''); setNotice('') }
+  function openCreate() { setForm({ ...EMPTY, password: generatePassword() }); setEditingId('new'); setErr(''); setNotice('') }
+  function openEdit(u) { setForm({ email: u.email, display_name: u.display_name, role: u.role, platform: u.platform || 'accounting', password: '' }); setEditingId(u.id); setErr(''); setNotice('') }
   function closeForm() { setEditingId(null); setForm(EMPTY) }
 
   async function submit() {
     setSaving(true); setErr(''); setNotice('')
     try {
-      if (editingId === 'new') { await createUser({ email: form.email, display_name: form.display_name, role: form.role, platform: form.platform }); setNotice(L.invited(form.email)) }
+      if (editingId === 'new') {
+        await createUser({ email: form.email, display_name: form.display_name, role: form.role, platform: form.platform, password: form.password })
+        setNotice(L.createdPw(form.email, form.password))
+      }
       else { await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role, platform: form.platform }) }
       closeForm(); await load()
     } catch (e) { setErr(e.message) }
@@ -92,10 +111,17 @@ export default function AdminHome() {
     try { await deleteUser(u.id); await load() } catch (e) { setErr(e.message) }
     setBusyId(null)
   }
+  // Redefine a palavra-passe temporária e volta a exigir a mudança no acesso seguinte
   async function resend(u) {
     setBusyId(u.id); setErr(''); setNotice('')
-    try { await resendInvite(u.id); setNotice(L.resent(u.email)); await load() } catch (e) { setErr(e.message) }
+    const pw = generatePassword()
+    try { await resetPassword(u.id, pw); setNotice(L.resetPw(u.email, pw)); await load() } catch (e) { setErr(e.message) }
     setBusyId(null)
+  }
+  const [copied, setCopied] = useState(false)
+  function copyPw() {
+    navigator.clipboard?.writeText(form.password)
+    setCopied(true); setTimeout(() => setCopied(false), 1800)
   }
 
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT') : L.never
@@ -126,7 +152,7 @@ export default function AdminHome() {
       </div>
 
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12px', fontWeight: 600, marginBottom: '14px' }}>{err}</div>}
-      {notice && <div style={{ background: t.dueOk.bg, color: t.dueOk.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12px', fontWeight: 600, marginBottom: '14px' }}>✉️ {notice}</div>}
+      {notice && <div style={{ background: t.dueOk.bg, color: t.dueOk.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px', fontFamily: 'ui-monospace, monospace' }}>🔑 {notice}</div>}
 
       {/* Form */}
       {editingId && (
@@ -141,11 +167,24 @@ export default function AdminHome() {
               <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option><option value="comercial">{L.roleComercial}</option><option value="marketing">{L.roleMarketing}</option></select>
             </div>
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={submit} disabled={saving} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.invite : L.save)}</button>
+              <button onClick={submit} disabled={saving} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.createBtn : L.save)}</button>
               <button onClick={closeForm} style={{ padding: '9px 12px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
             </div>
           </div>
-          {editingId === 'new' && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '10px' }}>✉️ {L.inviteHint}</div>}
+
+          {/* Palavra-passe temporária (só na criação) */}
+          {editingId === 'new' && (
+            <div style={{ marginTop: '14px', background: t.softCardBg, borderRadius: '11px', padding: '13px 15px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '.5px' }}>{L.tempPw}</div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}
+                  style={{ ...inputStyle, width: 'auto', minWidth: '190px', flex: '0 1 240px', fontFamily: 'ui-monospace, monospace', fontWeight: 700, letterSpacing: '.5px' }} />
+                <button type="button" onClick={() => setForm(f=>({...f,password:generatePassword()}))} style={{ padding: '9px 13px', background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: t.textMuted }}>↻ {L.regen}</button>
+                <button type="button" onClick={copyPw} style={{ padding: '9px 13px', background: 'transparent', border: `1px solid ${copied ? '#0a7a3e' : t.cardBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: copied ? '#0a7a3e' : t.textMuted }}>{copied ? L.copied : `⧉ ${L.copy}`}</button>
+              </div>
+              <div style={{ fontSize: '11px', color: t.subtle, marginTop: '9px', lineHeight: 1.5 }}>🔑 {L.pwHint}</div>
+            </div>
+          )}
         </div>
       )}
 
@@ -162,7 +201,8 @@ export default function AdminHome() {
           const isSelf = u.id === user?.id
           const rs = roleStyle[u.role] || roleStyle.user
           // Pendente = convite ainda não aceite (sem confirmação de email nem login)
-          const isPending = !u.last_sign_in_at && !u.email_confirmed_at
+          // Nunca entrou: contas criadas com palavra-passe já têm o email confirmado
+          const isPending = !u.last_sign_in_at
           return (
             <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 22px', borderTop: `1px solid ${t.rowBorder}`, alignItems: 'center', gap: '12px', fontSize: '13px' }}>
               <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>({lang === 'de' ? 'ich' : lang === 'en' ? 'me' : 'eu'})</span>}</div>
@@ -172,11 +212,11 @@ export default function AdminHome() {
               <div style={{ color: t.textMuted }}>{fmtDate(u.created_at)}</div>
               <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : isPending ? <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span> : '—'}</div>
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                {isPending && !isSelf && (
+                {!isSelf && (
                   <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} aria-label={L.resend} style={{ flex: 'none', width: '30px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.chipBg, border: `1px solid ${t.accent}`, borderRadius: '7px', cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accent, padding: 0 }}>
                     {busyId === u.id ? '…' : (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-                        <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" />
+                        <circle cx="8" cy="15" r="4" /><path d="m11 12 8-8 3 3-3 3-2-2-3 3" />
                       </svg>
                     )}
                   </button>

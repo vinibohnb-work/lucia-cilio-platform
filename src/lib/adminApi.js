@@ -23,21 +23,18 @@ export async function listUsers() {
   return users || []
 }
 
-// Cria por convite: envia email com link para o utilizador definir a password.
-// O link aponta sempre para VITE_APP_URL (domínio de produção) quando definida;
-// caso contrário usa o domínio atual (útil em desenvolvimento).
+// Cria a conta já ativa com uma palavra-passe temporária (payload.password),
+// entregue pelo administrador. Não há email de convite nem prazo de 24h; a
+// conta fica marcada para exigir a mudança da palavra-passe no primeiro acesso.
 export async function createUser(payload) {
-  const base = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '')
-  const redirectTo = `${base}/definir-senha`
-  const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ ...payload, redirectTo }) })
+  const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify(payload) })
   return handle(res)
 }
 
-// Reenvia o convite (novo prazo) a um utilizador que ainda não ativou a conta.
-export async function resendInvite(id) {
-  const base = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '')
-  const redirectTo = `${base}/definir-senha`
-  const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ resend: true, id, redirectTo }) })
+// Define uma nova palavra-passe temporária e volta a exigir a mudança no acesso
+// seguinte. Serve para quem nunca entrou e para quem se esqueceu da senha.
+export async function resetPassword(id, password) {
+  const res = await fetch(ENDPOINT, { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ resetPassword: true, id, password }) })
   return handle(res)
 }
 
