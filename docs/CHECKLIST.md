@@ -73,6 +73,15 @@ A contabilidade *"está excelente como está, é só corrigir o português"*.
       já está correto (`/definir-senha`).
       **Liga-se a:** a Lúcia já teve um convite por aceitar e foi preciso reenviar — o botão de
       reenvio existe, mas um email mais claro reduz a necessidade dele.
+- [ ] **Nota com os requisitos da palavra-passe** na página de definição de senha
+      (`/definir-senha`, o passo logo a seguir ao convite).
+      **Estado atual:** só se exige **6 caracteres**, e a mensagem *"Pelo menos 6 caracteres"*
+      aparece apenas **depois** de o utilizador falhar — não há qualquer indicação antes.
+      **A fazer:** mostrar os requisitos junto ao campo, antes de escrever, nas três línguas.
+      ⚠️ **Confirmar primeiro** o que o Supabase exige de facto (Authentication → Policies:
+      comprimento mínimo e tipos de caracteres). Se lá estiver algo mais exigente do que os
+      nossos 6 caracteres, o utilizador leva com o erro técnico do Supabase em inglês — a nota
+      tem de refletir a regra real, não a nossa.
 - [ ] **Página de onboarding de clientes** — checklist/formulário de entrada do cliente novo
       (dados da empresa, documentos, acessos, expectativas).
 - [ ] **Botão "Fazer Onboarding"** na visão do administrador, para a Lúcia conduzir o processo
