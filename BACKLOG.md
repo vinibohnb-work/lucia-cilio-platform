@@ -25,6 +25,22 @@
 
 ### Onboarding e primeiro acesso
 
+- [ ] **Rever o fluxo de convite de novos acessos — avaliar palavra-passe pré-definida**
+  *Levantado no desenvolvimento · Resp.: Vinícius*
+  Hoje o acesso é dado por **convite por email** (`inviteUserByEmail`), cujo link **expira em
+  24 horas** — limite do Supabase. Já causou problemas reais duas vezes: o acesso da Nádia
+  expirou e teve de ser reenviado (16/07), e houve um convite pendente por ativar a tempo
+  (23/07). O botão de reenvio existe por causa disto.
+  **Alternativa a avaliar:** a Lúcia definir a palavra-passe na criação da conta e entregá-la
+  ao cliente — sem link, sem prazo. A plataforma já sabe fazê-lo (foi assim que se criaram as
+  contas de demonstração), portanto é barato de implementar.
+  ⚠️ **Contrapartida a decidir com ela:** a palavra-passe passa a viajar por WhatsApp/email,
+  o que é menos seguro. Se seguirmos por aí, convém **forçar a mudança no primeiro acesso**.
+  Uma terceira via é manter o convite mas alargar a validade — pode não ser possível, o limite
+  de 24h é da plataforma.
+  **Liga-se a:** os dois itens seguintes (email de convite e requisitos da palavra-passe) — a
+  decisão deste define se ainda fazem sentido como estão.
+
 - [ ] **Melhorar o fluxo de onboarding: pedir dados da empresa e país à entrada**
   *Reunião 06/08/2026 · Resp.: Vinícius*
   O país determina todas as regras fiscais (IVA, calendário, módulo alemão) — pedi-lo no
