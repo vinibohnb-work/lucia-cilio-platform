@@ -203,6 +203,14 @@
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
 
+### Acessos — Contabilidade Lite · migração 028
+- [x] **Plataforma "Contabilidade Lite"** — variante que mostra apenas a secção *Contabilidade*
+  do menu (Painel, Livro de Caixa, Catálogo, Obrigações Fiscais) e esconde a secção *Gestão*
+  (Preços, Planeamento, Clientes, Empresa, Consultoria e Reservas & Impostos). Para clientes
+  que só querem lançar e acompanhar. Escolhe-se na Gestão de Acessos, ao lado das outras
+  plataformas; o bloqueio é de rota, não só de menu.
+  *Levantado no desenvolvimento · Resp.: Vinícius*
+
 ### Acessos — palavra-passe pré-definida · migração 027
 - [x] **Fluxo de convite substituído por palavra-passe temporária** — a conta nasce ativa, com
   senha gerada (12 caracteres, sem ambíguos) que a Lúcia copia e entrega. Sem link, sem prazo

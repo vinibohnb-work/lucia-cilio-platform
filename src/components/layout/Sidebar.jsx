@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
 import { getCompanySettings } from '../../lib/companySettings'
+import { isLite, LITE_SECTIONS } from '../../lib/platformHome'
 import { useFiscalAlerts } from '../../hooks/useFiscalAlerts'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import Flag from '../Flag'
@@ -102,11 +103,15 @@ export default function Sidebar() {
       : platform === 'both'
         ? (platformFromPath === 'management' ? 'accounting' : platformFromPath)
         : (platform === 'esg' ? 'esg' : 'accounting')
+  // Contabilidade Lite: só a secção "Contabilidade" (esconde a secção "Gestão")
+  const lite = isLite(platform)
   // Itens sem `roles` são visíveis a todos; com `roles`, só a quem consta.
-  const sections = (NAV[viewPlatform] || NAV.accounting).map(sec => ({
-    ...sec,
-    items: sec.items.filter(it => !it.roles || it.roles.includes(role)),
-  })).filter(sec => sec.items.length > 0)
+  const sections = (NAV[viewPlatform] || NAV.accounting)
+    .filter(sec => !lite || LITE_SECTIONS.includes(sec.key))
+    .map(sec => ({
+      ...sec,
+      items: sec.items.filter(it => !it.roles || it.roles.includes(role)),
+    })).filter(sec => sec.items.length > 0)
 
   const PLATFORM_HOME = { management: '/gestao/clientes', accounting: '/contabilidade/dashboard', esg: '/esg/diagnostico' }
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }

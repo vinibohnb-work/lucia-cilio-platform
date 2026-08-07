@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { homePathFor } from '../lib/platformHome'
+import { homePathFor, basePlatform } from '../lib/platformHome'
 
 const Loading = () => (
   <div style={{
@@ -20,7 +20,9 @@ export default function PlatformRoute({ requirePlatform, children }) {
   if (!session) return <Navigate to="/login" replace />
 
   // 'both' acede a ambas as plataformas (tal como o admin).
-  if (role !== 'admin' && platform !== 'both' && requirePlatform && platform !== requirePlatform) {
+  // 'accounting_lite' é Contabilidade — o que muda é o âmbito de páginas,
+  // aplicado no ProtectedRoute (que cobre também rotas fora deste guarda).
+  if (role !== 'admin' && platform !== 'both' && requirePlatform && basePlatform(platform) !== requirePlatform) {
     return <Navigate to={homePathFor(role, platform)} replace />
   }
 

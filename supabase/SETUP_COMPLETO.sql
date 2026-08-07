@@ -17,7 +17,7 @@ alter table public.profiles add column if not exists platform text not null defa
 -- Recria o constraint para aceitar também 'both' (acesso às duas plataformas).
 alter table public.profiles drop constraint if exists profiles_platform_chk;
 alter table public.profiles add constraint profiles_platform_chk
-  check (platform in ('accounting','esg','both'));
+  check (platform in ('accounting','accounting_lite','esg','both'));
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 2. TABELAS BASE

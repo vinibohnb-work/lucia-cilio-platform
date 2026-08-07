@@ -27,6 +27,7 @@ export default function AdminHome() {
     eyebrow: 'Verwaltung', title: 'Benutzerverwaltung',
     new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
     platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG',
+    platLite: 'Buchhaltung Lite', platLiteHint: 'Nur der Bereich „Buchhaltung" (ohne Preise, Planung, Mandanten, Firma und Beratung).',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer', created: 'Erstellt',
     roleComercial: 'Vertrieb (nur CRM)', roleMarketing: 'Marketing (nur Marketing)',
     lastLogin: 'Letzter Login', save: 'Speichern', invite: 'Einladung senden',
@@ -46,6 +47,7 @@ export default function AdminHome() {
     eyebrow: 'Administration', title: 'User Management',
     new: '+ New User', email: 'Email', name: 'Display name',
     platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG',
+    platLite: 'Accounting Lite', platLiteHint: 'Only the "Accounting" section (no pricing, planning, clients, company or consulting).',
     role: 'Role', admin: 'Administrator', userRole: 'User', created: 'Created',
     roleComercial: 'Sales (CRM only)', roleMarketing: 'Marketing (Marketing only)',
     lastLogin: 'Last login', save: 'Save', invite: 'Send invitation',
@@ -65,6 +67,7 @@ export default function AdminHome() {
     eyebrow: 'Administração', title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
     platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG',
+    platLite: 'Contabilidade Lite', platLiteHint: 'Apenas a secção "Contabilidade" (sem preços, planeamento, clientes, empresa e consultoria).',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador', created: 'Criado',
     roleComercial: 'Comercial (só CRM)', roleMarketing: 'Marketing (só Marketing)',
     lastLogin: 'Último acesso', save: 'Guardar', invite: 'Enviar convite',
@@ -134,8 +137,8 @@ export default function AdminHome() {
     marketing: { bg: '#fdeef7', ink: '#9d174d' },
   }
   const roleLabel = (r) => r === 'admin' ? L.admin : r === 'comercial' ? L.roleComercial : r === 'marketing' ? L.roleMarketing : L.userRole
-  const platLabel = (p) => (p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : L.platAcc)
-  const platChip = (p) => p === 'esg' ? { bg: '#e8f0fb', ink: '#1e60c8' } : p === 'both' ? { bg: '#ede9fe', ink: '#5b21b6' } : { bg: '#eaf5ee', ink: '#0a7a3e' }
+  const platLabel = (p) => p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : p === 'accounting_lite' ? L.platLite : L.platAcc
+  const platChip = (p) => p === 'esg' ? { bg: '#e8f0fb', ink: '#1e60c8' } : p === 'both' ? { bg: '#ede9fe', ink: '#5b21b6' } : p === 'accounting_lite' ? { bg: '#f0f7f2', ink: '#3d7a55' } : { bg: '#eaf5ee', ink: '#0a7a3e' }
   const GRID = '1.1fr 0.9fr 158px 108px 90px 100px 188px'
 
   return (
@@ -161,7 +164,7 @@ export default function AdminHome() {
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.email}</div><input value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="nome@email.com" style={inputStyle} /></div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.name}</div><input value={form.display_name} onChange={e=>setForm(f=>({...f,display_name:e.target.value}))} placeholder="Lúcia Cílio" style={inputStyle} /></div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.platform}</div>
-              <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
+              <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="accounting_lite">{L.platLite}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
             </div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.role}</div>
               <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option><option value="comercial">{L.roleComercial}</option><option value="marketing">{L.roleMarketing}</option></select>
@@ -171,6 +174,10 @@ export default function AdminHome() {
               <button onClick={closeForm} style={{ padding: '9px 12px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
             </div>
           </div>
+
+          {form.platform === 'accounting_lite' && (
+            <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '10px', lineHeight: 1.5 }}>ℹ️ {L.platLiteHint}</div>
+          )}
 
           {/* Palavra-passe temporária (só na criação) */}
           {editingId === 'new' && (
