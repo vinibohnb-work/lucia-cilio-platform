@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lúcia Cílio — Painel (visão admin)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Instrument+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:#1b1b1b}
+  #bar{position:fixed;inset:0 0 auto 0;z-index:100;background:#141414;color:#e8e8e8;border-bottom:1px solid #333;
+    padding:8px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font:12.5px 'Instrument Sans',system-ui,sans-serif}
+  #bar strong{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#c9a84c}
+  #bar button{background:#222;color:#e8e8e8;border:1px solid #3a3a3a;border-radius:7px;padding:6px 11px;font:12px inherit;cursor:pointer}
+  #bar button.on{background:#c9a84c;color:#20140a;border-color:#c9a84c;font-weight:700}
+  #bar .sep{width:1px;height:18px;background:#333}
+  #bar .hint{color:#888;font-size:11.5px}
+  #stage{padding-top:43px}
+  .app{display:flex;min-height:calc(100vh - 43px)}
+  .side{width:238px;flex:none;display:flex;flex-direction:column;padding:22px 14px 16px}
+  .main{flex:1;min-width:0;padding:30px 34px 44px}
+  .nav{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;font-size:13.5px;margin-bottom:2px;
+    cursor:pointer;position:relative;transition:background .12s}
+  .seclabel{font-size:9.5px;letter-spacing:2.2px;text-transform:uppercase;font-weight:600;padding:0 10px 8px}
+  .card{border-radius:14px}
+  h3.sec{font-size:14px;font-weight:800;margin:0 0 14px}
+  .kpibox{border-radius:14px;padding:18px 20px}
+  .kpin{font-size:22px;font-weight:900}
+  .kpil{font-size:11px;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+  .mini{border-radius:10px;padding:14px 16px}
+  .minil{font-size:11px;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  .minin{font-size:19px;font-weight:900}
+  @media(max-width:760px){.side{display:none}.main{padding:18px 14px 40px}}
+</style>
+</head>
+<body>
+<div id="bar">
+  <strong>Painel</strong><span class="hint">visão de administrador</span>
+  <span class="sep"></span>
+  <button id="tL" class="on">Claro</button><button id="tN">Noturno</button>
+  <span class="sep"></span>
+  <span class="hint">O toggle Gestão / Contábil / ESG no rodapé do menu está funcional →</span>
+</div>
+<div id="stage"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// Tokens de src/theme.js. As cores FIXAS abaixo (#f0fdf4, #eff6ff, #fff7ed,
+// #fffbeb, #e2e8f0) estão assim no Dashboard.jsx real — não vêm do tema.
+// Reproduzidas de propósito para se ver o que acontece no modo noturno.
+// ════════════════════════════════════════════════════════════════════════════
+const THEMES = {
+  light:{appBg:'#f5f1e8',mainBg:'#f5f1e8',sidebarBg:'#0a2f1a',sidebarBorder:'rgba(201,168,76,.22)',sidebarSub:'#9db3a3',
+    logoBg:'transparent',logoInk:'#c9a84c',logoBorder:'1.5px solid #c9a84c',navActiveBg:'rgba(201,168,76,.13)',
+    navActiveText:'#f3ecdb',navText:'#b9c8be',sectionLabel:'#6f8b78',cardBg:'#fff',cardBorder:'#e7decd',
+    cardShadow:'0 1px 2px rgba(10,47,26,.04)',softCardBg:'#fbf7ee',heading:'#0a2f1a',text:'#374a3e',textMuted:'#8a9990',
+    subtle:'#a2ab9f',trackBg:'#f0ead9',rowBorder:'#eee6d6',headBg:'#f6f1e6',chipBg:'#f0ead9',chipText:'#6b5a2a',
+    inputBg:'#fff',inputBorder:'#ddd2ba',badgeBg:'#fbe6e2',badgeInk:'#c0392b',btnBg:'#0a2f1a',btnInk:'#f3ecdb',
+    avatarBg:'#0a2f1a',avatarInk:'#c9a84c',toggleBg:'transparent',pos:'#2f7d4f',neg:'#c0392b',accent:'#c9a84c',
+    fontBody:"'Instrument Sans',system-ui,sans-serif",fontDisplay:"'Cormorant Garamond',serif",fontNum:"'Cormorant Garamond',serif",
+    dueOk:{bg:'#e7f4ec',ink:'#2f7d4f'},dueSoon:{bg:'#fbf3df',ink:'#a5842f'},dueLate:{bg:'#fbe6e2',ink:'#c0392b'}},
+  night:{appBg:'#071c11',mainBg:'radial-gradient(120% 100% at 100% 0%,#0d2c1a 0%,#071c11 55%)',sidebarBg:'#04140b',
+    sidebarBorder:'rgba(201,168,76,.22)',sidebarSub:'#8ba392',logoBg:'linear-gradient(140deg,#c9a84c,#a5842f)',
+    logoInk:'#071c11',logoBorder:'none',navActiveBg:'rgba(201,168,76,.16)',navActiveText:'#f3ecdb',navText:'#8ba392',
+    sectionLabel:'#5f7c6b',cardBg:'rgba(255,255,255,.045)',cardBorder:'rgba(201,168,76,.14)',cardShadow:'none',
+    softCardBg:'rgba(255,255,255,.04)',heading:'#f2f7f3',text:'#cfe0d6',textMuted:'#8ba392',subtle:'#5f7c6b',
+    trackBg:'rgba(255,255,255,.07)',rowBorder:'rgba(255,255,255,.07)',headBg:'rgba(255,255,255,.03)',
+    chipBg:'rgba(201,168,76,.14)',chipText:'#d8bd74',inputBg:'rgba(255,255,255,.05)',inputBorder:'rgba(201,168,76,.22)',
+    badgeBg:'rgba(201,168,76,.2)',badgeInk:'#d8bd74',btnBg:'linear-gradient(140deg,#c9a84c,#a5842f)',btnInk:'#20140a',
+    avatarBg:'linear-gradient(140deg,#164e2b,#0a2f1a)',avatarInk:'#c9a84c',toggleBg:'rgba(201,168,76,.12)',
+    pos:'#7fd6a0',neg:'#e08b7a',accent:'#c9a84c',
+    fontBody:"'Manrope',system-ui,sans-serif",fontDisplay:"'Cormorant Garamond',serif",fontNum:"'Space Grotesk',monospace",
+    dueOk:{bg:'rgba(127,214,160,.14)',ink:'#7fd6a0'},dueSoon:{bg:'rgba(201,168,76,.18)',ink:'#d8bd74'},dueLate:{bg:'rgba(224,86,66,.16)',ink:'#e08b7a'}},
+}
+let T = THEMES.light, plat = 'contabil', navIdx = 0, themeKey = 'light'
+
+// Constantes fixas do Dashboard.jsx (não vêm do tema — ver nota acima)
+const G='#0a2f1a', GREEN='#2f7d4f', RED='#c0392b', GOLD='#c9a84c', BG='#f2f6f3'
+
+const ic=(i)=>`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex:none">${i}</svg>`
+const I={
+  painel:ic('<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'),
+  caixa:ic('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8 8h8M8 12h5"/>'),
+  catalogo:ic('<path d="M20.6 13.4 12 22l-9-9V4a1 1 0 0 1 1-1h8z"/><circle cx="7.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"/>'),
+  obrig:ic('<rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/>'),
+  preco:ic('<rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M8 7h8M8 11h8M8 15h4"/>'),
+  kpi:ic('<path d="M4 20V4M4 20h16"/><path d="M8 16l3-4 3 2 4-6" stroke-width="1.6"/>'),
+  clientes:ic('<circle cx="9" cy="8" r="3.3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.5a3 3 0 0 1 0 5.6M17.5 20a5 5 0 0 0-3-4.6"/>'),
+  empresa:ic('<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/>'),
+  rel:ic('<path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18M8.5 13h7M8.5 16.5h7" stroke-width="1.4"/>'),
+  ruck:ic('<path d="M12 3 4 6v6c0 4.5 3.2 7.5 8 9 4.8-1.5 8-4.5 8-9V6z"/><path d="M9.3 12h5.4M12 9.3v5.4" stroke-width="1.5"/>'),
+  material:ic('<rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/>'),
+  diag:ic('<path d="M12 21c4-2.5 6-6 6-11a6 6 0 0 0-12 0c0 5 2 8.5 6 11z"/><path d="M12 3c0 6 0 12 0 16" stroke-width="1.4"/>'),
+  proj:ic('<path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.2h6.5a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'),
+  admin:ic('<circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>'),
+  mkt:ic('<path d="M4 10v4h3l6 3.5v-11L7 10H4z"/><path d="M17 9.5a3.5 3.5 0 0 1 0 5" stroke-width="1.6"/>'),
+}
+const NAV={
+  gestao:[['Gestão',[['Clientes Ativos','clientes'],['Prospeção (CRM)','kpi'],['Marketing','mkt'],['Financeiro','caixa'],['Gestão de Acessos','admin']]]],
+  contabil:[['Contabilidade',[['Painel','painel'],['Livro de Caixa','caixa'],['Catálogo','catalogo'],['Obrigações Fiscais','obrig',6]]],
+            ['Gestão',[['Calculadora de Preços','preco'],['Planeamento Mensal','kpi'],['Clientes','clientes'],['Empresa','empresa'],['Consultoria','rel'],['Reservas & Impostos','ruck']]]],
+  esg:[['ESG',[['Materialidade','material'],['Diagnóstico ESG','diag'],['KPIs & Monitorização','kpi'],['Projetos','proj'],['Relatórios','rel'],['Consultoria','caixa']]]],
+}
+const fmt=(n)=>'€ '+n.toLocaleString('pt-PT')
+const fmt2=(n)=>'€ '+n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})
+
+// ── PAINEL (Contabilidade) — estrutura fiel a src/pages/contabilidade/Dashboard.jsx
+// Dados reais lidos da conta de admin em produção.
+function painel(){
+  const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+  const inc=[0,0,0,0,2000,2000,2000,2000,2000,2000,0,0], exp=[0,0,0,950,950,950,950,950,950,950,0,0], pred=[0,0,0,0,0,0,1200,1200,1200,1200,1200,1200]
+  const max=Math.max(...inc,...exp.map((e,i)=>e+pred[i]))||1
+  return `
+  <div style="display:flex;gap:9px;align-items:flex-start;padding:11px 14px;border-radius:11px;background:${T.softCardBg};border:1px solid ${T.cardBorder};font-size:11.5px;line-height:1.5;color:${T.textMuted};margin-bottom:18px">
+    <span>ⓘ</span><span>Valores estimados a partir dos lançamentos introduzidos. Não os considere definitivos — confirme sempre os montantes finais com a autoridade tributária ou com o seu contabilista certificado.</span></div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;gap:4px;background:${T.cardBg};border-radius:10px;padding:4px;border:1px solid ${T.cardBorder}">
+      <button style="padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ${G};background:${T.accent};color:#fff">Anual</button>
+      <button style="padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ${T.cardBorder};background:${T.cardBg};color:#64748b">Trimestral</button>
+    </div>
+    <span style="margin-left:auto;font-size:12px;font-weight:700;color:${GOLD}">2026</span>
+  </div>
+
+  <!-- Alerta Familienversicherung (cores fixas no código real) -->
+  <div style="background:#fdeaea;border:1px solid #f5b5b5;border-radius:12px;padding:13px 17px;margin-bottom:16px;display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+    <span style="font-size:17px">🔴</span>
+    <span style="font-size:13px;font-weight:600;color:#991b1b;flex:1;min-width:220px">Atenção: o teu lucro mensal está em 173% do limite da Familienversicherung (565 €/mês).</span>
+    <button style="padding:7px 14px;background:${T.btnBg};color:${T.btnInk};border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">Ver detalhes →</button>
+  </div>
+
+  <!-- KPIs de topo (fundos pastel fixos) -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    ${[[fmt(12000),'Receita',GREEN,'#f0fdf4'],[fmt(11400),'Custos fixos','#1d4ed8','#eff6ff'],
+       [fmt(0),'Custos variáveis','#c2410c','#fff7ed'],[fmt(600),'Resultado do ano',G,'#fff']]
+      .map(([v,l,c,bg])=>`<div class="kpibox" style="background:${bg};border:1px solid ${T.cardBorder}">
+        <div class="kpin" style="color:${c}">${v}</div><div class="kpil" style="color:${T.textMuted}">${l}</div></div>`).join('')}
+  </div>
+
+  <!-- Custos fixos previstos -->
+  <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:18px">🔁</span>
+    <span style="font-size:13px;color:#92400e;font-weight:600">Custos fixos previstos (por confirmar) · 2026: <strong>${fmt2(7200)}</strong> · 6</span>
+    <button style="margin-left:auto;padding:7px 14px;background:${T.btnBg};color:${T.btnInk};border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer">Confirmar →</button>
+  </div>
+
+  <!-- Reserva para IR -->
+  <div class="card" style="background:${T.cardBg};border:1px solid ${T.cardBorder};padding:18px 22px;margin-bottom:20px">
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <h3 class="sec" style="color:${G};margin:0">Reserva para IR · 2026</h3>
+      <span style="font-size:11px;color:${T.subtle}">25% sobre o resultado do período</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      ${[['Resultado (base)',fmt2(600),G,BG,0],['A reservar (25%)',fmt2(150),'#b45309','#fffbeb',1],['Resultado do ano',fmt2(450),'#065f46','#f0fdf4',0]]
+        .map(([l,v,c,bg,s])=>`<div class="mini" style="background:${bg};border:1px solid ${T.cardBorder}">
+          <div class="minil" style="color:${T.textMuted}">${l}</div>
+          <div class="minin" style="color:${c};font-size:${s?'22px':'19px'}">${v}</div></div>`).join('')}
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:stretch">
+    <!-- Fluxo de caixa -->
+    <div class="card" style="background:${T.cardBg};border:1px solid ${T.cardBorder};padding:20px 22px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h3 class="sec" style="color:${G};margin:0">Fluxo de Caixa por Mês · 2026</h3>
+        <div style="display:flex;gap:14px">
+          ${[['Entradas',GREEN],['Saídas',RED],['Previsto','rgba(229,62,62,.38)']].map(([l,c])=>
+            `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:${T.textMuted};font-weight:600">
+              <span style="width:10px;height:10px;border-radius:3px;background:${c}"></span>${l}</span>`).join('')}
+        </div></div>
+      <div style="display:flex;align-items:flex-end;gap:6px;flex:1;min-height:180px;border-bottom:2px solid #e2e8f0">
+        ${meses.map((m,i)=>`<div style="flex:1;display:flex;align-items:flex-end;gap:2px;height:100%;justify-content:center">
+          <div style="width:42%;height:${(inc[i]/max)*100}%;min-height:${inc[i]>0?'3px':'0'};background:${GREEN};border-radius:3px 3px 0 0"></div>
+          <div style="width:42%;height:100%;display:flex;flex-direction:column;justify-content:flex-end">
+            ${pred[i]>0?`<div style="height:${(pred[i]/max)*100}%;background:rgba(229,62,62,.38);border-radius:3px 3px 0 0"></div>`:''}
+            <div style="height:${(exp[i]/max)*100}%;min-height:${exp[i]>0?'3px':'0'};background:${RED};border-radius:${pred[i]>0?'0':'3px 3px 0 0'}"></div>
+          </div></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        ${meses.map(m=>`<div style="flex:1;text-align:center;font-size:10px;color:${T.subtle};font-weight:600">${m}</div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Break-even -->
+    <div class="card" style="background:${T.cardBg};border:1px solid ${T.cardBorder};padding:20px 22px">
+      <h3 class="sec" style="color:${G};margin:0 0 4px">Análise de Break-even</h3>
+      <p style="font-size:11px;color:${T.subtle};margin:0 0 18px">Receita mínima para cobrir todos os custos.</p>
+      <div style="background:${BG};border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;border:1px solid ${T.cardBorder}">
+        <div style="font-size:11px;color:${T.textMuted};font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Ponto de equilíbrio</div>
+        <div style="font-size:28px;font-weight:900;color:${G}">${fmt2(11400)}</div></div>
+      <div style="margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:11px;font-weight:700;color:${GREEN}">Acima do break-even ✓</span>
+          <span style="font-size:11px;font-weight:800;color:${GREEN}">100%</span></div>
+        <div style="height:9px;border-radius:20px;background:${T.trackBg};overflow:hidden"><div style="width:100%;height:100%;background:${GREEN}"></div></div>
+      </div>
+      ${[['Receita',fmt2(12000)],['Custos Fixos',fmt2(11400)],['Custos Variáveis',fmt2(0)],['Margem de Contribuição','100%']]
+        .map(([l,v],i)=>`<div style="display:flex;justify-content:space-between;padding:8px 0;${i<3?`border-bottom:1px solid ${T.rowBorder}`:''}">
+          <span style="font-size:12px;color:${T.textMuted}">${l}</span><span style="font-size:12.5px;font-weight:700;color:${T.heading}">${v}</span></div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Receita por produto -->
+  <div class="card" style="background:${T.cardBg};border:1px solid ${T.cardBorder};padding:20px 22px;margin-top:16px">
+    <h3 class="sec" style="color:${G}">Receita por Produto/Serviço</h3>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:700;color:${T.heading}">Consultoria Contábil</span>
+      <span style="font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:${T.chipBg};color:${T.chipText}">SERVIÇO</span>
+      <span style="margin-left:auto;font-size:13px;font-weight:800;color:${T.heading}">${fmt2(12000)} · 100%</span></div>
+    <div style="height:9px;border-radius:20px;background:${T.trackBg};overflow:hidden"><div style="width:100%;height:100%;background:${GREEN}"></div></div>
+  </div>`
+}
+
+// ── Landing das outras plataformas (para o toggle ter destino) ──
+function gestao(){
+  return `<div style="margin-bottom:20px">
+    <div style="font-size:10.5px;letter-spacing:2.6px;text-transform:uppercase;font-weight:600;color:${T.accent};margin-bottom:7px">Gestão</div>
+    <h1 style="margin:0;font-family:${T.fontDisplay};font-weight:600;font-size:34px;line-height:1.05;letter-spacing:-.5px;color:${T.heading}">Clientes Ativos</h1>
+    <p style="font-size:12.5px;color:${T.textMuted};margin:8px 0 0">Visão geral dos clientes e acesso rápido à visualização completa.</p></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    ${[['GR','GrünBau GmbH (Demo)','demo.gruenbau@lc-demo.com',fmt(139409),fmt(20273)],
+       ['CA','Café Lisboa Lda (Demo)','demo.cafelisboa@lc-demo.com',fmt(48845),fmt(23353)]]
+      .map(([ini,n,e,r,s])=>`<div class="card" style="background:${T.cardBg};border:1px solid ${T.cardBorder};box-shadow:${T.cardShadow};padding:18px 20px">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+          <span style="width:44px;height:44px;border-radius:50%;background:${T.avatarBg};color:${T.avatarInk};display:flex;align-items:center;justify-content:center;font-family:${T.fontDisplay};font-size:15px;font-weight:600">${ini}</span>
+          <div><div style="font-size:15px;font-weight:800;color:${T.heading}">${n}</div>
+            <div style="font-size:11.5px;color:${T.subtle}">${e}</div></div></div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#ede9fe;color:#5b21b6">Contab. + ESG</span>
+          <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${T.dueOk.bg};color:${T.dueOk.ink}">● ativo</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          ${[['Receita (ano)',r],['Saldo',s],['Diagnóstico ESG','28/28'],['Ano ref.','2025']]
+            .map(([l,v])=>`<div style="background:${T.softCardBg};border-radius:11px;padding:13px 15px">
+              <div style="font-size:10.5px;font-weight:700;color:${T.textMuted};text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${l}</div>
+              <div style="font-size:20px;font-weight:800;color:${T.heading};font-family:${T.fontNum}">${v}</div></div>`).join('')}</div>
+        <div style="display:flex;gap:8px">
+          <button style="flex:1;padding:10px;border:none;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;background:${T.btnBg};color:${T.btnInk}">👁 Plataforma</button>
+          <button style="flex:1;padding:10px;border:1px solid ${T.cardBorder};border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer;background:transparent;color:${T.textMuted}">🗂 Dados &amp; Histórico</button></div>
+      </div>`).join('')}
+  </div>`
+}
+function esg(){
+  return `<div style="margin-bottom:20px">
+    <div style="font-size:10.5px;letter-spacing:2.6px;text-transform:uppercase;font-weight:600;color:${T.accent};margin-bottom:7px">Materialidade</div>
+    <h1 style="margin:0;font-family:${T.fontDisplay};font-weight:600;font-size:34px;line-height:1.05;letter-spacing:-.5px;color:${T.heading}">Dupla Materialidade</h1>
+    <p style="font-size:12.5px;color:${T.textMuted};margin:8px 0 0;max-width:560px">Pontua cada tema em duas perspetivas (1–5). O quadrante superior direito é material — é onde se trabalha.</p></div>
+  <div class="card" style="background:${T.cardBg};border:1px solid ${T.cardBorder};box-shadow:${T.cardShadow};padding:18px 20px;max-width:430px">
+    <div style="font-family:${T.fontDisplay};font-size:17px;font-weight:600;color:${T.heading};margin-bottom:10px">Matriz de materialidade</div>
+    <svg viewBox="0 0 380 396" style="width:100%">
+      <rect x="242" y="14" width="124" height="120" fill="${T.accent}" opacity="0.13"/>
+      <text x="362" y="28" text-anchor="end" font-size="10" font-weight="800" fill="${T.accent}" letter-spacing="1">MATERIAL</text>
+      ${[1,2,3,4,5].map(v=>{const x=42+((v-1)/4)*324,y=338-((v-1)/4)*324;return`
+        <line x1="${x}" y1="14" x2="${x}" y2="338" stroke="${T.rowBorder}"/><line x1="42" y1="${y}" x2="366" y2="${y}" stroke="${T.rowBorder}"/>
+        <text x="${x}" y="352" text-anchor="middle" font-size="9" fill="${T.subtle}">${v}</text>
+        <text x="34" y="${y+3}" text-anchor="end" font-size="9" fill="${T.subtle}">${v}</text>`}).join('')}
+      <line x1="242" y1="14" x2="242" y2="338" stroke="${T.accent}" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <line x1="42" y1="134" x2="366" y2="134" stroke="${T.accent}" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <line x1="42" y1="338" x2="366" y2="338" stroke="${T.textMuted}" stroke-width="1.5"/>
+      <line x1="42" y1="14" x2="42" y2="338" stroke="${T.textMuted}" stroke-width="1.5"/>
+      <text x="204" y="374" text-anchor="middle" font-size="10" font-weight="600" fill="${T.textMuted}">Importância / impacto para a empresa →</text>
+      <text x="12" y="176" text-anchor="middle" font-size="10" font-weight="600" fill="${T.textMuted}" transform="rotate(-90 12 176)">Importância para os stakeholders →</text>
+      ${[['CL',5,4,'#0a7a3e',1],['RE',4,4,'#0a7a3e',1],['EQ',4,5,'#1e60c8',1],['AC',4,4,'#a9781a',1],['PO',3,4,'#0a7a3e',0],['AG',3,3,'#0a7a3e',0]]
+        .map(([ab,c,s,col,mat],i)=>{const x=42+((c-1)/4)*324+(i%2?9:0),y=338-((s-1)/4)*324-(i%2?7:0);return`
+        <circle cx="${x}" cy="${y}" r="${mat?10:8}" fill="${col}" opacity="${mat?0.95:0.7}" ${mat?`stroke="${T.accent}" stroke-width="2"`:''}/>
+        <text x="${x}" y="${y+3}" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff">${ab}</text>`}).join('')}
+    </svg></div>`
+}
+
+// ── Casca ───────────────────────────────────────────────────────────────────
+function shell(){
+  let i=-1
+  const secs=NAV[plat].map(([label,items])=>`
+    <div style="margin-bottom:20px">
+      <div class="seclabel" style="color:${T.sectionLabel}">${label}</div>
+      ${items.map(([n,icon,badge])=>{i++;const on=i===navIdx;return`
+        <div class="nav" data-nav="${i}" style="background:${on?T.navActiveBg:'transparent'};color:${on?T.navActiveText:T.navText};font-weight:${on?600:400}">
+          ${on?`<span style="position:absolute;left:0;width:3px;height:20px;background:${T.accent};border-radius:0 3px 3px 0"></span>`:''}
+          ${I[icon]}<span>${n}</span>
+          ${badge?`<span style="margin-left:auto;font-size:10px;font-weight:700;border-radius:20px;padding:1px 7px;background:${T.badgeBg};color:${T.badgeInk}">${badge}</span>`:''}
+        </div>`}).join('')}
+    </div>`).join('')
+
+  const body = plat==='contabil' ? painel() : plat==='gestao' ? gestao() : esg()
+
+  return `<div class="app" style="background:${T.appBg};font-family:${T.fontBody}">
+    <div class="side" style="background:${T.sidebarBg};border-right:1px solid ${T.sidebarBorder}">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 6px 20px">
+        <div style="width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:${T.fontDisplay};font-size:19px;font-weight:600;background:${T.logoBg};color:${T.logoInk};border:${T.logoBorder}">C</div>
+        <div><div style="font-family:${T.fontDisplay};font-size:19px;font-weight:600;font-style:italic;color:#f3ecdb;line-height:1.05">Lúcia Cílio</div>
+          <div style="font-size:8.5px;letter-spacing:2.6px;text-transform:uppercase;color:${T.accent};margin-top:3px">Office Consulting</div></div>
+      </div>
+      <div style="flex:1">${secs}</div>
+      <div style="border-top:1px solid ${T.sidebarBorder};padding-top:14px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+          <span style="width:28px;height:28px;border-radius:50%;background:${T.avatarBg};color:${T.avatarInk};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:${T.fontDisplay}">VI</span>
+          <span style="font-size:12.5px;color:${T.navText};flex:1">Vinícius Bohn</span>
+          <span style="width:30px;height:30px;border-radius:8px;border:1px solid ${T.sidebarBorder};color:${T.sidebarSub};display:flex;align-items:center;justify-content:center;font-size:13px">⇤</span>
+        </div>
+        <!-- Toggle de plataforma (admin) — funcional -->
+        <div style="display:flex;gap:4px;padding:2px;margin-bottom:14px;border-radius:9px;border:1px solid ${T.sidebarBorder}">
+          ${[['gestao','Gestão'],['contabil','Contábil'],['esg','ESG']].map(([k,l])=>`
+            <button data-plat="${k}" style="flex:1;padding:7px 4px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;
+              background:${plat===k?T.accent:'transparent'};color:${plat===k?'#0a2f1a':T.sidebarSub}">${l}</button>`).join('')}
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid ${T.sidebarBorder}">
+            ${['🇵🇹','🇩🇪','🇬🇧'].map((f,fi)=>`<span style="padding:6px 9px;font-size:13px;background:${fi===0?T.accent:'transparent'};opacity:${fi===0?1:.5}">${f}</span>`).join('')}
+          </div>
+          <button data-theme="1" style="width:32px;height:32px;border-radius:8px;background:${T.toggleBg};border:1px solid ${T.sidebarBorder};color:${T.accent};cursor:pointer;font-size:14px">${themeKey==='night'?'☀':'☾'}</button>
+        </div>
+      </div>
+    </div>
+    <div class="main" style="background:${T.mainBg};color:${T.text}">${body}</div>
+  </div>`
+}
+
+const stage=document.getElementById('stage')
+function draw(){
+  stage.innerHTML=shell()
+  document.body.style.background=T.appBg
+  stage.querySelectorAll('[data-plat]').forEach(b=>b.onclick=()=>{plat=b.dataset.plat;navIdx=0;draw()})
+  stage.querySelectorAll('[data-nav]').forEach(n=>n.onclick=()=>{navIdx=+n.dataset.nav;draw()})
+  stage.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>setTheme(themeKey==='light'?'night':'light'))
+}
+function setTheme(k){themeKey=k;T=THEMES[k]
+  document.getElementById('tL').className=k==='light'?'on':''
+  document.getElementById('tN').className=k==='night'?'on':''
+  draw()}
+document.getElementById('tL').onclick=()=>setTheme('light')
+document.getElementById('tN').onclick=()=>setTheme('night')
+draw()
+</script>
+</body>
+</html>
