@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lúcia Cílio — Revisão de Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Instrument+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:#1b1b1b;font-family:'Instrument Sans',system-ui,sans-serif}
+
+  /* ── Barra de revisão (não faz parte da plataforma) ── */
+  #chrome{position:fixed;inset:0 0 auto 0;z-index:100;background:#141414;color:#e8e8e8;
+    border-bottom:1px solid #333;padding:9px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+  #chrome strong{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#c9a84c;letter-spacing:.3px}
+  #chrome select,#chrome button{background:#222;color:#e8e8e8;border:1px solid #3a3a3a;border-radius:7px;
+    padding:6px 10px;font-size:12px;font-family:inherit;cursor:pointer}
+  #chrome button.on{background:#c9a84c;color:#20140a;border-color:#c9a84c;font-weight:700}
+  #chrome .sep{width:1px;height:20px;background:#333}
+  #chrome .hint{color:#888;font-size:11.5px}
+  #stage{padding-top:46px}
+
+  /* Modo "todos": cada ecrã numa moldura com legenda */
+  .shot{margin:0 0 30px}
+  .shot-label{position:sticky;top:46px;z-index:20;background:#141414;color:#c9a84c;font-size:11px;font-weight:700;
+    letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-top:1px solid #333}
+  .frame{border:0}
+
+  /* ── Plataforma ── */
+  .app{display:flex;min-height:calc(100vh - 46px)}
+  .side{width:238px;flex:none;display:flex;flex-direction:column;padding:22px 14px 16px}
+  .brandrow{display:flex;align-items:center;gap:11px;padding:0 6px 20px}
+  .logo{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600}
+  .brandname{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;line-height:1.05;font-style:italic}
+  .brandsub{font-size:8.5px;letter-spacing:2.6px;text-transform:uppercase;margin-top:3px}
+  .seclabel{font-size:9.5px;letter-spacing:2.2px;text-transform:uppercase;font-weight:600;padding:0 10px 8px}
+  .nav{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;font-size:13.5px;margin-bottom:2px}
+  .nav.act{font-weight:600}
+  .nav .bdg{margin-left:auto;font-size:10px;font-weight:700;border-radius:20px;padding:1px 7px}
+  .main{flex:1;min-width:0;padding:30px 34px 44px}
+
+  /* utilitários dos mockups */
+  .h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:1.05;letter-spacing:-.5px;margin:0}
+  .eyebrow{font-size:10.5px;letter-spacing:2.6px;text-transform:uppercase;font-weight:600;margin-bottom:7px}
+  .sub{font-size:12.5px;margin:8px 0 0;line-height:1.5}
+  .card{border-radius:14px;padding:18px 20px}
+  .grid{display:grid;gap:14px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .kpi-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .kpi-v{font-size:26px;font-weight:800;letter-spacing:-.5px;font-family:'Cormorant Garamond',serif}
+  .chip{padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;display:inline-block}
+  .btn{padding:10px 20px;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:9px 10px}
+  td{padding:9px 10px;font-size:12.5px}
+  input,select,textarea{font-family:inherit}
+  .inp{padding:9px 11px;border-radius:9px;font-size:13px;width:100%}
+  .note{display:flex;gap:9px;align-items:flex-start;padding:11px 14px;border-radius:11px;font-size:11.5px;line-height:1.5;margin-bottom:18px}
+</style>
+</head>
+<body>
+
+<div id="chrome">
+  <strong>Lúcia Cílio</strong>
+  <span class="hint">revisão de design</span>
+  <span class="sep"></span>
+  <select id="pick"></select>
+  <span class="sep"></span>
+  <button id="prev">←</button><button id="next">→</button>
+  <span class="sep"></span>
+  <button id="tLight" class="on">Claro</button>
+  <button id="tNight">Noturno</button>
+  <span class="sep"></span>
+  <button id="all">Ver todos</button>
+  <span class="hint" id="count"></span>
+</div>
+
+<div id="stage"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// Tokens copiados de src/theme.js — o mockup usa exatamente as mesmas cores,
+// fontes e sombras da plataforma. Se o tema mudar lá, tem de mudar aqui.
+// ════════════════════════════════════════════════════════════════════════════
+const THEMES = {
+  light: {
+    appBg:'#f5f1e8', mainBg:'#f5f1e8',
+    sidebarBg:'#0a2f1a', sidebarBorder:'rgba(201,168,76,.22)', sidebarSub:'#9db3a3',
+    logoBg:'transparent', logoInk:'#c9a84c', logoBorder:'1.5px solid #c9a84c',
+    navActiveBg:'rgba(201,168,76,.13)', navActiveText:'#f3ecdb', navText:'#b9c8be',
+    sectionLabel:'#6f8b78',
+    cardBg:'#fff', cardBorder:'#e7decd', cardShadow:'0 1px 2px rgba(10,47,26,.04)',
+    softCardBg:'#fbf7ee',
+    heading:'#0a2f1a', text:'#374a3e', textMuted:'#8a9990', subtle:'#a2ab9f',
+    trackBg:'#f0ead9', rowBorder:'#eee6d6', headBg:'#f6f1e6',
+    chipBg:'#f0ead9', chipText:'#6b5a2a',
+    inputBg:'#fff', inputBorder:'#ddd2ba', segBg:'#eae3d4', segBorder:'#ddd2ba',
+    badgeBg:'#fbe6e2', badgeInk:'#c0392b',
+    btnBg:'#0a2f1a', btnInk:'#f3ecdb',
+    avatarBg:'#0a2f1a', avatarInk:'#c9a84c',
+    pos:'#2f7d4f', neg:'#c0392b', accent:'#c9a84c',
+    gridLine:'#eee6d6',
+    loginBg:'#f5f1e8', loginShadow:'0 30px 70px -30px rgba(10,47,26,.35)',
+    fontBody:"'Instrument Sans',system-ui,sans-serif", fontDisplay:"'Cormorant Garamond',serif", fontNum:"'Cormorant Garamond',serif",
+    dueOk:{bg:'#e7f4ec',ink:'#2f7d4f'}, dueSoon:{bg:'#fbf3df',ink:'#a5842f'}, dueLate:{bg:'#fbe6e2',ink:'#c0392b'},
+  },
+  night: {
+    appBg:'#071c11', mainBg:'radial-gradient(120% 100% at 100% 0%,#0d2c1a 0%,#071c11 55%)',
+    sidebarBg:'#04140b', sidebarBorder:'rgba(201,168,76,.22)', sidebarSub:'#8ba392',
+    logoBg:'linear-gradient(140deg,#c9a84c,#a5842f)', logoInk:'#071c11', logoBorder:'none',
+    navActiveBg:'rgba(201,168,76,.16)', navActiveText:'#f3ecdb', navText:'#8ba392',
+    sectionLabel:'#5f7c6b',
+    cardBg:'rgba(255,255,255,.045)', cardBorder:'rgba(201,168,76,.14)', cardShadow:'none',
+    softCardBg:'rgba(255,255,255,.04)',
+    heading:'#f2f7f3', text:'#cfe0d6', textMuted:'#8ba392', subtle:'#5f7c6b',
+    trackBg:'rgba(255,255,255,.07)', rowBorder:'rgba(255,255,255,.07)', headBg:'rgba(255,255,255,.03)',
+    chipBg:'rgba(201,168,76,.14)', chipText:'#d8bd74',
+    inputBg:'rgba(255,255,255,.05)', inputBorder:'rgba(201,168,76,.22)',
+    segBg:'rgba(255,255,255,.05)', segBorder:'rgba(201,168,76,.22)',
+    badgeBg:'rgba(201,168,76,.2)', badgeInk:'#d8bd74',
+    btnBg:'linear-gradient(140deg,#c9a84c,#a5842f)', btnInk:'#20140a',
+    avatarBg:'linear-gradient(140deg,#164e2b,#0a2f1a)', avatarInk:'#c9a84c',
+    pos:'#7fd6a0', neg:'#e08b7a', accent:'#c9a84c',
+    gridLine:'rgba(255,255,255,.06)',
+    loginBg:'radial-gradient(120% 90% at 50% 0%,#0d2c1a 0%,#071c11 60%)', loginShadow:'0 30px 80px -30px rgba(0,0,0,.6)',
+    fontBody:"'Manrope',system-ui,sans-serif", fontDisplay:"'Cormorant Garamond',serif", fontNum:"'Space Grotesk',monospace",
+    dueOk:{bg:'rgba(127,214,160,.14)',ink:'#7fd6a0'}, dueSoon:{bg:'rgba(201,168,76,.18)',ink:'#d8bd74'}, dueLate:{bg:'rgba(224,86,66,.16)',ink:'#e08b7a'},
+  },
+}
+let T = THEMES.light
+
+// ── Ícones do menu (os mesmos traços da plataforma) ──
+const ic = (inner) => `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex:none">${inner}</svg>`
+const I = {
+  painel: ic('<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>'),
+  caixa: ic('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8 8h8M8 12h5"/>'),
+  catalogo: ic('<path d="M20.6 13.4 12 22l-9-9V4a1 1 0 0 1 1-1h8z"/><circle cx="7.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"/>'),
+  obrig: ic('<rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/>'),
+  preco: ic('<rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M8 7h8M8 11h8M8 15h4"/>'),
+  kpi: ic('<path d="M4 20V4M4 20h16"/><path d="M8 16l3-4 3 2 4-6" stroke-width="1.6"/>'),
+  clientes: ic('<circle cx="9" cy="8" r="3.3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.5a3 3 0 0 1 0 5.6M17.5 20a5 5 0 0 0-3-4.6"/>'),
+  empresa: ic('<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/>'),
+  rel: ic('<path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18M8.5 13h7M8.5 16.5h7" stroke-width="1.4"/>'),
+  ruck: ic('<path d="M12 3 4 6v6c0 4.5 3.2 7.5 8 9 4.8-1.5 8-4.5 8-9V6z"/><path d="M9.3 12h5.4M12 9.3v5.4" stroke-width="1.5"/>'),
+  material: ic('<rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/>'),
+  diag: ic('<path d="M12 21c4-2.5 6-6 6-11a6 6 0 0 0-12 0c0 5 2 8.5 6 11z"/><path d="M12 3c0 6 0 12 0 16" stroke-width="1.4"/>'),
+  proj: ic('<path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.2h6.5a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'),
+  admin: ic('<circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>'),
+  mkt: ic('<path d="M4 10v4h3l6 3.5v-11L7 10H4z"/><path d="M17 9.5a3.5 3.5 0 0 1 0 5" stroke-width="1.6"/>'),
+}
+
+// ── Menus por plataforma ──
+const NAV = {
+  contabil: [
+    ['Contabilidade', [['Painel','painel'],['Livro de Caixa','caixa'],['Catálogo','catalogo'],['Obrigações Fiscais','obrig',6]]],
+    ['Gestão', [['Calculadora de Preços','preco'],['Planeamento Mensal','kpi'],['Clientes','clientes'],['Empresa','empresa'],['Consultoria','rel'],['Reservas & Impostos','ruck']]],
+  ],
+  lite: [
+    ['Contabilidade', [['Painel','painel'],['Livro de Caixa','caixa'],['Catálogo','catalogo'],['Obrigações Fiscais','obrig',6]]],
+  ],
+  esg: [
+    ['ESG', [['Materialidade','material'],['Diagnóstico ESG','diag'],['KPIs & Monitorização','kpi'],['Projetos','proj'],['Relatórios','rel'],['Consultoria','caixa']]],
+  ],
+  gestao: [
+    ['Gestão', [['Clientes Ativos','clientes'],['Prospeção (CRM)','kpi'],['Marketing','mkt'],['Financeiro','caixa'],['Gestão de Acessos','admin']]],
+  ],
+}
+
+// ── Blocos reutilizáveis ──
+const card = (inner, extra='') => `<div class="card" style="background:${T.cardBg};border:1px solid ${T.cardBorder};box-shadow:${T.cardShadow};${extra}">${inner}</div>`
+const head = (eyebrow, title, sub, right='') => `
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:20px">
+    <div>
+      <div class="eyebrow" style="color:${T.accent}">${eyebrow}</div>
+      <h1 class="h1" style="color:${T.heading}">${title}</h1>
+      ${sub?`<p class="sub" style="color:${T.textMuted};max-width:560px">${sub}</p>`:''}
+    </div>
+    <div class="row">${right}</div>
+  </div>`
+const btn = (txt) => `<button class="btn" style="background:${T.btnBg};color:${T.btnInk}">${txt}</button>`
+const chip = (txt,bg,ink) => `<span class="chip" style="background:${bg};color:${ink}">${txt}</span>`
+const kpi = (l,v,s,c) => card(`<div class="kpi-l" style="color:${T.textMuted}">${l}</div>
+  <div class="kpi-v" style="color:${c||T.heading};margin:4px 0">${v}</div>
+  ${s?`<div style="font-size:11.5px;color:${T.subtle}">${s}</div>`:''}`)
+const estimate = () => `<div class="note" style="background:${T.softCardBg};border:1px solid ${T.cardBorder};color:${T.textMuted}">
+  <span>ⓘ</span><span>Valores estimados a partir dos lançamentos introduzidos. Não os considere definitivos — confirme sempre os montantes finais com a autoridade tributária ou com o seu contabilista certificado.</span></div>`
+const table = (cols, rows) => card(`<div style="overflow-x:auto"><table>
+  <thead><tr style="background:${T.headBg}">${cols.map(c=>`<th style="color:${T.textMuted}">${c}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map(r=>`<tr style="border-top:1px solid ${T.rowBorder}">${r.map(c=>`<td style="color:${T.text}">${c}</td>`).join('')}</tr>`).join('')}</tbody>
+</table></div>`,'padding:0;overflow:hidden')
+const inp = (v,w='100%') => `<input class="inp" value="${v}" style="background:${T.inputBg};border:1px solid ${T.inputBorder};color:${T.heading};width:${w}" readonly>`
+const field = (l,v,w) => `<div style="flex:1;min-width:150px"><div style="font-size:11px;font-weight:600;color:${T.textMuted};margin-bottom:6px">${l}</div>${inp(v,w)}</div>`
+
+// ── Ecrãs ───────────────────────────────────────────────────────────────────
+const S = {}
+
+S.login = () => `<div style="min-height:calc(100vh - 46px);display:flex;align-items:center;justify-content:center;background:${T.loginBg};padding:40px">
+  <div style="width:400px;max-width:100%;border-radius:20px;padding:40px 38px;background:${T.cardBg};border:1px solid ${T.cardBorder};box-shadow:${T.loginShadow}">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:26px">
+      <div class="logo" style="width:68px;height:68px;font-size:30px;border:${T.logoBorder};background:${T.logoBg};color:${T.logoInk};margin-bottom:14px">C</div>
+      <div style="font-family:${T.fontDisplay};font-size:26px;font-weight:600;font-style:italic;color:${T.heading}">Lúcia Cílio</div>
+      <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:${T.accent};margin-top:4px">Office Consulting</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:15px">
+      <div><div style="font-size:11px;font-weight:600;color:${T.textMuted};margin-bottom:7px">E-MAIL</div>${inp('lucia@exemplo.com')}</div>
+      <div><div style="font-size:11px;font-weight:600;color:${T.textMuted};margin-bottom:7px">PALAVRA-PASSE</div>${inp('••••••••')}</div>
+      <button class="btn" style="background:${T.btnBg};color:${T.btnInk};width:100%;padding:13px;margin-top:8px">Entrar</button>
+    </div>
+  </div></div>`
+
+S.senha = () => `<div style="min-height:calc(100vh - 46px);display:flex;align-items:center;justify-content:center;background:${T.loginBg};padding:40px">
+  <div style="width:400px;max-width:100%;border-radius:20px;padding:40px 38px;background:${T.cardBg};border:1px solid ${T.cardBorder};box-shadow:${T.loginShadow}">
+    <div style="text-align:center;margin-bottom:24px">
+      <div class="logo" style="width:68px;height:68px;font-size:30px;border:${T.logoBorder};background:${T.logoBg};color:${T.logoInk};margin:0 auto 14px">C</div>
+      <div style="font-family:${T.fontDisplay};font-size:24px;font-weight:600;color:${T.heading}">Definir nova palavra-passe</div>
+      <p style="font-size:13px;color:${T.textMuted};margin:6px 0 0;line-height:1.5">Recebeu uma palavra-passe temporária. Por segurança, defina a sua antes de continuar.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:15px">
+      <div><div style="font-size:11px;font-weight:600;color:${T.textMuted};margin-bottom:7px">NOVA PALAVRA-PASSE</div>${inp('••••••••••')}</div>
+      <div style="background:${T.softCardBg};border-radius:10px;padding:11px 13px">
+        <div style="font-size:10.5px;font-weight:700;color:${T.textMuted};text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">A palavra-passe deve conter:</div>
+        ${[['Pelo menos 8 caracteres',1],['Uma letra minúscula',1],['Uma letra maiúscula',1],['Um número',0],['Um caractere especial (! @ # $ % &amp; *)',0]]
+          .map(([r,ok])=>`<div style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:${ok?T.pos:T.subtle};margin-bottom:4px">
+            <span style="width:13px;text-align:center;font-weight:800">${ok?'✓':'○'}</span><span>${r}</span></div>`).join('')}
+      </div>
+      <div><div style="font-size:11px;font-weight:600;color:${T.textMuted};margin-bottom:7px">CONFIRMAR</div>${inp('••••••••••')}</div>
+      <button class="btn" style="background:${T.btnBg};color:${T.btnInk};width:100%;padding:13px">Definir e continuar</button>
+    </div>
+  </div></div>`
+
+S.painel = () => `
+  <div class="row" style="margin-bottom:16px">
+    <div style="display:flex;gap:4px;background:${T.cardBg};border-radius:10px;padding:4px;border:1px solid ${T.cardBorder}">
+      <button class="btn" style="background:${T.accent};color:#fff;padding:6px 12px;font-size:12px">Anual</button>
+      <button class="btn" style="background:transparent;color:${T.textMuted};padding:6px 12px;font-size:12px;border:1px solid ${T.cardBorder}">Trimestral</button>
+    </div>
+    <span style="margin-left:auto;font-size:12px;font-weight:700;color:${T.accent}">2026</span>
+  </div>
+  ${estimate()}
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    ${kpi('Receita','€ 139.409','ano corrente',T.pos)}
+    ${kpi('Despesas','€ 119.137','ano corrente',T.neg)}
+    ${kpi('Saldo','€ 20.273','caixa + banco')}
+    ${kpi('Margem de contribuição','58,4%','ponto de equilíbrio € 84.200',T.accent)}
+  </div>
+  <div class="grid" style="grid-template-columns:1.6fr 1fr;margin-bottom:16px">
+    ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:14px">Fluxo mensal</div>
+      <svg viewBox="0 0 520 170" style="width:100%">
+        ${[0,1,2,3].map(i=>`<line x1="0" y1="${20+i*40}" x2="520" y2="${20+i*40}" stroke="${T.gridLine}"/>`).join('')}
+        <polyline fill="none" stroke="${T.accent}" stroke-width="2.5" points="20,120 100,96 180,104 260,70 340,84 420,52 500,66"/>
+        <polyline fill="none" stroke="${T.pos}" stroke-width="2.5" stroke-dasharray="5 4" points="20,140 100,132 180,136 260,120 340,128 420,112 500,120"/>
+      </svg>
+      <div class="row" style="margin-top:10px;font-size:11.5px;color:${T.textMuted}">
+        <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:3px;background:${T.accent};display:inline-block"></span>Entradas</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:3px;background:${T.pos};display:inline-block"></span>Saídas</span>
+      </div>`)}
+    ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:12px">IVA</div>
+      ${[['IVA liquidado (vendas)','€ 22.264'],['IVA dedutível (compras)','€ 16.890'],['IVA a entregar','€ 5.374']]
+        .map(([l,v],i)=>`<div style="display:flex;justify-content:space-between;padding:9px 0;${i<2?`border-bottom:1px solid ${T.rowBorder}`:''}">
+          <span style="font-size:12.5px;color:${T.text}">${l}</span><strong style="font-size:13px;color:${i===2?T.accent:T.heading}">${v}</strong></div>`).join('')}`)}
+  </div>
+  ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:12px">Reserva para IR</div>
+    <div class="row">
+      <div style="flex:1"><div style="font-size:11.5px;color:${T.subtle}">Resultado (base)</div><div style="font-size:19px;font-weight:800;color:${T.heading}">€ 20.273</div></div>
+      <div style="flex:1"><div style="font-size:11.5px;color:${T.subtle}">A reservar (30%)</div><div style="font-size:19px;font-weight:800;color:#b45309">€ 6.082</div></div>
+      <div style="flex:2"><div style="height:8px;border-radius:20px;background:${T.trackBg};overflow:hidden"><div style="width:30%;height:100%;background:${T.accent}"></div></div></div>
+    </div>`)}`
+
+S.caixa = () => `${head('Contabilidade','Livro de Caixa','Lançamentos de entradas e saídas, com IVA e destino.',btn('+ Nova Entrada'))}
+  ${estimate()}
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    ${kpi('Entradas','€ 30.700','no período',T.pos)}
+    ${kpi('Saídas','€ 25.450','no período',T.neg)}
+    ${kpi('Saldo caixa','€ 1.240')}
+    ${kpi('Saldo banco','€ 19.033')}
+  </div>
+  ${table(['Data','Doc.','Descrição','Tipo','Categoria','Entrada','Saída','IVA','Saldo'],[
+    ['05/07','RE-2026','Bauprojekt — Abschlagszahlung','Entrada','—',`<b style="color:${T.pos}">18.500,00</b>`,'','19%','18.500,00'],
+    ['09/07','RE-2027','Altbausanierung — Rate','Entrada','—',`<b style="color:${T.pos}">9.800,00</b>`,'','19%','28.300,00'],
+    ['13/07','','Baustoffe (Zement, Stahl)','Saída','Material','',`<b style="color:${T.neg}">8.200,00</b>`,'19%','20.100,00'],
+    ['17/07','','Löhne und Gehälter','Saída','Outros','',`<b style="color:${T.neg}">14.500,00</b>`,'—','5.600,00'],
+    ['21/07','','Diesel Fuhrpark','Saída','Automóvel','',`<b style="color:${T.neg}">950,00</b>`,'19%','4.650,00'],
+  ])}`
+
+S.catalogo = () => `${head('Contabilidade','Catálogo','Produtos e serviços com preço de referência.',btn('+ Novo item'))}
+  ${table(['Nome','Tipo','Preço'],[
+    ['Neubau – Rohbau (Projeto)',chip('Serviço',T.chipBg,T.chipText),'€ 18.500,00'],
+    ['Altbausanierung (Rate)',chip('Serviço',T.chipBg,T.chipText),'€ 9.800,00'],
+    ['Energetische Modernisierung',chip('Serviço',T.chipBg,T.chipText),'€ 6.400,00'],
+    ['Nachhaltigkeitsberatung',chip('Serviço',T.chipBg,T.chipText),'€ 2.400,00'],
+  ])}`
+
+S.obrig = () => `${head('Contabilidade','Obrigações Fiscais','Prazos de entrega e pagamento gerados a partir dos Dados da Empresa.',btn('Gerar calendário'))}
+  ${estimate()}
+  <div class="row" style="margin-bottom:14px">
+    ${chip('Todas',T.segBg,T.textMuted)}${chip('Pendentes',T.accent,'#fff')}
+  </div>
+  ${table(['Obrigação','País','Prazo','Estado'],[
+    ['Umsatzsteuer-Voranmeldung','🇩🇪 DE','10/08/2026',chip('a vencer',T.dueSoon.bg,T.dueSoon.ink)],
+    ['Gewerbesteuer-Vorauszahlung','🇩🇪 DE','15/08/2026',chip('a vencer',T.dueSoon.bg,T.dueSoon.ink)],
+    ['IVA — Declaração periódica','🇵🇹 PT','20/08/2026',chip('pendente',T.chipBg,T.chipText)],
+    ['Umsatzsteuer-Voranmeldung','🇩🇪 DE','10/07/2026',chip('entregue',T.dueOk.bg,T.dueOk.ink)],
+    ['Pagamento por conta (IRC)','🇵🇹 PT','31/07/2026',chip('vencida',T.dueLate.bg,T.dueLate.ink)],
+  ])}`
+
+S.preco = () => `${head('Gestão','Calculadora de Preços','Preço final a partir de custos, margem, IVA e reserva de IR.')}
+  ${estimate()}
+  <div class="row" style="margin-bottom:18px">
+    ${['Evento','Serviço','Produto','Tratamento'].map((x,i)=>`<button class="btn" style="background:${i===1?T.btnBg:'transparent'};color:${i===1?T.btnInk:T.textMuted};border:1px solid ${T.cardBorder};padding:9px 16px;font-size:12.5px">${x}</button>`).join('')}
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 300px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      ${card(`<div class="kpi-l" style="color:${T.accent};margin-bottom:12px">Mão de obra</div>
+        <div class="row">${field('Horas','18','100%')}${field('€/hora','45','100%')}${field('Total','€ 810','100%')}</div>`)}
+      ${card(`<div class="kpi-l" style="color:${T.accent};margin-bottom:12px">Material consumido</div>
+        <div class="row">${field('Quantidade','12','100%')}${field('Custo unitário','€ 8,50','100%')}${field('Total','€ 102','100%')}</div>`)}
+      ${card(`<div class="kpi-l" style="color:${T.accent};margin-bottom:12px">Margem e impostos</div>
+        <div class="row">${field('Margem (%)','25','100%')}${field('IVA (%)','19','100%')}${field('Reserva IR (%)','30','100%')}</div>`)}
+    </div>
+    ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:14px">Resultado</div>
+      ${[['Custos totais','€ 912'],['Preço sem IVA','€ 1.140'],['IVA (19%)','€ 217'],['Reserva IR','€ 342']]
+        .map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid ${T.rowBorder}">
+          <span style="font-size:12px;color:${T.textMuted}">${l}</span><span style="font-size:13px;font-weight:700;color:${T.heading}">${v}</span></div>`).join('')}
+      <div style="margin-top:14px;padding:14px;border-radius:11px;background:${T.btnBg}">
+        <div style="font-size:10.5px;color:${T.accent};text-transform:uppercase;letter-spacing:1px;font-weight:700">Preço final</div>
+        <div style="font-size:28px;font-weight:800;color:${T.btnInk};font-family:${T.fontNum}">€ 1.357</div>
+      </div>`)}
+  </div>`
+
+S.plano = () => `${head('Planeamento','Planeamento Mensal','Planeie tratamentos/serviços por mês: receita, custos, lucro (EÜR) e reserva.',btn('Guardar'))}
+  ${estimate()}
+  ${card(`<div class="row">${field('Custos fixos mensais (€)','3.790')}${field('Horas produtivas/mês','640')}${field('Custo indireto por hora','€ 5,92')}${field('Reserva (%)','30')}</div>`,'margin-bottom:16px')}
+  ${table(['Tratamento/Serviço','Duração','Preço','Qtd./mês','Material','Receita','Lucro (EÜR)','Reserva','Após reserva'],[
+    ['Neubau – Rohbau','4800 min','€ 18.500','1','€ 8.200','€ 18.500','€ 9.826','€ 2.948','€ 6.878'],
+    ['Altbausanierung','2400 min','€ 9.800','1','€ 3.900','€ 9.800','€ 5.663','€ 1.699','€ 3.964'],
+    ['Energetische Modern.','1600 min','€ 6.400','1','€ 2.600','€ 6.400','€ 3.642','€ 1.093','€ 2.549'],
+    [`<b>TOTAL</b>`,'','','','',`<b>€ 34.700</b>`,`<b>€ 19.131</b>`,`<b>€ 5.740</b>`,`<b style="color:${T.pos}">€ 13.391</b>`],
+  ])}`
+
+S.clientes = () => `${head('Gestão','Clientes','Carteira de clientes por país e serviço.',btn('+ Novo cliente'))}
+  ${table(['Nome','País','Setor','Serviço','Estado'],[
+    ['Stadtwerke München','🇩🇪 DE','Setor público',chip('Contab.',T.chipBg,T.chipText),chip('ativo',T.dueOk.bg,T.dueOk.ink)],
+    ['Wohnbau Genossenschaft eG','🇩🇪 DE','Imobiliário',chip('Contab.',T.chipBg,T.chipText),chip('ativo',T.dueOk.bg,T.dueOk.ink)],
+    ['Familie Weber (Privat)','🇩🇪 DE','Cliente privado',chip('Contab.',T.chipBg,T.chipText),chip('ativo',T.dueOk.bg,T.dueOk.ink)],
+  ])}`
+
+S.empresa = () => `${head('Definições','Dados da Empresa','Estes dados determinam as regras fiscais aplicadas em toda a plataforma.',btn('Guardar'))}
+  ${card(`<div class="row" style="margin-bottom:14px">${field('Nome da empresa','GrünBau GmbH')}${field('País','🇩🇪 Deutschland')}${field('Moeda','EUR')}</div>
+    <div class="row" style="margin-bottom:14px">${field('Regime de IVA','Regime normal')}${field('Taxa de IVA (%)','19')}${field('Reserva para IR (%)','30')}</div>
+    <div class="row">${field('Krankenversicherung (€)','420')}${field('Rentenversicherung (€)','180')}${field('Limite Familienversicherung (€)','565')}</div>`)}`
+
+S.ruck = () => `${head('🇩🇪 Deutschland','Rücklagen &amp; Steuern','Mantém o controlo e evita surpresas com o Finanzamt.')}
+  ${estimate()}
+  <div class="grid" style="grid-template-columns:1fr 300px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      ${card(`<div style="font-size:15px;font-weight:700;color:${T.heading};margin-bottom:12px">1. Einkommensteuer-Rücklage</div>
+        <div class="row">${field('Gewinn bis heute','€ 20.273')}${field('Prozentsatz (%)','30')}${field('Empfohlene Rücklage','€ 6.082')}</div>`)}
+      ${card(`<div style="font-size:15px;font-weight:700;color:${T.heading};margin-bottom:12px">2. Umsatzsteuer</div>
+        <div class="row">${field('Eingenommene USt','€ 22.264')}${field('Vorsteuer','€ 16.890')}${field('Zahllast','€ 5.374')}</div>`)}
+      ${card(`<div style="font-size:15px;font-weight:700;color:${T.heading};margin-bottom:12px">3. Familienversicherung — Check</div>
+        <div class="row" style="align-items:center">
+          <span style="width:12px;height:12px;border-radius:50%;background:${T.pos};display:inline-block"></span>
+          <span style="font-size:13px;color:${T.text}"><b>OK — unter Grenze</b> · Monatsgewinn € 0 / Grenze € 565 (0%)</span>
+        </div>`)}
+    </div>
+    ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:14px">Auf einen Blick</div>
+      ${[['Für Steuern reserviert','€ 6.082'],['USt-Zahllast','€ 5.374'],['Vorsorge (monatlich)','€ 600']]
+        .map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid ${T.rowBorder}">
+          <span style="font-size:12px;color:${T.textMuted}">${l}</span><span style="font-size:13px;font-weight:700;color:${T.heading}">${v}</span></div>`).join('')}
+      <div style="margin-top:14px;padding:14px;border-radius:11px;background:${T.softCardBg}">
+        <div style="font-size:11px;color:${T.textMuted}">Gesamt (aktuell)</div>
+        <div style="font-size:24px;font-weight:800;color:${T.accent};font-family:${T.fontNum}">€ 12.056</div>
+      </div>`)}
+  </div>`
+
+S.materialidade = () => `${head('Materialidade','Dupla Materialidade','Pontua cada tema em duas perspetivas (1–5). O quadrante superior direito é material — é onde se trabalha.',
+  `<span style="font-size:11.5px;color:${T.subtle}">Pontuados: <b style="color:${T.heading}">16/16</b></span>${btn('Guardar')}`)}
+  <div class="grid" style="grid-template-columns:1fr 420px;align-items:start">
+    <div>
+      ${['E','S','G'].map((p,pi)=>{
+        const meta=[{c:'#0a7a3e',n:'Ambiente'},{c:'#1e60c8',n:'Social'},{c:'#a9781a',n:'Governança'}][pi]
+        const temas=[[['Clima e energia',4,5],['Poluição',4,3],['Água',3,3]],[['Equipa própria',5,4],['Formação',3,4]],[['Anticorrupção',4,4],['Conduta',3,4]]][pi]
+        return card(`<div class="row" style="margin-bottom:12px">
+          <span style="width:22px;height:22px;border-radius:6px;background:${meta.c};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${p}</span>
+          <span style="font-family:${T.fontDisplay};font-size:17px;font-weight:600;color:${T.heading}">${meta.n}</span></div>
+          ${temas.map(([n,s,c])=>`<div style="padding:10px 0;border-top:1px solid ${T.rowBorder};display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:700;color:${T.heading}">${n}</span>
+            <span style="display:flex;gap:12px">
+              <span style="display:flex;gap:3px">${[1,2,3,4,5].map(v=>`<span style="width:22px;height:20px;border-radius:5px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;background:${v<=s?meta.c:'transparent'};color:${v<=s?'#fff':T.subtle};border:1px solid ${v<=s?meta.c:T.inputBorder}">${v}</span>`).join('')}</span>
+              <span style="display:flex;gap:3px">${[1,2,3,4,5].map(v=>`<span style="width:22px;height:20px;border-radius:5px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;background:${v<=c?meta.c:'transparent'};color:${v<=c?'#fff':T.subtle};border:1px solid ${v<=c?meta.c:T.inputBorder}">${v}</span>`).join('')}</span>
+            </span></div>`).join('')}`,'margin-bottom:14px')
+      }).join('')}
+    </div>
+    <div>
+      ${card(`<div class="row" style="margin-bottom:10px"><span style="font-family:${T.fontDisplay};font-size:17px;font-weight:600;color:${T.heading}">Matriz de materialidade</span>
+        <span style="margin-left:auto;font-size:11px;color:${T.textMuted}">Limiar 3.5</span></div>
+        <svg viewBox="0 0 380 396" style="width:100%">
+          <rect x="242" y="14" width="124" height="120" fill="${T.accent}" opacity="0.13"/>
+          <text x="362" y="28" text-anchor="end" font-size="10" font-weight="800" fill="${T.accent}" letter-spacing="1">MATERIAL</text>
+          ${[1,2,3,4,5].map(v=>{const x=42+((v-1)/4)*324,y=338-((v-1)/4)*324;return`
+            <line x1="${x}" y1="14" x2="${x}" y2="338" stroke="${T.gridLine}"/>
+            <line x1="42" y1="${y}" x2="366" y2="${y}" stroke="${T.gridLine}"/>
+            <text x="${x}" y="352" text-anchor="middle" font-size="9" fill="${T.subtle}">${v}</text>
+            <text x="34" y="${y+3}" text-anchor="end" font-size="9" fill="${T.subtle}">${v}</text>`}).join('')}
+          <line x1="242" y1="14" x2="242" y2="338" stroke="${T.accent}" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <line x1="42" y1="134" x2="366" y2="134" stroke="${T.accent}" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <line x1="42" y1="338" x2="366" y2="338" stroke="${T.textMuted}" stroke-width="1.5"/>
+          <line x1="42" y1="14" x2="42" y2="338" stroke="${T.textMuted}" stroke-width="1.5"/>
+          <text x="204" y="374" text-anchor="middle" font-size="10" font-weight="600" fill="${T.textMuted}">Importância / impacto para a empresa →</text>
+          <text x="12" y="176" text-anchor="middle" font-size="10" font-weight="600" fill="${T.textMuted}" transform="rotate(-90 12 176)">Importância para os stakeholders →</text>
+          ${[['CL',5,4,'#0a7a3e',1],['RE',4,4,'#0a7a3e',1],['EQ',4,5,'#1e60c8',1],['AC',4,4,'#a9781a',1],['PO',3,4,'#0a7a3e',0],['AG',3,3,'#0a7a3e',0],['FO',4,3,'#1e60c8',0]]
+            .map(([ab,c,s,col,mat],i)=>{const x=42+((c-1)/4)*324+(i%2?9:0),y=338-((s-1)/4)*324-(i%2?7:0);return`
+            <circle cx="${x}" cy="${y}" r="${mat?10:8}" fill="${col}" opacity="${mat?0.95:0.7}" ${mat?`stroke="${T.accent}" stroke-width="2"`:''}/>
+            <text x="${x}" y="${y+3}" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff">${ab}</text>`}).join('')}
+        </svg>`,'margin-bottom:14px')}
+      ${card(`<div style="font-family:${T.fontDisplay};font-size:17px;font-weight:600;color:${T.heading};margin-bottom:10px">⭐ Temas materiais (4)</div>
+        ${[['CL','Clima e energia','#0a7a3e','5×4','85 t CO₂ → 60 t'],['EQ','Equipa própria','#1e60c8','4×5','2 acidentes → 0'],['RE','Resíduos','#0a7a3e','4×4','58% → 80%'],['AC','Anticorrupção','#a9781a','4×4','']]
+          .map(([ab,n,c,sc,goal])=>`<div style="padding:10px 0;border-top:1px solid ${T.rowBorder}">
+            <div class="row">
+              <span style="width:18px;height:18px;border-radius:5px;background:${c};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:800">${ab}</span>
+              <span style="font-size:12.5px;font-weight:700;color:${T.heading}">${n}</span>
+              <span style="margin-left:auto;font-size:10.5px;font-weight:700;color:${T.subtle}">${sc}</span>
+              ${chip('🎯 Meta',T.softCardBg,T.textMuted)}${chip('💶 Financeiro',T.dueOk.bg,T.dueOk.ink)}
+            </div>
+            ${goal?`<div style="font-size:11px;color:${T.text};margin-top:6px;background:${T.softCardBg};border-radius:8px;padding:7px 10px">🎯 ${goal}</div>`:''}
+          </div>`).join('')}`)}
+    </div>
+  </div>`
+
+S.diagnostico = () => `${head('Diagnóstico ESG','Questionário de Sustentabilidade','Creditreform "Advanced" 2023 · alinhado ao ESRS/EFRAG. 28 perguntas (10 Ambiente, 7 Social, 11 Governança).',
+  `<div><div style="font-size:11px;font-weight:600;color:${T.textMuted};margin-bottom:5px">Ano de referência</div>
+   <div class="row" style="gap:6px">${inp('2025','92px')}<button class="btn" style="background:${T.cardBg};color:${T.accent};border:1px solid ${T.inputBorder};padding:9px 14px">+</button></div></div>${btn('Guardar')}`)}
+  ${card(`<div style="display:flex;justify-content:space-between;margin-bottom:9px">
+    <span style="font-size:12px;font-weight:700;color:${T.text}">Respondidas</span>
+    <span style="font-size:13px;font-weight:800;color:${T.accent}">28 / 28</span></div>
+    <div style="height:8px;border-radius:20px;background:${T.softCardBg};overflow:hidden"><div style="width:100%;height:100%;background:${T.accent}"></div></div>`,'margin-bottom:18px')}
+  <div class="row" style="margin-bottom:18px">
+    ${[['E','Ambiente','#0a7a3e','#eaf5ee','10/10',1],['S','Social','#1e60c8','#e8f0fb','7/7',0],['G','Governança','#a9781a','#fbf3d9','11/11',0]]
+      .map(([l,n,c,bg,pr,act])=>`<div style="display:flex;align-items:center;gap:9px;padding:9px 15px;border-radius:10px;border:1px solid ${act?c:T.cardBorder};background:${act?bg:T.cardBg}">
+        <span style="width:22px;height:22px;border-radius:6px;background:${c};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${l}</span>
+        <span style="font-size:13px;font-weight:700;color:${act?c:T.textMuted}">${n}</span>
+        <span style="font-size:11px;font-weight:700;color:${T.subtle}">${pr}</span></div>`).join('')}
+  </div>
+  <div style="background:#eaf5ee;border-radius:12px;padding:13px 16px;margin-bottom:16px;font-size:12.5px;color:${T.text};line-height:1.5">
+    O pilar Ambiente cobre consumo de energia, emissões, água, resíduos e alinhamento à Taxonomia da UE.</div>
+  ${[[2,'Consumo de energia por fonte','Energieverbrauch nach Quelle'],[5,'Emissões de CO₂ (Scope 1, 2 e 3)','CO₂-Emissionen'],[6,'Existe meta de redução de emissões?','Gibt es ein Reduktionsziel?']]
+    .map(([n,pt,de])=>card(`<div style="display:flex;gap:13px">
+      <span style="width:26px;height:26px;flex:none;border-radius:50%;background:#eaf5ee;color:#0a7a3e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">${n}</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:${T.heading};line-height:1.45">${pt}</div>
+        <div style="font-size:11.5px;color:${T.subtle};margin-top:3px">${de}</div>
+        <div class="row" style="margin-top:14px">
+          ${n===6?`<button class="btn" style="background:#0a7a3e;color:#fff;padding:8px 18px">Sim</button>
+                   <button class="btn" style="background:transparent;color:${T.textMuted};border:1px solid ${T.inputBorder};padding:8px 18px">Não</button>`
+                 :`${field('Total','38.000','130px')}${field('Renovável (%)','62','130px')}${field('Autogeração (%)','20','130px')}`}
+        </div>
+      </div></div>`,'margin-bottom:14px')).join('')}`
+
+S.kpis = () => `${head('Monitorização ESG','KPIs &amp; Monitorização','Indicadores extraídos do questionário de sustentabilidade — calculados automaticamente.',
+  `<span style="font-size:12px;color:${T.textMuted};font-weight:600">Ano de referência</span>${inp('2025','92px')}`)}
+  ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:10px">⭐ Temas materiais &amp; metas</div>
+    <div class="row" style="gap:8px">
+      ${[['CL','Clima e energia','#0a7a3e','#eaf5ee','60 t CO₂ · 2027-12'],['EQ','Equipa própria','#1e60c8','#e8f0fb','0 acidentes'],['RE','Resíduos','#0a7a3e','#eaf5ee','80% reciclado'],['AC','Anticorrupção','#a9781a','#fbf3d9','']]
+        .map(([ab,n,c,bg,g])=>`<span style="display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;background:${bg}">
+          <span style="width:16px;height:16px;border-radius:4px;background:${c};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:800">${ab}</span>
+          <span style="font-size:12px;font-weight:700;color:${c}">${n}</span>
+          ${g?`<span style="font-size:10.5px;font-weight:700;color:${T.textMuted}">🎯 ${g}</span>`:''}</span>`).join('')}
+    </div>`,`margin-bottom:16px;border-left:4px solid ${T.accent}`)}
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    ${kpi('Emissões de CO₂ (total)','85,0 t',`Scope 1·2·3 &nbsp; <b style="color:${T.pos};font-size:11px">▼ 13 vs 2024</b>`,'#0a7a3e')}
+    ${kpi('Colaboradores','28',`FTE &nbsp; <b style="color:${T.pos};font-size:11px">▲ 2 vs 2024</b>`,'#1e60c8')}
+    ${kpi('Eletricidade renovável','62%',`38.000 kWh &nbsp; <b style="color:${T.pos};font-size:11px">▲ 14 vs 2024</b>`,'#0a7a3e')}
+    ${kpi('Maturidade de governança','78%',`Governança &nbsp; <b style="color:${T.pos};font-size:11px">▲ 22 vs 2024</b>`,'#a9781a')}
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:12px">Emissões por Scope</div>
+      <div class="row" style="gap:18px">
+        <svg width="130" height="130" viewBox="0 0 130 130" style="flex:none">
+          <circle cx="65" cy="65" r="52" fill="none" stroke="#0a7a3e" stroke-width="16" stroke-dasharray="154 173" transform="rotate(-90 65 65)"/>
+          <circle cx="65" cy="65" r="52" fill="none" stroke="#3ba05f" stroke-width="16" stroke-dasharray="96 231" stroke-dashoffset="-154" transform="rotate(-90 65 65)"/>
+          <circle cx="65" cy="65" r="52" fill="none" stroke="#9ccbaa" stroke-width="16" stroke-dasharray="77 250" stroke-dashoffset="-250" transform="rotate(-90 65 65)"/>
+          <text x="65" y="60" text-anchor="middle" font-size="20" font-weight="800" fill="${T.heading}">85,0</text>
+          <text x="65" y="78" text-anchor="middle" font-size="10" fill="${T.subtle}">t CO₂</text>
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          ${[['Scope 1','#0a7a3e','40,0 t'],['Scope 2','#3ba05f','25,0 t'],['Scope 3','#9ccbaa','20,0 t']]
+            .map(([n,c,v])=>`<div class="row" style="gap:8px;font-size:12px"><span style="width:10px;height:10px;border-radius:3px;background:${c}"></span>
+              <span style="color:${T.text};font-weight:600">${n}</span><span style="color:${T.subtle};margin-left:auto">${v}</span></div>`).join('')}
+        </div></div>`)}
+    ${card(`<div class="kpi-l" style="color:${T.textMuted};margin-bottom:14px">Percentagem de mulheres por posição</div>
+      ${[['Todos',22],['Lideranças',15],['Alta gestão',0],['Controlo',0]]
+        .map(([l,v])=>`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span style="color:${T.text};font-weight:600">${l}</span><span style="color:${T.subtle};font-weight:700">${v}%</span></div>
+          <div style="height:8px;border-radius:20px;background:${T.trackBg};overflow:hidden"><div style="width:${v}%;height:100%;background:#1e60c8"></div></div></div>`).join('')}`)}
+  </div>`
+
+S.projetos = () => `${head('Projetos ESG','Projetos &amp; Ações','Os projetos nascem da materialidade — sempre com a lente custo/benefício (investimento, poupança, payback).',btn('+ Novo projeto'))}
+  ${card(`<div class="row" style="gap:22px">
+    ${[['Investimento total','€ 120.000',T.heading],['Poupança/ano','€ 25.000',T.pos],['em curso','2','#a9781a'],['concluídos','0',T.pos]]
+      .map(([l,v,c])=>`<div><div class="kpi-l" style="color:${T.textMuted}">${l}</div><div style="font-size:18px;font-weight:800;color:${c};font-family:${T.fontNum}">${v}</div></div>`).join('')}
+  </div>`,'margin-bottom:16px')}
+  ${[['Substituição da Frota por Veículos Elétricos','Clima e energia','#0a7a3e','#eaf5ee','Em curso','#fbf3d9','#a9781a',30,'€ 96.000','€ 16.800','5.7','Scope 1 da frota: −28 t CO₂/ano · CO₂ total 85 t → 57 t até 2028'],
+    ['Fotovoltaico no armazém','Clima e energia','#0a7a3e','#eaf5ee','Planeado','#e8f0fb','#1e60c8',0,'€ 18.000','€ 4.200','4.3','Autogeração 20% → 45%'],
+    ['Separação de resíduos em obra','Resíduos e circularidade','#0a7a3e','#eaf5ee','Em curso','#fbf3d9','#a9781a',60,'€ 6.000','€ 4.000','1.5','58% → 80% reciclado']]
+    .map(([n,tema,tc,tbg,st,sbg,sc,pr,inv,sav,pb,imp])=>card(`
+      <div class="row" style="margin-bottom:8px">
+        <span style="font-size:14.5px;font-weight:800;color:${T.heading}">${n}</span>
+        ${chip(tema+' ⭐',tbg,tc)}${chip(st,sbg,sc)}
+      </div>
+      <div class="row" style="gap:16px;margin-bottom:10px;font-size:12px">
+        <span style="color:${T.textMuted}">Investimento: <b style="color:${T.heading}">${inv}</b></span>
+        <span style="color:${T.textMuted}">Poupança: <b style="color:${T.pos}">${sav}/ano</b></span>
+        <span style="font-weight:800;color:${T.pos}">💶 Payback: ${pb} anos</span>
+        <span style="color:${T.textMuted}">🎯 ${imp}</span>
+      </div>
+      <div class="row" style="gap:10px">
+        <div style="flex:1;height:6px;background:${T.softCardBg};border-radius:20px;overflow:hidden"><div style="width:${pr}%;height:100%;background:linear-gradient(90deg,${T.heading},${T.accent})"></div></div>
+        <span style="font-size:11px;font-weight:700;color:${T.textMuted}">${pr}%</span>
+      </div>`,'margin-bottom:12px')).join('')}`
+
+S.relatorios = () => `${head('Relatório ESG','Relatório de Sustentabilidade','Estrutura pré-preenchida com os dados ao vivo da plataforma — o texto de cada secção é editável.',
+  `<span style="font-size:12px;color:${T.textMuted};font-weight:600">Ano</span>${inp('2025','92px')}
+   <button class="btn" style="background:${T.cardBg};color:${T.heading};border:1px solid ${T.cardBorder}">🖨 Imprimir / PDF</button>${btn('Guardar')}`)}
+  ${[['1. Dupla Materialidade',`<table><thead><tr>${['Tema','Stakeholders','Empresa','Impacto fin.','Meta'].map(c=>`<th style="color:${T.textMuted};border-bottom:1px solid ${T.cardBorder}">${c}</th>`).join('')}</tr></thead>
+      <tbody>${[['Clima e energia','4/5','5/5','4/5','60 t CO₂'],['Equipa própria','5/5','4/5','3/5','0 acidentes'],['Resíduos e circularidade','4/5','4/5','3/5','80% reciclado']]
+      .map(r=>`<tr>${r.map((c,i)=>`<td style="border-bottom:1px solid ${T.rowBorder};color:${i===0?'#0a7a3e':T.text};font-weight:${i===0?700:400}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`],
+    ['2. Diagnóstico',`<div class="row" style="gap:18px">${[['E','#0a7a3e','10/10'],['S','#1e60c8','7/7'],['G','#a9781a','11/11']]
+      .map(([p,c,v])=>`<span style="font-size:12.5px;color:${T.text}"><span style="display:inline-flex;width:18px;height:18px;border-radius:5px;background:${c};color:#fff;align-items:center;justify-content:center;font-size:10px;font-weight:800;margin-right:6px;vertical-align:middle">${p}</span><b>${v}</b></span>`).join('')}
+      <span style="font-size:12.5px;color:${T.textMuted}">Ano: <b style="color:${T.heading}">2025</b> · vs <b style="color:${T.heading}">2024</b></span></div>`],
+    ['3. Projetos &amp; Ações',`${[['Frota Elétrica','Em curso · 30%','€ 96.000','€ 16.800'],['Fotovoltaico','Planeado · 0%','€ 18.000','€ 4.200']]
+      .map(([n,st,i,s])=>`<div class="row" style="gap:12px;font-size:12.5px;padding:7px 10px;background:${T.softCardBg};border-radius:9px;margin-bottom:6px">
+        <b style="color:${T.heading}">${n}</b><span style="color:${T.textMuted}">${st}</span>
+        <span style="color:${T.textMuted}">Investimento: ${i}</span><span style="color:${T.pos};font-weight:700">Poupança/ano: ${s}</span></div>`).join('')}`],
+    ['4. KPIs &amp; Resultados',`<table><thead><tr>${['KPI','2025','2024'].map(c=>`<th style="color:${T.textMuted};border-bottom:1px solid ${T.cardBorder}">${c}</th>`).join('')}</tr></thead>
+      <tbody>${[['CO₂ (t)','85,0','98,0'],['Eletricidade renovável (%)','62','48'],['Água (m³)','420','420'],['Taxa de reciclagem (%)','58','45']]
+      .map(r=>`<tr>${r.map((c,i)=>`<td style="border-bottom:1px solid ${T.rowBorder};color:${i===1?T.heading:T.text};font-weight:${i===1?700:400}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`]]
+    .map(([t2,inner])=>card(`<h3 style="margin:0 0 12px;font-family:${T.fontDisplay};font-size:18px;font-weight:600;color:${T.heading};border-bottom:2px solid ${T.accent};padding-bottom:6px">${t2}</h3>
+      <textarea readonly style="width:100%;padding:10px 12px;border-radius:9px;border:1px solid ${T.inputBorder};background:${T.inputBg};color:${T.heading};font-size:13px;resize:vertical;margin-bottom:12px" rows="2">A empresa considera que os temas mais relevantes são o clima e a segurança da equipa…</textarea>
+      <div style="font-size:10px;font-weight:700;color:${T.subtle};text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Dados ao vivo da plataforma</div>
+      ${inner}`,'margin-bottom:16px')).join('')}`
+
+S.ativos = () => `${head('Gestão','Clientes Ativos','Visão geral dos clientes e acesso rápido à visualização completa.')}
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    ${[['GR','GrünBau GmbH (Demo)','demo.gruenbau@lc-demo.com','Contab. + ESG','#ede9fe','#5b21b6',['Receita (ano)','€ 139.409'],['Saldo','€ 20.273'],'28/28'],
+       ['CA','Café Lisboa Lda (Demo)','demo.cafelisboa@lc-demo.com','Contab. + ESG','#ede9fe','#5b21b6',['Receita (ano)','€ 48.845'],['Saldo','€ 23.353'],'28/28']]
+      .map(([ini,n,e,pl,pbg,pink,k1,k2,esg])=>card(`
+        <div class="row" style="margin-bottom:14px">
+          <span style="width:44px;height:44px;border-radius:50%;background:${T.avatarBg};color:${T.avatarInk};display:flex;align-items:center;justify-content:center;font-family:${T.fontDisplay};font-size:15px;font-weight:600">${ini}</span>
+          <div><div style="font-size:15px;font-weight:800;color:${T.heading}">${n}</div>
+            <div style="font-size:11.5px;color:${T.subtle}">${e}</div></div>
+        </div>
+        <div class="row" style="margin-bottom:14px">${chip(pl,pbg,pink)}${chip('● ativo',T.dueOk.bg,T.dueOk.ink)}</div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          ${[k1,k2,['Diagnóstico ESG',esg],['Ano ref.','2025']].map(([l,v])=>`<div style="background:${T.softCardBg};border-radius:11px;padding:13px 15px">
+            <div style="font-size:10.5px;font-weight:700;color:${T.textMuted};text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${l}</div>
+            <div style="font-size:20px;font-weight:800;color:${T.heading};font-family:${T.fontNum}">${v}</div></div>`).join('')}
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn" style="flex:1;background:${T.btnBg};color:${T.btnInk};font-size:12.5px">👁 Plataforma</button>
+          <button class="btn" style="flex:1;background:transparent;color:${T.textMuted};border:1px solid ${T.cardBorder};font-size:12.5px">🗂 Dados &amp; Histórico</button>
+        </div>`)).join('')}
+  </div>`
+
+S.crm = () => {
+  const stages=[['Mapeado','#9ccbaa','#0a2f1a',2],['Em abordagem','#7dbb92','#0a2f1a',2],['Conectado','#5aa87a','#fff',1],['Reunião','#3d9163','#fff',1],['Proposta','#1f7a4c','#fff',1],['Fechado','#0a5c36','#fff',1],['Perdido','#7a1f2b','#fff',1],['Futuro','#8a9990','#fff',0]]
+  const cards={0:[['Construtora Almeida','🔥 Quente','#fff1e8','#c2410c','Instagram',82,'há 2 dias',0],['Imobiliária Norte','🌤 Morno','#fbf3d9','#a9781a','Site',54,'há 9 dias',1]],
+    1:[['Hotel Ribeira','🔥 Quente','#fff1e8','#c2410c','Indicação',78,'há 1 dia',0],['Padaria Central','❄ Frio','#e8f0fb','#1e60c8','Formulário',26,'há 14 dias',1]],
+    2:[['Engenharia Sul','🔥 Quente','#fff1e8','#c2410c','LinkedIn',88,'hoje',0]],
+    3:[['Co-work Baixa','🔥 Quente','#fff1e8','#c2410c','Evento',72,'há 3 dias',0]],
+    4:[['Açaí Brasil','🌤 Morno','#fbf3d9','#a9781a','Instagram',61,'há 5 dias',0]],
+    5:[['Célia Münster','🔥 Quente','#fff1e8','#c2410c','Indicação',70,'',0]],
+    6:[['Loja XPTO','❄ Frio','#e8f0fb','#1e60c8','Site',18,'',0]]}
+  return `${head('Gestão','Prospeção (CRM)','Funil da prospeção ativa — arrasta os cartões entre as etapas.',btn('+ Lead'))}
+  <div style="background:${T.dueLate.bg};color:${T.dueLate.ink};border-radius:11px;padding:11px 15px;font-size:12.5px;font-weight:700;margin-bottom:12px;display:flex;gap:9px;align-items:center">
+    <span>⏰</span><span>2 lead(s) sem contacto há 7+ dias</span><span style="margin-left:auto;font-size:11px;opacity:.8">→</span></div>
+  <div class="row" style="margin-bottom:14px">
+    <span style="font-size:11px;font-weight:700;color:${T.textMuted};text-transform:uppercase;letter-spacing:.5px">Filtros</span>
+    ${inp('Temperatura: Todos','auto')}${inp('Origem: Todas','auto')}
+    <span class="chip" style="background:transparent;border:1px solid ${T.cardBorder};color:${T.textMuted};padding:8px 13px">⏰ Só follow-up pendente</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:flex-start">
+    ${stages.map(([n,bg,ink,cnt],si)=>`<div style="flex:1 1 0;min-width:0">
+      <div style="background:${bg};color:${ink};border-radius:10px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <div style="min-width:0;flex:1"><div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n}</div></div>
+        <span style="min-width:20px;height:20px;padding:0 5px;border-radius:20px;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800">${cnt}</span></div>
+      ${(cards[si]||[]).map(([nm,tp,tbg,tink,src,sc,dias,late])=>`
+        <div style="background:${T.cardBg};border:1px solid ${late?'#dc2626':T.cardBorder};border-left:3px solid ${late?'#dc2626':tink};box-shadow:${T.cardShadow};border-radius:10px;padding:9px 10px;margin-bottom:7px">
+          <div style="font-size:12.5px;font-weight:700;color:${T.heading};line-height:1.3">${nm}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">
+            <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;background:${tbg};color:${tink}">${tp}</span>
+            <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;background:${T.softCardBg};color:${T.textMuted}">${src}</span>
+            <span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:20px;background:${sc>=70?'#eaf5ee':T.softCardBg};color:${sc>=70?'#0a7a3e':T.textMuted}">★ ${sc}</span>
+          </div>
+          ${dias?`<div style="font-size:10px;font-weight:700;color:${late?'#dc2626':T.subtle};margin-top:7px">⏱ ${dias}</div>`:''}
+          ${si===5?`<button class="btn" style="width:100%;margin-top:7px;font-size:10.5px;padding:5px;background:${T.softCardBg};color:${T.heading};border:1px solid ${T.cardBorder}">→ Criar contrato</button>`:''}
+        </div>`).join('')}
+      <div style="width:100%;padding:8px;border-radius:10px;border:1px dashed ${T.cardBorder};color:${T.subtle};font-size:12px;font-weight:700;text-align:center">+</div>
+    </div>`).join('')}
+  </div>`}
+
+S.financeiro = () => `${head('Gestão','Financeiro','Contratos e recebimentos dos clientes.',btn('+ Novo contrato'))}
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    ${kpi('Previsto (mês)','€ 4.180','8 contratos ativos')}
+    ${kpi('Recebido','€ 3.280','',T.pos)}
+    ${kpi('Em aberto','€ 900','',T.neg)}
+    ${kpi('Contratos ativos','8','')}
+  </div>
+  ${table(['Cliente','Serviço','Valor','Periodicidade','Início','Estado'],[
+    ['Célia Münster','Contabilidade mensal','€ 450','Mensal','01/2026',chip('recebido',T.dueOk.bg,T.dueOk.ink)],
+    ['Co-work Baixa','Consultoria ESG','€ 1.200','Mensal','03/2026',chip('recebido',T.dueOk.bg,T.dueOk.ink)],
+    ['GrünBau GmbH','Contabilidade + ESG','€ 980','Mensal','02/2026',chip('em aberto',T.dueSoon.bg,T.dueSoon.ink)],
+    ['Açaí Brasil','Diagnóstico ESG','€ 2.400','Única','07/2026',chip('em aberto',T.dueSoon.bg,T.dueSoon.ink)],
+  ])}`
+
+S.marketing = () => `${head('Gestão','Marketing <span class="chip" style="background:#fbf3d9;color:#a9781a;font-size:11px;vertical-align:middle;margin-left:8px">Em preparação</span>','Espaço para tráfego e campanhas — conteúdo a definir com o gestor de tráfego.')}
+  ${card(`<p style="font-size:13px;color:${T.text};margin:0 0 16px;line-height:1.5">Esta página é o espaço reservado para os dados de marketing. Previsto:</p>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      ${[['📊','Métricas das campanhas','Alcance, custo e resultados da Meta e do Google.'],
+         ['🎯','Origem dos leads','Que canal traz leads — já registado no CRM (campo "origem").'],
+         ['📝','Formulários e e-book','Inscrições a entrar automaticamente no CRM como leads.'],
+         ['📈','Conteúdos','Que temas funcionam melhor, para orientar a comunicação.']]
+        .map(([i,t2,d])=>`<div style="background:${T.softCardBg};border-radius:11px;padding:14px 16px">
+          <div style="font-size:18px;margin-bottom:6px">${i}</div>
+          <div style="font-size:13px;font-weight:700;color:${T.heading};margin-bottom:3px">${t2}</div>
+          <div style="font-size:11.5px;color:${T.textMuted};line-height:1.45">${d}</div></div>`).join('')}
+    </div>`)}`
+
+S.acessos = () => `${head('Administração','Gestão de Utilizadores','',btn('+ Novo Utilizador'))}
+  <div style="background:${T.dueOk.bg};color:${T.dueOk.ink};border-radius:10px;padding:10px 14px;font-size:12.5px;font-weight:600;margin-bottom:14px;font-family:ui-monospace,monospace">
+    🔑 Conta luis.sinate@gmail.com criada. Palavra-passe temporária: DrEmJg@D32*m</div>
+  ${card(`<div class="row" style="align-items:flex-end;margin-bottom:14px">
+      ${field('E-mail','nome@email.com')}${field('Nome de exibição','Luis Sinate')}
+      ${field('Plataforma','Contabilidade Lite')}${field('Perfil','Utilizador')}
+      <button class="btn" style="background:${T.btnBg};color:${T.btnInk}">Criar conta</button>
+    </div>
+    <div style="font-size:11.5px;color:${T.textMuted};margin-bottom:10px">ℹ️ Apenas a secção "Contabilidade" (sem preços, planeamento, clientes, empresa e consultoria).</div>
+    <div style="background:${T.softCardBg};border-radius:11px;padding:13px 15px">
+      <div class="kpi-l" style="color:${T.textMuted};margin-bottom:7px">Palavra-passe temporária</div>
+      <div class="row">
+        <input class="inp" value="DrEmJg@D32*m" readonly style="background:${T.inputBg};border:1px solid ${T.inputBorder};color:${T.heading};width:240px;font-family:ui-monospace,monospace;font-weight:700">
+        <button class="btn" style="background:transparent;color:${T.textMuted};border:1px solid ${T.cardBorder};font-size:12px;padding:9px 13px">↻ Gerar nova</button>
+        <button class="btn" style="background:transparent;color:${T.textMuted};border:1px solid ${T.cardBorder};font-size:12px;padding:9px 13px">⧉ Copiar</button>
+      </div>
+      <div style="font-size:11px;color:${T.subtle};margin-top:9px">🔑 A pessoa entra com esta palavra-passe e é obrigada a definir a sua no primeiro acesso.</div>
+    </div>`,'margin-bottom:16px')}
+  ${table(['E-mail','Nome','Plataforma','Perfil','Criado','Último acesso','Ações'],[
+    ['luciacilio.consulting@gmail.com','Lúcia Cílio',chip('ESG','#e8f0fb','#1e60c8'),chip('Administrador',T.chipBg,T.chipText),'12/05/2026','06/08/2026','✎ ✕'],
+    ['celia.muenster@gmail.com','Célia Münster',chip('Contabilidade','#eaf5ee','#0a7a3e'),chip('Utilizador',T.chipBg,T.chipText),'02/06/2026','04/08/2026','🔑 ✎ ✕'],
+    ['luis.sinate@gmail.com','Luis Sinate',chip('ESG','#e8f0fb','#1e60c8'),chip('Utilizador',T.chipBg,T.chipText),'06/08/2026',chip('pendente','#fef3c7','#92400e'),'🔑 ✎ ✕'],
+    ['carla@exemplo.com','Carla (comercial)',chip('Contabilidade','#eaf5ee','#0a7a3e'),chip('Comercial (só CRM)','#e8f0fb','#1e60c8'),'06/08/2026',chip('pendente','#fef3c7','#92400e'),'🔑 ✎ ✕'],
+  ])}`
+
+S.consultoria = () => `${head('Consultoria','Consultoria &amp; Documentos','Histórico de reuniões, recomendações e repositório de documentos.')}
+  ${card(`<div class="row" style="margin-bottom:12px">
+      <span style="font-size:13px;color:${T.textMuted}">📁 Documentos</span>
+      <span style="font-size:12px;color:${T.subtle}">/ Contratos</span>
+    </div>
+    ${['📁 2026','📁 Contratos','📄 Relatorio_ESG_2025.pdf','📄 Balancete_Q2.xlsx']
+      .map(f=>`<div style="padding:10px 12px;border-top:1px solid ${T.rowBorder};font-size:12.5px;color:${T.text};display:flex;gap:10px">
+        <span style="flex:1">${f}</span><span style="color:${T.subtle};font-size:11px">04/08/2026</span></div>`).join('')}`,'margin-bottom:16px')}
+  ${card(`<div style="font-family:${T.fontDisplay};font-size:18px;font-weight:600;color:${T.heading};margin-bottom:12px">Histórico</div>
+    ${[['Reunião','06/08/2026','Revisão da plataforma; domínio próprio e landing page com o Filipe.','#e8f0fb','#1e60c8'],
+       ['Recomendação','30/07/2026','Priorizar o nicho da construção em contabilidade e ESG.','#fbf3d9','#a9781a'],
+       ['Relatório','23/07/2026','Enviado relatório ESG 2025 com a matriz de dupla materialidade.','#eaf5ee','#0a7a3e']]
+      .map(([tp,d,txt,bg,ink])=>`<div style="padding:11px 0;border-top:1px solid ${T.rowBorder}">
+        <div class="row" style="margin-bottom:5px">${chip(tp,bg,ink)}<span style="font-size:11.5px;color:${T.subtle}">${d}</span></div>
+        <div style="font-size:12.5px;color:${T.text};line-height:1.5">${txt}</div></div>`).join('')}`)}`
+
+// ── Catálogo de ecrãs ───────────────────────────────────────────────────────
+const SCREENS = [
+  {g:'Autenticação', id:'login', n:'Login', bare:true, r:S.login},
+  {g:'Autenticação', id:'senha', n:'Definir palavra-passe', bare:true, r:S.senha},
+  {g:'Contabilidade', id:'painel', n:'Painel', nav:'contabil', act:0, r:S.painel},
+  {g:'Contabilidade', id:'caixa', n:'Livro de Caixa', nav:'contabil', act:1, r:S.caixa},
+  {g:'Contabilidade', id:'catalogo', n:'Catálogo', nav:'contabil', act:2, r:S.catalogo},
+  {g:'Contabilidade', id:'obrig', n:'Obrigações Fiscais', nav:'contabil', act:3, r:S.obrig},
+  {g:'Contabilidade', id:'preco', n:'Calculadora de Preços', nav:'contabil', act:4, r:S.preco},
+  {g:'Contabilidade', id:'plano', n:'Planeamento Mensal', nav:'contabil', act:5, r:S.plano},
+  {g:'Contabilidade', id:'clientes', n:'Clientes', nav:'contabil', act:6, r:S.clientes},
+  {g:'Contabilidade', id:'empresa', n:'Empresa', nav:'contabil', act:7, r:S.empresa},
+  {g:'Contabilidade', id:'consultoria', n:'Consultoria', nav:'contabil', act:8, r:S.consultoria},
+  {g:'Contabilidade', id:'ruck', n:'Reservas & Impostos (DE)', nav:'contabil', act:9, r:S.ruck},
+  {g:'Contabilidade', id:'lite', n:'▸ Contabilidade Lite (menu reduzido)', nav:'lite', act:0, r:S.painel},
+  {g:'ESG', id:'materialidade', n:'Materialidade', nav:'esg', act:0, r:S.materialidade},
+  {g:'ESG', id:'diagnostico', n:'Diagnóstico ESG', nav:'esg', act:1, r:S.diagnostico},
+  {g:'ESG', id:'kpis', n:'KPIs & Monitorização', nav:'esg', act:2, r:S.kpis},
+  {g:'ESG', id:'projetos', n:'Projetos', nav:'esg', act:3, r:S.projetos},
+  {g:'ESG', id:'relatorios', n:'Relatórios', nav:'esg', act:4, r:S.relatorios},
+  {g:'Gestão', id:'ativos', n:'Clientes Ativos', nav:'gestao', act:0, r:S.ativos},
+  {g:'Gestão', id:'crm', n:'Prospeção (CRM)', nav:'gestao', act:1, r:S.crm},
+  {g:'Gestão', id:'marketing', n:'Marketing', nav:'gestao', act:2, r:S.marketing},
+  {g:'Gestão', id:'financeiro', n:'Financeiro', nav:'gestao', act:3, r:S.financeiro},
+  {g:'Gestão', id:'acessos', n:'Gestão de Acessos', nav:'gestao', act:4, r:S.acessos},
+]
+
+// ── Casca (menu lateral + conteúdo) ─────────────────────────────────────────
+function sidebar(navKey, act) {
+  let i = -1
+  const secs = NAV[navKey].map(([label, items]) => `
+    <div style="margin-bottom:20px">
+      <div class="seclabel" style="color:${T.sectionLabel}">${label}</div>
+      ${items.map(([n, icon, badge]) => { i++
+        const on = i === act
+        return `<div class="nav ${on?'act':''}" style="background:${on?T.navActiveBg:'transparent'};color:${on?T.navActiveText:T.navText}">
+          ${I[icon]}<span>${n}</span>${badge?`<span class="bdg" style="background:${T.badgeBg};color:${T.badgeInk}">${badge}</span>`:''}
+          ${on?`<span style="position:absolute;left:0;width:3px;height:20px;background:${T.accent};border-radius:0 3px 3px 0"></span>`:''}
+        </div>`}).join('')}
+    </div>`).join('')
+  const toggle = navKey==='gestao' ? `<div style="display:flex;gap:4px;padding:2px;margin-bottom:14px;border-radius:9px;border:1px solid ${T.sidebarBorder}">
+      ${[['Gestão',1],['Contábil',0],['ESG',0]].map(([l,on])=>`<div style="flex:1;padding:7px 4px;border-radius:7px;font-size:11px;font-weight:700;text-align:center;background:${on?T.accent:'transparent'};color:${on?'#0a2f1a':T.sidebarSub}">${l}</div>`).join('')}
+    </div>` : ''
+  return `<div class="side" style="background:${T.sidebarBg};border-right:1px solid ${T.sidebarBorder}">
+    <div class="brandrow">
+      <div class="logo" style="background:${T.logoBg};color:${T.logoInk};border:${T.logoBorder}">C</div>
+      <div><div class="brandname" style="color:#f3ecdb">Lúcia Cílio</div>
+        <div class="brandsub" style="color:${T.accent}">Office Consulting</div></div>
+    </div>
+    <div style="flex:1">${secs}</div>
+    <div style="border-top:1px solid ${T.sidebarBorder};padding-top:14px">
+      <div class="row" style="gap:9px;margin-bottom:14px">
+        <span style="width:28px;height:28px;border-radius:50%;background:${T.avatarBg};color:${T.avatarInk};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:${T.fontDisplay}">VI</span>
+        <span style="font-size:12.5px;color:${T.navText};flex:1">Vinícius Bohn</span>
+        <span style="width:30px;height:30px;border-radius:8px;border:1px solid ${T.sidebarBorder};color:${T.sidebarSub};display:flex;align-items:center;justify-content:center">${I.painel?'⇥':''}</span>
+      </div>
+      ${toggle}
+      <div class="row" style="justify-content:space-between">
+        <div style="display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid ${T.sidebarBorder}">
+          ${['🇵🇹','🇩🇪','🇬🇧'].map((f,fi)=>`<span style="padding:6px 9px;font-size:13px;background:${fi===0?T.accent:'transparent'};opacity:${fi===0?1:.5}">${f}</span>`).join('')}
+        </div>
+        <span style="width:32px;height:32px;border-radius:8px;background:${T.toggleBg||'transparent'};border:1px solid ${T.sidebarBorder};display:flex;align-items:center;justify-content:center;color:${T.accent}">☾</span>
+      </div>
+    </div>
+  </div>`
+}
+
+const render = (sc) => sc.bare
+  ? `<div style="background:${T.appBg};font-family:${T.fontBody}">${sc.r()}</div>`
+  : `<div class="app" style="background:${T.appBg};font-family:${T.fontBody}">
+       ${sidebar(sc.nav, sc.act)}
+       <div class="main" style="background:${T.mainBg};color:${T.text}">${sc.r()}</div>
+     </div>`
+
+// ── Controlo da revisão ─────────────────────────────────────────────────────
+let cur = 0, allMode = false
+const stage = document.getElementById('stage')
+const pick = document.getElementById('pick')
+
+let last = ''
+SCREENS.forEach((s, i) => {
+  if (s.g !== last) { const og = document.createElement('optgroup'); og.label = s.g; og.id = 'g'+i; pick.appendChild(og); last = s.g }
+  const o = document.createElement('option'); o.value = i; o.textContent = s.n
+  pick.lastChild.appendChild(o)
+})
+document.getElementById('count').textContent = SCREENS.length + ' ecrãs'
+
+function draw() {
+  if (allMode) {
+    stage.innerHTML = SCREENS.map(s => `<div class="shot"><div class="shot-label">${s.g} · ${s.n}</div>${render(s)}</div>`).join('')
+  } else {
+    stage.innerHTML = render(SCREENS[cur])
+    pick.value = cur
+  }
+  document.body.style.background = T.appBg
+}
+function setTheme(k) {
+  T = THEMES[k]
+  document.getElementById('tLight').className = k === 'light' ? 'on' : ''
+  document.getElementById('tNight').className = k === 'night' ? 'on' : ''
+  draw()
+}
+pick.onchange = e => { allMode = false; document.getElementById('all').className = ''; cur = +e.target.value; draw() }
+document.getElementById('prev').onclick = () => { allMode = false; document.getElementById('all').className=''; cur = (cur - 1 + SCREENS.length) % SCREENS.length; draw() }
+document.getElementById('next').onclick = () => { allMode = false; document.getElementById('all').className=''; cur = (cur + 1) % SCREENS.length; draw() }
+document.getElementById('tLight').onclick = () => setTheme('light')
+document.getElementById('tNight').onclick = () => setTheme('night')
+document.getElementById('all').onclick = e => { allMode = !allMode; e.target.className = allMode ? 'on' : ''; draw() }
+document.onkeydown = e => { if (e.key === 'ArrowRight') document.getElementById('next').click(); if (e.key === 'ArrowLeft') document.getElementById('prev').click() }
+draw()
+</script>
+</body>
+</html>
