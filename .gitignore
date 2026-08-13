@@ -36,3 +36,8 @@ ref/
 
 # Artefactos de revisão
 *.zip
+
+.vercel
+
+# Sessões de QA (contêm token válido)
+.qa/
