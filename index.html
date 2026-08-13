@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <!-- Sem maximum-scale: ampliar com dois dedos é a única forma de o utilizador
+         compensar texto pequeno. Bloqueá-lo é falha de acessibilidade (QA 13/08). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a2f1a" />
 
     <!-- Fontes do redesign -->

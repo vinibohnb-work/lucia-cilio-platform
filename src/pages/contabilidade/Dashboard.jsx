@@ -269,9 +269,9 @@ export default function Dashboard() {
 
       {/* ── Aviso: limite de lucro Familienversicherung (DE, ≥80%) ── */}
       {showFamvWarn && (
-        <div style={{ background: famvRatio >= 1 ? '#fdeaea' : '#fffbeb', border: `1px solid ${famvRatio >= 1 ? '#f5b5b5' : '#fcd34d'}`, borderRadius: '12px', padding: '13px 17px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '11px', flexWrap: 'wrap' }}>
+        <div style={{ background: famvRatio >= 1 ? t.dueLate.bg : t.dueSoon.bg, border: `1px solid ${famvRatio >= 1 ? t.dueLate.ink : t.dueSoon.ink}44`, borderRadius: '12px', padding: '13px 17px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '11px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '17px' }}>{famvRatio >= 1 ? '🔴' : '⚠️'}</span>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: famvRatio >= 1 ? '#991b1b' : '#92400e', flex: 1, minWidth: '220px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: famvRatio >= 1 ? t.dueLate.ink : t.dueSoon.ink, flex: 1, minWidth: '220px' }}>
             {L.famvWarn(Math.round(famvRatio * 100), famvLimit)}
           </span>
           <button onClick={() => navigate('/contabilidade/rucklagen')} style={{ padding: '7px 14px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
@@ -283,9 +283,9 @@ export default function Dashboard() {
       {/* KPIs topo */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? '10px' : '14px', marginBottom: '20px' }}>
         {[
-          { label: L.revenue, value: revenue,             color: GREEN, bg: '#f0fdf4' },
-          { label: L.fixed,   value: fixedTotal,          color: '#1d4ed8', bg: '#eff6ff' },
-          { label: L.variable,value: varC,                color: '#c2410c', bg: '#fff7ed' },
+          { label: L.revenue, value: revenue,             color: t.dueOk.ink,     bg: t.dueOk.bg },
+          { label: L.fixed,   value: fixedTotal,          color: t.toneBlue.ink,  bg: t.toneBlue.bg },
+          { label: L.variable,value: varC,                color: t.toneOrange.ink,bg: t.toneOrange.bg },
           { label: netLabel,  value: yearNet,             color: yearNet>=0?G:RED, bg: '#fff' },
         ].map(k => (
           <div key={k.label} style={{ background: k.bg, borderRadius: '14px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
@@ -296,16 +296,16 @@ export default function Dashboard() {
       </div>
 
       {entries.length === 0 && (
-        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
+        <div style={{ background: t.dueSoon.bg, border: `1px solid ${t.dueSoon.ink}44`, borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', fontSize: '13px', color: t.dueSoon.ink, fontWeight: 600 }}>
           {L.noData}
         </div>
       )}
 
       {/* ── Custos fixos previstos por confirmar (acumulado no período) ── */}
       {periodPredicted > 0 && (
-        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ background: t.dueSoon.bg, border: `1px solid ${t.dueSoon.ink}44`, borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '18px' }}>🔁</span>
-          <span style={{ fontSize: '13px', color: '#92400e', fontWeight: 600 }}>
+          <span style={{ fontSize: '13px', color: t.dueSoon.ink, fontWeight: 600 }}>
             {L.predictedFixed} · {periodLabel}: <strong>{fmt2(periodPredicted)}</strong> · {pendingCountPeriod}
           </span>
           <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
@@ -320,9 +320,9 @@ export default function Dashboard() {
           <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: '0 0 14px' }}>{L.ivaTitle} · {periodLabel}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '10px' : '16px' }}>
             {[
-              { label: L.ivaLiq, value: ivaLiquidado, color: '#065f46', bg: '#f0fdf4' },
-              { label: L.ivaDed, value: ivaDedutivel, color: '#1d4ed8', bg: '#eff6ff' },
-              { label: ivaApagar >= 0 ? L.ivaPay : L.ivaRec, value: Math.abs(ivaApagar), color: ivaApagar >= 0 ? '#c2410c' : '#065f46', bg: ivaApagar >= 0 ? '#fff7ed' : '#f0fdf4', strong: true },
+              { label: L.ivaLiq, value: ivaLiquidado, color: t.dueOk.ink,    bg: t.dueOk.bg },
+              { label: L.ivaDed, value: ivaDedutivel, color: t.toneBlue.ink, bg: t.toneBlue.bg },
+              { label: ivaApagar >= 0 ? L.ivaPay : L.ivaRec, value: Math.abs(ivaApagar), color: ivaApagar >= 0 ? t.toneOrange.ink : t.dueOk.ink, bg: ivaApagar >= 0 ? t.toneOrange.bg : t.dueOk.bg, strong: true },
             ].map(c => (
               <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: `1px solid ${t.cardBorder}` }}>
                 <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
@@ -344,8 +344,8 @@ export default function Dashboard() {
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: isMobile ? '10px' : '16px' }}>
               {[
                 { label: L.irBase, value: irBase, color: G, bg: BG },
-                { label: `${L.irReserve} (${irPct}%)`, value: irReserve, color: '#b45309', bg: '#fffbeb', strong: true },
-                { label: netLabel, value: yearNet - irReserve, color: (yearNet - irReserve) >= 0 ? '#065f46' : RED, bg: '#f0fdf4' },
+                { label: `${L.irReserve} (${irPct}%)`, value: irReserve, color: t.dueSoon.ink, bg: t.dueSoon.bg, strong: true },
+                { label: netLabel, value: yearNet - irReserve, color: (yearNet - irReserve) >= 0 ? t.dueOk.ink : RED, bg: t.dueOk.bg },
               ].map(c => (
                 <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: `1px solid ${t.cardBorder}` }}>
                   <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
@@ -396,7 +396,7 @@ export default function Dashboard() {
           </div>
 
           {/* Bars */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', flex: 1, minHeight: '180px', borderBottom: '2px solid #e2e8f0', paddingBottom: '0' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', flex: 1, minHeight: '180px', borderBottom: `2px solid ${t.gridAxis || t.cardBorder}`, paddingBottom: '0' }}>
             {monthly.map((m, i) => (
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '100%', width: '100%', justifyContent: 'center' }}>
@@ -433,12 +433,12 @@ export default function Dashboard() {
           {/* Progress to breakeven */}
           <div style={{ marginBottom: '18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: aboveBE ? GREEN : '#92400e' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: aboveBE ? GREEN : t.dueSoon.ink }}>
                 {breakeven > 0 ? (aboveBE ? L.above : L.below) : '—'}
               </span>
               <span style={{ fontSize: '11px', fontWeight: 800, color: aboveBE ? GREEN : GOLD }}>{Math.round(progressBE)}%</span>
             </div>
-            <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
+            <div style={{ height: '8px', background: t.trackBg, borderRadius: '99px', overflow: 'hidden' }}>
               <div style={{ width: `${progressBE}%`, height: '100%', background: aboveBE ? `linear-gradient(90deg,${GREEN},${G})` : `linear-gradient(90deg,${GOLD},${RED})`, borderRadius: '99px', transition: 'width .4s' }} />
             </div>
             {!aboveBE && breakeven > 0 && (
@@ -451,8 +451,8 @@ export default function Dashboard() {
           {/* Breakdown */}
           {[
             { label: L.revenue, value: revenue,    color: GREEN },
-            { label: L.fixed,   value: fixedTotal, color: '#1d4ed8' },
-            { label: L.variable,value: varC,       color: '#c2410c' },
+            { label: L.fixed,   value: fixedTotal, color: t.toneBlue.ink },
+            { label: L.variable,value: varC,       color: t.toneOrange.ink },
             { label: L.cmRatio, value: `${Math.round(cmRatio*100)}%`, color: G, isText: true },
           ].map(r => (
             <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${t.rowBorder}` }}>
@@ -488,7 +488,7 @@ export default function Dashboard() {
                     {fmt2(r.total)} <span style={{ fontSize: '11px', color: t.subtle, fontWeight: 600 }}>· {Math.round(pct)}%</span>
                   </span>
                 </div>
-                <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
+                <div style={{ height: '8px', background: t.trackBg, borderRadius: '99px', overflow: 'hidden' }}>
                   <div style={{ width: `${(r.total / maxProductRev) * 100}%`, height: '100%', background: `linear-gradient(90deg,${G},${GOLD})`, borderRadius: '99px', transition: 'width .4s' }} />
                 </div>
               </div>

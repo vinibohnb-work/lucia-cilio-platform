@@ -12,7 +12,7 @@ export const THEMES = {
     sectionLabel: '#6f8b78',
     cardBg: '#fff', cardBorder: '#e7decd', cardShadow: '0 1px 2px rgba(10,47,26,.04)',
     softCardBg: '#fbf7ee',
-    heading: '#0a2f1a', text: '#374a3e', textMuted: '#8a9990', subtle: '#a2ab9f',
+    heading: '#0a2f1a', text: '#374a3e', textMuted: '#5a6b61', subtle: '#5f7066',
     trackBg: '#f0ead9', bar1: '#0a2f1a', bar2: '#164e2b',
     rowBorder: '#eee6d6', headBg: '#f6f1e6',
     chipBg: '#f0ead9', chipText: '#6b5a2a',
@@ -32,6 +32,8 @@ export const THEMES = {
     loginBg: '#f5f1e8', loginShadow: '0 30px 70px -30px rgba(10,47,26,.35)',
     fontBody: "'Instrument Sans',system-ui,sans-serif", fontDisplay: "'Cormorant Garamond',serif", fontNum: "'Cormorant Garamond',serif",
     dueOk: { bg: '#e7f4ec', ink: '#2f7d4f' }, dueSoon: { bg: '#fbf3df', ink: '#a5842f' }, dueLate: { bg: '#fbe6e2', ink: '#c0392b' },
+    // Tons auxiliares para cartões de indicadores (antes fixos no Dashboard)
+    toneBlue: { bg: '#eff6ff', ink: '#1d4ed8' }, toneOrange: { bg: '#fff7ed', ink: '#c2410c' },
   },
   night: {
     appBg: '#071c11', mainBg: 'radial-gradient(120% 100% at 100% 0%,#0d2c1a 0%,#071c11 55%)',
@@ -41,7 +43,7 @@ export const THEMES = {
     sectionLabel: '#5f7c6b',
     cardBg: 'rgba(255,255,255,.045)', cardBorder: 'rgba(201,168,76,.14)', cardShadow: 'none',
     softCardBg: 'rgba(255,255,255,.04)',
-    heading: '#f2f7f3', text: '#cfe0d6', textMuted: '#8ba392', subtle: '#5f7c6b',
+    heading: '#f2f7f3', text: '#cfe0d6', textMuted: '#8ba392', subtle: '#7d9789',
     trackBg: 'rgba(255,255,255,.07)', bar1: '#c9a84c', bar2: '#4f9d6f',
     rowBorder: 'rgba(255,255,255,.07)', headBg: 'rgba(255,255,255,.03)',
     chipBg: 'rgba(201,168,76,.14)', chipText: '#d8bd74',
@@ -61,5 +63,6 @@ export const THEMES = {
     loginBg: 'radial-gradient(120% 90% at 50% 0%,#0d2c1a 0%,#071c11 60%)', loginShadow: '0 30px 80px -30px rgba(0,0,0,.6)',
     fontBody: "'Manrope',system-ui,sans-serif", fontDisplay: "'Cormorant Garamond',serif", fontNum: "'Space Grotesk',monospace",
     dueOk: { bg: 'rgba(127,214,160,.14)', ink: '#7fd6a0' }, dueSoon: { bg: 'rgba(201,168,76,.18)', ink: '#d8bd74' }, dueLate: { bg: 'rgba(224,86,66,.16)', ink: '#e08b7a' },
+    toneBlue: { bg: 'rgba(125,175,255,.14)', ink: '#9dc3ff' }, toneOrange: { bg: 'rgba(251,146,60,.14)', ink: '#f3a866' },
   },
 }

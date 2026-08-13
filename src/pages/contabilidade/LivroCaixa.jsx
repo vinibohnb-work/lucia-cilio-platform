@@ -283,9 +283,11 @@ export default function LivroCaixa() {
           { label: L.cash, value: cashBal, color: '#92400e', bg: '#f5edd6', icon: '💵' },
           { label: L.bank, value: bankBal, color: '#1d4ed8', bg: '#eff6ff', icon: '🏦' },
         ].map(c => (
-          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 20px', border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          // No telemóvel empilha (como os cartões da linha de cima): lado a lado, num
+          // cartão de ~180px, o rótulo e o valor quebram os dois e as linhas entrelaçam-se.
+          <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 20px', border: `1px solid ${t.cardBorder}`, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? '6px' : '10px' }}>
             <span style={{ fontSize: '12px', color: t.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.icon} {c.label}</span>
-            <span style={{ fontSize: '20px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</span>
+            <span style={{ fontSize: '20px', fontWeight: 900, color: c.color, whiteSpace: 'nowrap' }}>€ {fmt(c.value)}</span>
           </div>
         ))}
       </div>

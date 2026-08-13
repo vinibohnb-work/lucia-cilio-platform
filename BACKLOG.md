@@ -39,23 +39,11 @@
 > a conta de demonstração. Relatório completo: `docs/auditorias/2026-08-13-interface.md`.
 > Severidade: 🟠 atrapalha · 🟡 incomoda · 🔵 oportunidade. Zero bloqueadores.
 
-- [ ] **🟠 Desbloquear o zoom no telemóvel** — `index.html` tem `maximum-scale=1.0` no
-  `meta[name=viewport]`, o que impede ampliar em **todos** os ecrãs. É o item de
-  acessibilidade mais grave: o público lê valores fiscais pequenos no telemóvel.
-  *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟠 Corrigir o contraste dos tokens de texto** — 35 elementos só no Painel abaixo do
-  mínimo WCAG AA (`2026` a 2.03:1; meses do gráfico a 2.37:1). Vem de `subtle` (`#a2ab9f`) e
-  `textMuted` (`#8a9990`) sobre o creme `#f5f1e8`. **Um ajuste em `src/theme.js` corrige a
-  plataforma inteira.**
-  *QA 13/08/2026 · Resp.: Vinícius*
 - [ ] **🟠 Subir os textos abaixo de 12px** — 36 elementos só no Painel; `OFFICE CONSULTING`
-  a 9px, rótulos de secção a 10px. Combina-se com os dois itens acima.
+  a 9px, rótulos de secção a 10px. Agora que o zoom e o contraste estão corrigidos, este é o
+  que resta do trio de legibilidade.
   *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟠 Cartões "Em Caixa" / "No Banco" partem-se no telemóvel** — lê-se *"EM €"* numa linha
-  e *"CAIXA −4436,50"* na seguinte. `LivroCaixa.jsx:286` usa `flex` + `space-between` num
-  cartão de ~180px. Os cartões da linha de cima usam layout empilhado e ficam bem — esta linha
-  é a exceção. Prova: `qa-2026-08-13/demo/mobile/contabilidade-caixa.png`.
-  *QA 13/08/2026 · Resp.: Vinícius*
+
 - [ ] **🟠 Associar rótulos aos campos de formulário** — 36 ocorrências, incluindo o login.
   Sem `label for`/`aria-label`, o leitor de ecrã não liga rótulo a campo e tocar no texto não
   foca o campo.
@@ -81,16 +69,21 @@
   de 1120px; veem-se 3 de 12 colunas e os cabeçalhos truncam. Sugestão: cartão por linha no
   telemóvel.
   *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🔵 Painel não respeita o tema noturno** — `Dashboard.jsx` mistura tokens com 7 cores
-  fixas (`#f0fdf4`, `#eff6ff`, `#fff7ed`, `#fffbeb`, `#fdeaea`, `#e2e8f0`, `#f2f6f3`); no modo
-  noturno os cartões pastel flutuam sobre o fundo escuro.
-  *Revisão de design 12/08/2026 · Resp.: Vinícius*
-- [ ] **🔵 Dois formatadores de número no mesmo ecrã** — `€ 7200,00` (sem separador) a poucos
-  centímetros de `€ 11 400,00` (com separador). `Dashboard.jsx:23-24`.
-  *Revisão de design 12/08/2026 · Resp.: Vinícius*
+
 - [ ] **🔵 Livro de Caixa sem paginação** — com os 30 lançamentos da conta demo a página tem
   ~8.000 px no telemóvel. Com um ano real de dados, será várias vezes isso.
   *QA 13/08/2026 · Resp.: Vinícius*
+
+### Internacionalização
+
+- [ ] **Formatação de números não acompanha a língua da interface**
+  *QA 13/08/2026 · Resp.: Vinícius*
+  **13 ficheiros** fixam `toLocaleString('pt-PT')`, por isso um utilizador com a interface em
+  alemão ou inglês vê números à portuguesa (`11 400,00` em vez de `11.400,00`). O módulo
+  Rücklagen é a exceção — usa `de-DE` corretamente, o que torna a plataforma inconsistente
+  consigo própria.
+  **Nota:** a diferença entre `7200,00` e `11 400,00` **não é bug** — é regra do português
+  europeu (números de 4 dígitos não levam separador). O problema é outro: a língua fixa.
 
 ### CRM e prospeção
 
@@ -295,6 +288,21 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Correções de QA e design — 13/08
+- [x] **Zoom desbloqueado no telemóvel** — removido `maximum-scale=1.0` do `index.html`.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [x] **Contraste conforme WCAG AA** — `textMuted` 2.65:1 → **5.02:1** e `subtle` 2.10:1 →
+  **4.66:1** no tema claro; `subtle` noturno 3.87:1 → **5.63:1**. Valores calculados, não
+  escolhidos a olho, e a hierarquia entre os dois tons foi preservada.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [x] **Cartões "Em Caixa" / "No Banco"** — passam a empilhar no telemóvel, como os da linha
+  de cima; o valor deixa de quebrar.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [x] **Painel respeita o tema noturno** — as 17 cores fixas do `Dashboard.jsx` passaram a
+  tokens; acrescentados `toneBlue` e `toneOrange` ao tema, a par dos `dueOk/dueSoon/dueLate`
+  que já existiam.
+  *Revisão de design 12/08/2026 · Resp.: Vinícius*
 
 ### Acessos — Contabilidade Lite · migração 028
 - [x] **Plataforma "Contabilidade Lite"** — variante que mostra apenas a secção *Contabilidade*
