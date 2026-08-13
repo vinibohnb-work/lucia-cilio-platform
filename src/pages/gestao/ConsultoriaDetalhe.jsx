@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { BLOCOS, SWOT_QUADRANTES, TOWS_CELULAS, progressoBloco, progressoTotal } from '../../data/consultoriaBlocos'
+import { Privadas, Capital, Financiamento, Projecao, Liquidez } from '../../components/consultoria/TabelasNumeros'
 
 // Ficha da consultoria — usada AO VIVO, muitas vezes presencial e com o cliente
 // a ver o ecrã. Daí: guardar automático (nada de botão), campos que crescem com
@@ -255,6 +256,13 @@ export default function ConsultoriaDetalhe() {
               )}
             </div>
           )}
+
+          {/* Blocos 3 e 4 — tabelas de números */}
+          {sec.tipo === 'privadas'      && <Privadas      numeros={c.numeros || {}} alterar={alterar} />}
+          {sec.tipo === 'capital'       && <Capital       numeros={c.numeros || {}} alterar={alterar} />}
+          {sec.tipo === 'financiamento' && <Financiamento numeros={c.numeros || {}} alterar={alterar} />}
+          {sec.tipo === 'projecao'      && <Projecao      numeros={c.numeros || {}} alterar={alterar} />}
+          {sec.tipo === 'liquidez'      && <Liquidez      numeros={c.numeros || {}} alterar={alterar} />}
 
           {/* TOWS */}
           {sec.tipo === 'tows' && (

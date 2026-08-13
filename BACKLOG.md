@@ -17,15 +17,6 @@
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
 
-- [ ] **Consultoria — Fase 1: blocos 3 e 4 (os números)**
-  *Reunião 13/08/2026 · Resp.: Vinícius*
-  Bloco 3: retiradas privadas necessárias, necessidade de capital (investimentos + custos de
-  constituição + reserva de 3 meses) e financiamento (capital próprio vs alheio, incluindo
-  KfW). Bloco 4: previsão de faturação/custos/lucro (sempre líquida, sem IVA) e previsão de
-  liquidez. **Verificação que o documento exige:** o lucro previsto cobre as retiradas
-  privadas + as amortizações? Um semáforo responde.
-  ✅ Não depende de nada — a estrutura veio toda do documento da IHK.
-
 - [ ] **Consultoria — Fase 2: relatório em PDF**
   *Reunião 13/08/2026 · Resp.: Vinícius*
   Secções pré-preenchidas com os dados ao vivo + texto editável, e impressão limpa como no
@@ -308,6 +299,28 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Consultoria — Fase 1 · blocos 3 e 4 (os números)
+- [x] **Retiradas privadas** — rendimentos e despesas do agregado, com o resultado que o
+  documento pede: quanto o negócio tem de gerar por mês e por ano para a pessoa viver.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Necessidade de capital** — investimentos + custos de constituição + reserva, com a
+  reserva a **sugerir-se sozinha** a partir dos custos do ano 1 do bloco 4 (os 3 meses que o
+  documento recomenda); o valor manual sobrepõe-se à sugestão.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Financiamento** — capital próprio vs alheio (incluindo KfW), com **semáforo**: cobre a
+  necessidade de capital ou faltam X?
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Projeção a 3 anos** — faturação líquida e custos por ano, lucro calculado, e a
+  **verificação que fecha o plano**: o lucro de cada ano cobre as retiradas privadas mais as
+  amortizações? Um semáforo por ano responde.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Previsão de liquidez** — 12 meses com saldo acumulado, assinalando **em que mês** a
+  caixa fica negativa.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Linhas por omissão** nas seis tabelas (renomeáveis, removíveis, com adição livre) —
+  referência e não dogma, como o resto do módulo.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
 
 ### Consultoria — Fase 0 · migração 029
 - [x] **Tabela `consultorias`** — dados de contacto embutidos (a Lúcia regista **sem criar

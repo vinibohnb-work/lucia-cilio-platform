@@ -4,7 +4,7 @@
 > *"Der Businessplan (BP)"* da Câmara de Comércio alemã (IHK), 7 páginas, que a Lúcia enviou.
 > **Prazo real:** ela começa a usar com clientes **em setembro**.
 >
-> **Estado — 13/08/2026:** ✅ **Fase 0 construída e testada** (migração 029 aplicada; fluxo e
+> **Estado — 13/08/2026:** ✅ **Fases 0 e 1 construídas e testadas** (migração 029 aplicada; fluxo e
 > RLS verificados contra a base real). As fases seguintes estão no `BACKLOG.md`, uma entrada
 > por fase.
 
@@ -169,8 +169,8 @@ Portugal). Sem ficheiros: *"vídeos e coisas não colocaria"*.
 | Fase | O que entra | Estado |
 |---|---|---|
 | **0** | Tabela + lista + ficha + **Blocos 1 e 2, com SWOT e TOWS** | ✅ **Feito** (migração 029) |
-| **1** | Blocos 3 e 4 (as tabelas de números) | Por fazer — não depende de nada |
-| **2** | Relatório em PDF | Por fazer — depende da Fase 1 |
+| **1** | Blocos 3 e 4 (as tabelas de números) | ✅ **Feito** |
+| **2** | Relatório em PDF | Por fazer — já não tem dependências |
 | **3** | Consultoria gratuita (o outro tipo) | ⚠️ Aguarda o formulário dela |
 | **4** | Resumo com IA (descritivo) | Por fazer — depende das Fases 1–2 |
 | **5** | Formulário público → consultoria + lead no CRM | ⚠️ Aguarda formulário + Filipe |
@@ -187,6 +187,18 @@ Portugal). Sem ficheiros: *"vídeos e coisas não colocaria"*.
 - **SWOT + TOWS** — cada célula TOWS mostra os itens da SWOT que a alimentam e guarda a
   **origem** de cada estratégia.
 - **Recursos** — só links.
+
+### O que a Fase 1 entregou
+
+As seis tabelas dos blocos 3 e 4, com os cálculos em `src/lib/consultoriaCalc.js` e as duas
+verificações que fecham o plano:
+
+- **O financiamento cobre a necessidade de capital?** — semáforo no bloco 3.
+- **O lucro cobre as retiradas privadas + as amortizações?** — semáforo por ano no bloco 4.
+
+Mais dois automatismos que poupam trabalho na sessão: a **reserva sugere-se sozinha** a partir
+dos custos do ano 1 (os 3 meses do documento) e a **liquidez assinala em que mês** a caixa fica
+negativa.
 
 **Verificado contra a base real:** criação sem conta, gravação de respostas/SWOT/TOWS com
 origem, cálculo do progresso, as três restrições (tipo, bloco 1–4, nome obrigatório) e a RLS —

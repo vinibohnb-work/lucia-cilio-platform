@@ -11,8 +11,9 @@
 // resposta antiga fica no JSONB sem aparecer (não se perde, só deixa de ser
 // mostrada).
 //
-// Blocos 3 e 4 (os números) chegam na Fase 1 — ficam aqui já declarados para o
-// progresso e a navegação mostrarem o caminho todo desde o início.
+// Blocos 3 e 4 são os números: as tabelas têm linhas por omissão (também elas
+// referência) que a Lúcia pode renomear, apagar ou acrescentar na própria
+// interface — os cálculos estão em src/lib/consultoriaCalc.js.
 // ============================================================================
 
 export const BLOCOS = [
@@ -99,24 +100,57 @@ export const BLOCOS = [
       },
     ],
   },
-  // ── Fase 1 (ainda por construir) ──
   {
-    n: 3, key: 'capital', porConstruir: true,
+    n: 3, key: 'capital',
     pt: 'Dinheiro pessoal e capital', de: 'Privatentnahmen und Kapital', en: 'Personal income and capital',
     subPt: 'Sessão 3 · retiradas privadas, necessidade de capital e financiamento',
     subDe: 'Sitzung 3 · Privatentnahmen, Kapitalbedarf und Finanzierung',
     subEn: 'Session 3 · private withdrawals, capital needs and financing',
-    seccoes: [],
+    seccoes: [
+      { key: 'privadas', num: '2.1', tipo: 'privadas',
+        pt: 'Retiradas privadas necessárias', de: 'Berechnung der notwendigen Privatentnahmen', en: 'Necessary private withdrawals',
+        notaPt: 'Quanto o negócio tem de gerar para a pessoa viver — despesas do agregado menos os outros rendimentos.',
+        notaDe: 'Was das Geschäft erwirtschaften muss, damit die Person leben kann.',
+        notaEn: 'What the business must generate for the person to live on.' },
+      { key: 'capital', num: '2.2.1', tipo: 'capital',
+        pt: 'Necessidade de capital', de: 'Kapitalbedarf', en: 'Capital needs',
+        notaPt: 'Investimentos + custos de constituição + reserva. O documento sugere, para a reserva, os custos correntes dos primeiros 3 meses.',
+        notaDe: 'Investitionen + Gründungskosten + Reserve (lfd. Kosten der ersten drei Monate).',
+        notaEn: 'Investments + setup costs + reserve (the first three months of running costs).' },
+      { key: 'financiamento', num: '2.2.2', tipo: 'financiamento',
+        pt: 'Financiamento', de: 'Finanzierung', en: 'Financing',
+        notaPt: 'Tem de cobrir a totalidade da necessidade de capital.',
+        notaDe: 'Muss den ermittelten Finanzbedarf vollständig decken.',
+        notaEn: 'Must fully cover the capital needs.' },
+    ],
   },
   {
-    n: 4, key: 'projecoes', porConstruir: true,
+    n: 4, key: 'projecoes',
     pt: 'Projeções', de: 'Vorschau', en: 'Projections',
     subPt: 'Sessão 4 · faturação, custos, lucro e liquidez',
     subDe: 'Sitzung 4 · Umsatz, Kosten, Gewinn und Liquidität',
     subEn: 'Session 4 · revenue, costs, profit and liquidity',
-    seccoes: [],
+    seccoes: [
+      { key: 'projecao', num: '2.2.3', tipo: 'projecao',
+        pt: 'Previsão de faturação, custos e lucro', de: 'Umsatz-, Kosten- und Gewinnvorschau', en: 'Revenue, cost and profit forecast',
+        notaPt: 'Faturação sempre líquida (sem IVA) e planeada com prudência. O lucro tem de cobrir as retiradas privadas mais as amortizações.',
+        notaDe: 'Immer Netto-Umsatz (ohne MwSt.) und vorsichtig planen. Der Gewinn muss die Privatentnahmen und die Tilgung decken.',
+        notaEn: 'Always net revenue (excl. VAT), planned conservatively. Profit must cover private withdrawals plus loan repayments.' },
+      { key: 'liquidez', num: '2.3', tipo: 'liquidez',
+        pt: 'Previsão de liquidez', de: 'Liquiditätsvorschau', en: 'Liquidity forecast',
+        notaPt: 'Mostra se há dinheiro em caixa a cada momento. Considerar sazonalidade, adiantamentos e o comportamento de pagamento dos clientes.',
+        notaDe: 'Zeigt, ob Sie jederzeit zahlungsfähig sind — Saisonalität, Abschlagszahlungen und Zahlungsverhalten berücksichtigen.',
+        notaEn: 'Shows whether cash is available at all times — consider seasonality, advances and customer payment behaviour.' },
+    ],
   },
 ]
+
+// Tabelas que contam para o progresso de cada bloco de números
+export const TABELAS_POR_BLOCO = {
+  3: [['privadas', 'rendimentos'], ['privadas', 'despesas'], ['capital', 'investimentos'],
+      ['capital', 'constituicao'], ['financiamento', 'proprio'], ['financiamento', 'alheio']],
+  4: [['projecao', 'receitas'], ['projecao', 'custos'], ['liquidez', 'entradas']],
+}
 
 // ── Quadrantes da SWOT ──
 export const SWOT_QUADRANTES = [
@@ -144,13 +178,26 @@ export const perguntasDoBloco = (n) =>
   (bloco(n)?.seccoes || []).flatMap(s => s.perguntas || [])
 
 // Progresso: perguntas respondidas / total, mais os quadrantes SWOT preenchidos
+// Uma tabela conta como feita quando tem pelo menos um valor preenchido.
+const temValor = (linhas) => (linhas || []).some(l =>
+  Array.isArray(l?.valores) ? l.valores.some(v => String(v ?? '').trim())
+  : Array.isArray(l) ? String(l ?? '').trim()
+  : String(l?.valor ?? '').trim())
+
 export function progressoBloco(n, c) {
   const perguntas = perguntasDoBloco(n)
   const feitas = perguntas.filter(q => (c?.respostas?.[q.key] || '').trim()).length
   const temSwot = (bloco(n)?.seccoes || []).some(s => s.tipo === 'swot')
   const swotFeitos = temSwot ? SWOT_QUADRANTES.filter(q => (c?.swot?.[q.key] || []).length).length : 0
-  const total = perguntas.length + (temSwot ? SWOT_QUADRANTES.length : 0)
-  return { feitas: feitas + swotFeitos, total, pct: total ? Math.round(((feitas + swotFeitos) / total) * 100) : 0 }
+  // Blocos de números: conta as tabelas com algum valor
+  const tabelas = TABELAS_POR_BLOCO[n] || []
+  const tabelasFeitas = tabelas.filter(([sec, campo]) => {
+    const v = c?.numeros?.[sec]?.[campo]
+    return Array.isArray(v) ? temValor(v.map(x => (typeof x === 'object' ? x : { valor: x }))) : false
+  }).length
+  const total = perguntas.length + (temSwot ? SWOT_QUADRANTES.length : 0) + tabelas.length
+  const soma = feitas + swotFeitos + tabelasFeitas
+  return { feitas: soma, total, pct: total ? Math.round((soma / total) * 100) : 0 }
 }
 
 export function progressoTotal(c) {
