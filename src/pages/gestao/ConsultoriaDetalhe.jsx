@@ -27,7 +27,7 @@ export default function ConsultoriaDetalhe() {
   const timer = useRef(null)
 
   const L = lang === 'de' ? {
-    voltar: '← Beratungen', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
+    voltar: '← Beratungen', relatorio: 'Bericht →', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
     bloco: 'Block', porConstruir: 'Dieser Block kommt in der nächsten Phase.',
     swotVazio: 'Fügen Sie Punkte in die vier Quadranten ein.',
     towsAjuda: 'Was soll ich mit dem tun, was die SWOT gezeigt hat?',
@@ -39,7 +39,7 @@ export default function ConsultoriaDetalhe() {
     titulo: 'Titel', url: 'URL', loading: 'Wird geladen…', erroSave: 'Speichern fehlgeschlagen.',
     naoEncontrada: 'Beratung nicht gefunden.',
   } : lang === 'en' ? {
-    voltar: '← Consultancies', guardado: 'Saved ✓', aGuardar: 'Saving…',
+    voltar: '← Consultancies', relatorio: 'Report →', guardado: 'Saved ✓', aGuardar: 'Saving…',
     bloco: 'Block', porConstruir: 'This block arrives in the next phase.',
     swotVazio: 'Add items to the four quadrants.',
     towsAjuda: 'With what the SWOT revealed, what should I do?',
@@ -51,7 +51,7 @@ export default function ConsultoriaDetalhe() {
     titulo: 'Title', url: 'URL', loading: 'Loading…', erroSave: 'Save failed.',
     naoEncontrada: 'Consultancy not found.',
   } : {
-    voltar: '← Consultorias', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
+    voltar: '← Consultorias', relatorio: 'Relatório →', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
     bloco: 'Bloco', porConstruir: 'Este bloco chega na próxima fase.',
     swotVazio: 'Acrescenta pontos aos quatro quadrantes.',
     towsAjuda: 'Com aquilo que a SWOT mostrou, o que devo fazer?',
@@ -171,6 +171,8 @@ export default function ConsultoriaDetalhe() {
             {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
             {erro && <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.neg }}>{erro}</span>}
             <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.chipBg, color: t.chipText }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
+            <button onClick={() => navigate(`/gestao/consultorias/${id}/relatorio`)}
+              style={{ padding: '6px 13px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accent, fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>{L.relatorio}</button>
             <select value={c.status} onChange={e => alterar({ status: e.target.value }, true)} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', fontSize: '12px', padding: '6px 9px' }}>
               <option value="ativa">{L.ativa}</option><option value="concluida">{L.concluida}</option><option value="pausada">{L.pausada}</option>
             </select>

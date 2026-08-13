@@ -17,23 +17,11 @@
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
 
-- [ ] **Consultoria — Fase 2: relatório em PDF**
-  *Reunião 13/08/2026 · Resp.: Vinícius*
-  Secções pré-preenchidas com os dados ao vivo + texto editável, e impressão limpa como no
-  Relatório ESG. **Destino: o banco** — *"estruturar esta informação para, em caso de
-  financiamento, apresentar ao banco"*. Depende da Fase 1.
-
 - [ ] **Consultoria — Fase 3: o tipo "consultoria gratuita"**
   *Reunião 13/08/2026 · Resp.: Vinícius*
   O outro produto: 1 sessão, *"para entender o negócio e que serviços posso oferecer"*.
   O tipo já existe na tabela; faltam as perguntas.
   ⚠️ **Depende de:** o formulário de consultoria gratuita, que a Lúcia envia.
-
-- [ ] **Consultoria — Fase 4: resumo com IA**
-  *Reunião 13/08/2026 · Resp.: Vinícius*
-  *"O que achas que posso oferecer a este cliente?"* e *"faz-me um pequeno resumo"*.
-  ⚠️ **Limite que ela pôs:** *"não é analítica, mas é o descritivo"* — a IA resume o que foi
-  preenchido e assinala lacunas; não decide pela consultora. Depende das Fases 1–2.
 
 - [ ] **Consultoria — Fase 5: formulário público → consultoria + lead no CRM**
   *Reunião 13/08/2026 · Resp.: Vinícius*
@@ -299,6 +287,25 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Consultoria — Fase 2 · relatório gerado por IA + PDF
+- [x] **`api/consultoria-relatorio.js`** — função serverless que gera o relatório com a API
+  da Anthropic. A `ANTHROPIC_API_KEY` vive **só no servidor**, como a `service_role`;
+  verificado que não entra no bundle. Só admin, e a ficha é lida no servidor pelo id —
+  não se confia no conteúdo que o browser envia.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Seis secções na ordem do documento da IHK**, porque o destinatário é o banco. Os
+  valores calculados e as duas verificações vão prontos no prompt — a IA cita, não recalcula.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Limite da Lúcia respeitado** — *"não é analítica, mas é o descritivo"*: a IA descreve
+  o que foi preenchido e lista o que falta; não julga o negócio nem inventa números. Isto
+  absorve a antiga Fase 4 (resumo com IA), que deixa de ser um item separado.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Texto dela ganha sempre** — cada secção é editável e a edição sobrevive a uma nova
+  geração, com opção de descartar e voltar ao texto da IA.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Exportar em PDF** — botão Imprimir/PDF com folha própria, como no Relatório ESG.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
 
 ### Consultoria — Fase 1 · blocos 3 e 4 (os números)
 - [x] **Retiradas privadas** — rendimentos e despesas do agregado, com o resultado que o

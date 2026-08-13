@@ -34,6 +34,7 @@ const Financeiro          = lazy(() => import('./pages/gestao/Financeiro'))
 const Marketing           = lazy(() => import('./pages/gestao/Marketing'))
 const Consultorias        = lazy(() => import('./pages/gestao/Consultorias'))
 const ConsultoriaDetalhe  = lazy(() => import('./pages/gestao/ConsultoriaDetalhe'))
+const ConsultoriaRelatorio= lazy(() => import('./pages/gestao/ConsultoriaRelatorio'))
 const Consultoria         = lazy(() => import('./pages/Consultoria'))
 
 const Dashboard           = lazy(() => import('./pages/contabilidade/Dashboard'))
@@ -123,6 +124,7 @@ function AppLayout() {
             <Route path="/gestao/crm"           element={<RoleRoute requireRole={['admin', 'comercial']}><Crm /></RoleRoute>} />
             <Route path="/gestao/consultorias"     element={<RoleRoute requireRole="admin"><Consultorias /></RoleRoute>} />
             <Route path="/gestao/consultorias/:id" element={<RoleRoute requireRole="admin"><ConsultoriaDetalhe /></RoleRoute>} />
+            <Route path="/gestao/consultorias/:id/relatorio" element={<RoleRoute requireRole="admin"><ConsultoriaRelatorio /></RoleRoute>} />
             <Route path="/gestao/marketing"     element={<RoleRoute requireRole={['admin', 'marketing']}><Marketing /></RoleRoute>} />
             <Route path="/gestao/financeiro"    element={<RoleRoute requireRole="admin"><Financeiro /></RoleRoute>} />
             <Route path="/gestao/acessos"       element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
