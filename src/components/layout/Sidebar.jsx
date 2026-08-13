@@ -70,6 +70,7 @@ const NAV = {
     { key: 'section_gestao', items: [
       { to: '/gestao/clientes',   Icon: IconClientes, labelKey: 'nav_clientes_ativos', roles: ['admin'] },
       { to: '/gestao/crm',        Icon: IconKpi,      labelKey: 'nav_crm',             roles: ['admin', 'comercial'] },
+      { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
       { to: '/gestao/marketing',  Icon: IconMarketing, labelKey: 'nav_marketing',      roles: ['admin', 'marketing'] },
       { to: '/gestao/financeiro', Icon: IconCaixa,    labelKey: 'nav_fin_gestao',      roles: ['admin'] },
       { to: '/gestao/acessos',    Icon: IconAdmin,    labelKey: 'nav_acessos',         roles: ['admin'] },

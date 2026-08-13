@@ -455,6 +455,37 @@ returns void language sql security definer set search_path = public as $$
 $$;
 grant execute on function public.clear_must_change_password() to authenticated;
 
+-- ─────────────────────────────────────────────────────────────────────────
+-- 16. MÓDULO DE CONSULTORIA (migração 029)
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists public.consultorias (
+  id         uuid primary key default gen_random_uuid(),
+  tipo       text not null default 'implementacao' check (tipo in ('gratuita', 'implementacao')),
+  nome       text not null,
+  empresa    text,
+  email      text,
+  telefone   text,
+  setor      text,
+  lead_id    uuid references public.crm_leads (id) on delete set null,
+  user_id    uuid references auth.users (id) on delete set null,
+  bloco      int  not null default 1 check (bloco between 1 and 4),
+  status     text not null default 'ativa' check (status in ('ativa', 'concluida', 'pausada')),
+  respostas  jsonb not null default '{}'::jsonb,
+  swot       jsonb not null default '{}'::jsonb,
+  tows       jsonb not null default '{}'::jsonb,
+  numeros    jsonb not null default '{}'::jsonb,
+  recursos   jsonb not null default '[]'::jsonb,
+  relatorio  jsonb not null default '{}'::jsonb,
+  notas      text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.consultorias enable row level security;
+drop policy if exists "consultorias_admin" on public.consultorias;
+create policy "consultorias_admin" on public.consultorias
+  for all using (public.is_admin()) with check (public.is_admin());
+create index if not exists idx_consultorias_status on public.consultorias (status, updated_at desc);
+
 -- ============================================================================
 -- FIM. Para tornar alguém admin (depois de criar o login):
 --   update public.profiles set role = 'admin'
