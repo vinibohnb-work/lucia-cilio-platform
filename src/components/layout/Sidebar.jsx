@@ -44,6 +44,7 @@ const NAV = {
     { key: 'section_acc', items: [
       { to: '/contabilidade/dashboard',    Icon: IconPainel,   labelKey: 'nav_dash' },
       { to: '/contabilidade/caixa',        Icon: IconCaixa,    labelKey: 'nav_caixa' },
+      { to: '/contabilidade/conciliacao',  Icon: IconRucklagen, labelKey: 'nav_conciliacao' },
       { to: '/contabilidade/catalogo',     Icon: IconCatalogo, labelKey: 'nav_catalogo' },
       { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations' },
     ]},

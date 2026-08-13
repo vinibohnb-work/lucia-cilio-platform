@@ -17,20 +17,16 @@
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
 
-- [ ] **Consultoria — Fase 3: o tipo "consultoria gratuita"**
-  *Reunião 13/08/2026 · Resp.: Vinícius*
-  O outro produto: 1 sessão, *"para entender o negócio e que serviços posso oferecer"*.
-  O tipo já existe na tabela; faltam as perguntas.
-  ⚠️ **Depende de:** o formulário de consultoria gratuita, que a Lúcia envia.
+### Achados durante o desenvolvimento
 
-- [ ] **Consultoria — Fase 5: formulário público → consultoria + lead no CRM**
-  *Reunião 13/08/2026 · Resp.: Vinícius*
-  ⚠️ **Depende de:** o formulário dela e o alinhamento com o Filipe.
+- [ ] **Design do relatório de consultoria** — o conteúdo gerado está correto, a apresentação
+  não lhe faz jus. Revisão de design a decorrer em paralelo.
+  *13/08/2026 · Resp.: Vinícius*
 
-- [ ] **Importação de extrato bancário (CSV/Excel) com reconciliação caixa/banco**
-  *Reunião 13/08/2026 · Resp.: Vinícius*
-  Ficheiro em vez de integração bancária direta — decisão tomada na reunião. Inclui o *match*
-  entre o que vem do extrato e os lançamentos já existentes no Livro de Caixa.
+- [ ] **Vulnerabilidade alta no `react-router`** — CSRF por `PUT/PATCH/DELETE` em pedidos de
+  documento (`npm audit`). É a única das 7 que está em dependência de execução, não de build.
+  Avaliar a atualização.
+  *13/08/2026 · Resp.: Vinícius*
 
 ### QA de interface — achados de 13/08
 
@@ -287,6 +283,32 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Conciliação caixa/banco · migração 030
+- [x] **Importação de extrato (CSV e Excel)** — o formato é descoberto a partir do conteúdo:
+  separador, decimal à portuguesa/alemã/inglesa, data em quatro formatos, coluna de valor com
+  sinal **ou** colunas débito/crédito separadas, e cabeçalho que pode não estar na 1.ª linha.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Reimportar é inofensivo** — índice único `(user_id, fingerprint)` na base: importar o
+  extrato de janeiro duas vezes não duplica nada.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Conciliação um-para-um** com o Livro de Caixa: valor e sentido têm de bater certo,
+  data até 7 dias, e a semelhança da descrição desempata. **Só concilia sozinho o que é
+  inequívoco** — dois lançamentos iguais no mesmo dia ficam marcados como ambíguos, porque é
+  precisamente o caso em que a máquina não deve decidir.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Movimento sem correspondência → cria o lançamento** a partir do extrato. E o inverso:
+  lançamentos de banco que não constam do extrato ficam assinalados numa aba própria.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Leitor de Excel carregado sob procura** — fica fora do arranque; e usei
+  `read-excel-file` em vez do `xlsx`, que está parado em 2022 com CVEs por corrigir.
+  *13/08/2026 · Resp.: Vinícius*
+
+### Consultoria — Fases 3 e 5 · encerradas por decisão
+- [x] **Fase 3 (consultoria gratuita)** e **Fase 5 (formulário público → CRM)** — retiradas do
+  âmbito por decisão de 13/08/2026. ⚠️ **Não foram construídas**: ficam registadas aqui para
+  o histórico ficar honesto, não como funcionalidade entregue.
+  *13/08/2026 · Resp.: Vinícius*
 
 ### Consultoria — Fase 2 · relatório gerado por IA + PDF
 - [x] **`api/consultoria-relatorio.js`** — função serverless que gera o relatório com a API
