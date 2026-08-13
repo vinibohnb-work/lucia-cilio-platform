@@ -3,8 +3,9 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 06/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
-> 30/07/2026, 06/08/2026
+> **Última sincronização:** 13/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> 30/07/2026, 06/08/2026, 13/08/2026
+> **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
 >
 > **Convenção:** itens concluídos saem das secções de cima e passam para
@@ -13,6 +14,83 @@
 ---
 
 ## Itens de desenvolvimento
+
+### Consultoria — módulo novo (prioridade da reunião de 13/08)
+
+- [ ] **Estruturar o módulo de consultoria na plataforma**
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+  Etapas de diagnóstico → **SWOT e derivação TOWS** (substitui "chances e riscos") → projeções
+  → relatório final. Base: o material Word da Lúcia e o da Câmara de Comércio alemã, como
+  referência e não cópia.
+  **Regras acordadas:** a Lúcia acede **como administradora** e regista o contacto/lead **sem
+  criar conta ao cliente**; o relatório sai em **PDF** para entregar; conteúdos entram como
+  **links** (vídeos, comunidade, Instagram) e não como ficheiros pesados.
+  ⚠️ **Prazo real:** ela começa a usar com clientes **em setembro**.
+  ⚠️ **Depende de:** o Word de consultoria e o formulário de consultoria gratuita, que ela envia.
+
+- [ ] **Importação de extrato bancário (CSV/Excel) com reconciliação caixa/banco**
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+  Ficheiro em vez de integração bancária direta — decisão tomada na reunião. Inclui o *match*
+  entre o que vem do extrato e os lançamentos já existentes no Livro de Caixa.
+
+### QA de interface — achados de 13/08
+
+> Da auditoria automática + inspeção das 48 capturas (16 ecrãs × 3 tamanhos), em produção com
+> a conta de demonstração. Relatório completo: `docs/auditorias/2026-08-13-interface.md`.
+> Severidade: 🟠 atrapalha · 🟡 incomoda · 🔵 oportunidade. Zero bloqueadores.
+
+- [ ] **🟠 Desbloquear o zoom no telemóvel** — `index.html` tem `maximum-scale=1.0` no
+  `meta[name=viewport]`, o que impede ampliar em **todos** os ecrãs. É o item de
+  acessibilidade mais grave: o público lê valores fiscais pequenos no telemóvel.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟠 Corrigir o contraste dos tokens de texto** — 35 elementos só no Painel abaixo do
+  mínimo WCAG AA (`2026` a 2.03:1; meses do gráfico a 2.37:1). Vem de `subtle` (`#a2ab9f`) e
+  `textMuted` (`#8a9990`) sobre o creme `#f5f1e8`. **Um ajuste em `src/theme.js` corrige a
+  plataforma inteira.**
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟠 Subir os textos abaixo de 12px** — 36 elementos só no Painel; `OFFICE CONSULTING`
+  a 9px, rótulos de secção a 10px. Combina-se com os dois itens acima.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟠 Cartões "Em Caixa" / "No Banco" partem-se no telemóvel** — lê-se *"EM €"* numa linha
+  e *"CAIXA −4436,50"* na seguinte. `LivroCaixa.jsx:286` usa `flex` + `space-between` num
+  cartão de ~180px. Os cartões da linha de cima usam layout empilhado e ficam bem — esta linha
+  é a exceção. Prova: `qa-2026-08-13/demo/mobile/contabilidade-caixa.png`.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟠 Associar rótulos aos campos de formulário** — 36 ocorrências, incluindo o login.
+  Sem `label for`/`aria-label`, o leitor de ecrã não liga rótulo a campo e tocar no texto não
+  foca o campo.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟠 Estado de carregamento do Painel** — apanhado em "A carregar…" com o ecrã vazio e o
+  botão "+ Nova Entrada" já visível, a convidar a agir sobre nada. Sugestão: esqueleto de
+  carregamento e esconder o botão enquanto não há dados.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟡 Matriz de materialidade no fim da página no telemóvel** — é preciso passar pelos 16
+  temas (~9.000 px) para a ver. No computador está fixa à direita. É o resultado da página.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟡 Alvos de toque abaixo de 44×44 px** — 32 ocorrências; o botão "Mostrar" da
+  palavra-passe tem 42×17.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟡 Campos com fonte < 16px fazem o iPhone ampliar sozinho** — 12 ocorrências,
+  incluindo o login (14px).
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟡 Oito ecrãs sem `<h1>`** — Painel, Livro de Caixa, Obrigações, Precificação,
+  Catálogo, Clientes, Empresa e login começam direto nos controlos. As páginas de ESG e as
+  mais recentes têm cabeçalho — a inconsistência é entre as antigas e as novas.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟡 Tabela do Planeamento Mensal exige rolagem lateral no telemóvel** — largura mínima
+  de 1120px; veem-se 3 de 12 colunas e os cabeçalhos truncam. Sugestão: cartão por linha no
+  telemóvel.
+  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🔵 Painel não respeita o tema noturno** — `Dashboard.jsx` mistura tokens com 7 cores
+  fixas (`#f0fdf4`, `#eff6ff`, `#fff7ed`, `#fffbeb`, `#fdeaea`, `#e2e8f0`, `#f2f6f3`); no modo
+  noturno os cartões pastel flutuam sobre o fundo escuro.
+  *Revisão de design 12/08/2026 · Resp.: Vinícius*
+- [ ] **🔵 Dois formatadores de número no mesmo ecrã** — `€ 7200,00` (sem separador) a poucos
+  centímetros de `€ 11 400,00` (com separador). `Dashboard.jsx:23-24`.
+  *Revisão de design 12/08/2026 · Resp.: Vinícius*
+- [ ] **🔵 Livro de Caixa sem paginação** — com os 30 lançamentos da conta demo a página tem
+  ~8.000 px no telemóvel. Com um ano real de dados, será várias vezes isso.
+  *QA 13/08/2026 · Resp.: Vinícius*
 
 ### CRM e prospeção
 
@@ -152,7 +230,15 @@
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
 
-- **Foco atual declarado pela Lúcia (30/07):** *"CRM e consultoria"*. A contabilidade
+- **Foco atual (13/08):** **módulo de consultoria** e **importação de extrato**. A Lúcia começa
+  a usar a consultoria com clientes **em setembro** — é o prazo real, antes do fim do projeto.
+- **Extrato por ficheiro (CSV/Excel), não integração bancária direta** — decisão de 13/08.
+- **Na consultoria, a Lúcia é a administradora**: regista o contacto/lead sem criar conta ao
+  cliente; o relatório sai em **PDF** para entregar.
+- **SWOT e TOWS** substituem "chances e riscos" no diagnóstico de consultoria.
+- **Links, não ficheiros pesados** — vídeos, comunidade, Instagram e contactos entram como link.
+- **Material da Câmara de Comércio alemã é referência, não cópia.**
+- **Foco anterior (30/07):** *"CRM e consultoria"*. A contabilidade
   *"está excelente como está, é só corrigir o português"*.
 - **Manter a plataforma o mais simples possível** — conselho que a Lúcia recebeu e repete.
 - **Saídas descritivas, não analíticas** — comparativos ano a ano; a análise fica com ela.
@@ -183,6 +269,13 @@
   (~80% consideradas corretas).
 - ⚠️ Website/domínio parado desde março por falta de envio de informações aos fornecedores.
 - ⚠️ Cronograma dependente da disponibilidade da Lúcia.
+- ⚠️ **(13/08)** O prazo de novembro pode ser insuficiente para robustecer a solução.
+- ⚠️ **(13/08)** Questões legais/fiscais e de proteção de dados, agravadas por serem **dois
+  países** — liga-se ao `docs/SEGURANCA_DADOS.md` e à decisão de backup.
+- ⚠️ **(13/08)** Custos adicionais com servidor seguro podem afetar a continuidade.
+- ⚠️ **(13/08)** Excesso de ideias sem foco pode atrasar a entrega e a monetização.
+- ⚠️ **Não há ambiente de staging** — o `.env.local` aponta para o Supabase de produção. Testar
+  escrita significa escrever na base real dos clientes; o QA de 13/08 correu só em leitura.
 
 ---
 
