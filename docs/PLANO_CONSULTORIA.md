@@ -3,6 +3,10 @@
 > **Base:** transcrição completa da reunião de 13/08/2026 + o documento
 > *"Der Businessplan (BP)"* da Câmara de Comércio alemã (IHK), 7 páginas, que a Lúcia enviou.
 > **Prazo real:** ela começa a usar com clientes **em setembro**.
+>
+> **Estado — 13/08/2026:** ✅ **Fase 0 construída e testada** (migração 029 aplicada; fluxo e
+> RLS verificados contra a base real). As fases seguintes estão no `BACKLOG.md`, uma entrada
+> por fase.
 
 ## 1. Correção ao plano anterior: são DUAS consultorias, não uma
 
@@ -162,16 +166,31 @@ Portugal). Sem ficheiros: *"vídeos e coisas não colocaria"*.
 
 ## 5. Faseamento
 
-| Fase | O que entra | Depende de |
+| Fase | O que entra | Estado |
 |---|---|---|
-| **0 — amanhã** | Tabela + lista + ficha + **Blocos 1 e 2 completos, com SWOT e TOWS** | Nada ✅ |
-| **1** | Blocos 3 e 4 (as quatro tabelas de números) | Nada ✅ |
-| **2** | Relatório em PDF | Fases 0–1 |
-| **3** | Consultoria gratuita (o outro tipo) | ⚠️ O formulário dela |
-| **4** | Resumo com IA | Fases 0–1 |
-| **5** | Formulário público → cria consultoria + lead no CRM | ⚠️ Formulário + Filipe |
+| **0** | Tabela + lista + ficha + **Blocos 1 e 2, com SWOT e TOWS** | ✅ **Feito** (migração 029) |
+| **1** | Blocos 3 e 4 (as tabelas de números) | Por fazer — não depende de nada |
+| **2** | Relatório em PDF | Por fazer — depende da Fase 1 |
+| **3** | Consultoria gratuita (o outro tipo) | ⚠️ Aguarda o formulário dela |
+| **4** | Resumo com IA (descritivo) | Por fazer — depende das Fases 1–2 |
+| **5** | Formulário público → consultoria + lead no CRM | ⚠️ Aguarda formulário + Filipe |
 
-**A Fase 0 cobre exatamente as duas primeiras sessões** — que é o que ela vai fazer amanhã.
+### O que a Fase 0 entregou
+
+- **`consultorias`** (migração 029) — contacto embutido, sem conta para o cliente; ligações
+  opcionais a `crm_leads` e `auth.users`; RLS só admin.
+- **Lista** — cartões com tipo, estado e progresso por bloco; criar pede só nome, empresa e
+  tipo e **abre logo a ficha**.
+- **Ficha** — stepper dos 4 blocos e **guardar automático** (700 ms, sem botão).
+- **Blocos 1 e 2** — as 23 perguntas do documento da IHK em PT/DE/EN; respostas guardadas
+  **por chave**, para a lista poder ser adaptada sem perder dados.
+- **SWOT + TOWS** — cada célula TOWS mostra os itens da SWOT que a alimentam e guarda a
+  **origem** de cada estratégia.
+- **Recursos** — só links.
+
+**Verificado contra a base real:** criação sem conta, gravação de respostas/SWOT/TOWS com
+origem, cálculo do progresso, as três restrições (tipo, bloco 1–4, nome obrigatório) e a RLS —
+um cliente não lê, não cria, não altera nem apaga. Registos de teste apagados.
 
 ## 6. A decidir com a Lúcia
 

@@ -17,16 +17,36 @@
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
 
-- [ ] **Estruturar o módulo de consultoria na plataforma**
+- [ ] **Consultoria — Fase 1: blocos 3 e 4 (os números)**
   *Reunião 13/08/2026 · Resp.: Vinícius*
-  Etapas de diagnóstico → **SWOT e derivação TOWS** (substitui "chances e riscos") → projeções
-  → relatório final. Base: o material Word da Lúcia e o da Câmara de Comércio alemã, como
-  referência e não cópia.
-  **Regras acordadas:** a Lúcia acede **como administradora** e regista o contacto/lead **sem
-  criar conta ao cliente**; o relatório sai em **PDF** para entregar; conteúdos entram como
-  **links** (vídeos, comunidade, Instagram) e não como ficheiros pesados.
-  ⚠️ **Prazo real:** ela começa a usar com clientes **em setembro**.
-  ⚠️ **Depende de:** o Word de consultoria e o formulário de consultoria gratuita, que ela envia.
+  Bloco 3: retiradas privadas necessárias, necessidade de capital (investimentos + custos de
+  constituição + reserva de 3 meses) e financiamento (capital próprio vs alheio, incluindo
+  KfW). Bloco 4: previsão de faturação/custos/lucro (sempre líquida, sem IVA) e previsão de
+  liquidez. **Verificação que o documento exige:** o lucro previsto cobre as retiradas
+  privadas + as amortizações? Um semáforo responde.
+  ✅ Não depende de nada — a estrutura veio toda do documento da IHK.
+
+- [ ] **Consultoria — Fase 2: relatório em PDF**
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+  Secções pré-preenchidas com os dados ao vivo + texto editável, e impressão limpa como no
+  Relatório ESG. **Destino: o banco** — *"estruturar esta informação para, em caso de
+  financiamento, apresentar ao banco"*. Depende da Fase 1.
+
+- [ ] **Consultoria — Fase 3: o tipo "consultoria gratuita"**
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+  O outro produto: 1 sessão, *"para entender o negócio e que serviços posso oferecer"*.
+  O tipo já existe na tabela; faltam as perguntas.
+  ⚠️ **Depende de:** o formulário de consultoria gratuita, que a Lúcia envia.
+
+- [ ] **Consultoria — Fase 4: resumo com IA**
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+  *"O que achas que posso oferecer a este cliente?"* e *"faz-me um pequeno resumo"*.
+  ⚠️ **Limite que ela pôs:** *"não é analítica, mas é o descritivo"* — a IA resume o que foi
+  preenchido e assinala lacunas; não decide pela consultora. Depende das Fases 1–2.
+
+- [ ] **Consultoria — Fase 5: formulário público → consultoria + lead no CRM**
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+  ⚠️ **Depende de:** o formulário dela e o alinhamento com o Filipe.
 
 - [ ] **Importação de extrato bancário (CSV/Excel) com reconciliação caixa/banco**
   *Reunião 13/08/2026 · Resp.: Vinícius*
@@ -288,6 +308,27 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Consultoria — Fase 0 · migração 029
+- [x] **Tabela `consultorias`** — dados de contacto embutidos (a Lúcia regista **sem criar
+  conta ao cliente**, como decidido) e ligações opcionais a `crm_leads` e `auth.users`.
+  RLS só admin: verificado que um cliente não lê, não cria, não altera nem apaga.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Lista e ficha de consultoria** — criar pede só nome, empresa e tipo e abre logo a
+  ficha; stepper dos 4 blocos com progresso; **guardar automático** (sem botão), porque é
+  usada ao vivo com o cliente a ver o ecrã.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Blocos 1 e 2 com as 23 perguntas do documento da IHK** em PT/DE/EN (o alemão é o
+  original). As respostas guardam-se **por chave**: reescrever uma pergunta não perde a
+  resposta — a lista é referência, não dogma.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **SWOT e TOWS** — quatro quadrantes, e cada célula TOWS mostra os itens da SWOT que a
+  alimentam; ao clicar marcam-se como **origem da estratégia**, que fica guardada com ela.
+  É o *"com aquilo que descobri no SWOT, o que devo fazer?"* tornado rastreável.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
+- [x] **Recursos só com links** (Instagram, comunidade, contactos), como decidido — sem
+  ficheiros pesados.
+  *Reunião 13/08/2026 · Resp.: Vinícius*
 
 ### Correções de QA e design — 13/08
 - [x] **Zoom desbloqueado no telemóvel** — removido `maximum-scale=1.0` do `index.html`.
