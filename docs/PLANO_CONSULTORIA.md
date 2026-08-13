@@ -1,144 +1,183 @@
 # Plano de implementação — Módulo de Consultoria
 
-> **Base:** reunião de 13/08/2026 (extração do sistema interno — a transcrição em si não está
-> disponível, só os 10 itens de ação, 9 alinhamentos e 5 riscos).
-> **Prazo real:** a Lúcia começa a usar com clientes **em setembro**, e tem uma consultoria
-> **já amanhã** que gostaria de testar com alguma coisa.
+> **Base:** transcrição completa da reunião de 13/08/2026 + o documento
+> *"Der Businessplan (BP)"* da Câmara de Comércio alemã (IHK), 7 páginas, que a Lúcia enviou.
+> **Prazo real:** ela começa a usar com clientes **em setembro**.
 
-## 1. O que ficou decidido na reunião
+## 1. Correção ao plano anterior: são DUAS consultorias, não uma
 
-| Decisão | Consequência para o desenho |
-|---|---|
-| A Lúcia acede **como administradora** e regista o contacto/lead **sem criar conta ao cliente** | O módulo vive na **Gestão** e não pode depender de `auth.users` |
-| Etapas: **diagnóstico → SWOT → TOWS → projeções → relatório** | Um fluxo por etapas dentro de uma ficha |
-| **SWOT/TOWS** substitui "chances e riscos" | O TOWS é *derivado* do SWOT — a interface deve ajudar a derivar |
-| Relatório em **PDF** para entregar ao cliente | Vista de impressão, como já se fez no Relatório ESG |
-| **Links**, não ficheiros pesados (vídeos, comunidade, Instagram, contactos) | Secção de recursos só com URLs |
-| Material da Câmara de Comércio alemã é **referência, não cópia** | O conteúdo do diagnóstico vem do Word dela |
-| Simples e utilizável em **telemóvel e computador** | Etapas empilham no telemóvel; ela usa em sessão presencial |
+A primeira versão deste plano tratou tudo como um fluxo único. A transcrição mostra que são
+dois produtos distintos, e ela tem os **dois já amanhã**:
 
-## 2. A questão estrutural (a decisão mais importante)
+| | **Consultoria gratuita** | **Consultoria de Implementação de Negócio** |
+|---|---|---|
+| Objetivo | *"entender o negócio da pessoa e que serviços posso oferecer"* | Estruturar o negócio até estar pronto a arrancar |
+| Duração | 1 sessão, gratuita | **4 sessões em bloco** |
+| Base | O formulário que ela tem no Forms | O documento da IHK |
+| Saída | Perceber o encaixe comercial | Plano apresentável **ao banco** |
+| Estado | ⚠️ O formulário ainda não chegou | ✅ Documento recebido e estruturado |
 
-O que já existe **não serve**: a tabela `consulting_notes` está ligada a `user_id` →
-`auth.users`, ou seja, **só funciona para quem já tem conta na plataforma**. A reunião decidiu
-exatamente o contrário — registar o contacto **sem criar conta**.
+O destino final da consultoria de implementação é **financiamento**: *"estruturar esta
+informação numa tabela para, em caso de financiamento, teres a informação para apresentar ao
+banco"*. Isto muda o desenho do relatório — não é um resumo bonito, é um documento que um
+gestor de crédito lê.
 
-Proposta: tabela própria `consultorias`, com os dados de contacto embutidos e **duas ligações
-opcionais**:
+## 2. A estrutura real (do documento da IHK)
 
-- `lead_id` → `crm_leads` — quando a consultoria nasce de um lead que já está no funil
-- `user_id` → `auth.users` — preenchido **mais tarde**, se o cliente vier a ter conta
+O documento está em alemão; a Lúcia disse *"podes traduzir para português"*. As perguntas
+abaixo são as do original.
 
-Assim a consultoria funciona sozinha desde o primeiro minuto, e liga-se ao resto quando fizer
-sentido. Sem isto, ou se força a criação de conta (contra o que foi decidido), ou a consultoria
-fica desligada do CRM e do Financeiro.
+### Bloco 1 — Ideia e pessoa *(sessão 1)*
 
-## 3. Modelo de dados
+**1.1 A minha ideia de negócio**
+- Quais são os meus produtos / que serviços ofereço?
+- Porquê estes produtos ou serviços?
+- Onde vejo uma lacuna de mercado ou um nicho?
+- Em que localização quero começar?
+- Sozinho ou com sócios?
+- Quando quero iniciar a atividade?
+- Em que regime — tempo inteiro ou parcial?
 
-```
-consultorias
-  id · created_at · updated_at
-  ── contacto (sem conta) ──
-  nome · empresa · email · telefone · setor · notas
-  ── ligações opcionais ──
-  lead_id → crm_leads      (de onde veio)
-  user_id → auth.users     (se/quando virar cliente da plataforma)
-  ── estado ──
-  fase        diagnostico | swot | tows | projecoes | relatorio | concluida
-  ── conteúdo (JSONB, uma linha por consultoria) ──
-  diagnostico  respostas do questionário
-  swot         { forcas[], fraquezas[], oportunidades[], ameacas[] }
-  tows         { so[], wo[], st[], wt[] }   ← cada estratégia guarda de que itens SWOT nasceu
-  projecoes    cenários e valores
-  recursos     [{ titulo, url, tipo }]
-  relatorio    texto editável por secção
-```
+**1.2 As minhas competências pessoais e técnicas** *(juntar CV)*
+- Porque me quero tornar independente?
+- Que formação e especializações tenho?
+- Onde ganhei experiência neste ramo?
+- Tenho experiência ou conhecimentos comerciais?
+- Se não tenho, como vou colmatar essa lacuna? (seminários, cursos, coaching)
+- Qual é a minha situação familiar? (casado, parceria, filhos)
+- Quem vive do rendimento desta atividade?
+- Existe outro rendimento no agregado?
+- Como concilio a família com a independência?
+- Como está organizado o apoio às crianças?
+- A minha família apoia-me nesta atividade?
 
-Uma linha por consultoria, conteúdo em JSONB — o mesmo padrão do `esg_materiality` e do
-`esg_reports`, que já provou funcionar aqui.
+### Bloco 2 — Mercado e estratégia *(sessão 2)*
+
+**1.3 Clientes, concorrência, marketing e vendas**
+- Quem são exatamente os meus clientes?
+- Onde e como os encontro?
+- Quem são os meus concorrentes e o que oferecem?
+- O que distingue a minha oferta da deles?
+- Que vantagens tem a minha oferta?
+
+**1.4 → SWOT + TOWS** ⭐
+No original chama-se *"Perspetivas futuras, oportunidades e riscos"*. A Lúcia anotou **no
+próprio Word**: *"substituir por uma análise SWOT e criar uma TOWS"* e *"com aquilo que
+descobri no SWOT, o que devo fazer?"*.
+
+As perguntas originais desta secção **não se perdem** — passam a alimentar os quadrantes:
+- *Que objetivos tenho? Onde quero estar e quando?* → alimenta Oportunidades
+- *Há riscos ou oportunidades que já conheço?* → Ameaças / Oportunidades
+- *Consigo viver dos excedentes no início?* → Fraquezas
+- *E se o primeiro ano correr pior do que o planeado? E se eu adoecer?* → Ameaças
+
+### Bloco 3 — O dinheiro pessoal e o capital *(sessão 3)*
+
+**2.1 Cálculo das retiradas privadas necessárias**
+Tabela de rendimentos e despesas do agregado familiar. O princípio que ela sublinhou:
+*"a pessoa tem que saber qual é a quantia de dinheiro que precisa para se manter mensalmente,
+para não pensar só no negócio"*.
+
+**2.2.1 Necessidade de capital** — investimentos (máquinas, equipamento, mobiliário, viaturas)
++ custos de constituição (consultoria, informação, conceito publicitário, impressos, ação de
+abertura) + **reserva** (o documento sugere os custos correntes dos primeiros 3 meses).
+
+**2.2.2 Financiamento** — tem de cobrir a totalidade da necessidade de capital:
+- **Capital próprio:** dinheiro + entradas em espécie (viatura, computador, mobiliário)
+- **Capital alheio:** empréstimo privado, empréstimo público (KfW *Startgeld* / *Mikrodarlehen*),
+  crédito bancário, conta corrente caucionada
+
+### Bloco 4 — Projeções *(sessão 4)*
+
+**2.2.3 Previsão de faturação, custos e lucro** — sempre **faturação líquida (sem IVA)** e
+*"planeie com prudência"*. O lucro tem de cobrir **as retiradas privadas do 2.1** mais a
+amortização dos créditos — é este o cruzamento que fecha o plano.
+
+**Previsão de liquidez** — considerando sazonalidade, prazos de contratos longos, adiantamentos
+e o comportamento de pagamento dos clientes.
+
+## 3. A questão estrutural (mantém-se do plano anterior)
+
+`consulting_notes` está ligada a `auth.users` → só serve quem já tem conta. A reunião foi
+explícita ao contrário: *"eu adiciono a pessoa, mas adiciono a pessoa onde?"* → **na própria
+consultoria, sem criar conta**.
+
+Tabela `consultorias` com os dados de contacto embutidos e ligações **opcionais** a
+`crm_leads` (de onde veio) e a `auth.users` (se um dia vier a ter conta).
 
 ## 4. Como aparece na plataforma
 
-**Onde:** nova entrada **Consultorias** no menu da **Gestão**, entre Clientes Ativos e CRM.
-Admin apenas (o papel `comercial` não vê — é trabalho dela).
+**Onde:** entrada **Consultorias** no menu da Gestão, admin apenas.
 
-### 4.1 Lista de consultorias
+⚠️ **Restrição de desenho que vem da transcrição:** a consultoria de amanhã é **presencial** e
+ela preenche ao vivo — *"eu vou falando, vou perguntando, vou preenchendo"* — com o cliente a
+ver o ecrã: *"é legal ter essa coisa visual para a pessoa entrar e ver o que estou a fazer"*.
+Ou seja: **tem de ser bonito de mostrar e rápido de preencher ao mesmo tempo**. Nada de
+formulários densos.
 
-Cartões, um por consultoria: nome do contacto e empresa, **etiqueta da fase**, data da última
-alteração e uma barra de progresso das 5 etapas. Filtros por fase. Botão **+ Nova consultoria**
-pede só nome e empresa — começa-se a trabalhar em 5 segundos, que é o que interessa numa sessão
-ao vivo.
+### Lista
+Cartões por consultoria: contacto, empresa, **tipo** (gratuita / implementação), bloco atual e
+progresso. "+ Nova consultoria" pede só nome, empresa e tipo.
 
-### 4.2 Ficha da consultoria — o local de trabalho
+### Ficha — os 4 blocos
+Um bloco por sessão, com o progresso visível. Cada pergunta é uma linha com campo de texto que
+guarda sozinho. No telemóvel empilha.
 
-Cabeçalho com o contacto e um **stepper de 5 etapas** sempre visível, mostrando onde se está.
-No telemóvel o stepper vira uma lista compacta e as etapas empilham.
-
-**① Diagnóstico** — questionário guiado, no formato do Diagnóstico ESG (que já funciona):
-pergunta, resposta, progresso `x/n`. ⚠️ *As perguntas vêm do Word dela — sem isso, esta etapa
-fica com uma estrutura vazia.*
-
-**② SWOT** — quatro quadrantes num quadro 2×2, com as cores já usadas na plataforma:
-
+### SWOT — quadro 2×2
 ```
-┌───────────────────────┬───────────────────────┐
-│  FORÇAS  (interno +)  │  FRAQUEZAS (interno −)│
-│  + adicionar item     │  + adicionar item     │
-├───────────────────────┼───────────────────────┤
-│ OPORTUNIDADES (ext +) │  AMEAÇAS  (externo −) │
-│  + adicionar item     │  + adicionar item     │
-└───────────────────────┴───────────────────────┘
+┌── FORÇAS (interno +) ──┬── FRAQUEZAS (interno −) ──┐
+│  + adicionar           │  + adicionar              │
+├── OPORTUNIDADES (ext+) ┼── AMEAÇAS (externo −) ────┤
+│  + adicionar           │  + adicionar              │
+└────────────────────────┴───────────────────────────┘
 ```
 
-Cada item é uma linha curta que se escreve e enter. No telemóvel os quadrantes empilham em
-coluna, mantendo os rótulos (interno/externo, positivo/negativo).
-
-**③ TOWS** — a etapa que dá o valor. Matriz 2×2 onde **as linhas são o externo** e **as colunas
-o interno**, e cada célula cruza os dois:
-
+### TOWS — onde a plataforma vale mais que o Word
 ```
-                  FORÇAS              FRAQUEZAS
-OPORTUNIDADES  │ SO — atacar     │ WO — melhorar     │
-               │ usar força para │ corrigir fraqueza │
-               │ agarrar a opor. │ para agarrar opor.│
-AMEAÇAS        │ ST — defender   │ WT — proteger     │
-               │ usar força para │ reduzir exposição │
-               │ mitigar ameaça  │                   │
+                    FORÇAS                FRAQUEZAS
+OPORTUNIDADES  │ SO — atacar        │ WO — melhorar      │
+AMEAÇAS        │ ST — defender      │ WT — proteger      │
 ```
+Ao abrir a célula **SO**, a plataforma mostra as forças e as oportunidades já escritas, e ela
+escreve a estratégia com elas à vista. Cada estratégia **guarda de que itens nasceu** — é o
+*"com aquilo que descobri no SWOT, o que devo fazer?"* dela, tornado rastreável.
 
-**O que a plataforma faz aqui e o Word não faz:** ao abrir uma célula, ela mostra **os itens do
-SWOT que alimentam aquele cruzamento** (na célula SO, as forças e as oportunidades já escritas),
-e a Lúcia escreve a estratégia com eles à vista. Cada estratégia **guarda de que itens nasceu** —
-é isso que torna o relatório defensável em vez de opinião solta.
+### Números — tabelas simples
+As quatro tabelas (retiradas privadas, capital, financiamento, faturação/custos/lucro) com
+totais automáticos e **a verificação que o documento exige**: o lucro previsto cobre as
+retiradas privadas + amortizações? Um semáforo responde.
 
-**④ Projeções** — cenários lado a lado (ex.: atual · conservador · alvo) com as linhas que ela
-usa. ⚠️ *Estrutura a definir com o material dela — não invento indicadores financeiros.*
+### Resumo com IA — descritivo, não analítico
+Ela pediu: *"o que achas que posso oferecer a este cliente em termos de soluções?"* e
+*"faz-me depois um pequeno resumo"*. Mas foi clara no limite: *"não é analítica, mas é o
+descritivo"* — o mesmo princípio do ESG. A IA resume o que foi preenchido e assinala lacunas
+("falta responder X"); **não decide pela consultora**.
 
-**⑤ Relatório** — igual ao Relatório ESG, que já está feito e ela conhece: secções
-pré-preenchidas com os dados ao vivo (contacto, diagnóstico, SWOT, TOWS, projeções) e **um campo
-de texto editável por secção**, mais o botão **🖨 Imprimir / PDF** que gera o documento limpo
-para entregar.
+### Relatório
+Secções pré-preenchidas + texto editável + **🖨 Imprimir/PDF**, como no Relatório ESG.
 
-**Recursos** — barra lateral com links (vídeos, comunidade, Instagram, contactos), sempre
-acessível. Só URLs, sem ficheiros.
+### Recursos
+Barra lateral só com **links** — Instagram, comunidade, contactos (telefone Alemanha e
+Portugal). Sem ficheiros: *"vídeos e coisas não colocaria"*.
 
 ## 5. Faseamento
 
 | Fase | O que entra | Depende de |
 |---|---|---|
-| **0 — para já** | Tabela + lista + ficha + **SWOT e TOWS** completos | Nada |
-| **1** | Diagnóstico com as perguntas reais | ⚠️ O Word dela |
-| **2** | Projeções | ⚠️ O Word dela |
-| **3** | Relatório em PDF | Fases 0–2 |
-| **4** | Formulário de consultoria gratuita → cria a consultoria e o lead no CRM | ⚠️ O formulário dela + alinhamento com o Filipe |
+| **0 — amanhã** | Tabela + lista + ficha + **Blocos 1 e 2 completos, com SWOT e TOWS** | Nada ✅ |
+| **1** | Blocos 3 e 4 (as quatro tabelas de números) | Nada ✅ |
+| **2** | Relatório em PDF | Fases 0–1 |
+| **3** | Consultoria gratuita (o outro tipo) | ⚠️ O formulário dela |
+| **4** | Resumo com IA | Fases 0–1 |
+| **5** | Formulário público → cria consultoria + lead no CRM | ⚠️ Formulário + Filipe |
 
-**A Fase 0 é entregável sem depender de ninguém** — o SWOT e o TOWS são metodologia padrão, não
-precisam do material dela. É o que faz sentido ter pronto para a consultoria de amanhã.
+**A Fase 0 cobre exatamente as duas primeiras sessões** — que é o que ela vai fazer amanhã.
 
 ## 6. A decidir com a Lúcia
 
-- **Projeções:** que indicadores? Faturação, custos, margem? Quantos cenários?
-- **Diagnóstico:** quantas perguntas e em que blocos? (o ESG tem 28 — serve de referência)
-- **Uma consultoria pode virar cliente?** Se sim, um botão "criar acesso à plataforma" que
-  transforma o contacto em utilizador e liga o `user_id`.
-- **Idiomas:** o resto da plataforma é PT/DE/EN. A consultoria também?
+- **Idioma das perguntas:** traduzo para português, mas o cliente dela pode ser alemão. Fica
+  trilingue como o resto (PT/DE/EN)?
+- **A tabela de retiradas privadas** tem categorias fixas no documento da IHK — uso essas ou
+  ela quer simplificar?
+- **A consultoria gratuita** aguarda o formulário.
+- **Anexos:** o documento pede *"juntar CV"*. Ligo ao repositório de documentos que já existe?
