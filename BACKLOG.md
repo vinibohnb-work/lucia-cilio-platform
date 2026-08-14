@@ -19,10 +19,6 @@
 
 ### Achados durante o desenvolvimento
 
-- [ ] **Design do relatório de consultoria** — o conteúdo gerado está correto, a apresentação
-  não lhe faz jus. Revisão de design a decorrer em paralelo.
-  *13/08/2026 · Resp.: Vinícius*
-
 - [ ] **Vulnerabilidade alta no `react-router`** — CSRF por `PUT/PATCH/DELETE` em pedidos de
   documento (`npm audit`). É a única das 7 que está em dependência de execução, não de build.
   Avaliar a atualização.
@@ -283,6 +279,19 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Relatório de consultoria · modelo de design
+- [x] **PDF segundo o modelo aprovado** — 11 páginas A4: capa em verde com as duas
+  verificações, sumário com KPIs e barra de posição, SWOT em quadro 2×2 com referências
+  S1/W2/O3, peso dos fatores, matriz TOWS com o cruzamento à vista, prioridades em quadrante
+  impacto/esforço, capital, projeções e as lacunas.
+  *13/08/2026 · Resp.: Vinícius*
+- [x] **Fronteira mantida: os números saem do cálculo, a prosa da IA.** O relatório impresso
+  nunca imprime um número que a IA tenha escrito — todos vêm de `consultoriaCalc`.
+  *13/08/2026 · Resp.: Vinícius*
+- [x] **Páginas sem dados desaparecem** em vez de aparecerem vazias; uma ficha por preencher
+  gera só a capa, sem rebentar.
+  *13/08/2026 · Resp.: Vinícius*
 
 ### Conciliação caixa/banco · migração 030
 - [x] **Importação de extrato (CSV e Excel)** — o formato é descoberto a partir do conteúdo:

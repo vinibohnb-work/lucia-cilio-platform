@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { progressoTotal } from '../../data/consultoriaBlocos'
+import { construirHTML } from '../../lib/relatorioModelo'
 
 // Relatório da consultoria — o documento que vai ao banco.
 // A IA escreve o primeiro rascunho a partir da ficha; a consultora edita por
@@ -41,7 +42,7 @@ export default function ConsultoriaRelatorio() {
     lacunas: 'Was noch fehlt', geradoEm: 'Erstellt am', editado: 'von Ihnen bearbeitet',
     reporEditado: 'Meinen Text verwerfen', preenchido: 'ausgefüllt',
     loading: 'Wird geladen…', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
-    naoEncontrada: 'Beratung nicht gefunden.', semDados: 'Füllen Sie zuerst die Beratung aus.',
+    naoEncontrada: 'Beratung nicht gefunden.', semPopup: 'Der Browser hat das Fenster blockiert.', semDados: 'Füllen Sie zuerst die Beratung aus.',
     aviso: 'Die KI beschreibt nur — sie beurteilt das Geschäft nicht. Prüfen Sie den Text vor dem Versand.',
   } : lang === 'en' ? {
     voltar: '← Back to consultancy', eyebrow: 'Consultancy', title: 'Report',
@@ -51,7 +52,7 @@ export default function ConsultoriaRelatorio() {
     lacunas: 'What is still missing', geradoEm: 'Generated on', editado: 'edited by you',
     reporEditado: 'Discard my text', preenchido: 'filled in',
     loading: 'Loading…', guardado: 'Saved ✓', aGuardar: 'Saving…',
-    naoEncontrada: 'Consultancy not found.', semDados: 'Fill in the consultancy first.',
+    naoEncontrada: 'Consultancy not found.', semPopup: 'The browser blocked the window.', semDados: 'Fill in the consultancy first.',
     aviso: 'The AI only describes — it does not judge the business. Review the text before sending.',
   } : {
     voltar: '← Voltar à consultoria', eyebrow: 'Consultoria', title: 'Relatório',
@@ -61,7 +62,7 @@ export default function ConsultoriaRelatorio() {
     lacunas: 'O que ainda falta', geradoEm: 'Gerado em', editado: 'editado por ti',
     reporEditado: 'Descartar o meu texto', preenchido: 'preenchido',
     loading: 'A carregar…', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
-    naoEncontrada: 'Consultoria não encontrada.', semDados: 'Preenche primeiro a consultoria.',
+    naoEncontrada: 'Consultoria não encontrada.', semPopup: 'O browser bloqueou a janela.', semDados: 'Preenche primeiro a consultoria.',
     aviso: 'A IA apenas descreve — não julga o negócio. Revê o texto antes de o enviares.',
   }
 
@@ -122,31 +123,14 @@ export default function ConsultoriaRelatorio() {
     await supabase.from('consultorias').update({ relatorio: novo, updated_at: new Date().toISOString() }).eq('id', id)
   }
 
-  // Impressão: janela nova com HTML próprio, como no Relatório ESG
+  // Impressão: o documento segue o modelo de design aprovado (11 páginas A4).
+  // O texto que ela editou entra no lugar do da IA — construirHTML trata disso.
   function imprimir() {
-    const esc = (s) => String(s ?? '').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]))
-    const corpo = SECCOES.map(s => {
-      const txt = textoDe(s.key)
-      if (!txt.trim()) return ''
-      return `<h2>${esc(titulo(s))}</h2><p class="txt">${esc(txt).replace(/\n/g, '<br/>')}</p>`
-    }).join('')
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(L.title)} — ${esc(c.nome)}</title><style>
-      body{font-family:Georgia,serif;color:#1a2b20;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.6}
-      h1{font-size:26px;margin-bottom:4px} .sub{color:#667;font-size:13px;margin-bottom:28px}
-      h2{font-size:17px;border-bottom:2px solid #c9a84c;padding-bottom:4px;margin-top:30px}
-      .txt{font-size:13.5px;white-space:pre-wrap;text-align:justify}
-      .pe{margin-top:40px;padding-top:12px;border-top:1px solid #ddd;color:#889;font-size:10.5px}
-      @page{margin:18mm}
-    </style></head><body>
-      <h1>${esc(L.title)}</h1>
-      <div class="sub">${esc(c.nome)}${c.empresa ? ` · ${esc(c.empresa)}` : ''}${c.setor ? ` · ${esc(c.setor)}` : ''}</div>
-      ${corpo || `<p class="txt">${esc(L.vazio)}</p>`}
-      <div class="pe">Lúcia Cílio · Office Consulting${rel.gerado_em ? ` — ${new Date(rel.gerado_em).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT')}` : ''}</div>
-    </body></html>`
+    const html = construirHTML({ c, lang })
     const w = window.open('', '_blank')
-    if (!w) return
+    if (!w) { setErro(L.semPopup); return }
     w.document.write(html); w.document.close()
-    setTimeout(() => w.print(), 300)
+    setTimeout(() => w.print(), 600)   // dá tempo às fontes
   }
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }

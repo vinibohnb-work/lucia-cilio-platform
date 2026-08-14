@@ -50,8 +50,70 @@ const SCHEMA = {
       description: 'O que ficou por preencher e é preciso para o plano ficar completo. Uma frase cada.',
       items: { type: 'string' },
     },
+    confirmado: {
+      type: 'array',
+      description: 'Dois ou tres pontos que a ficha ja sustenta com dados. Frases completas.',
+      items: { type: 'string' },
+    },
+    emAberto: {
+      type: 'array',
+      description: 'Dois ou tres pontos por resolver, com o valor ou o facto concreto.',
+      items: { type: 'string' },
+    },
+    posicao: {
+      type: 'object',
+      description: 'Onde o dossie esta hoje, de 1 (inviavel) a 5 (muito solido).',
+      properties: {
+        banda: { type: 'integer', enum: [1, 2, 3, 4, 5] },
+        nota: { type: 'string', description: 'Uma linha a justificar, com factos da ficha.' },
+      },
+      required: ['banda', 'nota'],
+      additionalProperties: false,
+    },
+    pesos: {
+      type: 'array',
+      description: 'Prioridade de cada item da SWOT, pela referencia (S1, W2, O3, T1).',
+      items: {
+        type: 'object',
+        properties: {
+          ref: { type: 'string' },
+          peso: { type: 'string', enum: ['alto', 'medio', 'baixo'] },
+        },
+        required: ['ref', 'peso'],
+        additionalProperties: false,
+      },
+    },
+    leitura: { type: 'string', description: 'Um paragrafo a ler o conjunto da SWOT: o que e estrutural e o que e resoluvel.' },
+    prioridades: {
+      type: 'array',
+      description: 'As estrategias TOWS ordenadas por onde comecar. Impacto e esforco de 1 a 5.',
+      items: {
+        type: 'object',
+        properties: {
+          titulo: { type: 'string' },
+          tipo: { type: 'string', enum: ['so', 'wo', 'st', 'wt'] },
+          impacto: { type: 'integer', enum: [1, 2, 3, 4, 5] },
+          esforco: { type: 'integer', enum: [1, 2, 3, 4, 5] },
+        },
+        required: ['titulo', 'tipo', 'impacto', 'esforco'],
+        additionalProperties: false,
+      },
+    },
+    sequencia: {
+      type: 'array',
+      description: 'Ate 4 periodos ate ao arranque, cada um com o que fazer nesse periodo.',
+      items: {
+        type: 'object',
+        properties: {
+          periodo: { type: 'string' },
+          itens: { type: 'array', items: { type: 'string' } },
+        },
+        required: ['periodo', 'itens'],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ['seccoes', 'lacunas'],
+  required: ['seccoes', 'lacunas', 'confirmado', 'emAberto', 'posicao', 'pesos', 'leitura', 'prioridades', 'sequencia'],
   additionalProperties: false,
 }
 
@@ -85,11 +147,14 @@ export function descrever(c, lang) {
     }
   }
 
-  // SWOT
+  // SWOT — com as referências que o relatório usa (S1, W2, O3, T1)
+  const SIGLA = { forcas: 'S', fraquezas: 'W', oportunidades: 'O', ameacas: 'T' }
   out.push(`\n## SWOT`)
   for (const q of SWOT_QUADRANTES) {
     const itens = c.swot?.[q.key] || []
-    out.push(`  ${L(q)}: ${itens.length ? itens.join('; ') : '(vazio)'}`)
+    out.push(`  ${L(q)}:`)
+    if (!itens.length) out.push('    (vazio)')
+    itens.forEach((it, i) => out.push(`    ${SIGLA[q.key]}${i + 1}: ${it}`))
   }
 
   // TOWS, com a origem de cada estratégia
@@ -186,7 +251,26 @@ A decisão é da consultora, não tua.
   item, concreta ("Falta X"). Se não faltar nada, devolve lista vazia.
 
 # Secções a devolver (todas, por esta ordem)
-${lista}`
+${lista}
+
+# Os campos de leitura — onde a fronteira e mais delicada
+O relatorio impresso mostra alguns juizos de prioridade. O documento diz expressamente ao
+leitor que sao **a leitura da consultora, nao medicoes**, e ela reve tudo antes de enviar.
+O teu papel e dar-lhe um primeiro rascunho ancorado na ficha, nao decidir por ela:
+
+- 'posicao': onde o dossie esta hoje, de 1 a 5. Ancora nas duas verificacoes e no que falta
+  preencher. Se as verificacoes passam mas ha lacunas por fechar, isso e 3 — "viavel com
+  correcoes", nao 4.
+- 'pesos': prioridade de cada item da SWOT pela referencia. Alto = trava ou sustenta o
+  arranque; baixo = importa pouco para a decisao de agora.
+- 'prioridades': as estrategias que ela escreveu no TOWS, com impacto e esforco de 1 a 5.
+  Nao inventes estrategias novas — usa as dela, com o mesmo sentido.
+- 'sequencia': ordena o que ja esta na ficha ao longo do tempo. Se a ficha nao diz quando o
+  negocio abre, usa periodos relativos e nao datas inventadas.
+- 'confirmado' e 'emAberto': o que os dados sustentam e o que falta, com o valor concreto.
+
+Se nao houver dados para um destes campos, devolve-o vazio. Uma lista vazia e uma resposta
+honesta; uma lista inventada nao e.`
 }
 
 export default async function handler(req, res) {
@@ -250,6 +334,13 @@ export default async function handler(req, res) {
     const relatorio = {
       seccoes: saida.seccoes || [],
       lacunas: saida.lacunas || [],
+      confirmado: saida.confirmado || [],
+      emAberto: saida.emAberto || [],
+      posicao: saida.posicao || null,
+      pesos: saida.pesos || [],
+      leitura: saida.leitura || '',
+      prioridades: saida.prioridades || [],
+      sequencia: saida.sequencia || [],
       gerado_em: new Date().toISOString(),
       modelo: message.model,
       lang: idioma,
