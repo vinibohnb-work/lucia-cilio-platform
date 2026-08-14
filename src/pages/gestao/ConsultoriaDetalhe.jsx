@@ -6,6 +6,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { BLOCOS, SWOT_QUADRANTES, TOWS_CELULAS, progressoBloco, progressoTotal } from '../../data/consultoriaBlocos'
 import { Privadas, Capital, Financiamento, Projecao, Liquidez } from '../../components/consultoria/TabelasNumeros'
+import BlocoEnquadramento from '../../components/consultoria/BlocoEnquadramento'
 
 // Ficha da consultoria — usada AO VIVO, muitas vezes presencial e com o cliente
 // a ver o ecrã. Daí: guardar automático (nada de botão), campos que crescem com
@@ -185,6 +186,8 @@ export default function ConsultoriaDetalhe() {
           ))}
         </div>
       </div>
+
+      <BlocoEnquadramento enquadramento={c.enquadramento || {}} notasCliente={c.notas_cliente} alterar={alterar} />
 
       {/* Stepper dos 4 blocos */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '18px', flexWrap: 'wrap' }}>

@@ -556,6 +556,28 @@ create index if not exists idx_bank_imports_user
 create unique index if not exists uq_bank_tx_one_entry
   on public.bank_transactions (cash_entry_id) where cash_entry_id is not null;
 
+
+-- ============================================================================
+-- 18. BLOCO 0 · ENQUADRAMENTO DA CONSULTORIA (migração 031)
+-- ============================================================================
+alter table public.consultorias
+  add column if not exists enquadramento jsonb not null default '{}'::jsonb;
+
+-- As palavras do cliente, guardadas à parte das `notas` — que são as
+-- observações internas da consultora e não se devem misturar.
+alter table public.consultorias
+  add column if not exists notas_cliente text;
+
+comment on column public.consultorias.enquadramento is
+  'Bloco 0: pais, iniciou, data_inicio, regime, iva, faturacao, contabilista, dificuldade, dificuldade_outra';
+comment on column public.consultorias.notas_cliente is
+  'Texto livre escrito pelo próprio cliente (não confundir com notas, que são internas)';
+
+-- Procurar consultorias por país é a consulta natural quando as regras fiscais
+-- diferem entre Portugal e Alemanha.
+create index if not exists idx_consultorias_pais
+  on public.consultorias ((enquadramento ->> 'pais'));
+
 -- FIM. Para tornar alguém admin (depois de criar o login):
 --   update public.profiles set role = 'admin'
 --   where id = (select id from auth.users where email = 'admin@exemplo.com');

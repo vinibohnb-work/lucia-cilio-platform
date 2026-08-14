@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { retiradasPrivadas, necessidadeCapital, financiamento, projecao, verificacaoLucro, liquidez } from '../src/lib/consultoriaCalc.js'
 import { BLOCOS, SWOT_QUADRANTES, TOWS_CELULAS } from '../src/data/consultoriaBlocos.js'
+import { CAMPOS as CAMPOS_ENQ, opcaoDe } from '../src/data/enquadramento.js'
 
 // ============================================================================
 // Gera o relatório da consultoria com a IA.
@@ -130,6 +131,25 @@ export function descrever(c, lang) {
   out.push(`Cliente: ${c.nome}${c.empresa ? ` — ${c.empresa}` : ''}`)
   if (c.setor) out.push(`Setor: ${c.setor}`)
   out.push(`Bloco atual: ${c.bloco} de 4`)
+
+  // Enquadramento (bloco 0) — vem à cabeça porque condiciona a leitura de tudo
+  // o resto, em especial o país, que decide as regras fiscais.
+  const enq = c.enquadramento || {}
+  const linhasEnq = CAMPOS_ENQ
+    .filter(cp => String(enq[cp.key] ?? '').trim())
+    .map(cp => {
+      const v = cp.tipo === 'data' ? enq[cp.key] : (opcaoDe(cp.key, enq[cp.key], lang) || enq[cp.key])
+      const extra = cp.outraKey && enq[cp.outraKey] ? ` — ${enq[cp.outraKey]}` : ''
+      return `  - ${cp[lang] || cp.pt}: ${v}${extra}`
+    })
+  if (linhasEnq.length) {
+    out.push(`\n## Enquadramento`)
+    out.push(linhasEnq.join('\n'))
+    if (enq.iniciou === 'sim') {
+      out.push('  ATENCAO: ja esta a faturar. As perguntas do bloco 1 estao escritas para quem ainda nao abriu — le as respostas com isso em conta e nao trates o negocio como se ainda nao existisse.')
+    }
+  }
+  if (c.notas_cliente?.trim()) out.push(`\n## Nas palavras do cliente\n  ${c.notas_cliente.trim()}`)
 
   // Blocos 1 e 2 — as respostas às perguntas
   for (const b of BLOCOS) {

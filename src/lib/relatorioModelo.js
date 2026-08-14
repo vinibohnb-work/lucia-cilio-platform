@@ -16,6 +16,7 @@ import {
   projecao, verificacaoLucro, liquidez, soma,
 } from './consultoriaCalc.js'
 import { SWOT_QUADRANTES, TOWS_CELULAS, BLOCOS } from '../data/consultoriaBlocos.js'
+import { CAMPOS as CAMPOS_ENQ, opcaoDe } from '../data/enquadramento.js'
 
 // ── Paleta do modelo ────────────────────────────────────────────────────────
 const C = {
@@ -161,6 +162,14 @@ export function construirHTML({ c, lang = 'pt' }) {
     .filter(q => !(c.respostas?.[q.key] || '').trim())
     .map(q => q[lang] || q.pt)
 
+  // Enquadramento na capa — o país à frente, porque decide as regras fiscais
+  const enq = c.enquadramento || {}
+  const NA_CAPA = ['pais', 'iniciou', 'regime', 'faturacao']
+  const linhasEnq = NA_CAPA
+    .map(k => [CAMPOS_ENQ.find(x => x.key === k), enq[k]])
+    .filter(([cp, v]) => cp && String(v ?? '').trim())
+    .map(([cp, v]) => [cp[lang] || cp.pt, opcaoDe(cp.key, v, lang) || v])
+
   const paginas = []
   let n = 1
   const addPagina = (html) => paginas.push(html)
@@ -179,6 +188,7 @@ export function construirHTML({ c, lang = 'pt' }) {
     <div style="display:flex;flex-direction:column;gap:8px;font-size:16px;color:#cfdcd3">
       <div><span style="color:${C.verdeMudo}">${esc(L.cliente)}</span> &nbsp;${esc(c.nome)}</div>
       ${setorLinha ? `<div><span style="color:${C.verdeMudo}">${esc(L.setor)}</span> &nbsp;${esc(setorLinha)}</div>` : ''}
+      ${linhasEnq.map(([rot, val]) => `<div><span style="color:${C.verdeMudo}">${esc(rot)}</span> &nbsp;${esc(val)}</div>`).join('')}
     </div>
   </div>
   ${temNumeros ? `

@@ -19,6 +19,20 @@
 
 ### Achados durante o desenvolvimento
 
+- [ ] **Bandas de faturação do formulário não encaixam nas do CRM** — o formulário de
+  diagnóstico usa bandas **mensais** (até 1.000 € … >10.000 €); o `REVENUE_RANGES` do CRM usa
+  bandas **anuais** que começam onde aquelas acabam (10.000 €/mês = 120 mil/ano cai já na 2.ª
+  banda do CRM). Se um dia estes leads entrarem no CRM sem conversão, a pontuação sai errada.
+  Converter, ou acrescentar bandas baixas ao CRM — esta segunda parece mais honesta, porque
+  são clientes mais pequenos do que o CRM assume hoje.
+  *13/08/2026 · Resp.: Vinícius*
+
+- [ ] **Perguntas do bloco 1 assumem que o negócio ainda não abriu** — *"Quando quero iniciar
+  a atividade?"*, *"Em que localização quero começar?"*. Para quem já fatura, leem-se mal.
+  Hoje a ficha **avisa** quando o Bloco 0 diz que já iniciou, mas não adapta as perguntas.
+  Avaliar uma variante do bloco 1 para negócio em curso.
+  *13/08/2026 · Resp.: Vinícius*
+
 - [ ] **Vulnerabilidade alta no `react-router`** — CSRF por `PUT/PATCH/DELETE` em pedidos de
   documento (`npm audit`). É a única das 7 que está em dependência de execução, não de build.
   Avaliar a atualização.
@@ -279,6 +293,25 @@
   *Reunião 23/07/2026 · Resp.: Vinícius* — conceito do Igor (preço pelo valor agregado)
 - [x] **Lead "fechado" → contrato no Financeiro**, com o valor do negócio.
   *Reunião 23/07/2026 · Resp.: Vinícius*
+
+### Consultoria — Bloco 0 · Enquadramento (migração 031)
+- [x] **Campos do formulário de diagnóstico inicial** (o JotForm do site) trazidos para a
+  ficha: país, se já iniciou e quando, enquadramento fiscal, IVA/Umsatzsteuer, faturação
+  mensal, contabilista, dificuldade principal e as palavras do cliente.
+  *13/08/2026 · Resp.: Vinícius*
+- [x] **O país passa a constar da consultoria** — era a única lacuna que podia tornar um
+  relatório factualmente errado, porque decide as regras fiscais aplicadas.
+  *13/08/2026 · Resp.: Vinícius*
+- [x] **As palavras do cliente ficam à parte das notas internas** (`notas_cliente`), para não
+  se confundir o que ele disse com o que a consultora observou.
+  *13/08/2026 · Resp.: Vinícius*
+- [x] **Aplica-se aos dois tipos de consultoria** e vive fora dos 4 blocos da IHK — é o
+  cabeçalho do caso, não uma sessão de trabalho. Em JSONB, para o formulário dela poder
+  mudar sem migração.
+  *13/08/2026 · Resp.: Vinícius*
+- [x] **Não trouxe o agendamento** do formulário: reconstruir marcação de reuniões é um
+  projeto por si, e o JotForm faz isso melhor.
+  *13/08/2026 · Resp.: Vinícius*
 
 ### Relatório de consultoria · modelo de design
 - [x] **PDF segundo o modelo aprovado** — 11 páginas A4: capa em verde com as duas
