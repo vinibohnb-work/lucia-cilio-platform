@@ -41,3 +41,6 @@ ref/
 
 # Sessões de QA (contêm token válido)
 .qa/
+
+# Artefactos de teste
+relatorio-teste.html
