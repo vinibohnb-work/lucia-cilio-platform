@@ -121,7 +121,7 @@ export default function PlaneamentoMensal() {
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const inputStyle = { padding: '7px 9px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' }
-  const GRID = 'minmax(150px, 1.4fr) 62px 78px 56px 82px 90px 90px 92px 92px 92px 96px 28px'
+  const GRID = 'minmax(150px, 1fr) 62px 78px 56px 82px 90px 90px 92px 92px 92px 96px 28px'
   const TABLE_MIN = 1120
   const headCell = { fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.6px', textTransform: 'uppercase' }
   const numCell = { fontSize: '12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
@@ -180,7 +180,7 @@ export default function PlaneamentoMensal() {
       <div className="table-scroll">
       <div style={{ ...card, overflow: 'hidden', minWidth: `${TABLE_MIN}px` }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '7px', padding: '11px 14px', background: t.headBg || t.softCardBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-          {[L.service, L.duration, L.price, L.qty, L.material, L.revenue, L.matTotal, L.overhead, L.profit, L.reserve, L.after, ''].map((h, i) => <div key={i} style={{ ...headCell, textAlign: i >= 5 && i <= 10 ? 'right' : 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h}</div>)}
+          {[L.service, L.duration, L.price, L.qty, L.material, L.revenue, L.matTotal, L.overhead, L.profit, L.reserve, L.after, ''].map((h, i) => <div key={i} style={{ ...headCell, textAlign: i >= 5 && i <= 10 ? 'right' : 'left', whiteSpace: 'normal', lineHeight: 1.3, alignSelf: 'end' }}>{h}</div>)}
         </div>
         {rows.map((r, i) => {
           const c = totals.rows[i]
@@ -189,8 +189,8 @@ export default function PlaneamentoMensal() {
               <div style={{ display: 'flex', gap: '6px' }}>
                 <input value={r.name} onChange={e => updateRow(i, 'name', e.target.value)} placeholder={L.service} style={{ ...inputStyle, flex: 1 }} />
                 {catalog.length > 0 && (
-                  <select value="" onChange={e => pickFromCatalog(i, e.target.value)} title={L.fromCatalog} style={{ ...inputStyle, width: '30px', flex: 'none', cursor: 'pointer', padding: '7px 2px' }}>
-                    <option value="">▾</option>
+                  <select value="" onChange={e => pickFromCatalog(i, e.target.value)} title={L.fromCatalog} style={{ ...inputStyle, width: '92px', flex: 'none', cursor: 'pointer', padding: '7px 6px', fontSize: '11.5px', color: t.textMuted }}>
+                    <option value="">{L.fromCatalog}</option>
                     {catalog.map(ci => <option key={ci.id} value={ci.id}>{ci.name}</option>)}
                   </select>
                 )}
