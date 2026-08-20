@@ -17,8 +17,9 @@ const URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
 
-// A geração demora — o pedido do utilizador prevê isso.
-export const config = { maxDuration: 60 }
+// A geração demora. O limite de tempo desta função vive no vercel.json
+// ("functions" → maxDuration) — o export const config não é respeitado neste
+// formato de função, e foi por isso que a primeira versão morreu a 504.
 
 // Secções do relatório. A ordem é a do documento da IHK, porque o destinatário
 // final é o banco e é assim que um gestor de crédito espera lê-lo.
@@ -331,7 +332,7 @@ export default async function handler(req, res) {
       max_tokens: 16000,
       thinking: { type: 'adaptive' },
       output_config: {
-        effort: 'medium',
+        effort: 'low',
         format: { type: 'json_schema', schema: SCHEMA },
       },
       system: instrucoes(idioma),

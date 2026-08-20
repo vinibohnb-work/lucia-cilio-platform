@@ -1,5 +1,13 @@
 {
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/" }
-  ]
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/"
+    }
+  ],
+  "functions": {
+    "api/consultoria-relatorio.js": {
+      "maxDuration": 300
+    }
+  }
 }
