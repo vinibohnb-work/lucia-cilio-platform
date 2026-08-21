@@ -24,6 +24,75 @@
   `src/data/consultoriaBlocos.js` e remover não perde respostas.
   ⚠️ **Depende de:** a Lúcia indicar quais.
 
+### Cybersecurity e Compliance (auditoria de 21/08 — pedido da Lúcia)
+
+> Relatório completo: `docs/auditorias/2026-08-21-seguranca-gdpr.md`. Ordem de ataque:
+> primeiro os ⚡, depois a infraestrutura (região/ambientes/backups), depois direitos e
+> rasto (exportação, MFA, audit), com o pacote documental em paralelo com a advogada.
+
+- [ ] **⚡ Eliminação completa do cliente: apagar também os ficheiros do Storage**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  Apagar o utilizador remove as 15 tabelas em cascata, mas a pasta dele no bucket
+  `client-docs` fica órfã — não-conformidade direta com o art. 17 do RGPD. Correção no
+  `api/admin-users.js`: listar e remover `client-docs/<uid>/**` antes do `deleteUser`.
+
+- [ ] **⚡ Tirar o `.env.local` (service_role) da pasta sincronizada com o OneDrive**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  A chave está fora do Git mas é copiada para a nuvem da Microsoft a cada gravação. Mover o
+  projeto para fora do sincronizador, ou excluir o ficheiro da sincronização.
+
+- [ ] **Confirmar a região do projeto Supabase no painel** *(2 minutos)*
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  Dashboard → Settings → General → Region. A região não se muda depois de criada — esta
+  resposta ordena tudo o resto (R1).
+
+- [ ] **R1 · Segundo projeto Supabase em Frankfurt (eu-central-1)**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  Resolve a residência UE **e** a separação dev/prod de uma vez. Se o atual já está na UE, o
+  novo é dev; se não está, o novo é a produção (migração com o `SETUP_COMPLETO.sql` + dump +
+  cópia do Storage) e o antigo vira dev. ~1 dia.
+  ⚠️ **Depende de:** a confirmação da região, acima.
+
+- [ ] **R2 · Fixar as funções serverless da Vercel em Frankfurt (`fra1`)**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  Uma linha no `vercel.json` (`"regions": ["fra1"]`) — hoje correm sem região fixada (o 504
+  de 20/08 mostrou gru1/São Paulo). 5 minutos.
+
+- [ ] **R3 · Confirmar/ativar backups automáticos no Supabase**
+  *Auditoria 21/08/2026 · Resp.: Lúcia + Vinícius*
+  Painel → Database → Backups. Plano gratuito não tem backups — seria bloqueador para dados
+  reais. Avaliar Pro (diários, 7 dias, na região do projeto) e o extra PITR. Decisão de
+  custo, não de código.
+
+- [ ] **R4 · Exportação completa dos dados de um cliente (art. 20 — portabilidade)**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  Endpoint admin que junta as 15 tabelas + lista de documentos num ZIP/JSON. Hoje só o Livro
+  de Caixa sai em CSV. 1–2 dias.
+
+- [ ] **R5a · MFA/2FA (TOTP) com o Supabase Auth**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  Suportado nativamente; falta a interface de inscrição/verificação e a política (obrigatório
+  para admins, opcional para clientes). 1–2 dias.
+
+- [ ] **R5b · Audit log — quem acedeu ou alterou o quê**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  Tabela `audit_log` com triggers nas tabelas sensíveis (quem, quando, o quê, valor
+  anterior) + registo do "ver como" quando a administradora entra na conta de um cliente.
+  2–3 dias.
+
+- [ ] **R6 · Pacote documental RGPD** *(com a advogada)*
+  *Auditoria 21/08/2026 · Resp.: Lúcia + Vinícius*
+  Política de privacidade, registo de tratamento, política de retenção/eliminação (incluindo
+  os registos com `user_id = null`), procedimento de data breach (72 h), e DPA/AVV dos três
+  suboperadores: Supabase, Vercel e Anthropic (todos têm DPA publicados). Absorve o item
+  antigo `docs/SEGURANCA_DADOS.md` da secção Documentação.
+
+- [ ] **IA e RGPD: DPA com a Anthropic + menção na política de privacidade**
+  *Auditoria 21/08/2026 · Resp.: Lúcia + Vinícius*
+  O relatório de consultoria envia a ficha do cliente à API da Anthropic (EUA). Para SaaS:
+  DPA assinado, constar do registo de tratamento, e avaliar residência de inferência na UE
+  quando disponível no plano.
+
 ### Achados durante o desenvolvimento
 
 - [ ] **Bandas de faturação do formulário não encaixam nas do CRM** — o formulário de
@@ -238,11 +307,6 @@
 
 ### Documentação
 
-- [ ] **`docs/SEGURANCA_DADOS.md` — documento de segurança e backup**
-  *Reunião 16/07/2026 · Resp.: Vinícius*
-  Para o projeto jurídico/legal da Lúcia (exigência na Alemanha).
-  ⚠️ **Depende de:** ela continua à procura de advogada.
-
 ---
 
 ## Validações técnicas
@@ -255,6 +319,7 @@
   ⚠️ **Depende de:** os exemplos de CSV bancário que a Lúcia vai enviar.
 
 - [ ] **Investigar soluções de backup e onde os dados ficam guardados (AWS / ferramentas Microsoft)**
+  ↳ Cruza com o R3 da secção Cybersecurity e Compliance — tratar juntos.
   *Reunião 16/07/2026 · Resp.: Vinícius*
   Comparar com a proposta Microsoft (100–200 €/mês para 50 utilizadores) e apresentar custos.
   Alternativas (AWS/GCP) tendem a ser mais baratas.
