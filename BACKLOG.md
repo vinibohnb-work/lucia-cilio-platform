@@ -3,8 +3,8 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 13/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
-> 30/07/2026, 06/08/2026, 13/08/2026
+> **Última sincronização:** 20/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
 >
@@ -16,6 +16,12 @@
 ## Itens de desenvolvimento
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
+
+- [ ] **Remover perguntas/itens não desejados do fluxo de consultoria**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  A estrutura já foi desenhada para isto: as perguntas vivem em
+  `src/data/consultoriaBlocos.js` e remover não perde respostas.
+  ⚠️ **Depende de:** a Lúcia indicar quais.
 
 ### Achados durante o desenvolvimento
 
@@ -165,6 +171,31 @@
 
 ### Contabilidade
 
+- [ ] **Campos de anotações amplas no Planeamento e nas Previsões**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  Notas internas abaixo de cada item, para ela registar contexto junto dos números.
+
+- [ ] **Renomear "projeções" para "previsões" onde aplicável**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  Inclui o espaço para anotações (mesmo pedido do item acima — tratar juntos).
+
+- [ ] **Indicador de break-even no somatório do Planeamento Mensal**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  Quanto falta faturar para cobrir os custos — no rodapé dos totais.
+
+- [ ] **Cálculo de imposto: mostrar valor líquido (neto) e tratar a dedução conforme o regime**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  Empresa isenta vs. regime normal — o tratamento do IVA/dedução difere. ⚠️ Risco apontado na
+  própria reunião: cálculo errado aqui gera relatórios financeiros errados; validar com a Lúcia.
+
+- [ ] **Relatório fiscal alemão EÜR (Einnahmen-Überschuss-Rechnung) exportável do Livro de Caixa**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  ⚠️ **Depende de:** a imagem/modelo de referência do EÜR que a Lúcia vai enviar.
+
+- [ ] **Exportação em PDF e rótulos de valores nos gráficos do painel**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  Visibilidade mensal: valores visíveis nos gráficos sem passar o rato, e painel exportável.
+
 - [ ] **Reserva pessoal na página da Empresa**
   *Anotações anteriores · Resp.: Vinícius*
   Quanto o empresário quer reservar para si, à semelhança da reserva de IR. Não confundir
@@ -183,6 +214,10 @@
   ⚠️ **Depende de:** a Lúcia confirmar as regras em Portugal.
 
 ### Gestão interna
+
+- [ ] **Remover utilizadores e dados de teste da plataforma**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  Contas demo e registos de ensaio que já não servem a demonstração.
 
 - [ ] **Dashboard macro da gestão**
   *Reunião 23/07/2026 · Resp.: Vinícius*
@@ -214,6 +249,13 @@
 
 ## Validações técnicas
 
+- [ ] **Validar o mapeamento de colunas da importação com extratos reais de vários bancos**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  A deteção automática de formato já está construída (separador, decimais, débito/crédito,
+  cabeçalho deslocado) e testada com extratos sintéticos PT/DE/EN — falta validá-la contra
+  ficheiros reais.
+  ⚠️ **Depende de:** os exemplos de CSV bancário que a Lúcia vai enviar.
+
 - [ ] **Investigar soluções de backup e onde os dados ficam guardados (AWS / ferramentas Microsoft)**
   *Reunião 16/07/2026 · Resp.: Vinícius*
   Comparar com a proposta Microsoft (100–200 €/mês para 50 utilizadores) e apresentar custos.
@@ -227,6 +269,12 @@
 ---
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
+
+- **Reunião de 20/08:** performance/carga **não é preocupação agora** — ajustar módulos
+  específicos só se surgirem problemas. Relatórios podem sair em **PDF ou com acesso limitado
+  à plataforma** para clientes. Desenvolver primeiro **para o caso da Célia**, mas já pensando
+  em algo **replicável** (Daniela, Nádia, catering). Ajustes **iterativos**, refinando prompt e
+  template conforme o feedback da Lúcia; avisar por WhatsApp quando houver alterações grandes.
 
 - **Foco atual (13/08):** **módulo de consultoria** e **importação de extrato**. A Lúcia começa
   a usar a consultoria com clientes **em setembro** — é o prazo real, antes do fim do projeto.
@@ -278,6 +326,18 @@
 ---
 
 ## Concluídos
+
+### Reunião de 20/08 — entregue no próprio dia
+- [x] **Corrigir erro no relatório de consultoria (time-out) e ajustar template/prompt da IA**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  ✔ O 504 era o limite de tempo da função Vercel mal declarado — passou para o `vercel.json`
+  (300 s) e o esforço da geração baixou. O template foi refeito segundo o modelo de design
+  aprovado (11 páginas A4) com o prompt alargado.
+- [x] **Melhorar legibilidade das colunas do Planeamento Mensal**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  ✔ Coluna Tratamento/Serviço deixou de esticar, seletor do catálogo legível (92px com
+  rótulo) e títulos das colunas quebram em duas linhas. Nota: a duração continua em minutos —
+  se a Lúcia quiser horas:minutos, é ajuste pequeno.
 
 ### CRM — perfil e follow-up · migração 025
 - [x] **Origem do lead** (`source`) — Instagram, formulário, site, LinkedIn, indicação, evento,
