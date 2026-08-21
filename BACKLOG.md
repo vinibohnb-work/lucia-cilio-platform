@@ -41,17 +41,12 @@
   A chave está fora do Git mas é copiada para a nuvem da Microsoft a cada gravação. Mover o
   projeto para fora do sincronizador, ou excluir o ficheiro da sincronização.
 
-- [ ] **Confirmar a região do projeto Supabase no painel** *(2 minutos)*
+- [ ] **R1 · Migrar a produção para um projeto Supabase em Frankfurt (eu-central-1)**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
-  Dashboard → Settings → General → Region. A região não se muda depois de criada — esta
-  resposta ordena tudo o resto (R1).
-
-- [ ] **R1 · Segundo projeto Supabase em Frankfurt (eu-central-1)**
-  *Auditoria 21/08/2026 · Resp.: Vinícius*
-  Resolve a residência UE **e** a separação dev/prod de uma vez. Se o atual já está na UE, o
-  novo é dev; se não está, o novo é a produção (migração com o `SETUP_COMPLETO.sql` + dump +
-  cópia do Storage) e o antigo vira dev. ~1 dia.
-  ⚠️ **Depende de:** a confirmação da região, acima.
+  ✅ Região confirmada a 21/08: **us-west-2 (Oregon, EUA)** — fora da UE, logo o projeto
+  novo em Frankfurt é a **produção** e o atual vira dev. Runbook completo passo a passo em
+  `docs/MIGRACAO_FRANKFURT.md` (~1h de janela; senhas sobrevivem; sessões caem uma vez).
+  Decidir na criação: plano **Pro** (fecha também o R3, backups).
 
 - [ ] **R2 · Fixar as funções serverless da Vercel em Frankfurt (`fra1`)**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
@@ -387,6 +382,12 @@
 ---
 
 ## Concluídos
+
+### Cybersecurity e Compliance
+- [x] **Confirmar a região do projeto Supabase** — confirmada a 21/08: `us-west-2`
+  (Oregon, EUA), fora da UE. Define o caminho do R1: migração para Frankfurt com o projeto
+  atual a virar dev. Runbook em `docs/MIGRACAO_FRANKFURT.md`.
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
 
 ### Reunião de 20/08 — entregue no próprio dia
 - [x] **Relatório fiscal alemão EÜR exportável do Livro de Caixa**
