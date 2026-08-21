@@ -305,8 +305,6 @@
   Mantém os dados retidos na base da Lúcia mesmo que ela troque de fornecedor. A alinhar com
   o Filipe; a página placeholder já existe.
 
-### Documentação
-
 ---
 
 ## Validações técnicas
