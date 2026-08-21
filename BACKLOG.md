@@ -6,6 +6,7 @@
 > **Última sincronização:** 20/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
+> **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
 >
 > **Convenção:** itens concluídos saem das secções de cima e passam para
