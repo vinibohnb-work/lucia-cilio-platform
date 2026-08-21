@@ -171,6 +171,12 @@
 
 ### Contabilidade
 
+- [ ] **Lançamento dividido (split) no Livro de Caixa**
+  *Imagens de referência de 20/08 · Resp.: Vinícius*
+  A ferramenta anterior da Lúcia permite dividir um lançamento (ex.: 590 € = 315 € + 275 €,
+  cada parte com a sua taxa). Não foi pedido expressamente, mas está no fluxo dela — confirmar
+  se precisa antes de construir.
+
 - [ ] **Campos de anotações amplas no Planeamento e nas Previsões**
   *Reunião 20/08/2026 · Resp.: Vinícius*
   Notas internas abaixo de cada item, para ela registar contexto junto dos números.
@@ -182,15 +188,6 @@
 - [ ] **Indicador de break-even no somatório do Planeamento Mensal**
   *Reunião 20/08/2026 · Resp.: Vinícius*
   Quanto falta faturar para cobrir os custos — no rodapé dos totais.
-
-- [ ] **Cálculo de imposto: mostrar valor líquido (neto) e tratar a dedução conforme o regime**
-  *Reunião 20/08/2026 · Resp.: Vinícius*
-  Empresa isenta vs. regime normal — o tratamento do IVA/dedução difere. ⚠️ Risco apontado na
-  própria reunião: cálculo errado aqui gera relatórios financeiros errados; validar com a Lúcia.
-
-- [ ] **Relatório fiscal alemão EÜR (Einnahmen-Überschuss-Rechnung) exportável do Livro de Caixa**
-  *Reunião 20/08/2026 · Resp.: Vinícius*
-  ⚠️ **Depende de:** a imagem/modelo de referência do EÜR que a Lúcia vai enviar.
 
 - [ ] **Exportação em PDF e rótulos de valores nos gráficos do painel**
   *Reunião 20/08/2026 · Resp.: Vinícius*
@@ -328,6 +325,19 @@
 ## Concluídos
 
 ### Reunião de 20/08 — entregue no próprio dia
+- [x] **Relatório fiscal alemão EÜR exportável do Livro de Caixa**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  ✔ Página "Relatório EÜR" (menu Contabilidade, só empresas DE, como o Rücklagen): cartões
+  Betriebseinnahmen/Betriebsausgaben/Gewinn, linhas expansíveis com os lançamentos
+  (Zahldatum, Konto, Belegnummer) e Imprimir/PDF. Nomes das linhas sempre em alemão.
+  Só a numeração confirmada pela referência (Zeile 15 · Pos 112) é usada — o resto fica sem
+  número, com aviso de que o formulário oficial muda por ano.
+- [x] **Cálculo de imposto: valor líquido (neto) e dedução conforme o regime**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  ✔ Verificado contra a referência dela: 590 € brutos a 19% → 495,80 € líquidos, ao cêntimo.
+  No EÜR: regime normal em líquidos (IVA recebido como receita, Vorsteuer como despesa);
+  Kleinunternehmer em brutos sem separação. Movimentos privados ficam fora.
+  ⚠️ Falta a validação da Lúcia sobre números reais — risco apontado na própria reunião.
 - [x] **Corrigir erro no relatório de consultoria (time-out) e ajustar template/prompt da IA**
   *Reunião 20/08/2026 · Resp.: Vinícius*
   ✔ O 504 era o limite de tempo da função Vercel mal declarado — passou para o `vercel.json`

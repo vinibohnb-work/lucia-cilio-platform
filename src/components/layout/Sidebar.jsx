@@ -185,6 +185,7 @@ export default function Sidebar() {
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>
               {sec.items.map(navRow)}
               {sec.key === 'section_mgmt' && country === 'DE' && navRow({ to: '/contabilidade/rucklagen', Icon: IconRucklagen, labelKey: 'nav_rucklagen' })}
+              {sec.key === 'section_mgmt' && country === 'DE' && navRow({ to: '/contabilidade/eur', Icon: IconRelatorios, labelKey: 'nav_eur' })}
             </nav>
           </div>
         ))}

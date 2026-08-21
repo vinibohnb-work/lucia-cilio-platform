@@ -45,6 +45,7 @@ const Precificacao        = lazy(() => import('./pages/contabilidade/Precificaca
 const Catalogo            = lazy(() => import('./pages/contabilidade/Catalogo'))
 const DespesasRecorrentes = lazy(() => import('./pages/contabilidade/DespesasRecorrentes'))
 const RucklagenSteuern    = lazy(() => import('./pages/contabilidade/RucklagenSteuern'))
+const RelatorioEUR        = lazy(() => import('./pages/contabilidade/RelatorioEUR'))
 const Conciliacao         = lazy(() => import('./pages/contabilidade/Conciliacao'))
 const PlaneamentoMensal   = lazy(() => import('./pages/contabilidade/PlaneamentoMensal'))
 const Empresa             = lazy(() => import('./pages/Empresa'))
@@ -105,6 +106,7 @@ function AppLayout() {
               <Route path="/contabilidade/obrigacoes"    element={<ObrigacoesFiscais />} />
               <Route path="/contabilidade/empresa"       element={<Empresa />} />
               <Route path="/contabilidade/rucklagen"     element={<RucklagenSteuern />} />
+              <Route path="/contabilidade/eur"           element={<RelatorioEUR />} />
               <Route path="/contabilidade/planeamento"   element={<PlaneamentoMensal />} />
             </Route>
 
