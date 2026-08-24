@@ -35,6 +35,9 @@ async function listarTabelas(url, key) {
   return Object.keys(spec.definitions || {}).filter(t => !t.startsWith('rpc_'))
 }
 
+// Tabelas cuja chave primária não se chama `id`
+const PK = { company_settings: 'user_id' }
+
 async function copiarTabela(t) {
   const { data, error } = await velho.from(t).select('*')
   if (error) return { t, erro: `ler: ${error.message}` }
@@ -42,7 +45,7 @@ async function copiarTabela(t) {
   // Em lotes, upsert por id (re-executável sem duplicar)
   for (let i = 0; i < data.length; i += 500) {
     const lote = data.slice(i, i + 500)
-    const { error: e2 } = await novo.from(t).upsert(lote, { onConflict: 'id', ignoreDuplicates: false })
+    const { error: e2 } = await novo.from(t).upsert(lote, { onConflict: PK[t] || 'id', ignoreDuplicates: false })
     if (e2) return { t, erro: e2.message }
   }
   return { t, n: data.length }
@@ -73,11 +76,13 @@ for (let ronda = 1; ronda <= 5 && pendentes.length; ronda++) {
 console.log('\n── Conferência ──')
 let ok = true
 for (const t of tabelas) {
+  const pk = PK[t] || 'id'
   const [a, b] = await Promise.all([
-    velho.from(t).select('id', { count: 'exact', head: true }),
-    novo.from(t).select('id', { count: 'exact', head: true }),
+    velho.from(t).select(pk, { count: 'exact', head: true }),
+    novo.from(t).select(pk, { count: 'exact', head: true }),
   ])
-  const igual = a.count === b.count
+  // count null dos dois lados NÃO é igualdade — é a coluna errada
+  const igual = a.count !== null && a.count === b.count
   ok = ok && igual
   console.log(`${igual ? ' ✓' : ' ✗'} ${t.padEnd(26)} antigo=${a.count} novo=${b.count}`)
 }
