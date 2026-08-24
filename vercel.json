@@ -9,5 +9,8 @@
     "api/consultoria-relatorio.js": {
       "maxDuration": 300
     }
-  }
+  },
+  "regions": [
+    "fra1"
+  ]
 }
