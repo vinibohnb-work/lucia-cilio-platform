@@ -18,6 +18,33 @@ const GREEN = '#16a34a'
 const RED = '#e53e3e'
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+
+// Vermelho escuro do aviso de limite de lucro — legível nos dois temas.
+const DARK_RED = '#8f2620'
+
+// Aviso discreto no canto de um KPI: um ponto que só abre a mensagem inteira ao
+// passar o rato. Nasceu do painel demasiado carregado de faixas de aviso (25/08).
+function AvisoKpi({ t, texto, cta, onClick }) {
+  const [aberto, setAberto] = useState(false)
+  return (
+    <span style={{ position: 'absolute', top: '12px', right: '12px', display: 'inline-flex' }}
+      onMouseEnter={() => setAberto(true)} onMouseLeave={() => setAberto(false)}>
+      <button onClick={onClick} title={texto} aria-label={texto}
+        style={{ width: '19px', height: '19px', borderRadius: '50%', border: 'none', cursor: 'pointer', padding: 0,
+          background: t.dueSoon.ink, color: t.dueSoon.bg, fontSize: '12px', fontWeight: 900, lineHeight: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center' }}>!</button>
+      {aberto && (
+        <span style={{ position: 'absolute', top: '25px', right: 0, zIndex: 30, width: '250px', textAlign: 'left',
+          background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: '0 10px 30px rgba(0,0,0,.18)',
+          borderRadius: '10px', padding: '10px 12px', fontSize: '11.5px', lineHeight: 1.45, fontWeight: 600,
+          color: t.textMuted }}>
+          {texto}
+          <span style={{ display: 'block', marginTop: '6px', color: t.accentText, fontWeight: 800 }}>{cta}</span>
+        </span>
+      )}
+    </span>
+  )
+}
 const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const fmt = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
@@ -264,31 +291,38 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-        <span style={{ marginLeft: 'auto', fontSize: '12px', fontWeight: 700, color: GOLD }}>{periodLabel}</span>
+        {/* Aviso do limite de lucro (Familienversicherung, DE) — vive na própria
+            linha do período, entre o seletor e o ano, para não roubar uma faixa. */}
+        {showFamvWarn && (
+          <div title={L.famvWarn(Math.round(famvRatio * 100), famvLimit)}
+            style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', alignItems: 'center', gap: '9px',
+              background: famvRatio >= 1 ? t.dueLate.bg : t.dueSoon.bg,
+              border: `1px solid ${famvRatio >= 1 ? t.dueLate.ink : t.dueSoon.ink}44`,
+              borderRadius: '10px', padding: '5px 6px 5px 12px' }}>
+            <span style={{ flex: 'none', width: '7px', height: '7px', borderRadius: '50%', background: famvRatio >= 1 ? t.dueLate.ink : t.dueSoon.ink }} />
+            <span style={{ fontSize: '12px', fontWeight: 600, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: famvRatio >= 1 ? t.dueLate.ink : t.dueSoon.ink }}>
+              {L.famvWarn(Math.round(famvRatio * 100), famvLimit)}
+            </span>
+            <button onClick={() => navigate('/contabilidade/rucklagen')}
+              style={{ flex: 'none', padding: '6px 12px', background: DARK_RED, color: '#fff', border: 'none', borderRadius: '7px', fontWeight: 700, fontSize: '11.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {L.famvCta}
+            </button>
+          </div>
+        )}
+        <span style={{ marginLeft: 'auto', flex: 'none', fontSize: '12px', fontWeight: 700, color: GOLD }}>{periodLabel}</span>
       </div>
-
-      {/* ── Aviso: limite de lucro Familienversicherung (DE, ≥80%) ── */}
-      {showFamvWarn && (
-        <div style={{ background: famvRatio >= 1 ? t.dueLate.bg : t.dueSoon.bg, border: `1px solid ${famvRatio >= 1 ? t.dueLate.ink : t.dueSoon.ink}44`, borderRadius: '12px', padding: '13px 17px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '11px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '17px' }}>{famvRatio >= 1 ? '🔴' : '⚠️'}</span>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: famvRatio >= 1 ? t.dueLate.ink : t.dueSoon.ink, flex: 1, minWidth: '220px' }}>
-            {L.famvWarn(Math.round(famvRatio * 100), famvLimit)}
-          </span>
-          <button onClick={() => navigate('/contabilidade/rucklagen')} style={{ padding: '7px 14px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
-            {L.famvCta}
-          </button>
-        </div>
-      )}
 
       {/* KPIs topo */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: isMobile ? '10px' : '14px', marginBottom: '20px' }}>
         {[
           { label: L.revenue, value: revenue,             color: t.dueOk.ink,     bg: t.dueOk.bg },
-          { label: L.fixed,   value: fixedTotal,          color: t.toneBlue.ink,  bg: t.toneBlue.bg },
+          { label: L.fixed,   value: fixedTotal,          color: t.toneBlue.ink,  bg: t.toneBlue.bg,
+            aviso: periodPredicted > 0 ? `${L.predictedFixed} · ${periodLabel}: ${fmt2(periodPredicted)} · ${pendingCountPeriod}` : null },
           { label: L.variable,value: varC,                color: t.toneOrange.ink,bg: t.toneOrange.bg },
           { label: netLabel,  value: yearNet,             color: yearNet>=0?G:RED, bg: '#fff' },
         ].map(k => (
-          <div key={k.label} style={{ background: k.bg, borderRadius: '14px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
+          <div key={k.label} style={{ position: 'relative', background: k.bg, borderRadius: '14px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
+            {k.aviso && <AvisoKpi t={t} texto={k.aviso} cta={L.predictedCta} onClick={() => navigate('/contabilidade/recorrentes')} />}
             <div style={{ fontSize: '22px', fontWeight: 900, color: k.color, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{fmt(k.value)}</div>
             <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{k.label}</div>
           </div>
@@ -301,18 +335,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Custos fixos previstos por confirmar (acumulado no período) ── */}
-      {periodPredicted > 0 && (
-        <div style={{ background: t.dueSoon.bg, border: `1px solid ${t.dueSoon.ink}44`, borderRadius: '12px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '18px' }}>🔁</span>
-          <span style={{ fontSize: '13px', color: t.dueSoon.ink, fontWeight: 600 }}>
-            {L.predictedFixed} · {periodLabel}: <strong>{fmt2(periodPredicted)}</strong> · {pendingCountPeriod}
-          </span>
-          <button onClick={() => navigate('/contabilidade/recorrentes')} style={{ marginLeft: 'auto', padding: '7px 14px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>
-            {L.predictedCta}
-          </button>
-        </div>
-      )}
+      {/* Os custos fixos previstos por confirmar deixaram de ter faixa própria —
+          são agora o ponto de aviso no canto do cartão "Custos fixos". */}
 
       {/* ── Apuramento de IVA ── */}
       {hasIva && (

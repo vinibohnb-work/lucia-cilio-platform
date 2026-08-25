@@ -398,6 +398,14 @@
     plataforma (sidebar, listas da Conciliação, sino fiscal, modais); o tema escuro leva
     o dourado com mais presença e no telemóvel a barra desaparece (é flutuante do sistema).
     O `data-theme` passou a ser escrito no `<html>` para o CSS distinguir os temas.
+  - **Painel com menos faixas de aviso** (25/08, pedido do Vinícius) — o Painel abria com
+    duas faixas largas antes de qualquer número. O aviso do limite de lucro
+    (Familienversicherung) passou para dentro da linha do período, entre o seletor
+    Anual/Trimestral e o ano: mais baixo (5px de padding), texto a 12px com reticências e
+    a mensagem inteira no tooltip, e o "Ver detalhes" em vermelho escuro (#8f2620) por ser
+    um aviso, não uma ação neutra. Os custos fixos previstos por confirmar perderam a faixa
+    e viraram um ponto de aviso no canto do cartão "Custos fixos", que abre a mensagem
+    completa ao passar o rato e leva aos recorrentes ao clicar.
   - **Falsos positivos verificados** (a revisão foi feita sobre o HTML estático, não sobre a
     app): drawer mobile com ☰ já existe; KPIs já empilham 2×2 no telemóvel; tema escuro já
     tem pos/neg/linhas de gráfico próprios; funil do CRM já é fluido com scroll no mobile;
