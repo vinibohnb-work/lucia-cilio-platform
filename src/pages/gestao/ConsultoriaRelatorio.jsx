@@ -140,11 +140,11 @@ export default function ConsultoriaRelatorio() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '860px' }}>
-      <button onClick={() => navigate(`/gestao/consultorias/${id}`)} style={{ background: 'none', border: 'none', color: t.accent, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
+      <button onClick={() => navigate(`/gestao/consultorias/${id}`)} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '520px', lineHeight: 1.5 }}>
             {c.nome}{c.empresa ? ` · ${c.empresa}` : ''} — {prog.pct}% {L.preenchido}

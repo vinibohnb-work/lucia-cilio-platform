@@ -102,10 +102,17 @@
 > a conta de demonstração. Relatório completo: `docs/auditorias/2026-08-13-interface.md`.
 > Severidade: 🟠 atrapalha · 🟡 incomoda · 🔵 oportunidade. Zero bloqueadores.
 
-- [ ] **🟠 Subir os textos abaixo de 12px** — 36 elementos só no Painel; `OFFICE CONSULTING`
-  a 9px, rótulos de secção a 10px. Agora que o zoom e o contraste estão corrigidos, este é o
-  que resta do trio de legibilidade.
-  *QA 13/08/2026 · Resp.: Vinícius*
+- [ ] **🟠 Subir os textos abaixo de 12px** — 36 elementos só no Painel. Progresso na 2ª
+  revisão de design (25/08): brand da sidebar 9→10px, rótulos de secção 10→11px, números dos
+  blocos 9→11px, "Nasce de" 9.5→11px, labels de formulário 10.5→11px. Resta a varredura
+  completa (legendas de gráficos, eixos da materialidade, microtextos dos cartões). Regra
+  acordada: ≥12px para texto informativo; 11px só para maiúsculas espaçadas (eyebrows).
+  *QA 13/08/2026 · Revisão design 25/08 · Resp.: Vinícius*
+
+- [ ] **🔵 Trocar emojis por ícones SVG nos botões de ação** — 📄/🖨/⚡/✨ na Conciliação,
+  EÜR e Relatório de consultoria destoam dos SVGs da navegação. Usar o mesmo set da sidebar.
+  Classificado "quando der" na revisão de design de 25/08 (T7, baixa).
+  *Revisão design 25/08/2026 · Resp.: Vinícius*
 
 - [ ] **🟠 Associar rótulos aos campos de formulário** — 36 ocorrências, incluindo o login.
   Sem `label for`/`aria-label`, o leitor de ecrã não liga rótulo a campo e tocar no texto não
@@ -365,6 +372,32 @@
 ---
 
 ## Concluídos
+
+### Revisão de design · 2ª iteração — 25/08
+- [x] **Correções da revisão de design feita no Claude Design (PDF de 25/08, 27 achados)** —
+  aplicadas no código real da plataforma:
+  - **T1 (alta)** Dourado #c9a84c deixou de ser usado como texto sobre fundos claros (~2:1 de
+    contraste). Novo token `accentText` no tema (`#6b5a2a` claro / `#d8bd74` escuro); 53 usos
+    migrados em 26 ficheiros (eyebrows, "Abrir →", "Relatório →", pills ativas, links "+").
+    O #c9a84c continua em bordas, barras e superfícies escuras (ícone ativo da sidebar).
+  - **T2 (alta)** `nowrap` onde texto quebrava: valores KPI do Painel, "Exportar CSV" (Livro
+    de Caixa), pills e botão "⚡ Conciliar" (Conciliação), chips e "Abrir →" (Consultorias),
+    chips/"Relatório →"/passos do stepper (ficha de consultoria).
+  - **T4 (média)** Inputs com respiro: campo 14px + padding 10×12 nas Consultorias, ficha,
+    Bloco 0, Planeamento, Acessos; tabelas de números da consultoria 13.5px.
+  - **T5 (média)** Números de tabelas/listas em sans com `tabular-nums` (Conciliação, EÜR,
+    Planeamento, tabelas da consultoria); serif Cormorant mantém-se só nos KPIs grandes.
+  - **T6 (média)** EÜR deixou de forçar `de-DE`: formatação de números/datas segue a língua
+    da interface, como o resto da plataforma (rótulos fiscais continuam em alemão).
+  - **03** "Ignorar" agora parece clicável (ghost com borda); **04** códigos Zeile/Pos a 12px
+    sans com mais contraste; **06** chip "Ativa" passou de amarelo-aviso a verde-ok, Pausada
+    neutra; **07** ficha ganhou o eyebrow padrão ("Gestão · Consultoria") como os outros ecrãs.
+  - **Falsos positivos verificados** (a revisão foi feita sobre o HTML estático, não sobre a
+    app): drawer mobile com ☰ já existe; KPIs já empilham 2×2 no telemóvel; tema escuro já
+    tem pos/neg/linhas de gráfico próprios; funil do CRM já é fluido com scroll no mobile;
+    cores dos papéis nos Acessos já têm semântica própria; cabeçalhos do Planeamento já
+    quebram sem `<br>`; números da Materialidade e cartões repetidos do CRM eram dados do mock.
+  *Revisão design 25/08/2026 · Resp.: Vinícius*
 
 ### Cybersecurity e Compliance
 - [x] **R3 · Backups automáticos ativos — upgrade Pro na organização da produção** — 25/08.

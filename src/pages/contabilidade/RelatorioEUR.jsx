@@ -104,8 +104,9 @@ export default function RelatorioEUR() {
   const isento = r.regime === 'exempt'
   const valorDe = (e) => (isento ? Number(e.amount) || 0 : liquidoDe(e))
 
-  const fmt = (v) => (Number(v) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
-  const dataFmt = (d) => new Date(d).toLocaleDateString('de-DE')
+  const loc = lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT'
+  const fmt = (v) => (Number(v) || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+  const dataFmt = (d) => new Date(d).toLocaleDateString(loc)
   const nomeDe = (l) => l.categoria
     ? (getCategory(l.categoria)?.de?.label || l.categoria)
     : (NOME_LINHA[l.key] || l.key)
@@ -176,13 +177,13 @@ export default function RelatorioEUR() {
       <div style={{ borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
         <div onClick={() => setAberta(expandida ? null : l.key)}
           style={{ display: 'flex', gap: '10px', alignItems: 'baseline', padding: '10px 0', cursor: 'pointer' }}>
-          <span style={{ flex: 'none', width: '34px', fontSize: '11px', color: t.subtle, fontFamily: t.fontNum }}>{l.zeile ?? ''}</span>
+          <span style={{ flex: 'none', width: '36px', fontSize: '12px', color: t.textMuted, fontVariantNumeric: 'tabular-nums' }}>{l.zeile ?? ''}</span>
           <span style={{ flex: 1, fontSize: '13px', color: t.heading, lineHeight: 1.4 }}>
             {expandida ? '▾ ' : '▸ '}{nomeDe(l)}
             <span style={{ fontSize: '10.5px', color: t.subtle }}> · {l.entries.length} {L.lancamentos}</span>
           </span>
-          {l.position && <span style={{ flex: 'none', fontSize: '11px', color: t.subtle, fontFamily: t.fontNum }}>{l.position}</span>}
-          <span style={{ flex: 'none', fontSize: '13.5px', fontWeight: 800, fontFamily: t.fontNum, color: t.heading }}>{fmt(l.total)}</span>
+          {l.position && <span style={{ flex: 'none', fontSize: '12px', color: t.textMuted, fontVariantNumeric: 'tabular-nums' }}>{l.position}</span>}
+          <span style={{ flex: 'none', fontSize: '13.5px', fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: t.heading }}>{fmt(l.total)}</span>
         </div>
         {expandida && (
           <div style={{ background: t.softCardBg, borderRadius: '9px', padding: '9px 12px', marginBottom: '10px' }}>
@@ -227,7 +228,7 @@ export default function RelatorioEUR() {
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '920px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
         </div>

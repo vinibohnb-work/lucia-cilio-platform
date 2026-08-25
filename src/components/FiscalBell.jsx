@@ -40,7 +40,7 @@ export default function FiscalBell() {
     <div style={{ position: 'fixed', zIndex: 85, top: isMobile ? 'calc(env(safe-area-inset-top) + 12px)' : '20px', right: isMobile ? '12px' : '22px' }}>
       <button onClick={() => setOpen(o => !o)} aria-label={L.title} style={{
         position: 'relative', width: '42px', height: '42px', borderRadius: '11px', cursor: 'pointer',
-        border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accent,
+        border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accentText,
         display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 12px rgba(0,0,0,.14)',
       }}>
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -66,7 +66,7 @@ export default function FiscalBell() {
                 </div>
               </div>
             ))}
-            <div onClick={go} style={{ padding: '11px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: t.accent, cursor: 'pointer' }}>{L.all}</div>
+            <div onClick={go} style={{ padding: '11px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 700, color: t.accentText, cursor: 'pointer' }}>{L.all}</div>
           </div>
         </>
       )}

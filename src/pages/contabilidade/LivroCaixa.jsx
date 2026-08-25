@@ -254,7 +254,7 @@ export default function LivroCaixa() {
           <option value="all">{L.all}</option>
           {months.map((m,i) => <option key={i} value={String(i+1).padStart(2,'0')}>{m} 2026</option>)}
         </select>
-        <button onClick={() => exportCSV(filtered, lang)} style={{ padding: '8px 14px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: '#4a6355' }}>
+        <button onClick={() => exportCSV(filtered, lang)} style={{ padding: '8px 14px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: '#4a6355', whiteSpace: 'nowrap' }}>
           ⬇ {L.export}
         </button>
       </div>

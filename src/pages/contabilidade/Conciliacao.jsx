@@ -196,7 +196,7 @@ export default function Conciliacao() {
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '1020px' }}>
       <div style={{ marginBottom: '18px' }}>
-        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
         <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
         <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
       </div>
@@ -228,9 +228,9 @@ export default function Conciliacao() {
           <div style={{ background: t.softCardBg, borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', maxHeight: '190px', overflowY: 'auto' }}>
             {previa.movimentos.slice(0, 8).map((m, i) => (
               <div key={i} style={{ display: 'flex', gap: '10px', fontSize: '11.5px', padding: '3px 0', color: t.text }}>
-                <span style={{ flex: 'none', width: '78px', color: t.subtle, fontFamily: t.fontNum }}>{dataFmt(m.data)}</span>
+                <span style={{ flex: 'none', width: '78px', color: t.subtle, fontVariantNumeric: 'tabular-nums' }}>{dataFmt(m.data)}</span>
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.descricao}</span>
-                <span style={{ flex: 'none', fontFamily: t.fontNum, fontWeight: 700, color: m.tipo === 'entrada' ? t.dueOk.ink : t.neg }}>
+                <span style={{ flex: 'none', fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: m.tipo === 'entrada' ? t.dueOk.ink : t.neg }}>
                   {m.tipo === 'entrada' ? '+' : '−'}{fmt(m.valor)}
                 </span>
               </div>
@@ -256,14 +256,14 @@ export default function Conciliacao() {
           <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
             {[['pendente', pendentes.length], ['conciliado', porStatus('conciliado').length], ['ignorado', porStatus('ignorado').length], ['semExtrato', entriesSemPar.length]].map(([k, n]) => (
               <button key={k} onClick={() => setAba(k)} style={{
-                padding: '7px 14px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer',
+                padding: '7px 14px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                 border: `1px solid ${aba === k ? t.accent : t.cardBorder}`,
-                background: aba === k ? t.softCardBg : 'transparent', color: aba === k ? t.accent : t.textMuted,
+                background: aba === k ? t.softCardBg : 'transparent', color: aba === k ? t.accentText : t.textMuted,
               }}>{L[k]} ({n})</button>
             ))}
             {aba === 'pendente' && nAutomaticos > 0 && (
               <button onClick={conciliarAutomaticos} disabled={isViewing}
-                style={{ ...btn, marginLeft: 'auto', padding: '8px 15px', fontSize: '12px', background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>
+                style={{ ...btn, marginLeft: 'auto', flex: 'none', whiteSpace: 'nowrap', padding: '8px 15px', fontSize: '12px', background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>
                 ⚡ {L.conciliar} {nAutomaticos}
               </button>
             )}
@@ -276,9 +276,9 @@ export default function Conciliacao() {
               {!entriesSemPar.length && <div style={{ fontSize: '13px', color: t.textMuted }}>{L.tudoOk}</div>}
               {entriesSemPar.map(e => (
                 <div key={e.id} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '8px 0', borderTop: `1px solid ${t.rowBorder || t.cardBorder}`, fontSize: '12.5px' }}>
-                  <span style={{ flex: 'none', width: '82px', color: t.subtle, fontFamily: t.fontNum }}>{dataFmt(e.entry_date)}</span>
+                  <span style={{ flex: 'none', width: '82px', color: t.subtle, fontVariantNumeric: 'tabular-nums' }}>{dataFmt(e.entry_date)}</span>
                   <span style={{ flex: 1, color: t.text }}>{e.description}</span>
-                  <span style={{ fontFamily: t.fontNum, fontWeight: 700, color: e.type === 'entrada' ? t.dueOk.ink : t.neg }}>
+                  <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: e.type === 'entrada' ? t.dueOk.ink : t.neg }}>
                     {e.type === 'entrada' ? '+' : '−'}{fmt(e.amount)}
                   </span>
                 </div>
@@ -298,9 +298,9 @@ export default function Conciliacao() {
                 return (
                   <div key={tx.id} style={{ ...card, padding: '14px 17px', marginBottom: '9px' }}>
                     <div style={{ display: 'flex', gap: '11px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <span style={{ flex: 'none', fontSize: '11.5px', color: t.subtle, fontFamily: t.fontNum, width: '78px' }}>{dataFmt(tx.tx_date)}</span>
+                      <span style={{ flex: 'none', fontSize: '11.5px', color: t.subtle, fontVariantNumeric: 'tabular-nums', width: '78px' }}>{dataFmt(tx.tx_date)}</span>
                       <span style={{ flex: 1, minWidth: '160px', fontSize: '13px', fontWeight: 600, color: t.heading }}>{tx.description}</span>
-                      <span style={{ fontSize: '14px', fontWeight: 800, fontFamily: t.fontNum, color: tx.type === 'entrada' ? t.dueOk.ink : t.neg }}>
+                      <span style={{ fontSize: '14px', fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: tx.type === 'entrada' ? t.dueOk.ink : t.neg }}>
                         {tx.type === 'entrada' ? '+' : '−'}{fmt(tx.amount)}
                       </span>
                     </div>
@@ -328,7 +328,7 @@ export default function Conciliacao() {
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
                           {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
                           <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btn, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
-                          <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btn, background: 'none', color: t.subtle, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
+                          <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btn, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
                         </div>
                       </div>
                     )}

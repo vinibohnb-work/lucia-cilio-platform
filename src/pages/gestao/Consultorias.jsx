@@ -55,7 +55,7 @@ export default function Consultorias() {
 
   const tipoLabel = (x) => x === 'gratuita' ? L.tGratuita : L.tImplementacao
   const statusLabel = { ativa: L.ativa, concluida: L.concluida, pausada: L.pausada }
-  const statusTone = { ativa: t.dueSoon, concluida: t.dueOk, pausada: { bg: t.chipBg, ink: t.chipText } }
+  const statusTone = { ativa: t.dueOk, concluida: { bg: t.chipBg, ink: t.chipText }, pausada: { bg: t.segBg, ink: t.textMuted } }
 
   const load = useCallback(async () => {
     setLoading(true); setErr('')
@@ -80,14 +80,14 @@ export default function Consultorias() {
   const visiveis = filtro === 'todas' ? lista : lista.filter(c => c.status === filtro)
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
-  const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' }
-  const lblStyle = { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
+  const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const lblStyle = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '1020px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
         </div>
@@ -126,7 +126,7 @@ export default function Consultorias() {
           <button key={f} onClick={() => setFiltro(f)} style={{
             padding: '7px 14px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer',
             border: `1px solid ${filtro === f ? t.accent : t.cardBorder}`,
-            background: filtro === f ? t.softCardBg : 'transparent', color: filtro === f ? t.accent : t.textMuted,
+            background: filtro === f ? t.softCardBg : 'transparent', color: filtro === f ? t.accentText : t.textMuted,
           }}>{f === 'todas' ? L.todas : statusLabel[f]}</button>
         ))}
       </div>
@@ -168,14 +168,14 @@ export default function Consultorias() {
                       <div style={{ height: '5px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
                         <div style={{ width: `${p.pct}%`, height: '100%', background: b.porConstruir ? t.subtle : t.accent }} />
                       </div>
-                      <div style={{ fontSize: '9px', fontWeight: atual ? 800 : 600, color: atual ? t.accent : t.subtle, marginTop: '3px', textAlign: 'center' }}>{b.n}</div>
+                      <div style={{ fontSize: '11px', fontWeight: atual ? 800 : 600, color: atual ? t.accentText : t.subtle, marginTop: '3px', textAlign: 'center' }}>{b.n}</div>
                     </div>
                   )
                 })}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '11px', color: t.subtle }}>{prog.feitas}/{prog.total}</span>
-                <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.accent }}>{L.abrir}</span>
+                <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.accentText, whiteSpace: 'nowrap' }}>{L.abrir}</span>
               </div>
             </div>
           )

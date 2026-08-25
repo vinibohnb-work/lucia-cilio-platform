@@ -28,7 +28,7 @@ export function TabelaLinhas({ titulo, linhas, chavePadrao, onChange, total, cor
     const r = rows.map((l, idx) => idx === i ? { ...l, [campo]: v } : l)
     onChange(r)
   }
-  const inputStyle = { padding: '6px 8px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '12.5px', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13.5px', outline: 'none', width: '100%', boxSizing: 'border-box' }
 
   return (
     <div style={{ background: t.softCardBg, borderRadius: '11px', padding: '12px 14px' }}>
@@ -40,13 +40,13 @@ export function TabelaLinhas({ titulo, linhas, chavePadrao, onChange, total, cor
         <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '5px' }}>
           <input value={l.desc || ''} onChange={e => set(i, 'desc', e.target.value)} placeholder={L.desc} style={{ ...inputStyle, flex: 1 }} />
           <input value={l.valor ?? ''} onChange={e => set(i, 'valor', e.target.value)} placeholder={L.val} inputMode="decimal"
-            style={{ ...inputStyle, width: '96px', flex: 'none', textAlign: 'right', fontFamily: t.fontNum, fontWeight: 700 }} />
+            style={{ ...inputStyle, width: '96px', flex: 'none', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }} />
           <button onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
             style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '12px', padding: '0 2px', flex: 'none' }}>✕</button>
         </div>
       ))}
       <button onClick={() => onChange([...rows, { desc: '', valor: '' }])}
-        style={{ background: 'none', border: 'none', color: t.accent, fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: '4px 0' }}>{L.add}</button>
+        style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: '4px 0' }}>{L.add}</button>
     </div>
   )
 }
@@ -100,7 +100,7 @@ export function Capital({ numeros, alterar }) {
   const custosAno1 = projecao(numeros?.projecao).custosAno1
   const c = necessidadeCapital(cap, custosAno1)
   const set = (campo, v) => alterar({ numeros: { ...numeros, capital: { ...cap, [campo]: v } } })
-  const inputStyle = { padding: '6px 8px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '12.5px', outline: 'none', textAlign: 'right', fontFamily: t.fontNum, fontWeight: 700 }
+  const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13.5px', outline: 'none', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
@@ -146,7 +146,7 @@ export function Financiamento({ numeros, alterar }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', background: t.softCardBg, borderRadius: '11px', padding: '12px 14px', marginTop: '12px' }}>
         <span style={{ fontSize: '12px', fontWeight: 700, color: t.textMuted }}>{L.amort}</span>
         <input value={fin.amortizacaoAno ?? ''} onChange={e => set('amortizacaoAno', e.target.value)} inputMode="decimal"
-          style={{ padding: '6px 8px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '12.5px', outline: 'none', width: '110px', textAlign: 'right', fontFamily: t.fontNum, fontWeight: 700 }} />
+          style={{ padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13.5px', outline: 'none', width: '110px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }} />
         <span style={{ marginLeft: 'auto', fontSize: '12px', fontWeight: 800, color: t.chipText, textTransform: 'uppercase', letterSpacing: '.5px' }}>{L.total}</span>
         <span style={{ fontSize: '18px', fontWeight: 800, color: t.heading, fontFamily: t.fontNum }}>{eur(f.total, lang)}</span>
       </div>
@@ -181,7 +181,7 @@ export function Projecao({ numeros, alterar }) {
   }
   const setDesc = (campo, i, val) => set(campo, rows(campo).map((l, idx) => idx === i ? { ...l, desc: val } : l))
 
-  const inp = { padding: '5px 7px', borderRadius: '6px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '12px', outline: 'none', width: '100%', boxSizing: 'border-box', textAlign: 'right', fontFamily: t.fontNum, fontWeight: 700 }
+  const inp = { padding: '5px 7px', borderRadius: '6px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '12px', outline: 'none', width: '100%', boxSizing: 'border-box', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }
   const GRID = 'minmax(120px, 1fr) 92px 92px 92px 22px'
 
   const Tabela = ({ campo, titulo, cor }) => (
@@ -200,7 +200,7 @@ export function Projecao({ numeros, alterar }) {
         </div>
       ))}
       <button onClick={() => set(campo, [...rows(campo), { desc: '', valores: Array(ANOS).fill('') }])}
-        style={{ background: 'none', border: 'none', color: t.accent, fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: '4px 0' }}>{L.add}</button>
+        style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: '4px 0' }}>{L.add}</button>
     </div>
   )
 
@@ -249,7 +249,7 @@ export function Liquidez({ numeros, alterar }) {
     const arr = [...(liq[campo] || Array(12).fill(''))]; arr[i] = v
     set(campo, arr)
   }
-  const inp = { padding: '5px 4px', borderRadius: '6px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '11.5px', outline: 'none', width: '100%', boxSizing: 'border-box', textAlign: 'right', fontFamily: t.fontNum, fontWeight: 700 }
+  const inp = { padding: '5px 4px', borderRadius: '6px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '11.5px', outline: 'none', width: '100%', boxSizing: 'border-box', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }
 
   return (
     <>

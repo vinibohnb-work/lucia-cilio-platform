@@ -58,7 +58,7 @@ export default function Consultoria() {
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '780px' }}>
       <div style={{ marginBottom: '22px' }}>
-        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
         <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '38px', lineHeight: 1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
         <p style={{ fontSize: '13px', color: t.textMuted, margin: '8px 0 0' }}>{L.subtitle}</p>
       </div>
@@ -67,7 +67,7 @@ export default function Consultoria() {
 
       {/* Documentos partilhados (leitura) */}
       <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accent, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.docs}</div>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accentText, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.docs}</div>
         <DocsBrowser userId={eid} readOnly />
       </div>
 
@@ -81,7 +81,7 @@ export default function Consultoria() {
               <span style={{ fontSize: '11px', color: t.subtle, marginLeft: 'auto' }}>{fmtDate(n.created_at)}</span>
             </div>
             {n.body && <p style={{ margin: 0, fontSize: '13px', color: t.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{n.body}</p>}
-            {n.link_url && <a href={n.link_url} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '8px', fontSize: '12.5px', fontWeight: 700, color: t.accent, textDecoration: 'none' }}>{L.open}</a>}
+            {n.link_url && <a href={n.link_url} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '8px', fontSize: '12.5px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>{L.open}</a>}
           </div>
         )
       })}

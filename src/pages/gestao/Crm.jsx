@@ -242,7 +242,7 @@ export default function Crm() {
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '14px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '38px', lineHeight: 1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
           <p style={{ fontSize: '13px', color: t.textMuted, margin: '8px 0 0' }}>{L.subtitle}</p>
         </div>
@@ -268,7 +268,7 @@ export default function Crm() {
           <option value="">{L.source}: {L.all}</option>
           {SOURCES.map(x => <option key={x.key} value={x.key}>{label(x)}</option>)}
         </select>
-        <button onClick={() => setFOverdue(o => !o)} style={{ padding: '8px 13px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${fOverdue ? t.accent : t.cardBorder}`, background: fOverdue ? t.softCardBg : 'transparent', color: fOverdue ? t.accent : t.textMuted }}>⏰ {L.overdueOnly}</button>
+        <button onClick={() => setFOverdue(o => !o)} style={{ padding: '8px 13px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${fOverdue ? t.accent : t.cardBorder}`, background: fOverdue ? t.softCardBg : 'transparent', color: fOverdue ? t.accentText : t.textMuted }}>⏰ {L.overdueOnly}</button>
         {(fTemp || fSource || fOverdue) && (
           <button onClick={() => { setFTemp(''); setFSource(''); setFOverdue(false) }} style={{ padding: '8px 11px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', border: 'none', background: 'transparent', color: t.subtle }}>✕ {L.all}</button>
         )}

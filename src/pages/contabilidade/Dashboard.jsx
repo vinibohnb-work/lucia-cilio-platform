@@ -289,7 +289,7 @@ export default function Dashboard() {
           { label: netLabel,  value: yearNet,             color: yearNet>=0?G:RED, bg: '#fff' },
         ].map(k => (
           <div key={k.label} style={{ background: k.bg, borderRadius: '14px', padding: '18px 20px', border: `1px solid ${t.cardBorder}` }}>
-            <div style={{ fontSize: '22px', fontWeight: 900, color: k.color }}>{fmt(k.value)}</div>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: k.color, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{fmt(k.value)}</div>
             <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{k.label}</div>
           </div>
         ))}

@@ -171,7 +171,7 @@ export default function Sidebar() {
         <img src="/logo.png" alt="LC" style={{ width: '42px', height: '42px', flex: 'none', objectFit: 'contain' }} />
         <div>
           <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '19px', lineHeight: 1, color: '#f3ecdb' }}>Lúcia Cílio</div>
-          <div style={{ fontSize: '9px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.sidebarSub }}>Office Consulting</div>
+          <div style={{ fontSize: '10px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.sidebarSub }}>Office Consulting</div>
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export default function Sidebar() {
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {sections.map((sec, si) => (
           <div key={sec.key} style={{ marginTop: si ? '20px' : 0 }}>
-            <div style={{ padding: '0 24px', fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 8px', color: t.sectionLabel }}>
+            <div style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 8px', color: t.sectionLabel }}>
               {sectionLabel[sec.key][lang] || sectionLabel[sec.key].pt}
             </div>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>

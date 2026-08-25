@@ -128,7 +128,7 @@ export default function AdminHome() {
   }
 
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT') : L.never
-  const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, fontSize: '13px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, fontSize: '14px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const roleStyle = {
     admin:     { bg: t.chipBg, ink: t.chipText },
@@ -146,11 +146,11 @@ export default function AdminHome() {
       {/* Cabeçalho de página */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', gap: '12px', flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '30px' : '38px', lineHeight: 1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
         </div>
         <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '10px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: 'none', background: t.btnBg, color: t.btnInk }}>
-          <span style={{ color: t.accent, fontSize: '16px', lineHeight: 1 }}>+</span>{L.new.replace('+ ', '')}
+          <span style={{ color: t.accentText, fontSize: '16px', lineHeight: 1 }}>+</span>{L.new.replace('+ ', '')}
         </button>
       </div>
 
@@ -220,7 +220,7 @@ export default function AdminHome() {
               <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : isPending ? <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span> : '—'}</div>
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                 {!isSelf && (
-                  <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} aria-label={L.resend} style={{ flex: 'none', width: '30px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.chipBg, border: `1px solid ${t.accent}`, borderRadius: '7px', cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accent, padding: 0 }}>
+                  <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} aria-label={L.resend} style={{ flex: 'none', width: '30px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.chipBg, border: `1px solid ${t.accent}`, borderRadius: '7px', cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accentText, padding: 0 }}>
                     {busyId === u.id ? '…' : (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                         <circle cx="8" cy="15" r="4" /><path d="m11 12 8-8 3 3-3 3-2-2-3 3" />

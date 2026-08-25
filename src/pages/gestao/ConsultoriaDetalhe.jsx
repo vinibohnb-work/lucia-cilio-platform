@@ -32,7 +32,7 @@ export default function ConsultoriaDetalhe() {
     bloco: 'Block', porConstruir: 'Dieser Block kommt in der nächsten Phase.',
     swotVazio: 'Fügen Sie Punkte in die vier Quadranten ein.',
     towsAjuda: 'Was soll ich mit dem tun, was die SWOT gezeigt hat?',
-    origem: 'Woraus entsteht', addEstrategia: 'Strategie hinzufügen', escolherOrigem: 'Punkte anklicken, aus denen die Strategie entsteht',
+    eyebrow: 'Verwaltung · Beratung', origem: 'Woraus entsteht', addEstrategia: 'Strategie hinzufügen', escolherOrigem: 'Punkte anklicken, aus denen die Strategie entsteht',
     add: 'Hinzufügen', remover: 'Entfernen', semItens: 'Noch keine Punkte in der SWOT.',
     contacto: 'Kontakt', estado: 'Status', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
     tGratuita: 'Kostenlos', tImplementacao: 'Geschäftsaufbau',
@@ -44,7 +44,7 @@ export default function ConsultoriaDetalhe() {
     bloco: 'Block', porConstruir: 'This block arrives in the next phase.',
     swotVazio: 'Add items to the four quadrants.',
     towsAjuda: 'With what the SWOT revealed, what should I do?',
-    origem: 'Comes from', addEstrategia: 'Add strategy', escolherOrigem: 'Click the items this strategy comes from',
+    eyebrow: 'Management · Consultancy', origem: 'Comes from', addEstrategia: 'Add strategy', escolherOrigem: 'Click the items this strategy comes from',
     add: 'Add', remover: 'Remove', semItens: 'No SWOT items yet.',
     contacto: 'Contact', estado: 'Status', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
     tGratuita: 'Free', tImplementacao: 'Business setup',
@@ -56,7 +56,7 @@ export default function ConsultoriaDetalhe() {
     bloco: 'Bloco', porConstruir: 'Este bloco chega na próxima fase.',
     swotVazio: 'Acrescenta pontos aos quatro quadrantes.',
     towsAjuda: 'Com aquilo que a SWOT mostrou, o que devo fazer?',
-    origem: 'Nasce de', addEstrategia: 'Acrescentar estratégia', escolherOrigem: 'Clica nos pontos de onde nasce a estratégia',
+    eyebrow: 'Gestão · Consultoria', origem: 'Nasce de', addEstrategia: 'Acrescentar estratégia', escolherOrigem: 'Clica nos pontos de onde nasce a estratégia',
     add: 'Acrescentar', remover: 'Remover', semItens: 'Ainda não há pontos na SWOT.',
     contacto: 'Contacto', estado: 'Estado', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
     tGratuita: 'Gratuita', tImplementacao: 'Implementação de negócio',
@@ -145,7 +145,7 @@ export default function ConsultoriaDetalhe() {
   }
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
-  const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: t.fontBody }
+  const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: t.fontBody }
   const lblStyle = { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
   if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
@@ -158,7 +158,9 @@ export default function ConsultoriaDetalhe() {
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '1020px' }}>
       {/* Cabeçalho */}
-      <button onClick={() => navigate('/gestao/consultorias')} style={{ background: 'none', border: 'none', color: t.accent, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
+      <button onClick={() => navigate('/gestao/consultorias')} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
+
+      <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
 
       <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', flexWrap: 'wrap', marginBottom: '12px' }}>
@@ -171,9 +173,9 @@ export default function ConsultoriaDetalhe() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap' }}>
             {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
             {erro && <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.neg }}>{erro}</span>}
-            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.chipBg, color: t.chipText }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
+            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.chipBg, color: t.chipText, whiteSpace: 'nowrap' }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
             <button onClick={() => navigate(`/gestao/consultorias/${id}/relatorio`)}
-              style={{ padding: '6px 13px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accent, fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>{L.relatorio}</button>
+              style={{ padding: '6px 13px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accentText, fontWeight: 700, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.relatorio}</button>
             <select value={c.status} onChange={e => alterar({ status: e.target.value }, true)} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', fontSize: '12px', padding: '6px 9px' }}>
               <option value="ativa">{L.ativa}</option><option value="concluida">{L.concluida}</option><option value="pausada">{L.pausada}</option>
             </select>
@@ -200,7 +202,7 @@ export default function ConsultoriaDetalhe() {
                 border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg, opacity: bl.porConstruir ? .65 : 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '5px' }}>
                 <span style={{ width: '19px', height: '19px', borderRadius: '50%', background: on ? t.accent : t.trackBg, color: on ? '#0a2f1a' : t.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800 }}>{bl.n}</span>
-                <span style={{ fontSize: '12.5px', fontWeight: 700, color: on ? t.heading : t.textMuted }}>{txt(bl)}</span>
+                <span style={{ fontSize: '12.5px', fontWeight: 700, color: on ? t.heading : t.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{txt(bl)}</span>
               </div>
               <div style={{ height: '4px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
                 <div style={{ width: `${p.pct}%`, height: '100%', background: t.accent }} />
@@ -223,7 +225,7 @@ export default function ConsultoriaDetalhe() {
       {(b.seccoes || []).map(sec => (
         <div key={sec.key} style={{ ...card, padding: '18px 20px', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '9px', flexWrap: 'wrap', marginBottom: '4px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: t.accent }}>{sec.num}</span>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: t.accentText }}>{sec.num}</span>
             <h3 style={{ margin: 0, fontFamily: t.fontDisplay, fontSize: '18px', fontWeight: 600, color: t.heading }}>{txt(sec)}</h3>
           </div>
           {txt(sec, 'nota') && <p style={{ fontSize: '11.5px', color: t.subtle, margin: '0 0 14px', lineHeight: 1.5 }}>ⓘ {txt(sec, 'nota')}</p>}
@@ -301,7 +303,7 @@ export default function ConsultoriaDetalhe() {
         <div style={{ ...card, padding: '18px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '9px' }}>
             <span style={lblStyle}>{L.recursos}</span>
-            <button onClick={addRecurso} style={{ background: 'none', border: 'none', color: t.accent, fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}>{L.addLink}</button>
+            <button onClick={addRecurso} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}>{L.addLink}</button>
           </div>
           {(c.recursos || []).map((r, i) => (
             <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
@@ -374,10 +376,10 @@ function CelulaTows({ cel, c, t, txt, L, swotItens, nova, onTexto, onToggleOrige
           </div>
           {!!(e.origem || []).length && (
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
-              <span style={{ fontSize: '9.5px', color: t.subtle, fontWeight: 700 }}>{L.origem}:</span>
+              <span style={{ fontSize: '11px', color: t.subtle, fontWeight: 700 }}>{L.origem}:</span>
               {e.origem.map(ref => {
                 const q = SWOT_QUADRANTES.find(x => x.key === ref.split(':')[0])
-                return <span key={ref} style={{ fontSize: '9.5px', padding: '1px 7px', borderRadius: '20px', background: q?.bg, color: q?.cor, fontWeight: 600 }}>{rotuloDe(ref)}</span>
+                return <span key={ref} style={{ fontSize: '11px', padding: '1px 7px', borderRadius: '20px', background: q?.bg, color: q?.cor, fontWeight: 600 }}>{rotuloDe(ref)}</span>
               })}
             </div>
           )}

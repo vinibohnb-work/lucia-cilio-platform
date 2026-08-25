@@ -38,13 +38,13 @@ export default function BlocoEnquadramento({ enquadramento = {}, notasCliente = 
   const set = (k, v) => alterar({ enquadramento: { ...enquadramento, [k]: v } })
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
-  const inputStyle = { padding: '8px 10px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '12.5px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: t.fontBody }
-  const lblStyle = { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
+  const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: t.fontBody }
+  const lblStyle = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
   return (
     <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap', marginBottom: '3px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 800, color: t.accent }}>0</span>
+        <span style={{ fontSize: '11px', fontWeight: 800, color: t.accentText }}>0</span>
         <h3 style={{ margin: 0, fontFamily: t.fontDisplay, fontSize: '18px', fontWeight: 600, color: t.heading }}>{L.titulo}</h3>
         <span style={{ fontSize: '11px', color: t.subtle }}>{L.sub}</span>
         <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: prog.pct === 100 ? t.dueOk.ink : t.subtle }}>{prog.feitas}/{prog.total}</span>

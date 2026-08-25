@@ -120,11 +120,11 @@ export default function PlaneamentoMensal() {
   }
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
-  const inputStyle = { padding: '7px 9px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' }
+  const inputStyle = { padding: '9px 10px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box' }
   const GRID = 'minmax(150px, 1fr) 62px 78px 56px 82px 90px 90px 92px 92px 92px 96px 28px'
   const TABLE_MIN = 1120
   const headCell = { fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.6px', textTransform: 'uppercase' }
-  const numCell = { fontSize: '12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+  const numCell = { fontSize: '12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontVariantNumeric: 'tabular-nums' }
 
   if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
 
@@ -133,7 +133,7 @@ export default function PlaneamentoMensal() {
       {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
         </div>
@@ -147,7 +147,7 @@ export default function PlaneamentoMensal() {
 
       {/* Base do planeamento */}
       <div style={{ ...card, padding: '16px 20px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accent, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '12px' }}>{L.settings}</div>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accentText, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '12px' }}>{L.settings}</div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(5, 1fr)', gap: '12px', alignItems: 'end' }}>
           <div>
             <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.monthlyFixed}</div>

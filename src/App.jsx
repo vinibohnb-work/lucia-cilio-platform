@@ -147,7 +147,7 @@ function AppLayout() {
           style={{
             position: 'fixed', top: 'calc(env(safe-area-inset-top) + 12px)', left: '12px', zIndex: 80,
             width: '42px', height: '42px', borderRadius: '11px', border: `1px solid ${t.cardBorder}`,
-            background: t.cardBg, color: t.accent, fontSize: '19px', lineHeight: 1,
+            background: t.cardBg, color: t.accentText, fontSize: '19px', lineHeight: 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
             boxShadow: '0 3px 12px rgba(0,0,0,.18)', backdropFilter: 'blur(6px)',
           }}
@@ -172,7 +172,7 @@ function AppLayout() {
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
         >
-          <span style={{ fontSize: '18px', lineHeight: 1, color: t.accent }}>+</span>
+          <span style={{ fontSize: '18px', lineHeight: 1, color: t.accentText }}>+</span>
           {lang === 'de' ? 'Neue Buchung' : lang === 'en' ? 'New Entry' : 'Nova Entrada'}
         </button>
       )}

@@ -135,11 +135,11 @@ export default function DocsBrowser({ userId, readOnly = false }) {
       {/* Barra: breadcrumb + ações */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', fontSize: '12.5px', fontWeight: 600, flex: 1, minWidth: '200px' }}>
-          <span onClick={() => setPath([])} style={{ cursor: 'pointer', color: path.length ? t.accent : t.heading }}>📂 {L.root}</span>
+          <span onClick={() => setPath([])} style={{ cursor: 'pointer', color: path.length ? t.accentText : t.heading }}>📂 {L.root}</span>
           {path.map((seg, i) => (
             <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               <span style={{ color: t.subtle }}>/</span>
-              <span onClick={() => setPath(path.slice(0, i + 1))} style={{ cursor: 'pointer', color: i === path.length - 1 ? t.heading : t.accent }}>{seg}</span>
+              <span onClick={() => setPath(path.slice(0, i + 1))} style={{ cursor: 'pointer', color: i === path.length - 1 ? t.heading : t.accentText }}>{seg}</span>
             </span>
           ))}
         </div>
@@ -171,7 +171,7 @@ export default function DocsBrowser({ userId, readOnly = false }) {
             {!isFolder && <span style={{ fontSize: '11px', color: t.subtle, flex: 'none' }}>{fmtSize(it.metadata?.size)}</span>}
             <span style={{ fontSize: '11px', color: t.subtle, flex: 'none', width: '78px', textAlign: 'right' }}>{fmtDate(it.updated_at || it.created_at)}</span>
             {!isFolder && (
-              <button onClick={e => { e.stopPropagation(); download(it.name) }} title={L.download} style={{ flex: 'none', background: 'none', border: 'none', cursor: 'pointer', color: t.accent, padding: '3px' }}>
+              <button onClick={e => { e.stopPropagation(); download(it.name) }} title={L.download} style={{ flex: 'none', background: 'none', border: 'none', cursor: 'pointer', color: t.accentText, padding: '3px' }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>
               </button>
             )}

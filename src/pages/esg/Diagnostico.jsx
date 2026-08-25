@@ -232,7 +232,7 @@ export default function Diagnostico() {
       {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accent }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
         </div>
@@ -245,7 +245,7 @@ export default function Diagnostico() {
               </select>
               {!isViewing && (
                 <button onClick={addYear} title={lang === 'de' ? 'Neues Jahr (kopiert aktuelle Antworten)' : lang === 'en' ? 'New year (copies current answers)' : 'Novo ano (copia as respostas atuais)'}
-                  style={{ width: '38px', height: '38px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.cardBg, color: t.accent, fontSize: '18px', fontWeight: 800, cursor: 'pointer' }}>+</button>
+                  style={{ width: '38px', height: '38px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.cardBg, color: t.accentText, fontSize: '18px', fontWeight: 800, cursor: 'pointer' }}>+</button>
               )}
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function Diagnostico() {
       <div style={{ ...card, padding: '14px 18px', marginBottom: '18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '9px' }}>
           <span style={{ fontSize: '12px', fontWeight: 700, color: t.text }}>{L.progress}</span>
-          <span style={{ fontSize: '13px', fontWeight: 800, color: t.accent }}>{answeredTotal} / {ESG_TOTAL}</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, color: t.accentText }}>{answeredTotal} / {ESG_TOTAL}</span>
         </div>
         <div style={{ height: '8px', borderRadius: '20px', background: t.softCardBg, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${(answeredTotal / ESG_TOTAL) * 100}%`, background: t.accent, transition: 'width .3s' }} />

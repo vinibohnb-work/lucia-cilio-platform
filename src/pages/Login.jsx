@@ -80,7 +80,7 @@ export default function Login() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px' }}>
           <img src="/logo.png" alt="LC" style={{ width: '68px', height: '68px', objectFit: 'contain', marginBottom: '14px' }} />
           <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '26px', color: t.heading, lineHeight: 1 }}>Lúcia Cílio</div>
-          <div style={{ fontSize: '10px', letterSpacing: '2.6px', textTransform: 'uppercase', marginTop: '5px', color: t.accent }}>{L.subtitle}</div>
+          <div style={{ fontSize: '10px', letterSpacing: '2.6px', textTransform: 'uppercase', marginTop: '5px', color: t.accentText }}>{L.subtitle}</div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -89,7 +89,7 @@ export default function Login() {
             {label(L.password)}
             <div style={{ position: 'relative' }}>
               <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" placeholder="••••••••" style={{ ...inputStyle, paddingRight: '64px' }} />
-              <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: t.accent }}>{showPw ? L.hide : L.show}</button>
+              <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: t.accentText }}>{showPw ? L.hide : L.show}</button>
             </div>
           </div>
 
