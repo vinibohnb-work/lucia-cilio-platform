@@ -269,10 +269,6 @@
 
 ### Gestão interna
 
-- [ ] **Remover utilizadores e dados de teste da plataforma**
-  *Reunião 20/08/2026 · Resp.: Vinícius*
-  Contas demo e registos de ensaio que já não servem a demonstração.
-
 - [ ] **Dashboard macro da gestão**
   *Reunião 23/07/2026 · Resp.: Vinícius*
   Próximos pagamentos, pagamentos em aberto, faturação total — *"é mesmo mais na perspetiva
@@ -393,6 +389,12 @@
   *Auditoria 21/08/2026 · Resp.: Vinícius*
 
 ### Reunião de 20/08 — entregue no próprio dia
+- [x] **Remover utilizadores e dados de teste da plataforma**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  ✔ As duas contas demo (GrünBau, Café Lisboa) apagadas da produção nova a 24/08, no
+  smoke test da migração — a cascata levou os 63 lançamentos delas, como desenhado.
+  Nota: continuam no projeto antigo (dev) até à limpeza; se um dia fizerem falta para
+  apresentações comerciais, o seed `scripts/seed_demo_esg.mjs` recria-as.
 - [x] **Relatório fiscal alemão EÜR exportável do Livro de Caixa**
   *Reunião 20/08/2026 · Resp.: Vinícius*
   ✔ Página "Relatório EÜR" (menu Contabilidade, só empresas DE, como o Rücklagen): cartões
