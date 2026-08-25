@@ -41,23 +41,15 @@
   A chave está fora do Git mas é copiada para a nuvem da Microsoft a cada gravação. Mover o
   projeto para fora do sincronizador, ou excluir o ficheiro da sincronização.
 
-- [ ] **R1 · Migrar a produção para um projeto Supabase em Frankfurt (eu-central-1)**
-  *Auditoria 21/08/2026 · Resp.: Vinícius*
-  ✅ Região confirmada a 21/08: **us-west-2 (Oregon, EUA)** — fora da UE, logo o projeto
-  novo em Frankfurt é a **produção** e o atual vira dev. Runbook completo passo a passo em
-  `docs/MIGRACAO_FRANKFURT.md` (~1h de janela; senhas sobrevivem; sessões caem uma vez).
-  Decidir na criação: plano **Pro** (fecha também o R3, backups).
-
-- [ ] **R2 · Fixar as funções serverless da Vercel em Frankfurt (`fra1`)**
-  *Auditoria 21/08/2026 · Resp.: Vinícius*
-  Uma linha no `vercel.json` (`"regions": ["fra1"]`) — hoje correm sem região fixada (o 504
-  de 20/08 mostrou gru1/São Paulo). 5 minutos.
+- [ ] **Limpar os dados reais do projeto antigo (us-west-2), agora DEV**
+  *Migração 24/08/2026 · Resp.: Vinícius*
+  Após 1–2 dias de sobreposição estável: apagar utilizadores reais e dados no projeto
+  antigo, manter/criar contas de teste. Dados reais não ficam a viver nos EUA.
 
 - [ ] **R3 · Confirmar/ativar backups automáticos no Supabase**
   *Auditoria 21/08/2026 · Resp.: Lúcia + Vinícius*
-  Painel → Database → Backups. Plano gratuito não tem backups — seria bloqueador para dados
-  reais. Avaliar Pro (diários, 7 dias, na região do projeto) e o extra PITR. Decisão de
-  custo, não de código.
+  ⚠️ O projeto novo (LC Office EU) está no plano FREE — sem backups automáticos. É agora a
+  produção com dados reais: o upgrade Pro passou de recomendação a urgência.
 
 - [ ] **R4 · Exportação completa dos dados de um cliente (art. 20 — portabilidade)**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
@@ -384,6 +376,17 @@
 ## Concluídos
 
 ### Cybersecurity e Compliance
+- [x] **R1 · Produção migrada para Frankfurt (eu-central-1)** — 24/08: projeto "LC Office
+  (EU)" criado, schema via SETUP_COMPLETO, 14 utilizadores com hashes de senha (via SQL
+  Editors, excluindo colunas geradas), 17 tabelas conferidas (154 cash_entries),
+  company_settings 6/6, storage vazio. Env vars trocadas na Vercel, login confirmado.
+  O projeto us-west-2 passa a DEV (o .env.local já aponta para ele).
+  ⚠️ Pendente: limpar os dados reais do projeto antigo após 1–2 dias de sobreposição.
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+- [x] **R2 · Funções Vercel fixadas em Frankfurt (fra1)** — verificado em produção no
+  cabeçalho do pedido: `x-vercel-id: gru1::fra1::…` (borda no POP do utilizador, execução
+  em Frankfurt).
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
 - [x] **Confirmar a região do projeto Supabase** — confirmada a 21/08: `us-west-2`
   (Oregon, EUA), fora da UE. Define o caminho do R1: migração para Frankfurt com o projeto
   atual a virar dev. Runbook em `docs/MIGRACAO_FRANKFURT.md`.
