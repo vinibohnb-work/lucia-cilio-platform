@@ -17,6 +17,37 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 /* Scroll horizontal suave para tabelas largas no telemóvel */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+/* ── Barras de scroll ───────────────────────────────────────────────────────
+   A barra nativa do Windows (cinzenta, com setas) destoava da plataforma.
+   Aqui fica fina, sem setas e no dourado da casa. Firefox usa scrollbar-color;
+   o resto usa ::-webkit-scrollbar. Em ecrãs táteis não se mexe (barra flutua). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 168, 76, .5) transparent;
+}
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: rgba(201, 168, 76, .45);
+  border: 2px solid transparent;      /* afina o polegar sem encostar às bordas */
+  background-clip: padding-box;
+  border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover { background-color: rgba(201, 168, 76, .72); }
+::-webkit-scrollbar-thumb:active { background-color: var(--gold); }
+/* Botões de seta do Windows — a barra fica só com o polegar */
+::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+
+/* Tema escuro: o mesmo dourado precisa de mais presença sobre fundo escuro */
+:root[data-theme='night'] * { scrollbar-color: rgba(201, 168, 76, .6) transparent; }
+:root[data-theme='night'] ::-webkit-scrollbar-thumb { background-color: rgba(201, 168, 76, .55); }
+:root[data-theme='night'] ::-webkit-scrollbar-thumb:hover { background-color: rgba(201, 168, 76, .8); }
+
+@media (pointer: coarse) {
+  ::-webkit-scrollbar { width: 0; height: 0; }
+}
+
 /* Evita o zoom automático do iOS ao focar campos (precisa de >=16px) */
 @media (max-width: 768px) {
   input, select, textarea { font-size: 16px !important; }

@@ -392,6 +392,12 @@
   - **03** "Ignorar" agora parece clicável (ghost com borda); **04** códigos Zeile/Pos a 12px
     sans com mais contraste; **06** chip "Ativa" passou de amarelo-aviso a verde-ok, Pausada
     neutra; **07** ficha ganhou o eyebrow padrão ("Gestão · Consultoria") como os outros ecrãs.
+  - **Barras de scroll** (25/08, pedido do Vinícius sobre a barra da sidebar) — a barra
+    nativa do Windows (cinzenta, larga, com setas) foi substituída por uma fina de 9px,
+    sem setas, com o polegar no dourado da casa e pista transparente. Vale em toda a
+    plataforma (sidebar, listas da Conciliação, sino fiscal, modais); o tema escuro leva
+    o dourado com mais presença e no telemóvel a barra desaparece (é flutuante do sistema).
+    O `data-theme` passou a ser escrito no `<html>` para o CSS distinguir os temas.
   - **Falsos positivos verificados** (a revisão foi feita sobre o HTML estático, não sobre a
     app): drawer mobile com ☰ já existe; KPIs já empilham 2×2 no telemóvel; tema escuro já
     tem pos/neg/linhas de gráfico próprios; funil do CRM já é fluido com scroll no mobile;
