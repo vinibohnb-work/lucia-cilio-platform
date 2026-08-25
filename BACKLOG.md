@@ -46,11 +46,6 @@
   Após 1–2 dias de sobreposição estável: apagar utilizadores reais e dados no projeto
   antigo, manter/criar contas de teste. Dados reais não ficam a viver nos EUA.
 
-- [ ] **R3 · Confirmar/ativar backups automáticos no Supabase**
-  *Auditoria 21/08/2026 · Resp.: Lúcia + Vinícius*
-  ⚠️ O projeto novo (LC Office EU) está no plano FREE — sem backups automáticos. É agora a
-  produção com dados reais: o upgrade Pro passou de recomendação a urgência.
-
 - [ ] **R4 · Exportação completa dos dados de um cliente (art. 20 — portabilidade)**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
   Endpoint admin que junta as 15 tabelas + lista de documentos num ZIP/JSON. Hoje só o Livro
@@ -372,6 +367,12 @@
 ## Concluídos
 
 ### Cybersecurity e Compliance
+- [x] **R3 · Backups automáticos ativos — upgrade Pro na organização da produção** — 25/08.
+  O projeto dev foi transferido para uma organização gratuita à parte, por isso o Pro paga
+  só a produção (sem os ~$10 do segundo projeto). Backups diários com 7 dias de retenção,
+  na região do projeto (Frankfurt). Confirmar em Database → Backups que o primeiro aparece
+  nas próximas 24h. O backup lógico local (4-backup-logico.mjs) mantém-se como camada extra.
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
 - [x] **R1 · Produção migrada para Frankfurt (eu-central-1)** — 24/08: projeto "LC Office
   (EU)" criado, schema via SETUP_COMPLETO, 14 utilizadores com hashes de senha (via SQL
   Editors, excluindo colunas geradas), 17 tabelas conferidas (154 cash_entries),
