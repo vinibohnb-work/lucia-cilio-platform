@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -9,11 +11,12 @@ import { overheadPerHour, computePlanTotals } from '../../lib/planCalc'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 
-const fmt = (n) => (Number(n) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const EMPTY_ROW = { name: '', durationMin: '', price: '', qty: '', material: '' }
 
 export default function PlaneamentoMensal() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => (Number(n) || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
@@ -126,7 +129,7 @@ export default function PlaneamentoMensal() {
   const headCell = { fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.6px', textTransform: 'uppercase' }
   const numCell = { fontSize: '12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontVariantNumeric: 'tabular-nums' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>

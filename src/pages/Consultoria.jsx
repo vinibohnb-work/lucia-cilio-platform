@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../components/EsqueletoPagina'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
@@ -53,7 +54,7 @@ export default function Consultoria() {
   const fmtDate = (d) => new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT')
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '780px' }}>

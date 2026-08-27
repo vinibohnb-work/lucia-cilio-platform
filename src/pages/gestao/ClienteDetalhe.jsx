@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useParams, useNavigate } from 'react-router-dom'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -12,7 +14,6 @@ import { isAnswered } from '../../lib/esgKpis'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 import DocsBrowser from '../../components/DocsBrowser'
 
-const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 const KIND_STYLE = {
   note:           { bg: '#f1f5f9', ink: '#475569' },
   meeting:        { bg: '#ede9fe', ink: '#5b21b6' },
@@ -25,6 +26,8 @@ const EMPTY = { kind: 'meeting', title: '', body: '', link_url: '' }
 export default function ClienteDetalhe() {
   const { id } = useParams()
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
@@ -165,7 +168,7 @@ export default function ClienteDetalhe() {
     </div>
   )
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
   if (!client) return (
     <div style={{ padding: '40px' }}>
       <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '13px', padding: 0, marginBottom: '12px' }}>{L.back}</button>

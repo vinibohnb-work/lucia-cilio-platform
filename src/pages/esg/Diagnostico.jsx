@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -225,7 +226,7 @@ export default function Diagnostico() {
     )
   }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '860px' }}>

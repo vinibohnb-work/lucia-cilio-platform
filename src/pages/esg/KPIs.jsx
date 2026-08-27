@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { Link } from 'react-router-dom'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -9,7 +11,6 @@ import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../dat
 import { useEffectiveUserId } from '../../context/ViewAsContext'
 
 const E = '#0a7a3e', S = '#1e60c8', G = '#a9781a'
-const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString('pt-PT', { minimumFractionDigits: d, maximumFractionDigits: d })
 
 // Anel de progresso
 function Ring({ pct, color, track, size = 54, label }) {
@@ -25,6 +26,8 @@ function Ring({ pct, color, track, size = 54, label }) {
 
 export default function KPIs() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString(loc, { minimumFractionDigits: d, maximumFractionDigits: d })
   const { t, night } = useTheme()
   const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
@@ -113,7 +116,7 @@ export default function KPIs() {
     g26: 'Certificações de sustentabilidade', g27: 'Política anticorrupção', g28: 'Política de compliance',
   }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   // Estado vazio: sem diagnóstico não há KPIs (dados sempre ao vivo).
   if (!year) {

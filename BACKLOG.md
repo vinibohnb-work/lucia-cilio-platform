@@ -3,8 +3,8 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 20/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
-> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026
+> **Última sincronização:** 27/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
@@ -91,11 +91,6 @@
   Avaliar uma variante do bloco 1 para negócio em curso.
   *13/08/2026 · Resp.: Vinícius*
 
-- [ ] **Vulnerabilidade alta no `react-router`** — CSRF por `PUT/PATCH/DELETE` em pedidos de
-  documento (`npm audit`). É a única das 7 que está em dependência de execução, não de build.
-  Avaliar a atualização.
-  *13/08/2026 · Resp.: Vinícius*
-
 ### QA de interface — achados de 13/08
 
 > Da auditoria automática + inspeção das 48 capturas (16 ecrãs × 3 tamanhos), em produção com
@@ -118,22 +113,19 @@
   Sem `label for`/`aria-label`, o leitor de ecrã não liga rótulo a campo e tocar no texto não
   foca o campo.
   *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟠 Estado de carregamento do Painel** — apanhado em "A carregar…" com o ecrã vazio e o
-  botão "+ Nova Entrada" já visível, a convidar a agir sobre nada. Sugestão: esqueleto de
-  carregamento e esconder o botão enquanto não há dados.
-  *QA 13/08/2026 · Resp.: Vinícius*
 - [ ] **🟡 Matriz de materialidade no fim da página no telemóvel** — é preciso passar pelos 16
   temas (~9.000 px) para a ver. No computador está fixa à direita. É o resultado da página.
   *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟡 Alvos de toque abaixo de 44×44 px** — 32 ocorrências; o botão "Mostrar" da
-  palavra-passe tem 42×17.
-  *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟡 Campos com fonte < 16px fazem o iPhone ampliar sozinho** — 12 ocorrências,
-  incluindo o login (14px).
-  *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟡 Oito ecrãs sem `<h1>`** — Painel, Livro de Caixa, Obrigações, Precificação,
-  Catálogo, Clientes, Empresa e login começam direto nos controlos. As páginas de ESG e as
-  mais recentes têm cabeçalho — a inconsistência é entre as antigas e as novas.
+- [ ] **🟡 Alvos de toque abaixo de 44×44 px** — os piores foram corrigidos a 27/08 (o
+  "Mostrar" da palavra-passe passou de 42×17 para 52×38 no login e na definição de senha; os
+  botões de linha dos Acessos para 34×34). Falta a varredura das restantes ocorrências.
+  *QA 13/08/2026 · Parcial 27/08 · Resp.: Vinícius*
+- [ ] **🟡 Sete ecrãs sem `<h1>`** — Painel, Livro de Caixa, Obrigações, Precificação,
+  Catálogo, Clientes e Empresa começam direto nos controlos. O login já foi resolvido a 27/08
+  (o nome da marca passou a `<h1>`, sem alteração visual).
+  **Não é ajuste rápido:** estes sete ecrãs não têm título nenhum para converter — é preciso
+  *acrescentar* o cabeçalho padrão (eyebrow + título + subtítulo), como o das páginas novas.
+  Muda o topo de sete ecrãs principais, por isso deve ser visto antes com o Vinícius.
   *QA 13/08/2026 · Resp.: Vinícius*
 - [ ] **🟡 Tabela do Planeamento Mensal exige rolagem lateral no telemóvel** — largura mínima
   de 1120px; veem-se 3 de 12 colunas e os cabeçalhos truncam. Sugestão: cartão por linha no
@@ -146,14 +138,7 @@
 
 ### Internacionalização
 
-- [ ] **Formatação de números não acompanha a língua da interface**
-  *QA 13/08/2026 · Resp.: Vinícius*
-  **13 ficheiros** fixam `toLocaleString('pt-PT')`, por isso um utilizador com a interface em
-  alemão ou inglês vê números à portuguesa (`11 400,00` em vez de `11.400,00`). O módulo
-  Rücklagen é a exceção — usa `de-DE` corretamente, o que torna a plataforma inconsistente
-  consigo própria.
-  **Nota:** a diferença entre `7200,00` e `11 400,00` **não é bug** — é regra do português
-  europeu (números de 4 dígitos não levam separador). O problema é outro: a língua fixa.
+*(secção vazia — ver Concluídos)*
 
 ### CRM e prospeção
 
@@ -163,6 +148,20 @@
   *"todos estes dados, isto é CRM, não é? São leads"*. O campo `source` já está pronto a
   recebê-los.
   ⚠️ **Bloqueado:** falta saber que campos os formulários vão enviar — a alinhar com o Filipe.
+  ↳ A 27/08 ficou decidido reconstruir o próprio formulário dentro da plataforma (item abaixo),
+  o que resolve a dependência para esta origem de leads.
+
+- [ ] **Recriar o formulário de qualificação (hoje no JotForm) dentro da plataforma**
+  *Reunião 27/08/2026 · Resp.: Vinícius*
+  O JotForm sai de cena: o formulário passa a ser servido pela plataforma e serve de **filtro
+  antes de o lead entrar no CRM** — só quem qualifica é criado como lead. Os campos já estão
+  mapeados no Bloco 0 da consultoria (migração 031), o que aqui falta é a página pública, a
+  gravação e a regra de triagem.
+
+- [ ] **Botão "adicionar ao CRM" nos contactos gerados nas consultorias**
+  *Reunião 27/08/2026 · Resp.: Vinícius*
+  Hoje a consultoria regista o contacto sem criar conta e sem tocar no CRM (decisão de 13/08).
+  A Lúcia quer poder promover esse contacto a lead com um clique, sem reescrever os dados.
 
 ### Onboarding e primeiro acesso
 
@@ -205,10 +204,12 @@
   *Reunião 30/07/2026 · Resp.: Vinícius*
   Está hoje focada em documentos; ficou de ser enviada para ela validar.
 
-- [ ] **Permitir que o cliente envie documentos pela aplicação**
-  *Reunião 30/07/2026 · Resp.: Vinícius*
+- [ ] **Permitir que o cliente envie documentos pela aplicação, organizados por mês**
+  *Reunião 30/07/2026 · Reforçado a 27/08 · Resp.: Vinícius*
   Hoje o cliente só consegue **ver e descarregar** (`DocsBrowser readOnly`); o envio é só do
-  lado do admin.
+  lado do admin. A 27/08 ficou definido o formato: o envio vive **na área da Empresa** e os
+  ficheiros ficam **arrumados por mês**, que é como a Lúcia os procura ao fechar as contas.
+  ⚠️ **Depende de:** os 3–4 documentos de teste que a Lúcia vai enviar para validar o fluxo.
 
 - [ ] **Guião de reunião na ficha do cliente**
   *Reunião 23/07/2026 · Resp.: Vinícius*
@@ -230,6 +231,13 @@
 
 ### Contabilidade
 
+- [ ] **Guardar o ficheiro de extrato importado na conciliação**
+  *Reunião 27/08/2026 · Resp.: Vinícius*
+  A importação lê o CSV/Excel, cria os movimentos e descarta o ficheiro. A Lúcia quer que fique
+  arquivado (Storage), para poder voltar ao original quando uma conciliação levantar dúvidas.
+  ↳ Cruza com o ⚡1 da secção Cybersecurity: o que vai para o Storage tem de sair na eliminação
+  do cliente.
+
 - [ ] **Lançamento dividido (split) no Livro de Caixa**
   *Imagens de referência de 20/08 · Resp.: Vinícius*
   A ferramenta anterior da Lúcia permite dividir um lançamento (ex.: 590 € = 315 € + 275 €,
@@ -239,10 +247,6 @@
 - [ ] **Campos de anotações amplas no Planeamento e nas Previsões**
   *Reunião 20/08/2026 · Resp.: Vinícius*
   Notas internas abaixo de cada item, para ela registar contexto junto dos números.
-
-- [ ] **Renomear "projeções" para "previsões" onde aplicável**
-  *Reunião 20/08/2026 · Resp.: Vinícius*
-  Inclui o espaço para anotações (mesmo pedido do item acima — tratar juntos).
 
 - [ ] **Indicador de break-even no somatório do Planeamento Mensal**
   *Reunião 20/08/2026 · Resp.: Vinícius*
@@ -270,6 +274,14 @@
   ⚠️ **Depende de:** a Lúcia confirmar as regras em Portugal.
 
 ### Gestão interna
+
+- [ ] **Hospedar a plataforma no domínio próprio da Lúcia**
+  *Reunião 27/08/2026 · Resp.: Vinícius*
+  Sair do domínio da Vercel e servir a plataforma a partir do domínio do site dela — é o que
+  dá ao produto o ar de casa própria perante os clientes alemães. Do nosso lado é configurar o
+  domínio na Vercel e os registos DNS.
+  ⚠️ **Bloqueado:** a Lúcia tem de obter, com a empresa alemã que fez o site, o acesso às
+  configurações de domínio.
 
 - [ ] **Dashboard macro da gestão**
   *Reunião 23/07/2026 · Resp.: Vinícius*
@@ -311,10 +323,21 @@
   *Reunião 23/07/2026 · Resp.: Vinícius*
   A API mudou recentemente; validar antes de prometer prazo. Inclui a importação dos ~250
   contactos existentes, com triagem manual pela Lúcia, e a mensagem inicial de abordagem.
+  ⚠️ **Depende de:** a Lúcia vai apurar com o Filipe como fazer chegar o formulário/mensagem
+  aos leads do Instagram (27/08).
 
 ---
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
+
+- **Reunião de 27/08:** os contactos das consultorias passam a alimentar o CRM automaticamente,
+  e o **formulário de qualificação funciona como filtro** — o lead só entra no CRM depois de
+  qualificar. O formulário migra do JotForm para a plataforma, que por sua vez passa a viver no
+  **domínio próprio** da Lúcia. O **modelo de suporte recorrente** e as melhorias posteriores ao
+  período incluído ficam para definir **em novembro, presencialmente** (viagem ao Brasil). Está
+  em aberto **adaptar a plataforma ao Brasil** com um contabilista parceiro certificado, e um
+  **novo ciclo de desenvolvimento a partir de março** (3 ou 6 meses). O Wesley (utilizador
+  alemão) poderá entrar numa reunião futura para dar o seu retorno.
 
 - **Reunião de 20/08:** performance/carga **não é preocupação agora** — ajustar módulos
   específicos só se surgirem problemas. Relatórios podem sair em **PDF ou com acesso limitado
@@ -366,12 +389,63 @@
   países** — liga-se ao `docs/SEGURANCA_DADOS.md` e à decisão de backup.
 - ⚠️ **(13/08)** Custos adicionais com servidor seguro podem afetar a continuidade.
 - ⚠️ **(13/08)** Excesso de ideias sem foco pode atrasar a entrega e a monetização.
+- ⚠️ **(27/08)** Dependência de terceiros para avançar: a empresa alemã do site (acessos ao
+  domínio) e o Filipe (integrações e formulários). Dois dos itens novos ficam bloqueados por isto.
+- ⚠️ **(27/08)** A adaptação fiscal ao Brasil depende de encontrar um contabilista certificado
+  parceiro — sem isso, não há como validar as regras.
+- ⚠️ **(27/08)** Dispersão de ferramentas e leads por vários canais pode atrasar a consolidação
+  no CRM.
+- ⚠️ **(27/08)** O período de suporte incluído pode terminar sem modelo de recorrência definido.
 - ⚠️ **Não há ambiente de staging** — o `.env.local` aponta para o Supabase de produção. Testar
   escrita significa escrever na base real dos clientes; o QA de 13/08 correu só em leitura.
 
 ---
 
 ## Concluídos
+
+### Ajustes rápidos — 27/08
+
+- [x] **Formatação de números segue a língua da interface**
+  *QA 13/08/2026 · Resp.: Vinícius*
+  Criado `src/lib/formato.js` com o `localeDe(lang)` como fonte única. Os 16 locales fixos
+  espalhados por 14 ficheiros foram migrados: as funções `fmt` que viviam no topo do módulo
+  (e por isso não alcançavam a língua) passaram para dentro do componente, sem tocar em
+  nenhum sítio onde são chamadas. O Rücklagen deixou de ser a exceção em `de-DE`. Resolve
+  também o T6 da revisão de design.
+
+- [x] **Vulnerabilidade alta no `react-router`**
+  *13/08/2026 · Resp.: Vinícius*
+  `react-router-dom` 7.15 → **7.18.2**, que fecha o CSRF por `PUT/PATCH/DELETE` e o redirect
+  aberto por barra invertida. Aproveitou-se para correr `npm audit fix` nas restantes (todas
+  de build): **`npm audit` passou de 7 para 0 vulnerabilidades**.
+
+- [x] **🟠 Estado de carregamento das páginas**
+  *QA 13/08/2026 · Resp.: Vinícius*
+  As 17 páginas mostravam a mesma linha solta de "A carregar…" num ecrã vazio. Passaram a
+  usar o `EsqueletoPagina`, que desenha a forma do que vem a seguir (cabeçalho, fila de
+  cartões, lista) com um pulsar discreto — e que pára para quem pediu menos movimento.
+
+- [x] **🟡 Campos com fonte < 16px faziam o iPhone ampliar sozinho**
+  *QA 13/08/2026 · Resp.: Vinícius*
+  Já estava resolvido no `index.css` (regra `input, select, textarea { font-size: 16px }`
+  abaixo dos 768px) — verificado a 27/08 e fechado.
+
+- [x] **Renomear "projeções" para "previsões"**
+  *Reunião 20/08/2026 · Resp.: Vinícius*
+  Trocados os três rótulos em português (bloco 4 da consultoria, secção do relatório e o
+  índice do relatório). As chaves de dados (`projecao`, `projecoes`) ficaram como estavam,
+  porque estão gravadas na base — mudá-las obrigaria a migração sem ganho nenhum.
+  ↳ O espaço para anotações, que vinha no mesmo pedido, continua em aberto na Contabilidade.
+
+- [x] **Alvos de toque: os piores casos**
+  *QA 13/08/2026 · Resp.: Vinícius*
+  "Mostrar/Ocultar" da palavra-passe de 42×17 para 52×38 (login e definição de senha) e os
+  botões de linha dos Acessos para 34×34.
+
+- [x] **Login com `<h1>`**
+  *QA 13/08/2026 · Resp.: Vinícius*
+  O nome da marca passou a `<h1>` — mesma aparência, mas deixa de ser um ecrã sem cabeçalho
+  para quem usa leitor de ecrã.
 
 ### Revisão de design · 2ª iteração — 25/08
 - [x] **Correções da revisão de design feita no Claude Design (PDF de 25/08, 27 achados)** —

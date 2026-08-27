@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -112,7 +114,7 @@ export default function RelatoriosESG() {
     setTimeout(() => setMsg(''), 2600)
   }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
   const prevYear = years.find(y => y < year) || null
@@ -125,7 +127,7 @@ export default function RelatoriosESG() {
         .sort((a, b) => (Number(b.e.stakeholder) + Number(b.e.company)) - (Number(a.e.stakeholder) + Number(a.e.company)))
     : []
 
-  const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString('pt-PT', { minimumFractionDigits: d, maximumFractionDigits: d })
+  const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString(localeDe(lang), { minimumFractionDigits: d, maximumFractionDigits: d })
   const kpiTable = [
     [L.kpiRows.co2, k.env.co2Total, kPrev?.env.co2Total, 1],
     [L.kpiRows.renew, k.env.elecRenewPct, kPrev?.env.elecRenewPct, 0],

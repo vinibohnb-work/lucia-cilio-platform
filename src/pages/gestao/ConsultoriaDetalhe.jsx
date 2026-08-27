@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -148,7 +149,7 @@ export default function ConsultoriaDetalhe() {
   const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: t.fontBody }
   const lblStyle = { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
   if (!c) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.naoEncontrada}</div>
 
   const b = BLOCOS.find(x => x.n === blocoAtivo)

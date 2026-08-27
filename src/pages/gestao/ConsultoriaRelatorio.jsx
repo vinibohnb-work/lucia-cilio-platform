@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -17,7 +18,7 @@ const SECCOES = [
   { key: 'mercado',    pt: 'Mercado, clientes e concorrência',       de: 'Markt, Kunden, Wettbewerb',      en: 'Market, customers and competition' },
   { key: 'estrategia', pt: 'SWOT e estratégias',                     de: 'SWOT und Strategien',            en: 'SWOT and strategies' },
   { key: 'capital',    pt: 'Necessidade de capital e financiamento', de: 'Kapitalbedarf und Finanzierung', en: 'Capital needs and financing' },
-  { key: 'projecoes',  pt: 'Projeções e viabilidade',                de: 'Vorschau und Tragfähigkeit',     en: 'Projections and viability' },
+  { key: 'projecoes',  pt: 'Previsões e viabilidade',                de: 'Vorschau und Tragfähigkeit',     en: 'Projections and viability' },
 ]
 
 export default function ConsultoriaRelatorio() {
@@ -135,7 +136,7 @@ export default function ConsultoriaRelatorio() {
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
   if (!c) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.naoEncontrada}</div>
 
   return (

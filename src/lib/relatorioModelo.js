@@ -47,7 +47,7 @@ const T = {
     ideia: 'A ideia de negócio e a pessoa', mercado: 'Mercado, clientes e concorrência',
     swot: 'Análise SWOT', pesos: 'Peso dos fatores', tows: 'Matriz TOWS · estratégias',
     prioridades: 'Por onde começar', capital: 'Necessidade de capital e financiamento',
-    projecoes: 'Projeções e viabilidade', aberto: 'Em aberto',
+    projecoes: 'Previsões e viabilidade', aberto: 'Em aberto',
     porResponder: 'Por responder na ficha', notaInterna: 'Nota interna',
     ajuda: 'Ajuda', trava: 'Trava', interno: 'Interno', externo: 'Externo',
     forcas: 'Forças', fraquezas: 'Fraquezas', oportunidades: 'Oportunidades', ameacas: 'Ameaças',

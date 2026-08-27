@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -9,7 +11,6 @@ import { FlagDE } from '../../components/Flag'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 
-const fmt2 = (n) => `${(Number(n) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) ? n : 0 }
 
 // Anel de progresso (donut) para a coluna Übersicht
@@ -27,6 +28,8 @@ function Ring({ pct, color, track }) {
 
 export default function RucklagenSteuern() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt2 = (n) => `${(Number(n) || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
   const { t, night } = useTheme()
   const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
@@ -259,7 +262,7 @@ export default function RucklagenSteuern() {
     </div>
   )
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   const gridMain = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: '22px', alignItems: 'start' }
 

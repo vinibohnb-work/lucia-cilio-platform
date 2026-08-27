@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import EsqueletoPagina from '../components/EsqueletoPagina'
 import { useLang } from '../context/LangContext'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useTheme } from '../context/ThemeContext'
@@ -105,7 +106,7 @@ export default function Empresa() {
   const card = { background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '22px 24px' }
   const grid2 = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   return (
     <div style={{ width: '100%', maxWidth: '760px' }}>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings } from '../../lib/companySettings'
@@ -11,7 +12,6 @@ const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
-const fmt = (n) => isNaN(n) ? '0,00' : n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const p   = (v)  => parseFloat(v) || 0
 
 // ── Tipo: Evento / Catering ────────────────────────────────────────────────
@@ -552,6 +552,8 @@ const TYPES = {
 
 export default function Precificacao() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => isNaN(n) ? '0,00' : n.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const eid = useEffectiveUserId()

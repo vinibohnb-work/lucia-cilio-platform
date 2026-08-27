@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
@@ -13,7 +15,6 @@ const BG = '#f2f6f3'
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const daysInMonth = (y, m) => new Date(y, m, 0).getDate()
 
 function isDue(periodicity, monthNum) {
@@ -36,6 +37,8 @@ const EMPTY = { description: '', category: '', amount: '', periodicity: 'monthly
 
 export default function DespesasRecorrentes() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => (Number(n)||0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
@@ -194,7 +197,7 @@ export default function DespesasRecorrentes() {
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   return (
     <div style={{ width: '100%', maxWidth: '1000px' }}>

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useSearchParams, Link } from 'react-router-dom'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -135,13 +137,13 @@ export default function ProjetosESG() {
   }
 
   const payback = (inv, sav) => (Number(inv) > 0 && Number(sav) > 0 ? Number(inv) / Number(sav) : null)
-  const fmtEur = (v) => v == null ? '—' : `€ ${Number(v).toLocaleString('pt-PT')}`
+  const fmtEur = (v) => v == null ? '—' : `€ ${Number(v).toLocaleString(localeDe(lang))}`
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' }
   const labelStyle = { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   const totInvest = projects.reduce((s, p) => s + (Number(p.investment) || 0), 0)
   const totSaving = projects.reduce((s, p) => s + (Number(p.annual_saving) || 0), 0)

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -8,7 +10,6 @@ import { listUsers } from '../../lib/adminApi'
 // Financeiro da Gestão: contratos/mensalidades dos clientes da Lúcia e
 // confirmação de recebimentos por mês (padrão igual às Despesas Recorrentes).
 
-const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const toYm = (p) => { const [y, m] = String(p).split('-').map(Number); return y * 12 + (m - 1) }
 
 // O contrato é devido no período? (âncora = start_month)
@@ -30,6 +31,8 @@ const EMPTY = { client_name: '', user_id: '', service: '', amount: '', periodici
 
 export default function Financeiro() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   const { t } = useTheme()
   const isMobile = useIsMobile()
 
@@ -157,7 +160,7 @@ export default function Financeiro() {
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const inputStyle = { padding: '8px 10px', borderRadius: '8px', border: `1px solid ${t.inputBorder}`, fontSize: '13px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '980px' }}>

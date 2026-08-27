@@ -220,7 +220,7 @@ export default function AdminHome() {
               <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : isPending ? <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span> : '—'}</div>
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                 {!isSelf && (
-                  <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} aria-label={L.resend} style={{ flex: 'none', width: '30px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.chipBg, border: `1px solid ${t.accent}`, borderRadius: '7px', cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accentText, padding: 0 }}>
+                  <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} aria-label={L.resend} style={{ flex: 'none', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.chipBg, border: `1px solid ${t.accent}`, borderRadius: '7px', cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accentText, padding: 0 }}>
                     {busyId === u.id ? '…' : (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                         <circle cx="8" cy="15" r="4" /><path d="m11 12 8-8 3 3-3 3-2-2-3 3" />
@@ -229,7 +229,7 @@ export default function AdminHome() {
                   </button>
                 )}
                 <button onClick={() => openEdit(u)} style={{ padding: '5px 11px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', color: t.text }}>{L.edit}</button>
-                <button onClick={() => remove(u)} disabled={isSelf || busyId === u.id} style={{ padding: '5px 11px', background: isSelf ? t.segBg : t.dueLate.bg, border: 'none', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: isSelf ? 'not-allowed' : 'pointer', color: isSelf ? t.subtle : t.dueLate.ink }}>{busyId === u.id ? '…' : L.del}</button>
+                <button onClick={() => remove(u)} disabled={isSelf || busyId === u.id} style={{ padding: '0 12px', minHeight: '34px', background: isSelf ? t.segBg : t.dueLate.bg, border: 'none', borderRadius: '7px', fontSize: '11.5px', fontWeight: 600, cursor: isSelf ? 'not-allowed' : 'pointer', color: isSelf ? t.subtle : t.dueLate.ink }}>{busyId === u.id ? '…' : L.del}</button>
               </div>
             </div>
           )

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useNavigate } from 'react-router-dom'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
@@ -47,11 +49,12 @@ function AvisoKpi({ t, texto, cta, onClick }) {
 }
 const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const fmt = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-const fmt2 = (n) => `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 export default function Dashboard() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => `€ ${(Number(n)||0).toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  const fmt2 = (n) => `€ ${(Number(n)||0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   const { t, night } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const GREEN = t.pos, RED = t.neg
@@ -243,7 +246,7 @@ export default function Dashboard() {
     product: 'Produto', service: 'Serviço',
   }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   const yearNet = revenue - (fixedTotal + varC)
   const netLabel = isQuarter ? `${lang === 'de' ? 'Ergebnis' : lang === 'en' ? 'Result' : 'Resultado'} ${periodLabel}` : L.yearNet

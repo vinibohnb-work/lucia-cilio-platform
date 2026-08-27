@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useNavigate } from 'react-router-dom'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -228,7 +230,7 @@ export default function Materialidade() {
     )
   }
 
-  if (loading) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>
+  if (loading) return <EsqueletoPagina />
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '1020px' }}>
@@ -352,8 +354,8 @@ export default function Materialidade() {
                   {hasFin && finOpen !== topic.key && (
                     <div style={{ fontSize: '11px', color: t.text, marginTop: '6px', lineHeight: 1.5, background: t.softCardBg, borderRadius: '8px', padding: '7px 10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                       {fin.impact && <span>{L.finImpact.split(' (')[0]}: <strong>{fin.impact}/5</strong></span>}
-                      {fin.investment && <span>{L.invest.split(' (')[0]}: <strong>€ {Number(fin.investment).toLocaleString('pt-PT')}</strong></span>}
-                      {fin.saving && <span>{L.saving.split('/')[0]}: <strong>€ {Number(fin.saving).toLocaleString('pt-PT')}/{L.yrs === 'anos' ? 'ano' : L.yrs === 'Jahre' ? 'Jahr' : 'yr'}</strong></span>}
+                      {fin.investment && <span>{L.invest.split(' (')[0]}: <strong>€ {Number(fin.investment).toLocaleString(localeDe(lang))}</strong></span>}
+                      {fin.saving && <span>{L.saving.split('/')[0]}: <strong>€ {Number(fin.saving).toLocaleString(localeDe(lang))}/{L.yrs === 'anos' ? 'ano' : L.yrs === 'Jahre' ? 'Jahr' : 'yr'}</strong></span>}
                       {pb != null && <span style={{ color: '#0a7a3e', fontWeight: 700 }}>{L.payback}: {pb.toFixed(1)} {L.yrs}</span>}
                       {fin.note && <span style={{ color: t.textMuted, width: '100%' }}>→ {fin.note}</span>}
                     </div>

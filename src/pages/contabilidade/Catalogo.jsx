@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -9,7 +10,6 @@ const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
-const fmt = (n) => n == null || n === '' ? '—' : `€ ${(Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 const KIND_STYLE = {
   product: { bg: '#ede9fe', color: '#5b21b6' },
@@ -20,6 +20,8 @@ const EMPTY = { name: '', kind: 'service', price: '' }
 
 export default function Catalogo() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => n == null || n === '' ? '—' : `€ ${(Number(n)||0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()

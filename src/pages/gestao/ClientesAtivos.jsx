@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -10,10 +11,11 @@ import { ESG_QUESTIONS, ESG_TOTAL } from '../../data/esgQuestions'
 import { isAnswered } from '../../lib/esgKpis'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 
-const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 
 export default function ClientesAtivos() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()

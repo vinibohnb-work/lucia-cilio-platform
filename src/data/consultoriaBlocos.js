@@ -126,7 +126,7 @@ export const BLOCOS = [
   },
   {
     n: 4, key: 'projecoes',
-    pt: 'Projeções', de: 'Vorschau', en: 'Projections',
+    pt: 'Previsões', de: 'Vorschau', en: 'Projections',
     subPt: 'Sessão 4 · faturação, custos, lucro e liquidez',
     subDe: 'Sitzung 4 · Umsatz, Kosten, Gewinn und Liquidität',
     subEn: 'Session 4 · revenue, costs, profit and liquidity',

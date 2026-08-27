@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { supabase } from '../../lib/supabase'
 import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
@@ -26,7 +27,6 @@ const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','
 const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-const fmt = (n) => (Number(n)||0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 function exportCSV(entries, lang) {
   const header = lang === 'de'
@@ -55,6 +55,8 @@ const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', 
 
 export default function LivroCaixa() {
   const { lang } = useLang()
+  const loc = localeDe(lang)
+  const fmt = (n) => (Number(n)||0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
