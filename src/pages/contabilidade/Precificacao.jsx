@@ -8,6 +8,11 @@ import { computeTreatment } from '../../lib/treatmentCalc'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 
+// Formatador partilhado: as quatro calculadoras vivem fora do componente
+// principal, por isso cada uma cria o seu a partir da lingua que recebe.
+const criarFmt = (lang) => (n) => isNaN(n) ? '0,00'
+  : n.toLocaleString(localeDe(lang), { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
@@ -16,6 +21,7 @@ const p   = (v)  => parseFloat(v) || 0
 
 // ── Tipo: Evento / Catering ────────────────────────────────────────────────
 function EventoCalculator({ lang, irDefault }) {
+  const fmt = criarFmt(lang)
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
   const { t } = useTheme()
@@ -196,6 +202,7 @@ function EventoCalculator({ lang, irDefault }) {
 
 // ── Tipo: Serviço por Hora ─────────────────────────────────────────────────
 function ServicoCalculator({ lang, irDefault }) {
+  const fmt = criarFmt(lang)
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
   const { t } = useTheme()
@@ -324,6 +331,7 @@ function ServicoCalculator({ lang, irDefault }) {
 
 // ── Tipo: Produto / Revenda (MB Standard) ─────────────────────────────────
 function ProdutoCalculator({ lang, irDefault }) {
+  const fmt = criarFmt(lang)
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
   const { t } = useTheme()
@@ -421,6 +429,7 @@ function ProdutoCalculator({ lang, irDefault }) {
 
 // ── Tipo: Tratamento (Preiskalkulation pro Behandlung — modelo da Célia) ──
 function TratamentoCalculator({ lang, irDefault, settings }) {
+  const fmt = criarFmt(lang)
   const isDE = lang === 'de'
   const isMobile = useIsMobile()
   const { t } = useTheme()
@@ -552,8 +561,7 @@ const TYPES = {
 
 export default function Precificacao() {
   const { lang } = useLang()
-  const loc = localeDe(lang)
-  const fmt = (n) => isNaN(n) ? '0,00' : n.toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const fmt = criarFmt(lang)
   const { t } = useTheme()
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const eid = useEffectiveUserId()
