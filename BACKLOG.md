@@ -3,8 +3,8 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 09/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
-> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026
+> **Última sincronização:** 10/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
@@ -15,6 +15,47 @@
 ---
 
 ## Itens de desenvolvimento
+
+### Estrutura de serviços (prioridade da reunião de 10/09)
+
+> *"Vinícius monta primeira versão da aba de serviços e onboarding básico."* — o próximo
+> passo definido na reunião. A ideia estruturante: **separar a gestão interna dos serviços**.
+> A gestão (clientes ativos, CRM, marketing, acessos) é como a Lúcia trabalha; os serviços
+> (consultorias, contabilidade, ESG) são o que ela vende.
+
+- [ ] **Primeira versão da aba de Serviços**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Separar, na navegação, a **gestão interna** dos **serviços** (consultorias, contabilidade,
+  ESG). Hoje vivem misturados na secção Gestão, o que já se nota com a entrada dos
+  Diagnósticos. É o primeiro passo do próximo ciclo.
+
+- [ ] **Estrutura básica de onboarding e comunicação com o cliente**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Todos os clientes passam a ter acesso à plataforma como **canal de comunicação**: contrato,
+  documentos, notificações. O ecrã mostra **situação atual, próxima obrigação e próximo
+  pagamento** — o essencial que o cliente pergunta por WhatsApp.
+  ↳ **Prioridade dentro do item:** já há um cliente à espera de informação sobre a declaração
+  de IVA — a Lúcia pediu para começar por aí.
+  ↳ Cruza com o item de onboarding de 06/08 (pedir país e dados da empresa à entrada) —
+  tratar em conjunto, é o mesmo fluxo.
+
+- [ ] **Consultoria de organização administrativa — estrutura e formulário**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Serviço novo, **gratuito no arranque**, liderado pela Letícia. Precisa do mesmo tratamento
+  que a consultoria da IHK: blocos, formulário e relatório.
+  ⚠️ **Depende de:** o conceito do serviço, que a Letícia vai desenhar com a Lúcia.
+
+- [ ] **Consultoria ESG por fases**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Dar à ESG a mesma espinha das outras consultorias — materialidade, diagnóstico, KPIs e
+  relatório como fases de um percurso, com **visualização própria mais elaborada**. Os quatro
+  módulos já existem soltos; falta o fio que os liga.
+
+- [ ] **Relatório fiscal em duas versões: detalhada e resumida**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Cada relatório mantém **uma língua só** (decisão da reunião). O EÜR alemão já existe; falta
+  o equivalente português e o corte entre as duas versões.
+  ⚠️ **Depende de:** a Lúcia investigar o formato e a apresentação exigidos em Portugal.
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
 
@@ -48,6 +89,11 @@
   do Supabase: se estiver suspenso, ou se retoma para correr o script, ou se **elimina o
   projeto inteiro** — que resolve o mesmo de forma mais definitiva.
   ⚠️ **Depende também de:** autorização da Lúcia (é destrutivo sobre dados reais).
+
+- [ ] **Aceite dos termos de uso**
+  *Reunião 10/09/2026 · Resp.: Vinícius + advogada*
+  Quando a plataforma for vendida como SaaS, o cliente tem de aceitar os termos — com registo
+  de quem aceitou, quando e que versão. Anda a par do R6 (pacote documental).
 
 - [ ] **R4 · Exportação completa dos dados de um cliente (art. 20 — portabilidade)**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
@@ -154,6 +200,21 @@
   ↳ A 27/08 ficou decidido reconstruir o próprio formulário dentro da plataforma (item abaixo),
   o que resolve a dependência para esta origem de leads.
 
+- [ ] **Lead "fechado" no CRM cria o cliente ativo**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Hoje mover o lead para *fechado* já cria o contrato no Financeiro (migração 025). Falta o
+  passo seguinte: criar também o **cliente ativo**, para ela deixar de o fazer à mão.
+
+- [ ] **Campos de país e serviço no cadastro de clientes**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Para conseguir responder a "quantos clientes tenho em Portugal" e "quantos em cada serviço"
+  sem contar à mão. É a base do reporting que ela quer.
+
+- [ ] **Compactar a lista de clientes ativos**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  A lista está a crescer e ficou pesada de ler. Reduzir ao essencial: **nome, serviços ativos
+  e ligação para a plataforma do cliente**.
+
 ### Onboarding e primeiro acesso
 
 - [ ] **Melhorar o fluxo de onboarding: pedir dados da empresa e país à entrada**
@@ -171,6 +232,12 @@
   um email próprio enviado pela plataforma.
 
 ### Usabilidade e compreensão
+
+- [ ] **🐞 A Célia não consegue apagar transações**
+  *Reunião 10/09/2026 · Relatado por: Lúcia · Resp.: Vinícius*
+  Bug em uso real, no Livro de Caixa. Ainda por reproduzir — pode ser permissão (RLS),
+  interface ou um erro silencioso. É o tipo de coisa que mina a confiança de quem está a
+  experimentar a plataforma, por isso vale ir cedo.
 
 - [ ] **Corrigir bug de tradução no módulo ESG (opções não renováveis não mudam de idioma)**
   *Reunião 06/08/2026 · Resp.: Vinícius*
@@ -303,6 +370,19 @@
   Comparar com a proposta Microsoft (100–200 €/mês para 50 utilizadores) e apresentar custos.
   Alternativas (AWS/GCP) tendem a ser mais baratas.
 
+- [ ] **Integração de calendários (Outlook e Google, ou via Calendly)**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Para o agendamento sair do vaivém de mensagens. Decidir entre integrar as APIs diretamente
+  ou apoiar-se numa ferramenta já feita — a segunda hipótese entrega mais depressa e é
+  reversível.
+  ↳ Liga-se ao **agendamento do diagnóstico de 20 min** (secção Consultoria e jornada).
+
+- [ ] **Aplicação nativa (Android e iOS) — viabilidade e processo**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Estudar o que custa e o que muda. A plataforma já funciona no telemóvel pelo browser, por
+  isso a pergunta real é o que uma app nativa acrescenta: notificações, câmara para
+  documentos, presença na loja. Avaliar antes de prometer.
+
 - [ ] **Investigar viabilidade e custos da integração do Instagram (API da Meta) para captura de leads**
   *Reunião 23/07/2026 · Resp.: Vinícius*
   A API mudou recentemente; validar antes de prometer prazo. Inclui a importação dos ~250
@@ -313,6 +393,15 @@
 ---
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
+
+- **Reunião de 10/09:** a plataforma passa a ter duas metades claras — **gestão interna**
+  (clientes ativos, CRM, marketing, acessos) e **serviços** (consultorias, contabilidade, ESG).
+  **Todos os clientes** terão acesso básico, mesmo os que só compram consultoria: a plataforma
+  é o canal de comunicação (contrato, documentos, notificações). Nasce um serviço novo —
+  **consultoria de organização administrativa**, gratuita no arranque, liderada pela Letícia,
+  que passa a ter acesso à gestão e ajuda a testar. O **relatório fiscal** terá versão
+  detalhada e resumida, cada uma numa língua só. A **ESG** ganha visualização própria,
+  mantendo a estrutura por fases. Quando for vendida como SaaS, entra o **aceite dos termos**.
 
 - **Reunião de 27/08:** os contactos das consultorias passam a alimentar o CRM automaticamente,
   e o **formulário de qualificação funciona como filtro** — o lead só entra no CRM depois de
@@ -373,6 +462,10 @@
   países** — liga-se ao `docs/SEGURANCA_DADOS.md` e à decisão de backup.
 - ⚠️ **(13/08)** Custos adicionais com servidor seguro podem afetar a continuidade.
 - ⚠️ **(13/08)** Excesso de ideias sem foco pode atrasar a entrega e a monetização.
+- ⚠️ **(10/09)** Os requisitos legais de proteção de dados para vender como SaaS ainda não
+  foram investigados a fundo — liga-se ao R6 e ao aceite dos termos.
+- ⚠️ **(10/09)** Os contratos dos clientes novos dependem da advogada.
+- ⚠️ **(10/09)** Continua por confirmar se o cliente Luiz conseguiu entrar na plataforma.
 - ⚠️ **(27/08)** Dependência de terceiros para avançar: a empresa alemã do site (acessos ao
   domínio) e o Filipe (integrações e formulários). Dois dos itens novos ficam bloqueados por isto.
 - ⚠️ **(27/08)** A adaptação fiscal ao Brasil depende de encontrar um contabilista certificado
@@ -386,6 +479,23 @@
 ---
 
 ## Concluídos
+
+### Correção urgente — 10/09
+
+- [x] **🐞 Erro na Calculadora de Preços (`fmt is not defined`)**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Regressão que eu próprio introduzi a 27/08, no lote da formatação por língua: o `fmt` passou
+  para dentro do componente principal, mas as quatro calculadoras (Evento, Serviço, Produto e
+  Tratamento) vivem ao nível do módulo e ficaram sem ele — a página caía inteira ao abrir.
+  Corrigido com uma fábrica `criarFmt(lang)` partilhada (commit `4a5729d`).
+  **Verificado no browser:** as quatro calculadoras abrem e calculam, e o formato acompanha a
+  língua (`1337,50` em pt-PT · `1.337,50` em de-DE). Varridas as **23 rotas** da aplicação:
+  nenhuma outra rebenta.
+  **Porque passou:** validei o lote só com o `npm run build`, que não resolve nomes. O ESLint
+  apanhava (`no-undef`) — corri-o apenas nos ficheiros novos, não nos alterados. O `src/` está
+  agora a zero `no-undef`, e a varredura completa passou a fazer parte do fecho de cada lote.
+  ↳ A aba de **Obrigações Fiscais**, mencionada no mesmo item da reunião, foi verificada e
+  **não tinha erro** — era a calculadora.
 
 ### Formulário, CRM e documentos — 09/09
 
