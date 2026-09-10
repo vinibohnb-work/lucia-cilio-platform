@@ -3,7 +3,7 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 27/08/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> **Última sincronização:** 09/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
@@ -30,12 +30,6 @@
 > primeiro os ⚡, depois a infraestrutura (região/ambientes/backups), depois direitos e
 > rasto (exportação, MFA, audit), com o pacote documental em paralelo com a advogada.
 
-- [ ] **⚡ Eliminação completa do cliente: apagar também os ficheiros do Storage**
-  *Auditoria 21/08/2026 · Resp.: Vinícius*
-  Apagar o utilizador remove as 15 tabelas em cascata, mas a pasta dele no bucket
-  `client-docs` fica órfã — não-conformidade direta com o art. 17 do RGPD. Correção no
-  `api/admin-users.js`: listar e remover `client-docs/<uid>/**` antes do `deleteUser`.
-
 - [ ] **⚡ Tirar o `.env.local` (service_role) da pasta sincronizada com o OneDrive**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
   A chave está fora do Git mas é copiada para a nuvem da Microsoft a cada gravação. Mover o
@@ -43,8 +37,17 @@
 
 - [ ] **Limpar os dados reais do projeto antigo (us-west-2), agora DEV**
   *Migração 24/08/2026 · Resp.: Vinícius*
-  Após 1–2 dias de sobreposição estável: apagar utilizadores reais e dados no projeto
-  antigo, manter/criar contas de teste. Dados reais não ficam a viver nos EUA.
+  Apagar utilizadores reais e dados no projeto antigo, manter/criar contas de teste. Dados
+  reais não ficam a viver nos EUA.
+  **Script pronto:** `scripts/migracao/5-limpar-dev.mjs` — corre em simulação por omissão,
+  recusa-se a apontar à produção, faz backup local antes de apagar e só apaga com
+  `--confirmar`.
+  ⚠️ **Bloqueado (09/09):** o anfitrião `wefdhqurbdvsmzmtweno.supabase.co` **deixou de
+  resolver** — o projeto está suspenso (plano gratuito, por inatividade) ou já foi removido.
+  Enquanto assim estiver, não dá para limpar nem para confirmar o que lá está. Ver no painel
+  do Supabase: se estiver suspenso, ou se retoma para correr o script, ou se **elimina o
+  projeto inteiro** — que resolve o mesmo de forma mais definitiva.
+  ⚠️ **Depende também de:** autorização da Lúcia (é destrutivo sobre dados reais).
 
 - [ ] **R4 · Exportação completa dos dados de um cliente (art. 20 — portabilidade)**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
@@ -151,18 +154,6 @@
   ↳ A 27/08 ficou decidido reconstruir o próprio formulário dentro da plataforma (item abaixo),
   o que resolve a dependência para esta origem de leads.
 
-- [ ] **Recriar o formulário de qualificação (hoje no JotForm) dentro da plataforma**
-  *Reunião 27/08/2026 · Resp.: Vinícius*
-  O JotForm sai de cena: o formulário passa a ser servido pela plataforma e serve de **filtro
-  antes de o lead entrar no CRM** — só quem qualifica é criado como lead. Os campos já estão
-  mapeados no Bloco 0 da consultoria (migração 031), o que aqui falta é a página pública, a
-  gravação e a regra de triagem.
-
-- [ ] **Botão "adicionar ao CRM" nos contactos gerados nas consultorias**
-  *Reunião 27/08/2026 · Resp.: Vinícius*
-  Hoje a consultoria regista o contacto sem criar conta e sem tocar no CRM (decisão de 13/08).
-  A Lúcia quer poder promover esse contacto a lead com um clique, sem reescrever os dados.
-
 ### Onboarding e primeiro acesso
 
 - [ ] **Melhorar o fluxo de onboarding: pedir dados da empresa e país à entrada**
@@ -203,13 +194,6 @@
 - [ ] **Validar o desenho da página de Consultoria com a Lúcia**
   *Reunião 30/07/2026 · Resp.: Vinícius*
   Está hoje focada em documentos; ficou de ser enviada para ela validar.
-
-- [ ] **Permitir que o cliente envie documentos pela aplicação, organizados por mês**
-  *Reunião 30/07/2026 · Reforçado a 27/08 · Resp.: Vinícius*
-  Hoje o cliente só consegue **ver e descarregar** (`DocsBrowser readOnly`); o envio é só do
-  lado do admin. A 27/08 ficou definido o formato: o envio vive **na área da Empresa** e os
-  ficheiros ficam **arrumados por mês**, que é como a Lúcia os procura ao fechar as contas.
-  ⚠️ **Depende de:** os 3–4 documentos de teste que a Lúcia vai enviar para validar o fluxo.
 
 - [ ] **Guião de reunião na ficha do cliente**
   *Reunião 23/07/2026 · Resp.: Vinícius*
@@ -402,6 +386,51 @@
 ---
 
 ## Concluídos
+
+### Formulário, CRM e documentos — 09/09
+
+> Migração **032** por correr no Supabase (SQL Editor). Sem ela, os três primeiros itens
+> mostram erro na interface — o código já está em produção, a base é que ainda não tem as
+> tabelas e políticas.
+
+- [x] **Formulário de qualificação dentro da plataforma** *(primeira versão)*
+  *Reunião 27/08/2026 · Resp.: Vinícius*
+  Página **pública** em `/diagnostico`, sem conta, nas três línguas. As perguntas são as do
+  Bloco 0 (`src/data/enquadramento.js`), por isso o que vier daqui entra na ficha da
+  consultoria sem conversão nenhuma — e mudar uma pergunta continua a ser mexer num sítio só.
+  A triagem vive em `src/lib/triagem.js`, com os pesos à vista para afinar com a Lúcia;
+  passou seis casos de verificação. **Nada se perde:** quem fica abaixo do corte aparece na
+  lista à mesma, com o motivo escrito.
+  ↳ **Por decidir com ela:** os pesos e o corte (hoje 4 pontos).
+
+- [x] **Ecrã de Diagnósticos na Gestão**
+  *09/09/2026 · Resp.: Vinícius*
+  Lista as respostas com o veredito, abre as respostas todas e promove a lead com um clique.
+  Acessível a admin e comercial.
+
+- [x] **Botão "Juntar ao CRM" nos contactos das consultorias**
+  *Reunião 27/08/2026 · Resp.: Vinícius*
+  Na ficha, ao lado do "Relatório →". Guarda o `crm_lead_id` na consultoria, por isso não
+  duplica: depois de adicionado passa a "No CRM ✓". A ponte é partilhada com os diagnósticos
+  (`src/lib/leadsCrm.js`).
+  ↳ A **banda de faturação** fica deliberadamente por preencher no lead: as do formulário são
+  mensais e as do CRM anuais (item aberto em "Achados"). A faturação declarada vai nas notas.
+
+- [x] **⚡ Eliminação completa do cliente: apagar também os ficheiros do Storage**
+  *Auditoria 21/08/2026 · Resp.: Vinícius*
+  O `api/admin-users.js` percorre agora `client-docs/<uid>/**` (o Storage não apaga pastas e
+  o `list()` não é recursivo) e remove tudo **antes** de eliminar a conta. Por esta ordem de
+  propósito: se o Storage falhar, a conta continua lá e a operação repete-se — ao contrário,
+  ficariam ficheiros sem dono. Fecha a não-conformidade com o art. 17 do RGPD.
+
+- [x] **Envio de documentos pelo cliente, arrumado por mês**
+  *Reunião 30/07/2026 · Reforçado a 27/08 · Resp.: Vinícius*
+  Nova secção **Documentos** na área da Empresa: escolhe-se o mês (últimos 18) e envia-se.
+  Vai para `client-docs/<uid>/AAAA-MM/`, o mesmo sítio que a Lúcia já navega do lado dela.
+  A política nova dá ao cliente **INSERT apenas dentro da sua pasta** — não pode apagar nem
+  substituir, para não haver forma de fazer desaparecer um documento entregue (nomes
+  repetidos ganham sufixo em vez de sobrepor).
+  ↳ Falta validar com os 3–4 documentos reais que a Lúcia ia enviar.
 
 ### Ajustes rápidos — 27/08
 

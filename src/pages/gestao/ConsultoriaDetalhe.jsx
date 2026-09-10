@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 import { BLOCOS, SWOT_QUADRANTES, TOWS_CELULAS, progressoBloco, progressoTotal } from '../../data/consultoriaBlocos'
 import { Privadas, Capital, Financiamento, Projecao, Liquidez } from '../../components/consultoria/TabelasNumeros'
 import BlocoEnquadramento from '../../components/consultoria/BlocoEnquadramento'
+import { criarLeadDeContacto } from '../../lib/leadsCrm'
 
 // Ficha da consultoria — usada AO VIVO, muitas vezes presencial e com o cliente
 // a ver o ecrã. Daí: guardar automático (nada de botão), campos que crescem com
@@ -27,9 +28,11 @@ export default function ConsultoriaDetalhe() {
   const [blocoAtivo, setBlocoAtivo] = useState(1)
   const [novaEstrategia, setNovaEstrategia] = useState({})   // { celulaKey: { texto, origem:[] } }
   const timer = useRef(null)
+  const [aCriarLead, setACriarLead] = useState(false)   // ponte para o CRM
 
   const L = lang === 'de' ? {
     voltar: '← Beratungen', relatorio: 'Bericht →', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
+    addCrm: 'Zum CRM', noCrm: 'Im CRM ✓', verNoCrm: 'Im CRM ansehen →', crmErro: 'Lead konnte nicht angelegt werden.',
     bloco: 'Block', porConstruir: 'Dieser Block kommt in der nächsten Phase.',
     swotVazio: 'Fügen Sie Punkte in die vier Quadranten ein.',
     towsAjuda: 'Was soll ich mit dem tun, was die SWOT gezeigt hat?',
@@ -42,6 +45,7 @@ export default function ConsultoriaDetalhe() {
     naoEncontrada: 'Beratung nicht gefunden.',
   } : lang === 'en' ? {
     voltar: '← Consultancies', relatorio: 'Report →', guardado: 'Saved ✓', aGuardar: 'Saving…',
+    addCrm: '+ Add to CRM', noCrm: 'In CRM ✓', verNoCrm: 'See in CRM →', crmErro: 'Could not create the lead.',
     bloco: 'Block', porConstruir: 'This block arrives in the next phase.',
     swotVazio: 'Add items to the four quadrants.',
     towsAjuda: 'With what the SWOT revealed, what should I do?',
@@ -54,6 +58,7 @@ export default function ConsultoriaDetalhe() {
     naoEncontrada: 'Consultancy not found.',
   } : {
     voltar: '← Consultorias', relatorio: 'Relatório →', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
+    addCrm: '+ Juntar ao CRM', noCrm: 'No CRM ✓', verNoCrm: 'Ver no CRM →', crmErro: 'Não foi possível criar o lead.',
     bloco: 'Bloco', porConstruir: 'Este bloco chega na próxima fase.',
     swotVazio: 'Acrescenta pontos aos quatro quadrantes.',
     towsAjuda: 'Com aquilo que a SWOT mostrou, o que devo fazer?',
@@ -102,6 +107,23 @@ export default function ConsultoriaDetalhe() {
 
   const responder = (key, valor) =>
     alterar({ respostas: { ...(c.respostas || {}), [key]: valor } })
+
+  // ── Consultoria → CRM (decisão de 27/08) ──
+  // O contacto já está aqui todo; o que faltava era não ter de o reescrever no
+  // CRM. Guarda-se o id do lead na consultoria para o botão não duplicar.
+  async function juntarAoCrm() {
+    if (aCriarLead || c.crm_lead_id) return
+    setACriarLead(true); setErro('')
+    const { data, error } = await criarLeadDeContacto({
+      nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone,
+      setor: c.setor, enquadramento: c.enquadramento || {}, origem: 'consultoria',
+      notaExtra: `Veio da consultoria de ${new Date(c.created_at || Date.now()).toLocaleDateString('pt-PT')}.`,
+      lang,
+    })
+    setACriarLead(false)
+    if (error || !data) { setErro(L.crmErro); return }
+    alterar({ crm_lead_id: data.id }, true)
+  }
 
   // ── SWOT ──
   const addSwot = (q, texto) => {
@@ -175,6 +197,13 @@ export default function ConsultoriaDetalhe() {
             {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
             {erro && <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.neg }}>{erro}</span>}
             <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.chipBg, color: t.chipText, whiteSpace: 'nowrap' }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
+            {c.crm_lead_id ? (
+              <button onClick={() => navigate('/gestao/crm')} title={L.verNoCrm}
+                style={{ padding: '6px 13px', borderRadius: '9px', border: 'none', background: t.dueOk.bg, color: t.dueOk.ink, fontWeight: 700, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.noCrm}</button>
+            ) : (
+              <button onClick={juntarAoCrm} disabled={aCriarLead}
+                style={{ padding: '6px 13px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accentText, fontWeight: 700, fontSize: '12px', cursor: aCriarLead ? 'wait' : 'pointer', whiteSpace: 'nowrap' }}>{aCriarLead ? '…' : L.addCrm}</button>
+            )}
             <button onClick={() => navigate(`/gestao/consultorias/${id}/relatorio`)}
               style={{ padding: '6px 13px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accentText, fontWeight: 700, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.relatorio}</button>
             <select value={c.status} onChange={e => alterar({ status: e.target.value }, true)} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', fontSize: '12px', padding: '6px 9px' }}>

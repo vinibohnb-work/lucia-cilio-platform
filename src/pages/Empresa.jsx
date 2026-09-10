@@ -5,6 +5,7 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import { useTheme } from '../context/ThemeContext'
 import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } from '../lib/companySettings'
 import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
+import EnvioDocumentos from '../components/EnvioDocumentos'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -41,7 +42,7 @@ export default function Empresa() {
 
   const L = lang === 'de' ? {
     title: 'Firmendaten', subtitle: 'Grundlage für MwSt., Steuerkalender und Steuerrücklage.',
-    section_general: 'Allgemein', section_tax: 'Steuern',
+    section_general: 'Allgemein', section_tax: 'Steuern', section_docs: 'Belege',
     name: 'Firmenname', namePh: 'z.B. Lúcia Cílio, Unip. Lda',
     country: 'Land', currency: 'Währung',
     vatRegime: 'MwSt.-Regelung', normal: 'Normal', exempt: 'Befreit',
@@ -52,7 +53,7 @@ export default function Empresa() {
     saved: 'Gespeichert ✓', loading: 'Wird geladen…',
   } : lang === 'en' ? {
     title: 'Company Details', subtitle: 'Basis for VAT, tax calendar and tax reserve.',
-    section_general: 'General', section_tax: 'Taxes',
+    section_general: 'General', section_tax: 'Taxes', section_docs: 'Documents',
     name: 'Company name', namePh: 'e.g. Lúcia Cílio, Unip. Lda',
     country: 'Country', currency: 'Currency',
     vatRegime: 'VAT scheme', normal: 'Standard', exempt: 'Exempt',
@@ -63,7 +64,7 @@ export default function Empresa() {
     saved: 'Saved ✓', loading: 'Loading…',
   } : {
     title: 'Dados da Empresa', subtitle: 'Base para IVA, calendário fiscal e reserva de imposto.',
-    section_general: 'Geral', section_tax: 'Fiscalidade',
+    section_general: 'Geral', section_tax: 'Fiscalidade', section_docs: 'Documentos',
     name: 'Nome da empresa', namePh: 'ex: Lúcia Cílio, Unip. Lda',
     country: 'País', currency: 'Moeda',
     vatRegime: 'Regime de IVA', normal: 'Normal', exempt: 'Isento',
@@ -172,6 +173,12 @@ export default function Empresa() {
             </select>
           </div>
         </div>
+      </div>
+
+      {/* Documentos — envio pelo cliente, arrumado por mês (27/08) */}
+      <div style={{ ...card, marginBottom: '16px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: GOLD, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '16px' }}>{L.section_docs}</div>
+        <EnvioDocumentos userId={eid} />
       </div>
 
       {/* Ações */}

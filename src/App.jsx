@@ -33,6 +33,9 @@ const Crm                 = lazy(() => import('./pages/gestao/Crm'))
 const Financeiro          = lazy(() => import('./pages/gestao/Financeiro'))
 const Marketing           = lazy(() => import('./pages/gestao/Marketing'))
 const Consultorias        = lazy(() => import('./pages/gestao/Consultorias'))
+const Diagnosticos        = lazy(() => import('./pages/gestao/Diagnosticos'))
+// Formulario publico: so quem o abre e que o carrega.
+const FormularioDiagnostico = lazy(() => import('./pages/FormularioDiagnostico'))
 const ConsultoriaDetalhe  = lazy(() => import('./pages/gestao/ConsultoriaDetalhe'))
 const ConsultoriaRelatorio= lazy(() => import('./pages/gestao/ConsultoriaRelatorio'))
 const Consultoria         = lazy(() => import('./pages/Consultoria'))
@@ -127,6 +130,7 @@ function AppLayout() {
             <Route path="/gestao/clientes/:id"  element={<RoleRoute requireRole="admin"><ClienteDetalhe /></RoleRoute>} />
             <Route path="/gestao/crm"           element={<RoleRoute requireRole={['admin', 'comercial']}><Crm /></RoleRoute>} />
             <Route path="/gestao/consultorias"     element={<RoleRoute requireRole="admin"><Consultorias /></RoleRoute>} />
+            <Route path="/gestao/diagnosticos"     element={<RoleRoute requireRole={['admin', 'comercial']}><Diagnosticos /></RoleRoute>} />
             <Route path="/gestao/consultorias/:id" element={<RoleRoute requireRole="admin"><ConsultoriaDetalhe /></RoleRoute>} />
             <Route path="/gestao/consultorias/:id/relatorio" element={<RoleRoute requireRole="admin"><ConsultoriaRelatorio /></RoleRoute>} />
             <Route path="/gestao/marketing"     element={<RoleRoute requireRole={['admin', 'marketing']}><Marketing /></RoleRoute>} />
@@ -188,16 +192,20 @@ export default function App() {
         <ViewAsProvider>
         <SidebarProvider>
           <BrowserRouter>
+            <Suspense fallback={null}>
             <Routes>
               <Route path="/"                      element={<Navigate to="/login" replace />} />
               <Route path="/login"                 element={<Login />} />
               <Route path="/definir-senha"         element={<DefinirSenha />} />
+              {/* Formulario publico de diagnostico (sem conta) */}
+              <Route path="/diagnostico"           element={<FormularioDiagnostico />} />
               <Route path="/*" element={
                 <ProtectedRoute>
                   <AppLayout />
                 </ProtectedRoute>
               } />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </SidebarProvider>
         </ViewAsProvider>

@@ -4,6 +4,35 @@ import { createClient } from '@supabase/supabase-js'
 // Usa a SERVICE ROLE KEY (apenas no servidor) e só responde a administradores.
 const URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const BUCKET_DOCS = 'client-docs'
+
+// O Storage não apaga pastas: só apaga ficheiros, um a um, e o list() não é
+// recursivo. Isto percorre a árvore toda a partir de um prefixo.
+// (Uma pasta vem na listagem com id a null; um ficheiro traz id.)
+async function listarFicheiros(admin, prefixo) {
+  const { data, error } = await admin.storage.from(BUCKET_DOCS)
+    .list(prefixo, { limit: 1000, sortBy: { column: 'name', order: 'asc' } })
+  if (error) throw error
+  const caminhos = []
+  for (const item of data || []) {
+    const caminho = `${prefixo}/${item.name}`
+    if (item.id === null) caminhos.push(...await listarFicheiros(admin, caminho))
+    else caminhos.push(caminho)
+  }
+  return caminhos
+}
+
+// Eliminação de cliente tem de levar os documentos atrás (RGPD, art. 17).
+// Apagar o utilizador limpava as tabelas em cascata mas deixava a pasta dele no
+// bucket — órfã e sem forma de lá chegar pela interface.
+async function apagarDocumentos(admin, userId) {
+  const ficheiros = await listarFicheiros(admin, userId)
+  for (let i = 0; i < ficheiros.length; i += 100) {
+    const { error } = await admin.storage.from(BUCKET_DOCS).remove(ficheiros.slice(i, i + 100))
+    if (error) throw error
+  }
+  return ficheiros.length
+}
 
 export default async function handler(req, res) {
   if (!URL || !SERVICE_KEY) {
@@ -118,9 +147,20 @@ export default async function handler(req, res) {
       const id = req.query?.id || req.body?.id
       if (!id) return res.status(400).json({ error: 'ID em falta.' })
       if (id === callerId) return res.status(400).json({ error: 'Não pode eliminar a sua própria conta.' })
+
+      // Os documentos primeiro, a conta depois. Por esta ordem porque, se o
+      // Storage falhar, a conta ainda existe e a operação pode ser repetida —
+      // ao contrário: ficariam ficheiros sem dono, invisíveis na interface.
+      let docsApagados = 0
+      try {
+        docsApagados = await apagarDocumentos(admin, id)
+      } catch (e) {
+        return res.status(500).json({ error: `Não foi possível apagar os documentos do cliente (${e.message}). A conta NÃO foi eliminada — tente novamente.` })
+      }
+
       const { error } = await admin.auth.admin.deleteUser(id)
       if (error) throw error
-      return res.status(200).json({ ok: true })
+      return res.status(200).json({ ok: true, documentos_apagados: docsApagados })
     }
 
     return res.status(405).json({ error: 'Método não suportado.' })
