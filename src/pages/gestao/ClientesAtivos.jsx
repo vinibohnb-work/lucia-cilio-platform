@@ -11,6 +11,15 @@ import { ESG_QUESTIONS, ESG_TOTAL } from '../../data/esgQuestions'
 import { isAnswered } from '../../lib/esgKpis'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 
+// Espelha a lista de serviços do cadastro (AdminHome) — é por aqui que a Lúcia
+// conta clientes por serviço (reunião de 10/09).
+const SERVICO_ROT = {
+  contabilidade: { pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' },
+  consultoria:   { pt: 'Consultoria', de: 'Beratung', en: 'Consulting' },
+  esg:           { pt: 'ESG', de: 'ESG', en: 'ESG' },
+  organizacao:   { pt: 'Organização administrativa', de: 'Büroorganisation', en: 'Admin organisation' },
+}
+
 
 export default function ClientesAtivos() {
   const { lang } = useLang()
@@ -41,7 +50,7 @@ export default function ClientesAtivos() {
         // Multi-ano: ordem ascendente para o ano mais recente ficar por último (vence)
         supabase.from('esg_diagnostics').select('user_id,answers,reference_year').order('reference_year', { ascending: true }),
         supabase.from('clients').select('user_id'),
-        supabase.from('company_settings').select('user_id,country,de_famv_limit'),
+        supabase.from('company_settings').select('user_id,country,service,de_famv_limit'),
         supabase.from('monthly_plans').select('user_id,items,monthly_fixed,productive_hours'),
       ])
       const year = String(new Date().getFullYear())
@@ -65,6 +74,11 @@ export default function ClientesAtivos() {
       // Lucro mensal = Planeamento Mensal (se existir), senão média real do ano.
       const planBy = Object.fromEntries((mp || []).map(p => [p.user_id, p]))
       ;(cs || []).forEach(s => {
+        // País e serviço servem a vista compacta e o reporting, por isso entram
+        // para todos — o semáforo de limite continua só para os alemães.
+        const base = ensure(s.user_id)
+        base.country = s.country || null
+        base.service = s.service || null
         if (s.country !== 'DE') return
         const limit = Number(s.de_famv_limit) || 0
         if (limit <= 0) return
@@ -82,6 +96,7 @@ export default function ClientesAtivos() {
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
+    compacta: 'Kompakt', completa: 'Vollst\u00e4ndig', servico: 'Dienstleistung', semServico: 'ohne Dienstleistung',
     eyebrow: 'Verwaltung', title: 'Aktive Mandanten', subtitle: 'Übersicht der Mandanten und Schnellzugang zur vollständigen Ansicht.',
     platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchh. + ESG', active: 'aktiv', pending: 'ausstehend',
     revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen', clientsN: 'Mandanten',
@@ -92,6 +107,7 @@ export default function ClientesAtivos() {
     alertTitle: 'Gewinngrenze (Familienversicherung)',
     alertNear: (n, list) => `${n} Mandant(en) nähern sich der Gewinngrenze oder liegen darüber: ${list}`,
   } : lang === 'en' ? {
+    compacta: 'Compact', completa: 'Full', servico: 'Service', semServico: 'no service',
     eyebrow: 'Management', title: 'Active Clients', subtitle: 'Overview of clients and quick access to the full view.',
     platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Acc. + ESG', active: 'active', pending: 'pending',
     revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines', clientsN: 'Clients',
@@ -102,6 +118,7 @@ export default function ClientesAtivos() {
     alertTitle: 'Profit limit (family insurance)',
     alertNear: (n, list) => `${n} client(s) approaching or above the profit limit: ${list}`,
   } : {
+    compacta: 'Compacta', completa: 'Completa', servico: 'Servi\u00e7o', semServico: 'sem servi\u00e7o',
     eyebrow: 'Gestão', title: 'Clientes Ativos', subtitle: 'Visão geral dos clientes e acesso rápido à visualização completa.',
     platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contab. + ESG', active: 'ativo', pending: 'pendente',
     revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes', clientsN: 'Clientes',
@@ -111,6 +128,17 @@ export default function ClientesAtivos() {
     file: 'Dados & Histórico', viewShort: 'Plataforma',
     alertTitle: 'Limite de lucro (Familienversicherung)',
     alertNear: (n, list) => `${n} cliente(s) a aproximar-se do limite de lucro ou acima dele: ${list}`,
+  }
+
+  // A lista cresceu e ficou pesada de ler (10/09). A vista compacta mostra o
+  // essencial — nome, serviço e o atalho para a plataforma; a completa mantém
+  // os indicadores. Fica guardada a escolha, para ela não ter de repetir.
+  const [vista, setVista] = useState(() => {
+    try { return localStorage.getItem('lc-clientes-vista') || 'compacta' } catch { return 'compacta' }
+  })
+  const mudarVista = (v) => {
+    setVista(v)
+    try { localStorage.setItem('lc-clientes-vista', v) } catch { /* modo privado */ }
   }
 
   function viewClient(u) {
@@ -160,7 +188,59 @@ export default function ClientesAtivos() {
       {loading && <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>}
       {!loading && !err && clients.length === 0 && <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.empty}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+      {/* Vista: compacta (por omissão) ou completa */}
+      {!loading && clients.length > 0 && (
+        <div style={{ display: 'inline-flex', gap: '4px', background: t.cardBg, borderRadius: '10px', padding: '4px', border: `1px solid ${t.cardBorder}`, marginBottom: '14px' }}>
+          {[['compacta', L.compacta], ['completa', L.completa]].map(([k, rot]) => (
+            <button key={k} onClick={() => mudarVista(k)} style={{
+              padding: '7px 15px', borderRadius: '8px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', border: 'none',
+              background: vista === k ? t.heading : 'transparent', color: vista === k ? '#fff' : t.textMuted,
+            }}>{rot}</button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Vista compacta: nome, serviço e o atalho para a plataforma ── */}
+      {!loading && vista === 'compacta' && clients.length > 0 && (
+        <div style={{ ...card, padding: '4px 18px' }}>
+          {clients.map((u, i) => {
+            const st = stats[u.id] || {}
+            const activated = !!(u.last_sign_in_at || u.email_confirmed_at)
+            const servico = st.service ? (SERVICO_ROT[st.service]?.[lang] || SERVICO_ROT[st.service]?.pt || st.service) : null
+            return (
+              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: i < clients.length - 1 ? `1px solid ${t.rowBorder || t.cardBorder}` : 'none', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '160px' }}>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {u.display_name || u.email.split('@')[0]}
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: t.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={u.email}>{u.email}</div>
+                </div>
+
+                <span style={{ flex: 'none', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap',
+                  background: servico ? t.chipBg : 'transparent', color: servico ? t.chipText : t.subtle,
+                  border: servico ? 'none' : `1px dashed ${t.cardBorder}` }}>
+                  {servico || L.semServico}
+                </span>
+
+                {st.country && (
+                  <span style={{ flex: 'none', fontSize: '11px', fontWeight: 700, color: t.textMuted, fontVariantNumeric: 'tabular-nums' }}>{st.country}</span>
+                )}
+
+                <span style={{ flex: 'none', width: '8px', height: '8px', borderRadius: '50%', background: activated ? t.dueOk.ink : t.dueSoon.ink }} title={activated ? L.active : L.pending} />
+
+                <div style={{ flex: 'none', display: 'flex', gap: '7px' }}>
+                  {activated && (
+                    <button onClick={() => viewClient(u)} style={{ minHeight: '32px', padding: '0 12px', borderRadius: '8px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '11.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.viewShort}</button>
+                  )}
+                  <button onClick={() => navigate(`/gestao/clientes/${u.id}`)} style={{ minHeight: '32px', padding: '0 12px', borderRadius: '8px', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted, fontWeight: 700, fontSize: '11.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.file}</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={{ display: vista === 'compacta' ? 'none' : 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
         {!loading && clients.map(u => {
           const s = stats[u.id] || {}
           const isEsg = u.platform === 'esg'

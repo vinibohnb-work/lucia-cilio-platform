@@ -5,8 +5,18 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { listUsers, createUser, updateUser, deleteUser, resetPassword } from '../../lib/adminApi'
 import { generatePassword } from '../../lib/passwordPolicy'
+import { supabase } from '../../lib/supabase'
 
-const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting', password: '' }
+const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting', password: '', country: '', service: '' }
+
+// Serviços que a Lúcia vende. Ficam aqui porque é ela que os define — e é
+// por eles que quer contar clientes (reunião de 10/09).
+const SERVICOS = [
+  { key: 'contabilidade', pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' },
+  { key: 'consultoria',   pt: 'Consultoria', de: 'Beratung', en: 'Consulting' },
+  { key: 'esg',           pt: 'ESG', de: 'ESG', en: 'ESG' },
+  { key: 'organizacao',   pt: 'Organiza\u00e7\u00e3o administrativa', de: 'B\u00fcroorganisation', en: 'Admin organisation' },
+]
 
 export default function AdminHome() {
   const { user } = useAuth()
@@ -26,6 +36,7 @@ export default function AdminHome() {
   const L = lang === 'de' ? {
     eyebrow: 'Verwaltung', title: 'Benutzerverwaltung',
     new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
+    pais: 'Land', servico: 'Dienstleistung', semServico: '\u2014 keine \u2014',
     platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG',
     platLite: 'Buchhaltung Lite', platLiteHint: 'Nur der Bereich „Buchhaltung" (ohne Preise, Planung, Mandanten, Firma und Beratung).',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer', created: 'Erstellt',
@@ -46,6 +57,7 @@ export default function AdminHome() {
   } : lang === 'en' ? {
     eyebrow: 'Administration', title: 'User Management',
     new: '+ New User', email: 'Email', name: 'Display name',
+    pais: 'Country', servico: 'Service', semServico: '\u2014 none \u2014',
     platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG',
     platLite: 'Accounting Lite', platLiteHint: 'Only the "Accounting" section (no pricing, planning, clients, company or consulting).',
     role: 'Role', admin: 'Administrator', userRole: 'User', created: 'Created',
@@ -66,6 +78,7 @@ export default function AdminHome() {
   } : {
     eyebrow: 'Administração', title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
+    pais: 'Pa\u00eds', servico: 'Servi\u00e7o', semServico: '\u2014 nenhum \u2014',
     platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG',
     platLite: 'Contabilidade Lite', platLiteHint: 'Apenas a secção "Contabilidade" (sem preços, planeamento, clientes, empresa e consultoria).',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador', created: 'Criado',
@@ -93,21 +106,42 @@ export default function AdminHome() {
   useEffect(() => { load() }, [load])
 
   function openCreate() { setForm({ ...EMPTY, password: generatePassword() }); setEditingId('new'); setErr(''); setNotice('') }
-  function openEdit(u) { setForm({ email: u.email, display_name: u.display_name, role: u.role, platform: u.platform || 'accounting', password: '' }); setEditingId(u.id); setErr(''); setNotice('') }
+  async function openEdit(u) {
+    setForm({ email: u.email, display_name: u.display_name, role: u.role, platform: u.platform || 'accounting', password: '', country: '', service: '' })
+    setEditingId(u.id); setErr(''); setNotice('')
+    const { data } = await supabase.from('company_settings').select('country,service').eq('user_id', u.id).maybeSingle()
+    if (data) setForm(prev => ({ ...prev, country: data.country || '', service: data.service || '' }))
+  }
   function closeForm() { setEditingId(null); setForm(EMPTY) }
 
   async function submit() {
     setSaving(true); setErr(''); setNotice('')
     try {
       if (editingId === 'new') {
-        await createUser({ email: form.email, display_name: form.display_name, role: form.role, platform: form.platform, password: form.password })
+        const criado = await createUser({ email: form.email, display_name: form.display_name, role: form.role, platform: form.platform, password: form.password })
+        await guardarPerfilEmpresa(criado?.id)
         setNotice(L.createdPw(form.email, form.password))
       }
-      else { await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role, platform: form.platform }) }
+      else {
+        await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role, platform: form.platform })
+        await guardarPerfilEmpresa(editingId)
+      }
       closeForm(); await load()
     } catch (e) { setErr(e.message) }
     setSaving(false)
   }
+  // País e serviço vivem em company_settings: o país porque é ele que decide as
+  // regras fiscais, o serviço porque é por ele que a Lúcia conta os clientes.
+  // Quem os escrevia era só o cliente — a partir da migração 033 ela também.
+  async function guardarPerfilEmpresa(userId) {
+    if (!userId) return
+    if (!form.country && !form.service) return
+    const patch = { user_id: userId }
+    if (form.country) patch.country = form.country
+    if (form.service) patch.service = form.service
+    await supabase.from('company_settings').upsert(patch, { onConflict: 'user_id' })
+  }
+
   async function remove(u) {
     if (!window.confirm(L.confirmDel(u.email))) return
     setBusyId(u.id); setErr('')
@@ -165,6 +199,21 @@ export default function AdminHome() {
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.name}</div><input value={form.display_name} onChange={e=>setForm(f=>({...f,display_name:e.target.value}))} placeholder="Lúcia Cílio" style={inputStyle} /></div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.platform}</div>
               <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="accounting_lite">{L.platLite}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.pais}</div>
+              <select value={form.country} onChange={e=>setForm(f=>({...f,country:e.target.value}))} style={selectStyle}>
+                <option value="">{L.semServico}</option>
+                <option value="PT">Portugal</option>
+                <option value="DE">{lang === 'de' ? 'Deutschland' : lang === 'en' ? 'Germany' : 'Alemanha'}</option>
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.servico}</div>
+              <select value={form.service} onChange={e=>setForm(f=>({...f,service:e.target.value}))} style={selectStyle}>
+                <option value="">{L.semServico}</option>
+                {SERVICOS.map(sv => <option key={sv.key} value={sv.key}>{sv[lang] || sv.pt}</option>)}
+              </select>
             </div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.role}</div>
               <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option><option value="comercial">{L.roleComercial}</option><option value="marketing">{L.roleMarketing}</option></select>

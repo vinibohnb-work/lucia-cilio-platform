@@ -18,6 +18,7 @@ const Icon = ({ d, size = 17, sw = 1.7, children }) => (
     {children || <path d={d} />}
   </svg>
 )
+const IconInicio = () => <Icon><path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/></Icon>
 const IconPainel = () => <Icon><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></Icon>
 const IconCaixa = () => <Icon><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8 8h8M8 12h5"/></Icon>
 const IconCatalogo = () => <Icon><path d="M20.6 13.4 12 22l-9-9V4a1 1 0 0 1 1-1h8z"/><circle cx="7.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"/></Icon>
@@ -42,6 +43,7 @@ const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="non
 const NAV = {
   accounting: [
     { key: 'section_acc', items: [
+      { to: '/contabilidade/inicio',       Icon: IconInicio,   labelKey: 'nav_inicio' },
       { to: '/contabilidade/dashboard',    Icon: IconPainel,   labelKey: 'nav_dash' },
       { to: '/contabilidade/caixa',        Icon: IconCaixa,    labelKey: 'nav_caixa' },
       { to: '/contabilidade/conciliacao',  Icon: IconRucklagen, labelKey: 'nav_conciliacao' },
@@ -67,15 +69,20 @@ const NAV = {
     ]},
   ],
   // roles: quem vê cada item (ausente = todos). Papéis de equipa só veem a sua área.
+  // Reunião de 10/09: a gestão interna (como ela trabalha) fica separada dos
+  // serviços (o que ela vende). Sem isto, a Consultoria e os Diagnósticos
+  // apareciam no meio dos Acessos e do Marketing.
   management: [
     { key: 'section_gestao', items: [
       { to: '/gestao/clientes',   Icon: IconClientes, labelKey: 'nav_clientes_ativos', roles: ['admin'] },
       { to: '/gestao/crm',        Icon: IconKpi,      labelKey: 'nav_crm',             roles: ['admin', 'comercial'] },
-      { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
-      { to: '/gestao/diagnosticos', Icon: IconKpi,      labelKey: 'nav_diagnosticos',   roles: ['admin', 'comercial'] },
       { to: '/gestao/marketing',  Icon: IconMarketing, labelKey: 'nav_marketing',      roles: ['admin', 'marketing'] },
       { to: '/gestao/financeiro', Icon: IconCaixa,    labelKey: 'nav_fin_gestao',      roles: ['admin'] },
       { to: '/gestao/acessos',    Icon: IconAdmin,    labelKey: 'nav_acessos',         roles: ['admin'] },
+    ]},
+    { key: 'section_servicos', items: [
+      { to: '/gestao/diagnosticos', Icon: IconKpi,        labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
+      { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
     ]},
   ],
 }
@@ -156,6 +163,7 @@ export default function Sidebar() {
     section_mgmt: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' },
     section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung', en: 'ESG Consulting' },
     section_gestao: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' },
+    section_servicos: { pt: 'Serviços', de: 'Dienstleistungen', en: 'Services' },
   }
 
   return (

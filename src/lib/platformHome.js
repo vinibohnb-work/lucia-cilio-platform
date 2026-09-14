@@ -6,9 +6,11 @@ export function homePathFor(role, platform) {
   if (role === 'comercial') return '/gestao/crm'
   if (role === 'marketing') return '/gestao/marketing'
   if (platform === 'esg') return '/esg/diagnostico'
-  // 'accounting', 'accounting_lite' e 'both' aterram na Contabilidade
-  // ('both' alterna pelo toggle)
-  return '/contabilidade/dashboard'
+  // 'accounting', 'accounting_lite' e 'both' aterram no Início — a partir de
+  // 10/09 a plataforma é também o canal de comunicação com o cliente, e é ali
+  // que ele vê o que a Lúcia lhe deixou, o prazo seguinte e o que tem a pagar.
+  // O Painel (números e gráficos) fica a um clique.
+  return '/contabilidade/inicio'
 }
 
 // ── Contabilidade Lite ──────────────────────────────────────────────────────

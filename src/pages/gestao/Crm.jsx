@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
+import { createUser } from '../../lib/adminApi'
+import { generatePassword } from '../../lib/passwordPolicy'
 import { REVENUE_RANGES, TEMPERATURES, SOURCES, leadScore, daysSinceContact, needsFollowUp } from '../../lib/leadScore'
 
 // CRM de prospeção (kanban). Cartões arrastáveis entre etapas (drag & drop
@@ -11,6 +13,8 @@ import { REVENUE_RANGES, TEMPERATURES, SOURCES, leadScore, daysSinceContact, nee
 // contador de tentativas. Cada lead tem origem, temperatura, perfil de cliente
 // ideal (pontuação) e alerta de follow-up por dias sem contacto.
 
+const NL = String.fromCharCode(10)
+const NL2 = NL + NL
 const STAGES = ['mapeado', 'abordagem', 'conectado', 'reuniao', 'proposta', 'fechado', 'perdido', 'futuro']
 const FOLLOWUP_DAYS = 7
 
@@ -56,6 +60,11 @@ export default function Crm() {
       perdido:   ['Verloren', 'mit erfasstem Grund'],
       futuro:    ['Später', 'will, aber nicht jetzt'],
     },
+    criarAcesso: 'Zugang anlegen',
+    pedeEmail: 'E-Mail der Kundin/des Kunden (für den Zugang):',
+    acessoOk: (e, p) => `Zugang angelegt.${NL2}E-Mail: ${e}${NL}Vorläufiges Passwort: ${p}${NL2}Bitte weitergeben — beim ersten Login wird es geändert.`,
+    acessoErro: 'Zugang konnte nicht angelegt werden: ',
+    jaTemAcesso: 'Diese Kundin/dieser Kunde hat bereits einen Zugang.',
     add: '+ Lead', name: 'Name', company: 'Firma', contact: 'Kontakt', notes: 'Notizen',
     save: 'Speichern', del: 'Löschen', edit: 'Bearbeiten', attempts: 'Versuche', addAttempt: '+1 Versuch',
     lostReason: 'Grund des Verlusts:', loading: 'Wird geladen…',
@@ -87,6 +96,11 @@ export default function Crm() {
       perdido:   ['Lost', 'with recorded reason'],
       futuro:    ['Later', 'wants it, but not now'],
     },
+    criarAcesso: 'Create access',
+    pedeEmail: "Client's email (for platform access):",
+    acessoOk: (e, p) => `Access created.${NL2}Email: ${e}${NL}Temporary password: ${p}${NL2}Pass it on — it must be changed on first login.`,
+    acessoErro: 'Could not create access: ',
+    jaTemAcesso: 'This client already has access.',
     add: '+ Lead', name: 'Name', company: 'Company', contact: 'Contact', notes: 'Notes',
     save: 'Save', del: 'Delete', edit: 'Edit', attempts: 'Attempts', addAttempt: '+1 attempt',
     lostReason: 'Reason for losing:', loading: 'Loading…',
@@ -118,6 +132,11 @@ export default function Crm() {
       perdido:   ['Perdido', 'com motivo registado'],
       futuro:    ['Futuro', 'quer, mas não agora'],
     },
+    criarAcesso: 'Criar acesso',
+    pedeEmail: 'E-mail do cliente (para o acesso à plataforma):',
+    acessoOk: (e, p) => `Acesso criado.${NL2}E-mail: ${e}${NL}Palavra-passe tempor\u00e1ria: ${p}${NL2}Entrega-a ao cliente — vai ter de a trocar no primeiro acesso.`,
+    acessoErro: 'N\u00e3o foi poss\u00edvel criar o acesso: ',
+    jaTemAcesso: 'Este cliente j\u00e1 tem acesso.',
     add: '+ Lead', name: 'Nome', company: 'Empresa', contact: 'Contacto', notes: 'Notas',
     save: 'Guardar', del: 'Eliminar', edit: 'Editar', attempts: 'Tentativas', addAttempt: '+1 tentativa',
     lostReason: 'Motivo da perda:', loading: 'A carregar…',
@@ -207,6 +226,37 @@ export default function Crm() {
     setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ...patch } : l))
     await supabase.from('crm_leads').update(patch).eq('id', lead.id)
     window.alert(L.contractOk)
+  }
+
+  // ── Lead fechado → acesso à plataforma ──
+  // Na reunião de 10/09 ficou que TODOS os clientes passam a ter acesso, nem
+  // que seja como canal de comunicação. Fechar um negócio e ter de ir criar a
+  // conta noutro ecrã era trabalho repetido — e os 5 clientes novos desta
+  // semana fazem-no cinco vezes.
+  //
+  // A conta nasce com palavra-passe temporária, que a Lúcia entrega (o padrão
+  // da casa desde a migração 027). Se já existir contrato, fica ligado a ela.
+  async function criarAcesso(lead) {
+    const emailProvavel = (lead.contact || '').includes('@') ? lead.contact.trim() : ''
+    const email = window.prompt(L.pedeEmail, emailProvavel)
+    if (!email || !email.includes('@')) return
+    setErr('')
+
+    const password = generatePassword()
+    try {
+      const r = await createUser({
+        email: email.trim(), display_name: lead.company || lead.name,
+        role: 'user', platform: 'accounting', password,
+      })
+      // O contrato do Financeiro passa a apontar para a conta criada, para o
+      // cliente ver o seu próximo pagamento no Início.
+      if (lead.converted_billing_id && r?.id) {
+        await supabase.from('client_billing').update({ user_id: r.id }).eq('id', lead.converted_billing_id)
+      }
+      window.alert(L.acessoOk(email.trim(), password))
+    } catch (e) {
+      setErr(L.acessoErro + (e.message || ''))
+    }
   }
 
   // ── Drag & drop ──
@@ -375,6 +425,9 @@ export default function Crm() {
                           <span style={{ fontSize: '10px', fontWeight: 700, color: '#0a7a3e' }}>{L.hasContract}</span>
                         ) : (
                           <button onClick={() => toContract(lead)} style={{ width: '100%', fontSize: '10.5px', fontWeight: 800, padding: '5px', borderRadius: '8px', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>{L.toContract}</button>
+                        )}
+                        {isAdmin && (
+                          <button onClick={() => criarAcesso(lead)} style={{ width: '100%', marginTop: '5px', minHeight: '30px', fontSize: '10.5px', fontWeight: 800, padding: '5px', borderRadius: '8px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.accentText, cursor: 'pointer' }}>{L.criarAcesso}</button>
                         )}
                       </div>
                     )}

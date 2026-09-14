@@ -13,6 +13,7 @@ import { ESG_QUESTIONS, ESG_TOTAL } from '../../data/esgQuestions'
 import { isAnswered } from '../../lib/esgKpis'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 import DocsBrowser from '../../components/DocsBrowser'
+import AvisosCliente from '../../components/AvisosCliente'
 
 const KIND_STYLE = {
   note:           { bg: '#f1f5f9', ink: '#475569' },
@@ -49,7 +50,7 @@ export default function ClienteDetalhe() {
     summary: 'Übersicht', revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen',
     clientsN: 'Mandanten', esgProgress: 'ESG-Diagnose', refYear: 'Bezugsjahr',
     limitLabel: 'Gewinn / Grenze (Monat)', fromPlan: 'aus Monatsplanung', fromReal: 'Ø real',
-    docs: 'Dokumente', history: 'Beratung & Verlauf', new: '+ Neuer Eintrag',
+    avisos: 'Nachrichten an die Kundin/den Kunden', docs: 'Dokumente', history: 'Beratung & Verlauf', new: '+ Neuer Eintrag',
     kind: 'Typ', note: 'Notiz', meeting: 'Besprechung', recommendation: 'Empfehlung', report: 'Bericht',
     titleL: 'Titel', body: 'Inhalt', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Speichern', del: 'Löschen', open: 'Öffnen ↗', loading: 'Wird geladen…',
@@ -62,7 +63,7 @@ export default function ClienteDetalhe() {
     summary: 'Overview', revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines',
     clientsN: 'Clients', esgProgress: 'ESG assessment', refYear: 'Ref. year',
     limitLabel: 'Profit / limit (month)', fromPlan: 'from Monthly Plan', fromReal: 'real avg.',
-    docs: 'Documents', history: 'Consulting & History', new: '+ New entry',
+    avisos: 'Messages to the client', docs: 'Documents', history: 'Consulting & History', new: '+ New entry',
     kind: 'Type', note: 'Note', meeting: 'Meeting', recommendation: 'Recommendation', report: 'Report',
     titleL: 'Title', body: 'Content', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Save', del: 'Delete', open: 'Open ↗', loading: 'Loading…',
@@ -75,7 +76,7 @@ export default function ClienteDetalhe() {
     summary: 'Resumo', revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes',
     clientsN: 'Clientes', esgProgress: 'Diagnóstico ESG', refYear: 'Ano ref.',
     limitLabel: 'Lucro / limite (mês)', fromPlan: 'do Planeamento Mensal', fromReal: 'média real',
-    docs: 'Documentos', history: 'Consultoria & Histórico', new: '+ Novo registo',
+    avisos: 'Mensagens para o cliente', docs: 'Documentos', history: 'Consultoria & Histórico', new: '+ Novo registo',
     kind: 'Tipo', note: 'Nota', meeting: 'Reunião', recommendation: 'Recomendação', report: 'Relatório',
     titleL: 'Título', body: 'Conteúdo', link: 'Ligação (opcional)', linkPh: 'https://…',
     save: 'Guardar', del: 'Eliminar', open: 'Abrir ↗', loading: 'A carregar…',
@@ -244,6 +245,12 @@ export default function ClienteDetalhe() {
             </div>
           )
         })()}
+      </div>
+
+      {/* Avisos — o que o cliente vê no Início dele (10/09) */}
+      <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accentText, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.avisos}</div>
+        <AvisosCliente userId={id} />
       </div>
 
       {/* Documentos (repositório tipo Drive) */}

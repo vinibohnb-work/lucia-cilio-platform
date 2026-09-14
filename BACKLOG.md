@@ -3,7 +3,7 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 10/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> **Última sincronização:** 14/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
@@ -22,22 +22,6 @@
 > passo definido na reunião. A ideia estruturante: **separar a gestão interna dos serviços**.
 > A gestão (clientes ativos, CRM, marketing, acessos) é como a Lúcia trabalha; os serviços
 > (consultorias, contabilidade, ESG) são o que ela vende.
-
-- [ ] **Primeira versão da aba de Serviços**
-  *Reunião 10/09/2026 · Resp.: Vinícius*
-  Separar, na navegação, a **gestão interna** dos **serviços** (consultorias, contabilidade,
-  ESG). Hoje vivem misturados na secção Gestão, o que já se nota com a entrada dos
-  Diagnósticos. É o primeiro passo do próximo ciclo.
-
-- [ ] **Estrutura básica de onboarding e comunicação com o cliente**
-  *Reunião 10/09/2026 · Resp.: Vinícius*
-  Todos os clientes passam a ter acesso à plataforma como **canal de comunicação**: contrato,
-  documentos, notificações. O ecrã mostra **situação atual, próxima obrigação e próximo
-  pagamento** — o essencial que o cliente pergunta por WhatsApp.
-  ↳ **Prioridade dentro do item:** já há um cliente à espera de informação sobre a declaração
-  de IVA — a Lúcia pediu para começar por aí.
-  ↳ Cruza com o item de onboarding de 06/08 (pedir país e dados da empresa à entrada) —
-  tratar em conjunto, é o mesmo fluxo.
 
 - [ ] **Consultoria de organização administrativa — estrutura e formulário**
   *Reunião 10/09/2026 · Resp.: Vinícius*
@@ -200,25 +184,13 @@
   ↳ A 27/08 ficou decidido reconstruir o próprio formulário dentro da plataforma (item abaixo),
   o que resolve a dependência para esta origem de leads.
 
-- [ ] **Lead "fechado" no CRM cria o cliente ativo**
-  *Reunião 10/09/2026 · Resp.: Vinícius*
-  Hoje mover o lead para *fechado* já cria o contrato no Financeiro (migração 025). Falta o
-  passo seguinte: criar também o **cliente ativo**, para ela deixar de o fazer à mão.
-
-- [ ] **Campos de país e serviço no cadastro de clientes**
-  *Reunião 10/09/2026 · Resp.: Vinícius*
-  Para conseguir responder a "quantos clientes tenho em Portugal" e "quantos em cada serviço"
-  sem contar à mão. É a base do reporting que ela quer.
-
-- [ ] **Compactar a lista de clientes ativos**
-  *Reunião 10/09/2026 · Resp.: Vinícius*
-  A lista está a crescer e ficou pesada de ler. Reduzir ao essencial: **nome, serviços ativos
-  e ligação para a plataforma do cliente**.
-
 ### Onboarding e primeiro acesso
 
 - [ ] **Melhorar o fluxo de onboarding: pedir dados da empresa e país à entrada**
-  *Reunião 06/08/2026 · Resp.: Vinícius*
+  *Reunião 06/08/2026 · Parcial 14/09 · Resp.: Vinícius*
+  ↳ **Já feito a 14/09:** o Início avisa quando falta o país e leva à Empresa; a Lúcia passou
+  a poder registar país e serviço no momento em que cria a conta. Falta a página/checklist de
+  entrada e o botão **"Fazer Onboarding"** na visão dela.
   O país determina todas as regras fiscais (IVA, calendário, módulo alemão) — pedi-lo no
   primeiro acesso evita que o cliente veja números errados. Inclui a página/checklist de
   entrada do cliente novo (dados, documentos, acessos) e o botão **"Fazer Onboarding"** na
@@ -233,11 +205,13 @@
 
 ### Usabilidade e compreensão
 
-- [ ] **🐞 A Célia não consegue apagar transações**
-  *Reunião 10/09/2026 · Relatado por: Lúcia · Resp.: Vinícius*
-  Bug em uso real, no Livro de Caixa. Ainda por reproduzir — pode ser permissão (RLS),
-  interface ou um erro silencioso. É o tipo de coisa que mina a confiança de quem está a
-  experimentar a plataforma, por isso vale ir cedo.
+- [ ] **🐞 Rótulo trocado na Materialidade: "Poupança/ano (€)" aparece como "A guardar…"**
+  *Encontrado a 10/09 · Resp.: Vinícius*
+  A chave `saving` está duplicada no mesmo objeto de rótulos, nas três línguas
+  (`src/pages/esg/Materialidade.jsx`): serve o rótulo do campo **e** o estado "a guardar". Em
+  JavaScript ganha a última, por isso o campo do bloco financeiro mostra a mensagem errada.
+  Anterior ao trabalho de setembro — vem do commit original do módulo ESG. Correção: renomear
+  uma das chaves. Dois minutos, e está à vista no módulo que ela mostra a clientes.
 
 - [ ] **Corrigir bug de tradução no módulo ESG (opções não renováveis não mudam de idioma)**
   *Reunião 06/08/2026 · Resp.: Vinícius*
@@ -479,6 +453,65 @@
 ---
 
 ## Concluídos
+
+### Comunicação com o cliente e estrutura de serviços — 14/09
+
+> Migração **033** por correr no Supabase. Sem ela, o Início do cliente e os avisos mostram
+> erro — o código está em produção, a base é que ainda não tem a tabela nem as políticas.
+
+- [x] **🐞 A Célia não conseguia apagar transações**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Não era falha técnica: o botão era um `✕` de 14px com 2px de padding (~18×18) na cor
+  `#cbd5e1` — quase invisível sobre fundo claro — e no telemóvel ficava **fora do ecrã**,
+  porque a linha da tabela tem 760px dentro de um contentor que rola para o lado.
+  Agora: botão com borda e 32×32 no computador, e no telemóvel um **"Remover"** por baixo da
+  descrição, à vista sem rolar. Pelo caminho apanhei dois problemas silenciosos na mesma
+  função: **não havia confirmação** antes de apagar, e a remoção era otimista — como apagar
+  zero linhas **não devolve erro** no Supabase, uma falha de permissão fazia a linha
+  desaparecer e voltar no recarregamento seguinte. Passa a confirmar, a verificar o que foi
+  mesmo apagado e a avisar quando nada foi. E se o lançamento estava conciliado, o movimento
+  do extrato volta a **"por conciliar"** em vez de ficar conciliado com nada.
+  ↳ Descartadas pelo caminho: a chave estrangeira da conciliação é `on delete set null`
+  (não bloqueia) e o RLS deixa o dono apagar o que é seu.
+
+- [x] **Estrutura básica de onboarding e comunicação com o cliente**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Página **Início** (`/contabilidade/inicio`), onde o cliente passa a aterrar depois de
+  entrar. Responde às três perguntas que ele faz por mensagem: **mensagens da Lúcia**,
+  **próxima obrigação fiscal** (com os dias que faltam, a vermelho na última semana) e
+  **próximo pagamento** (calculado a partir do contrato e do que já foi recebido). Mais o
+  atalho para enviar os documentos do mês e um aviso quando falta o país da empresa.
+  Do lado dela, uma caixa na ficha do cliente para escrever os avisos, com três tons —
+  informação, **tratado** e precisa de ação. O tom "tratado" é literalmente o caso que
+  apressou isto: dizer a um cliente que a declaração de IVA foi entregue.
+  ↳ O cliente passou a poder ler o **seu** contrato e os recebimentos (política nova); não
+  pode escrever nada disso.
+
+- [x] **Primeira versão da aba de Serviços**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  A navegação da Gestão passou a ter duas secções: **Gestão** (Clientes Ativos, CRM,
+  Marketing, Financeiro, Acessos) e **Serviços** (Diagnósticos, Consultorias). É a separação
+  que ela pediu — como ela trabalha de um lado, o que ela vende do outro.
+
+- [x] **Lead "fechado" cria o acesso do cliente**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Descoberta pelo caminho: "cliente ativo" não é uma tabela — **são os utilizadores da
+  plataforma**. Por isso o que faltava era criar-lhes o acesso. O cartão do lead fechado
+  ganhou **"Criar acesso"**: cria a conta com palavra-passe temporária (o padrão da casa) e,
+  se já houver contrato, liga-o à conta — que é o que faz o próximo pagamento aparecer no
+  Início do cliente. Serve os 5 clientes que ela está a integrar esta semana.
+
+- [x] **Campos de país e serviço no cadastro de clientes**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Os dois no formulário de criação/edição de utilizador. O país já existia mas só o próprio
+  cliente o podia escrever — e muitos não chegam a preencher; agora ela regista-o quando
+  cria a conta, que é quando sabe o que vendeu.
+
+- [x] **Compactar a lista de clientes ativos**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Alternador **Compacta / Completa**, com a compacta por omissão e a escolha lembrada. A
+  compacta dá uma linha por cliente: nome, e-mail, serviço, país, um ponto de estado e os
+  atalhos. A completa mantém os indicadores todos.
 
 ### Correção urgente — 10/09
 

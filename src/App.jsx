@@ -34,6 +34,7 @@ const Financeiro          = lazy(() => import('./pages/gestao/Financeiro'))
 const Marketing           = lazy(() => import('./pages/gestao/Marketing'))
 const Consultorias        = lazy(() => import('./pages/gestao/Consultorias'))
 const Diagnosticos        = lazy(() => import('./pages/gestao/Diagnosticos'))
+const Inicio              = lazy(() => import('./pages/contabilidade/Inicio'))
 // Formulario publico: so quem o abre e que o carrega.
 const FormularioDiagnostico = lazy(() => import('./pages/FormularioDiagnostico'))
 const ConsultoriaDetalhe  = lazy(() => import('./pages/gestao/ConsultoriaDetalhe'))
@@ -99,6 +100,7 @@ function AppLayout() {
           <Routes>
             {/* Plataforma Contabilidade */}
             <Route element={<PlatformRoute requirePlatform="accounting" />}>
+              <Route path="/contabilidade/inicio"        element={<Inicio />} />
               <Route path="/contabilidade/dashboard"     element={<Dashboard />} />
               <Route path="/contabilidade/caixa"         element={<LivroCaixa />} />
               <Route path="/contabilidade/conciliacao"   element={<Conciliacao />} />

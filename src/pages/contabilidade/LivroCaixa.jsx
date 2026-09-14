@@ -19,6 +19,7 @@ const isRecDue = (per, m) => per === 'monthly' || (per === 'quarterly' && [1,4,7
 const toYm = (p) => { const [y, m] = p.split('-').map(Number); return y * 12 + (m - 1) }
 const inRecRange = (p, s, e) => { const ym = toYm(p); if (s && ym < toYm(s)) return false; if (e && ym > toYm(e)) return false; return true }
 
+const NL2 = String.fromCharCode(10) + String.fromCharCode(10)
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
@@ -72,6 +73,7 @@ export default function LivroCaixa() {
   const [form, setForm]       = useState(EMPTY_FORM)
   const [showForm, setShowForm] = useState(false)
   const [filterMonth, setFilterMonth] = useState('all')
+  const [erro, setErro] = useState('')
 
   const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
 
@@ -190,14 +192,37 @@ export default function LivroCaixa() {
     if (error) { alert(error.message); return }
     setForm({ ...EMPTY_FORM }); setShowForm(false); load()
   }
-  async function removeEntry(id) {
+  // Apagar um lançamento. Três cuidados que faltavam:
+  //  1. pergunta antes (não havia confirmação nenhuma);
+  //  2. não tira a linha do ecrã antes de saber o resultado — a remoção
+  //     otimista escondia falhas, porque apagar zero linhas NÃO devolve erro
+  //     no Supabase: a linha desaparecia e voltava no recarregamento seguinte;
+  //  3. se o lançamento estava conciliado com um movimento do extrato, esse
+  //     movimento volta a "por conciliar" em vez de ficar conciliado com nada.
+  async function removeEntry(e) {
     if (isViewing) return
-    setEntries(prev => prev.filter(e => e.id !== id))
-    const { error } = await supabase.from('cash_entries').delete().eq('id', id)
-    if (error) { alert(error.message); load() }
+    if (!window.confirm(L.confirmDel(e.description || ''))) return
+    setErro('')
+
+    const { data: tx } = await supabase.from('bank_transactions')
+      .select('id').eq('cash_entry_id', e.id).maybeSingle()
+
+    const { data: apagados, error } = await supabase.from('cash_entries')
+      .delete().eq('id', e.id).select('id')
+
+    if (error) { setErro(error.message); return }
+    if (!apagados || apagados.length === 0) { setErro(L.delFalhou); load(); return }
+
+    if (tx?.id) {
+      await supabase.from('bank_transactions')
+        .update({ status: 'pendente', matched_at: null }).eq('id', tx.id)
+    }
+    load()
   }
 
   const L = lang === 'de' ? {
+    remover: 'Entfernen', confirmDel: (d) => `Buchung entfernen?${d ? NL2 + '\u201e' + d + '\u201c' : ''}`,
+    delFalhou: 'Die Buchung konnte nicht entfernt werden. Bitte Seite neu laden und erneut versuchen.',
     export: 'CSV exportieren', balance: 'Kassenbestand', income: 'Einnahmen', expense: 'Ausgaben',
     cash: 'Kasse', bank: 'Bank', date: 'Datum', doc: 'Belegnr.', desc: 'Beschreibung', type: 'Art',
     amount: 'Betrag (€)', qty: 'Menge', dest: 'Konto', running: 'Bestand', entrada: 'Einnahme', saida: 'Ausgabe',
@@ -209,6 +234,8 @@ export default function LivroCaixa() {
     catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
     vat: 'MwSt.', vatExempt: 'befreit', predictedOut: 'Geplante Ausgaben', predictedOutSub: 'wiederkehrend, offen',
   } : lang === 'en' ? {
+    remover: 'Remove', confirmDel: (d) => `Remove this entry?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
+    delFalhou: 'The entry could not be removed. Please reload the page and try again.',
     export: 'Export CSV', balance: 'Current Balance', income: 'Total Income', expense: 'Total Expenses',
     cash: 'In Cash', bank: 'In Bank', date: 'Date', doc: 'Doc.', desc: 'Description', type: 'Type',
     amount: 'Amount (€)', qty: 'Qty.', dest: 'Account', running: 'Balance', entrada: 'Income', saida: 'Expense',
@@ -220,6 +247,8 @@ export default function LivroCaixa() {
     catalogNone: '— none —', catHint: 'Choose the expense category.', costType: 'Cost type',
     vat: 'VAT', vatExempt: 'exempt', predictedOut: 'Planned expenses', predictedOutSub: 'recurring, to confirm',
   } : {
+    remover: 'Remover', confirmDel: (d) => `Remover este lan\u00e7amento?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
+    delFalhou: 'N\u00e3o foi poss\u00edvel remover o lan\u00e7amento. Recarrega a p\u00e1gina e tenta outra vez.',
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
     amount: 'Valor (€)', qty: 'Qtd.', dest: 'Destino', running: 'Saldo', entrada: 'Entrada', saida: 'Saída',
@@ -234,7 +263,7 @@ export default function LivroCaixa() {
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const GRID = '108px 64px 1fr 96px 92px 88px 92px 34px'
+  const GRID = '108px 64px 1fr 96px 92px 88px 92px 44px'
 
   const fieldWrap = (label, node, minW, extra) => (
     <div style={{ flex: `1 1 ${minW}`, minWidth: minW }}>
@@ -249,6 +278,10 @@ export default function LivroCaixa() {
 
   return (
     <div style={{ width: '100%' }}>
+
+      {erro && (
+        <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{erro}</div>
+      )}
 
       {/* Header (sem botão de Nova Entrada — está no topo) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
@@ -399,12 +432,23 @@ export default function LivroCaixa() {
                     )}
                   </div>
                 )}
+                {!isViewing && isMobile && (
+                  <button onClick={() => removeEntry(e)} aria-label={L.remover}
+                    style={{ marginTop: '7px', minHeight: '32px', padding: '0 12px', background: 'transparent',
+                      border: `1px solid ${t.cardBorder}`, borderRadius: '8px', cursor: 'pointer',
+                      fontSize: '11.5px', fontWeight: 700, color: t.textMuted }}>{L.remover}</button>
+                )}
               </div>
               <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: e.private ? '#ede9fe' : (e.type==='entrada'?'#d1fae5':'#fee2e2'), color: e.private ? '#5b21b6' : (e.type==='entrada'?'#065f46':'#991b1b') }}>{e.private ? '👤 ' : ''}{entryTypeLabel(e, lang)}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: e.type==='entrada'?'#065f46':'#e53e3e', textAlign: 'right' }}>{e.type==='entrada'?'+':'−'} € {fmt(e.amount)}</div>
               <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: e.destination==='caixa'?'#f5edd6':'#eff6ff', color: e.destination==='caixa'?'#92400e':'#1d4ed8' }}>{e.destination==='caixa'?L.caixa:L.banco}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: e.balance>=0?G:'#e53e3e', textAlign: 'right' }}>€ {fmt(e.balance)}</div>
-              {!isViewing && <button onClick={() => removeEntry(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', borderRadius: '4px', lineHeight: 1 }} title="Remover">✕</button>}
+              {!isViewing && !isMobile && (
+                <button onClick={() => removeEntry(e)} title={L.remover} aria-label={L.remover}
+                  style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: '8px', cursor: 'pointer',
+                    fontSize: '13px', color: t.textMuted, padding: 0, lineHeight: 1 }}>✕</button>
+              )}
             </div>
           )
         })}
