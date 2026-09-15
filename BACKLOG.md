@@ -3,7 +3,7 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 15/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> **Última sincronização:** 14/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
@@ -67,6 +67,16 @@
   do Supabase: se estiver suspenso, ou se retoma para correr o script, ou se **elimina o
   projeto inteiro** — que resolve o mesmo de forma mais definitiva.
   ⚠️ **Depende também de:** autorização da Lúcia (é destrutivo sobre dados reais).
+
+- [ ] **Proteção anti-robôs no formulário público**
+  *14/09/2026 · Resp.: Vinícius*
+  Com a migração 032 aplicada, o `/diagnostico` está **a gravar a sério**. Hoje só tem uma
+  armadilha simples (um campo escondido que os humanos não preenchem): chega para robôs
+  comuns, não chega para quem insista. Enquanto o endereço não for divulgado o risco é baixo;
+  **antes de ser ligado ao site da Lúcia** convém decidir entre um Cloudflare Turnstile (sem
+  puzzles para o utilizador) ou um limite por IP numa função serverless.
+  ↳ Qualquer enchente entra na tabela `diagnostico_submissoes`, não no CRM — o filtro protege
+  o CRM, mas a lista de diagnósticos ficaria poluída.
 
 - [ ] **Aceite dos termos de uso**
   *Reunião 10/09/2026 · Resp.: Vinícius + advogada*
@@ -425,11 +435,9 @@
 
 ## Concluídos
 
-### Percurso ESG e três pontas soltas — 15/09
+### Percurso ESG e três pontas soltas — 14/09 (fim do dia)
 
-> Migração **034** por correr (uma linha: o caminho do ficheiro do extrato). As **032** e
-> **033** continuam à espera — sem elas o formulário público, os Diagnósticos, o Início do
-> cliente e as mensagens mostram erro.
+> Migração **034** aplicada a 14/09 — está tudo a funcionar em produção.
 
 - [x] **Consultoria ESG por fases**
   *Reunião 10/09/2026 · Resp.: Vinícius*
@@ -468,6 +476,17 @@
   de escolha, por se sobreporem às novas; e as opções passaram a mostrar a referência mensal,
   que é como ela pensa nos clientes.
 
+- [x] **🐞 Datas apareciam um dia atrás em fusos a oeste de Greenwich**
+  *Encontrado a 14/09 · Resp.: Vinícius*
+  Uma data sem hora (`2026-09-01`, como as colunas `date` do Postgres) passada ao `Date()` é
+  lida como meia-noite **UTC** e, ao ser mostrada em hora local, recua um dia em qualquer fuso
+  a oeste. Apanhado a preparar prints a partir do Brasil: um extrato de setembro aparecia como
+  31/08–29/09. **Não afeta a Lúcia** (Portugal e Alemanha estão a leste), mas afeta qualquer
+  teste feito do Brasil e qualquer cliente nas Américas.
+  Novo `dataCurta(d, lang)` em `src/lib/formato.js`, aplicado na Conciliação e no EÜR — os dois
+  ecrãs que mostram colunas só-data. Onde há *timestamps* (`created_at`, último acesso) o
+  comportamento anterior está correto e ficou como estava.
+
 - [x] **🐞 Rótulo trocado na Materialidade**
   *Encontrado a 10/09 · Resp.: Vinícius*
   A chave `saving` servia duas coisas no mesmo objeto — o rótulo "Poupança/ano (€)" e o estado
@@ -477,8 +496,7 @@
 
 ### Comunicação com o cliente e estrutura de serviços — 14/09
 
-> Migração **033** por correr no Supabase. Sem ela, o Início do cliente e os avisos mostram
-> erro — o código está em produção, a base é que ainda não tem a tabela nem as políticas.
+> Migração **033** aplicada a 14/09 — o Início do cliente e as mensagens estão a funcionar.
 
 - [x] **🐞 A Célia não conseguia apagar transações**
   *Reunião 10/09/2026 · Resp.: Vinícius*
@@ -553,9 +571,7 @@
 
 ### Formulário, CRM e documentos — 09/09
 
-> Migração **032** por correr no Supabase (SQL Editor). Sem ela, os três primeiros itens
-> mostram erro na interface — o código já está em produção, a base é que ainda não tem as
-> tabelas e políticas.
+> Migração **032** aplicada a 14/09 — o formulário público e os Diagnósticos estão a funcionar.
 
 - [x] **Formulário de qualificação dentro da plataforma** *(primeira versão)*
   *Reunião 27/08/2026 · Resp.: Vinícius*
