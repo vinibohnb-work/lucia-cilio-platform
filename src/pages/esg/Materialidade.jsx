@@ -52,7 +52,7 @@ export default function Materialidade() {
     materialList: 'Wesentliche Themen', noMaterial: 'Noch keine Themen im wesentlichen Quadranten.',
     goal: 'Ziel definieren', goalEdit: 'Ziel bearbeiten', baseline: 'Ausgangswert (heute)', target: 'Zielwert',
     deadline: 'Frist', how: 'Wie? (Maßnahmen)', saveGoal: 'Ziel speichern', removeGoal: 'Ziel entfernen',
-    fin: 'Finanzen', finImpact: 'Finanzielle Auswirkung (1–5)', invest: 'Investition (€)', saving: 'Einsparung/Jahr (€)',
+    fin: 'Finanzen', finImpact: 'Finanzielle Auswirkung (1–5)', invest: 'Investition (€)', poupanca: 'Einsparung/Jahr (€)',
     payback: 'Payback', yrs: 'Jahre', finNote: 'Notiz (finanziell)', saveFin: 'Speichern', removeFin: 'Entfernen',
     toProject: 'Projekt erstellen →',
     save: 'Speichern', saving: 'Wird gespeichert…', saved: 'Gespeichert ✓',
@@ -67,7 +67,7 @@ export default function Materialidade() {
     materialList: 'Material topics', noMaterial: 'No topics in the material quadrant yet.',
     goal: 'Set goal', goalEdit: 'Edit goal', baseline: 'Baseline (today)', target: 'Target',
     deadline: 'Deadline', how: 'How? (actions)', saveGoal: 'Save goal', removeGoal: 'Remove goal',
-    fin: 'Financials', finImpact: 'Financial impact (1–5)', invest: 'Investment (€)', saving: 'Saving/year (€)',
+    fin: 'Financials', finImpact: 'Financial impact (1–5)', invest: 'Investment (€)', poupanca: 'Saving/year (€)',
     payback: 'Payback', yrs: 'years', finNote: 'Note (financial)', saveFin: 'Save', removeFin: 'Remove',
     toProject: 'Create project →',
     save: 'Save', saving: 'Saving…', saved: 'Saved ✓',
@@ -82,7 +82,7 @@ export default function Materialidade() {
     materialList: 'Temas materiais', noMaterial: 'Ainda não há temas no quadrante material.',
     goal: 'Definir meta', goalEdit: 'Editar meta', baseline: 'Valor atual (hoje)', target: 'Meta',
     deadline: 'Prazo', how: 'Como? (ações)', saveGoal: 'Guardar meta', removeGoal: 'Remover meta',
-    fin: 'Financeiro', finImpact: 'Impacto financeiro (1–5)', invest: 'Investimento (€)', saving: 'Poupança/ano (€)',
+    fin: 'Financeiro', finImpact: 'Impacto financeiro (1–5)', invest: 'Investimento (€)', poupanca: 'Poupança/ano (€)',
     payback: 'Payback', yrs: 'anos', finNote: 'Nota (financeira)', saveFin: 'Guardar', removeFin: 'Remover',
     toProject: 'Criar projeto →',
     save: 'Guardar', saving: 'A guardar…', saved: 'Guardado ✓',
@@ -355,7 +355,7 @@ export default function Materialidade() {
                     <div style={{ fontSize: '11px', color: t.text, marginTop: '6px', lineHeight: 1.5, background: t.softCardBg, borderRadius: '8px', padding: '7px 10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                       {fin.impact && <span>{L.finImpact.split(' (')[0]}: <strong>{fin.impact}/5</strong></span>}
                       {fin.investment && <span>{L.invest.split(' (')[0]}: <strong>€ {Number(fin.investment).toLocaleString(localeDe(lang))}</strong></span>}
-                      {fin.saving && <span>{L.saving.split('/')[0]}: <strong>€ {Number(fin.saving).toLocaleString(localeDe(lang))}/{L.yrs === 'anos' ? 'ano' : L.yrs === 'Jahre' ? 'Jahr' : 'yr'}</strong></span>}
+                      {fin.saving && <span>{L.poupanca.split('/')[0]}: <strong>€ {Number(fin.saving).toLocaleString(localeDe(lang))}/{L.yrs === 'anos' ? 'ano' : L.yrs === 'Jahre' ? 'Jahr' : 'yr'}</strong></span>}
                       {pb != null && <span style={{ color: '#0a7a3e', fontWeight: 700 }}>{L.payback}: {pb.toFixed(1)} {L.yrs}</span>}
                       {fin.note && <span style={{ color: t.textMuted, width: '100%' }}>→ {fin.note}</span>}
                     </div>
@@ -378,7 +378,7 @@ export default function Materialidade() {
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
                         <input type="number" value={finForm.investment} onChange={e2 => setFinForm(f => ({ ...f, investment: e2.target.value }))} placeholder={L.invest} style={inputStyle} />
-                        <input type="number" value={finForm.saving} onChange={e2 => setFinForm(f => ({ ...f, saving: e2.target.value }))} placeholder={L.saving} style={inputStyle} />
+                        <input type="number" value={finForm.saving} onChange={e2 => setFinForm(f => ({ ...f, saving: e2.target.value }))} placeholder={L.poupanca} style={inputStyle} />
                       </div>
                       {paybackYears(finForm) != null && (
                         <div style={{ fontSize: '11px', fontWeight: 700, color: '#0a7a3e' }}>{L.payback}: {paybackYears(finForm).toFixed(1)} {L.yrs}</div>

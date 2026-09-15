@@ -9,6 +9,7 @@
 
 import { supabase } from './supabase'
 import { opcaoDe } from '../data/enquadramento'
+import { FATURACAO_FORM_PARA_CRM } from './leadScore'
 
 // A dor do lead, tirada da pergunta "principal dificuldade" do enquadramento.
 export function dorDoEnquadramento(enq = {}, lang = 'pt') {
@@ -35,11 +36,11 @@ export function resumoEnquadramento(enq = {}, lang = 'pt') {
 /**
  * Cria o lead no CRM a partir de um contacto.
  *
- * Nota sobre a faturação: o `revenue_range` fica deliberadamente por preencher.
- * As bandas do formulário são MENSAIS e as do CRM são ANUAIS — 10.000 €/mês cai
- * já na 2.ª banda anual do CRM. Converter às cegas estragaria a pontuação de
- * "cliente ideal", por isso a banda fica para a Lúcia escolher (é um item aberto
- * no backlog). A faturação declarada vai nas notas, para ela não ter de perguntar.
+ * A faturação vem do formulário em bandas MENSAIS e o CRM pontua em bandas
+ * ANUAIS. Desde 14/09 há bandas baixas no CRM e uma tabela de correspondência
+ * (FATURACAO_FORM_PARA_CRM), por isso o lead já chega com a banda preenchida e
+ * entra na pontuação de "cliente ideal". A faturação declarada continua a ir
+ * nas notas — a banda é uma aproximação, o que ela disse é o que ela disse.
  */
 export async function criarLeadDeContacto({
   nome, empresa, email, telefone, setor,
@@ -55,6 +56,7 @@ export async function criarLeadDeContacto({
     company: empresa?.trim() || null,
     contact: email?.trim() || telefone?.trim() || null,
     sector: setor?.trim() || null,
+    revenue_range: FATURACAO_FORM_PARA_CRM[enquadramento?.faturacao] || null,
     pain: dorDoEnquadramento(enquadramento, lang),
     notes: notas || null,
     source: origem,

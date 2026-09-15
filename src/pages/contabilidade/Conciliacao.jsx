@@ -26,6 +26,7 @@ export default function Conciliacao() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [aLer, setALer] = useState(false)
+  const [importacoes, setImportacoes] = useState([])   // extratos já arquivados
   const [previa, setPrevia] = useState(null)     // { movimentos, mapa, ficheiro, ... }
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
@@ -43,6 +44,7 @@ export default function Conciliacao() {
     semExtratoAjuda: 'Bankbuchungen im Kassenbuch, die im Auszug fehlen.',
     loading: 'Wird geladen…', erroFormato: 'Format nicht erkannt. Prüfen Sie, ob die Datei Datum, Beschreibung und Betrag enthält.',
     erroVazio: 'Keine Buchungen in der Datei gefunden.', semAlteracoes: 'Alle Buchungen waren bereits importiert.',
+    importados: 'Importierte Kontoauszüge', abrirFicheiro: 'Öffnen', semFicheiro: 'ohne Datei',
     verComo: 'Im Ansichtsmodus nicht möglich.',
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
@@ -56,6 +58,7 @@ export default function Conciliacao() {
     semExtratoAjuda: 'Bank entries in the cash book that are missing from the statement.',
     loading: 'Loading…', erroFormato: 'Format not recognised. Check the file has date, description and amount.',
     erroVazio: 'No transactions found in the file.', semAlteracoes: 'Every transaction was already imported.',
+    importados: 'Imported statements', abrirFicheiro: 'Open', semFicheiro: 'no file',
     verComo: 'Not available in view-as mode.',
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
@@ -70,6 +73,7 @@ export default function Conciliacao() {
     loading: 'A carregar…', erroFormato: 'Não reconheci o formato. Confirma que o ficheiro tem data, descrição e valor.',
     erroVazio: 'Não encontrei movimentos no ficheiro.', semAlteracoes: 'Todos os movimentos já tinham sido importados.',
     verComo: 'Não disponível no modo "ver como".',
+    importados: 'Extratos importados', abrirFicheiro: 'Abrir', semFicheiro: 'sem ficheiro',
   }
 
   const fmt = (v) => (Number(v) || 0).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -78,11 +82,12 @@ export default function Conciliacao() {
   const load = useCallback(async () => {
     if (!eid) return
     setLoading(true)
-    const [tx, ce] = await Promise.all([
+    const [tx, ce, imp] = await Promise.all([
       supabase.from('bank_transactions').select('*').eq('user_id', eid).order('tx_date', { ascending: false }),
       supabase.from('cash_entries').select('id,entry_date,description,type,amount,destination').eq('user_id', eid).eq('destination', 'banco'),
+      supabase.from('bank_imports').select('*').eq('user_id', eid).order('created_at', { ascending: false }).limit(6),
     ])
-    setTxs(tx.data || []); setEntries(ce.data || []); setLoading(false)
+    setTxs(tx.data || []); setEntries(ce.data || []); setImportacoes(imp.data || []); setLoading(false)
   }, [eid])
   useEffect(() => { load() }, [load])
 
@@ -116,7 +121,7 @@ export default function Conciliacao() {
       const r = extrairMovimentos(linhas)
       if (r.erro === 'formato') { setErro(L.erroFormato); return }
       if (r.erro === 'vazio' || !r.movimentos.length) { setErro(L.erroVazio); return }
-      setPrevia({ ...r, ficheiro: file.name })
+      setPrevia({ ...r, ficheiro: file.name, blob: file })
     } catch (e) {
       setErro(e.message || L.erroFormato)
     } finally {
@@ -128,13 +133,26 @@ export default function Conciliacao() {
   // ── Gravar o extrato ──
   async function importar() {
     if (isViewing) { setErro(L.verComo); return }
-    const { movimentos, ficheiro } = previa
+    const { movimentos, ficheiro, blob } = previa
     const datas = movimentos.map(m => m.data).sort()
     const { data: imp, error: e1 } = await supabase.from('bank_imports').insert({
       user_id: eid, filename: ficheiro, period_start: datas[0], period_end: datas[datas.length - 1],
       total_rows: movimentos.length,
     }).select('id').single()
     if (e1) { setErro(e1.message); return }
+
+    // O extrato original fica arquivado, para se poder voltar a ele quando uma
+    // conciliação levantar dúvidas. Vai para a pasta do próprio cliente no
+    // bucket 'client-docs' — a mesma que é apagada por inteiro quando o cliente
+    // é eliminado, por isso não deixa pontas soltas de RGPD.
+    // Se o envio falhar, a importação segue na mesma: perder o arquivo é
+    // incómodo, perder os movimentos seria pior.
+    if (blob) {
+      const nome = `${new Date().toISOString().slice(0, 10)}-${ficheiro}`.replace(/[^\w.\-@ ]+/g, '_')
+      const caminho = `${eid}/extratos/${nome}`
+      const { error: eUp } = await supabase.storage.from('client-docs').upload(caminho, blob, { upsert: true })
+      if (!eUp) await supabase.from('bank_imports').update({ file_path: caminho }).eq('id', imp.id)
+    }
 
     // O índice único (user_id, fingerprint) faz o resto: reimportar é inofensivo
     const { data: inseridos, error: e2 } = await supabase.from('bank_transactions')
@@ -150,6 +168,14 @@ export default function Conciliacao() {
     await supabase.from('bank_imports').update({ new_rows: novos }).eq('id', imp.id)
     if (novos === 0) setAviso(L.semAlteracoes)
     setPrevia(null); setAba('pendente'); load()
+  }
+
+  // Abrir o extrato arquivado: o bucket é privado, por isso pede-se uma
+  // ligação temporária em vez de guardar URLs.
+  async function abrirExtrato(caminho) {
+    const { data, error } = await supabase.storage.from('client-docs').createSignedUrl(caminho, 120)
+    if (error || !data?.signedUrl) { setErro(L.erroFormato); return }
+    window.open(data.signedUrl, '_blank', 'noopener')
   }
 
   // ── Ações sobre um movimento ──
@@ -249,6 +275,27 @@ export default function Conciliacao() {
         <div style={{ ...card, padding: '34px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: '34px', marginBottom: '10px' }}>🏦</div>
           <div style={{ fontSize: '14px', color: t.textMuted }}>{L.vazio}</div>
+        </div>
+      )}
+
+      {/* Extratos já arquivados — dá para voltar ao original (27/08) */}
+      {!!importacoes.length && !previa && (
+        <div style={{ ...card, padding: '14px 18px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '9px' }}>{L.importados}</div>
+          {importacoes.map((imp, i) => (
+            <div key={imp.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: i < importacoes.length - 1 ? `1px solid ${t.rowBorder || t.cardBorder}` : 'none', flexWrap: 'wrap' }}>
+              <span style={{ flex: 1, minWidth: '160px', fontSize: '12.5px', color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{imp.filename}</span>
+              <span style={{ flex: 'none', fontSize: '11.5px', color: t.subtle, fontVariantNumeric: 'tabular-nums' }}>
+                {dataFmt(imp.period_start)} – {dataFmt(imp.period_end)} · {imp.total_rows} {L.linhas}
+              </span>
+              {imp.file_path ? (
+                <button onClick={() => abrirExtrato(imp.file_path)}
+                  style={{ flex: 'none', minHeight: '30px', padding: '0 12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontSize: '11.5px', fontWeight: 700, color: t.accentText, cursor: 'pointer' }}>{L.abrirFicheiro}</button>
+              ) : (
+                <span style={{ flex: 'none', fontSize: '11px', color: t.subtle }}>{L.semFicheiro}</span>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

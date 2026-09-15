@@ -60,6 +60,7 @@ const NAV = {
   ],
   esg: [
     { key: 'section_esg', items: [
+      { to: '/esg/percurso',      Icon: IconRelatorios,  labelKey: 'nav_esg_percurso' },
       { to: '/esg/materialidade', Icon: IconMaterial,    labelKey: 'nav_esg_material' },
       { to: '/esg/diagnostico',   Icon: IconDiag,        labelKey: 'nav_esg_diag' },
       { to: '/esg/kpis',          Icon: IconKpi,         labelKey: 'nav_esg_kpis' },

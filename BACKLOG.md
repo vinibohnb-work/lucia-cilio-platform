@@ -3,7 +3,7 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 14/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> **Última sincronização:** 15/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
@@ -28,12 +28,6 @@
   Serviço novo, **gratuito no arranque**, liderado pela Letícia. Precisa do mesmo tratamento
   que a consultoria da IHK: blocos, formulário e relatório.
   ⚠️ **Depende de:** o conceito do serviço, que a Letícia vai desenhar com a Lúcia.
-
-- [ ] **Consultoria ESG por fases**
-  *Reunião 10/09/2026 · Resp.: Vinícius*
-  Dar à ESG a mesma espinha das outras consultorias — materialidade, diagnóstico, KPIs e
-  relatório como fases de um percurso, com **visualização própria mais elaborada**. Os quatro
-  módulos já existem soltos; falta o fio que os liga.
 
 - [ ] **Relatório fiscal em duas versões: detalhada e resumida**
   *Reunião 10/09/2026 · Resp.: Vinícius*
@@ -109,14 +103,6 @@
   quando disponível no plano.
 
 ### Achados durante o desenvolvimento
-
-- [ ] **Bandas de faturação do formulário não encaixam nas do CRM** — o formulário de
-  diagnóstico usa bandas **mensais** (até 1.000 € … >10.000 €); o `REVENUE_RANGES` do CRM usa
-  bandas **anuais** que começam onde aquelas acabam (10.000 €/mês = 120 mil/ano cai já na 2.ª
-  banda do CRM). Se um dia estes leads entrarem no CRM sem conversão, a pontuação sai errada.
-  Converter, ou acrescentar bandas baixas ao CRM — esta segunda parece mais honesta, porque
-  são clientes mais pequenos do que o CRM assume hoje.
-  *13/08/2026 · Resp.: Vinícius*
 
 - [ ] **Perguntas do bloco 1 assumem que o negócio ainda não abriu** — *"Quando quero iniciar
   a atividade?"*, *"Em que localização quero começar?"*. Para quem já fatura, leem-se mal.
@@ -205,14 +191,6 @@
 
 ### Usabilidade e compreensão
 
-- [ ] **🐞 Rótulo trocado na Materialidade: "Poupança/ano (€)" aparece como "A guardar…"**
-  *Encontrado a 10/09 · Resp.: Vinícius*
-  A chave `saving` está duplicada no mesmo objeto de rótulos, nas três línguas
-  (`src/pages/esg/Materialidade.jsx`): serve o rótulo do campo **e** o estado "a guardar". Em
-  JavaScript ganha a última, por isso o campo do bloco financeiro mostra a mensagem errada.
-  Anterior ao trabalho de setembro — vem do commit original do módulo ESG. Correção: renomear
-  uma das chaves. Dois minutos, e está à vista no módulo que ela mostra a clientes.
-
 - [ ] **Corrigir bug de tradução no módulo ESG (opções não renováveis não mudam de idioma)**
   *Reunião 06/08/2026 · Resp.: Vinícius*
   Bug encontrado em uso real — há opções que ficam fixas numa língua.
@@ -255,13 +233,6 @@
   *Reunião 30/07/2026 · Resp.: Vinícius*
 
 ### Contabilidade
-
-- [ ] **Guardar o ficheiro de extrato importado na conciliação**
-  *Reunião 27/08/2026 · Resp.: Vinícius*
-  A importação lê o CSV/Excel, cria os movimentos e descarta o ficheiro. A Lúcia quer que fique
-  arquivado (Storage), para poder voltar ao original quando uma conciliação levantar dúvidas.
-  ↳ Cruza com o ⚡1 da secção Cybersecurity: o que vai para o Storage tem de sair na eliminação
-  do cliente.
 
 - [ ] **Lançamento dividido (split) no Livro de Caixa**
   *Imagens de referência de 20/08 · Resp.: Vinícius*
@@ -453,6 +424,56 @@
 ---
 
 ## Concluídos
+
+### Percurso ESG e três pontas soltas — 15/09
+
+> Migração **034** por correr (uma linha: o caminho do ficheiro do extrato). As **032** e
+> **033** continuam à espera — sem elas o formulário público, os Diagnósticos, o Início do
+> cliente e as mensagens mostram erro.
+
+- [x] **Consultoria ESG por fases**
+  *Reunião 10/09/2026 · Resp.: Vinícius*
+  Página **Percurso** (`/esg/percurso`), onde a ESG passa a aterrar. Cinco fases —
+  materialidade, diagnóstico, indicadores, projetos e relatório — cada uma com o seu estado, e
+  um **próximo passo** em destaque. A reunião falou de quatro fases; os projetos entraram
+  porque já existem como módulo e o relatório conta com eles.
+  O estado é **calculado a partir do que os módulos já gravam** (`src/lib/esgPercurso.js`): a
+  página não guarda nada, por isso nunca fica dessincronizada do trabalho real. Regras: um
+  tema conta como tratado quando foi decidido (pontuado ou marcado como não aplicável), e os
+  projetos medem-se contra os **temas materiais** — a meta é cada tema material ter pelo menos
+  um projeto, e enquanto não houver materialidade a fase fica "à espera" em vez de mostrar 0%.
+  A fase dos indicadores conta as oito leituras de topo que já têm valor, porque os KPIs são
+  leitura do diagnóstico e não têm dados próprios — preferi medir o que existe a inventar um
+  estado de "revisto".
+  **Verificado no browser** em três situações (ficha vazia, a meio e completa): 0% → 43% → 98%,
+  com a fase seguinte a apontar sempre para a primeira por fechar.
+
+- [x] **Guardar o ficheiro de extrato importado na conciliação**
+  *Reunião 27/08/2026 · Resp.: Vinícius*
+  Era o **último ponto de 27/08 por fechar** que não dependia de terceiros. O ficheiro passa a
+  ser arquivado em `client-docs/<cliente>/extratos/` — a mesma pasta que é apagada por inteiro
+  quando o cliente é eliminado, por isso não abre pontas soltas de RGPD. Continua a **não subir
+  nada antes de ela confirmar** a importação, e se o envio falhar a importação segue na mesma:
+  perder o arquivo é incómodo, perder os movimentos seria pior. A página passou a listar os
+  últimos extratos com uma ligação temporária para os abrir. Migração 034.
+
+- [x] **Bandas de faturação do formulário e do CRM**
+  *13/08/2026 · Resp.: Vinícius*
+  O CRM começava em "< 50 mil €/ano" e os clientes reais da Lúcia cabiam quase todos aí: o topo
+  do formulário (>10.000 €/mês = 120 mil/ano) já era a segunda banda. Quatro bandas baixas
+  novas (12, 36, 60 e 120 mil) e uma tabela de correspondência entre as bandas **mensais** do
+  formulário e as **anuais** do CRM. Os leads que vêm do formulário e das consultorias já
+  chegam com a banda preenchida, em vez de vazia.
+  As duas bandas antigas continuam a pontuar (há leads gravados com elas) mas saíram da lista
+  de escolha, por se sobreporem às novas; e as opções passaram a mostrar a referência mensal,
+  que é como ela pensa nos clientes.
+
+- [x] **🐞 Rótulo trocado na Materialidade**
+  *Encontrado a 10/09 · Resp.: Vinícius*
+  A chave `saving` servia duas coisas no mesmo objeto — o rótulo "Poupança/ano (€)" e o estado
+  "A guardar…" — e em JavaScript ganha a última. O campo do bloco financeiro mostrava a
+  mensagem errada. Separadas as chaves nas três línguas. O projeto está agora a zero também em
+  `no-dupe-keys`, não só em `no-undef`.
 
 ### Comunicação com o cliente e estrutura de serviços — 14/09
 

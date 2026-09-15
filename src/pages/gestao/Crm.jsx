@@ -6,7 +6,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { createUser } from '../../lib/adminApi'
 import { generatePassword } from '../../lib/passwordPolicy'
-import { REVENUE_RANGES, TEMPERATURES, SOURCES, leadScore, daysSinceContact, needsFollowUp } from '../../lib/leadScore'
+import { REVENUE_RANGES, TEMPERATURES, SOURCES, leadScore, daysSinceContact, needsFollowUp, revenueRangesParaEscolher } from '../../lib/leadScore'
 
 // CRM de prospeção (kanban). Cartões arrastáveis entre etapas (drag & drop
 // nativo HTML5); mover para "Perdido" pede o motivo; "Em abordagem" tem
@@ -475,7 +475,7 @@ export default function Crm() {
                 <div><div style={fieldLbl}>{L.revenue}</div>
                   <select value={form.revenue_range} onChange={e => setForm(f => ({ ...f, revenue_range: e.target.value }))} style={selStyle}>
                     <option value="">—</option>
-                    {REVENUE_RANGES.map(x => <option key={x.key} value={x.key}>{label(x)}</option>)}
+                    {revenueRangesParaEscolher(form.revenue_range).map(x => <option key={x.key} value={x.key}>{label(x)}{x.mensal ? ` · ${x.mensal}` : ''}</option>)}
                   </select></div>
                 <div><div style={fieldLbl}>{L.sector}</div>
                   <input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} placeholder={L.sectorPh} style={inputStyle} /></div>

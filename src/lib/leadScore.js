@@ -12,13 +12,46 @@
 // ============================================================================
 
 // Faixas de faturação anual (chave guardada em crm_leads.revenue_range)
+//
+// As quatro primeiras nasceram a 14/09. As bandas começavam em "< 50 mil €" e
+// os clientes reais da Lúcia cabem quase todos aí dentro: o topo do formulário
+// de diagnóstico (mais de 10.000 €/mês) dá 120 mil/ano, que já era a segunda
+// banda. Resultado: a pontuação não distinguia quem fatura 500 €/mês de quem
+// fatura 4.000 €/mês — e é aí que está a clientela dela.
+//
+// As chaves antigas ficam todas, porque estão gravadas nos leads existentes.
 export const REVENUE_RANGES = [
+  { key: 'lt12',    points: 4,  pt: '< 12 mil €',     de: '< 12 Tsd. €',    en: '< €12k',        mensal: 'até 1.000 €/mês' },
+  { key: '12_36',   points: 10, pt: '12–36 mil €',    de: '12–36 Tsd. €',   en: '€12k–36k',      mensal: '1.000–3.000 €/mês' },
+  { key: '36_60',   points: 16, pt: '36–60 mil €',    de: '36–60 Tsd. €',   en: '€36k–60k',      mensal: '3.000–5.000 €/mês' },
+  { key: '60_120',  points: 22, pt: '60–120 mil €',   de: '60–120 Tsd. €',  en: '€60k–120k',     mensal: '5.000–10.000 €/mês' },
   { key: 'lt50',    points: 8,  pt: '< 50 mil €',     de: '< 50 Tsd. €',    en: '< €50k' },
   { key: '50_150',  points: 18, pt: '50–150 mil €',   de: '50–150 Tsd. €',  en: '€50k–150k' },
-  { key: '150_500', points: 28, pt: '150–500 mil €',  de: '150–500 Tsd. €', en: '€150k–500k' },
+  { key: '150_500', points: 28, pt: '120–500 mil €',  de: '120–500 Tsd. €', en: '€120k–500k' },
   { key: '500_2m',  points: 36, pt: '500 mil – 2 M€', de: '500 Tsd. – 2 Mio. €', en: '€500k–2M' },
   { key: 'gt2m',    points: 40, pt: '> 2 M€',         de: '> 2 Mio. €',     en: '> €2M' },
 ]
+
+// Chaves anteriores a 14/09. Continuam a pontuar (há leads gravados com elas),
+// mas não aparecem para escolher — sobrepõem-se às bandas baixas novas.
+export const REVENUE_RANGES_ANTIGAS = ['lt50', '50_150']
+
+// O que se oferece na ficha do lead.
+export const revenueRangesParaEscolher = (atual) =>
+  REVENUE_RANGES.filter(r => !REVENUE_RANGES_ANTIGAS.includes(r.key) || r.key === atual)
+
+// Tradução das bandas MENSAIS do formulário de diagnóstico para as ANUAIS do
+// CRM. Era o buraco que fazia o lead chegar sem faturação: o formulário
+// pergunta por mês, o CRM pontua por ano, e converter às cegas punha toda a
+// gente na mesma banda.
+export const FATURACAO_FORM_PARA_CRM = {
+  zero:   'lt12',
+  lt1k:   'lt12',
+  '1k_3k': '12_36',
+  '3k_5k': '36_60',
+  '5k_10k': '60_120',
+  gt10k:  '150_500',   // mais de 10 mil/mês = mais de 120 mil/ano
+}
 
 export const TEMPERATURES = [
   { key: 'quente', points: 25, emoji: '🔥', pt: 'Quente', de: 'Heiß',  en: 'Hot',  color: '#c2410c', bg: '#fff1e8' },

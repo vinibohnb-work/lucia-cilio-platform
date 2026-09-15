@@ -35,6 +35,7 @@ const Marketing           = lazy(() => import('./pages/gestao/Marketing'))
 const Consultorias        = lazy(() => import('./pages/gestao/Consultorias'))
 const Diagnosticos        = lazy(() => import('./pages/gestao/Diagnosticos'))
 const Inicio              = lazy(() => import('./pages/contabilidade/Inicio'))
+const PercursoESG         = lazy(() => import('./pages/esg/PercursoESG'))
 // Formulario publico: so quem o abre e que o carrega.
 const FormularioDiagnostico = lazy(() => import('./pages/FormularioDiagnostico'))
 const ConsultoriaDetalhe  = lazy(() => import('./pages/gestao/ConsultoriaDetalhe'))
@@ -117,6 +118,7 @@ function AppLayout() {
 
             {/* Plataforma ESG */}
             <Route element={<PlatformRoute requirePlatform="esg" />}>
+              <Route path="/esg/percurso"      element={<PercursoESG />} />
               <Route path="/esg/diagnostico"   element={<DiagnosticoESG />} />
               <Route path="/esg/materialidade" element={<Materialidade />} />
               <Route path="/esg/kpis"          element={<KPIs />} />

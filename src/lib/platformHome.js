@@ -5,7 +5,8 @@ export function homePathFor(role, platform) {
   // Papéis de equipa: entram direto na sua única área
   if (role === 'comercial') return '/gestao/crm'
   if (role === 'marketing') return '/gestao/marketing'
-  if (platform === 'esg') return '/esg/diagnostico'
+  // A ESG aterra no percurso: é lá que se vê em que fase se está (10/09).
+  if (platform === 'esg') return '/esg/percurso'
   // 'accounting', 'accounting_lite' e 'both' aterram no Início — a partir de
   // 10/09 a plataforma é também o canal de comunicação com o cliente, e é ali
   // que ele vê o que a Lúcia lhe deixou, o prazo seguinte e o que tem a pagar.
