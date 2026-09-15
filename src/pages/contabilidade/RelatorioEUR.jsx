@@ -4,6 +4,7 @@ import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
+import { dataCurta } from '../../lib/formato'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
 import { getCompanySettings } from '../../lib/companySettings'
 import { getCategory } from '../../data/expenseCategories'
@@ -107,7 +108,7 @@ export default function RelatorioEUR() {
 
   const loc = lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT'
   const fmt = (v) => (Number(v) || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
-  const dataFmt = (d) => new Date(d).toLocaleDateString(loc)
+  const dataFmt = (d) => dataCurta(d, lang)
   const nomeDe = (l) => l.categoria
     ? (getCategory(l.categoria)?.de?.label || l.categoria)
     : (NOME_LINHA[l.key] || l.key)

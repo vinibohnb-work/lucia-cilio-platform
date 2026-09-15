@@ -4,6 +4,7 @@ import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
+import { dataCurta } from '../../lib/formato'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { parseCSV, extrairMovimentos, conciliar, movimentoParaLancamento } from '../../lib/extratoBancario'
 
@@ -77,7 +78,7 @@ export default function Conciliacao() {
   }
 
   const fmt = (v) => (Number(v) || 0).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  const dataFmt = (d) => new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT')
+  const dataFmt = (d) => dataCurta(d, lang)
 
   const load = useCallback(async () => {
     if (!eid) return
