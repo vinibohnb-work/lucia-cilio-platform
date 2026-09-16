@@ -53,6 +53,8 @@ export default function Financeiro() {
     expected: 'Erwartet (Monat)', received: 'Erhalten (Monat)', pendingK: 'Ausstehend', contracts: 'Aktive Verträge',
     contractsT: 'Verträge', monthT: 'Eingänge im Monat', new: '+ Neuer Vertrag',
     client: 'Mandant', linkUser: 'Plattform-Nutzer (optional)', none: '— keiner —', service: 'Leistung',
+    contrato: 'Vertrag', anexar: 'PDF anhängen', verContrato: 'Vertrag öffnen', trocar: 'Ersetzen',
+    semContrato: 'kein Vertrag', erroAnexo: 'Datei konnte nicht hochgeladen werden.',
     amount: 'Betrag (€)', periodicity: 'Häufigkeit', monthly: 'Monatlich', quarterly: 'Vierteljährlich',
     annual: 'Jährlich', once: 'Einmalig', startM: 'Beginn', notes: 'Notizen', active: 'Aktiv',
     save: 'Speichern', edit: 'Bearbeiten', del: 'Löschen', confirm: 'Bestätigen', confirmed: 'Erhalten ✓', undo: 'Rückgängig',
@@ -64,6 +66,8 @@ export default function Financeiro() {
     expected: 'Expected (month)', received: 'Received (month)', pendingK: 'Outstanding', contracts: 'Active contracts',
     contractsT: 'Contracts', monthT: 'Payments this month', new: '+ New contract',
     client: 'Client', linkUser: 'Platform user (optional)', none: '— none —', service: 'Service',
+    contrato: 'Contract', anexar: 'Attach PDF', verContrato: 'Open contract', trocar: 'Replace',
+    semContrato: 'no contract', erroAnexo: 'Could not upload the file.',
     amount: 'Amount (€)', periodicity: 'Frequency', monthly: 'Monthly', quarterly: 'Quarterly',
     annual: 'Yearly', once: 'One-off', startM: 'Start', notes: 'Notes', active: 'Active',
     save: 'Save', edit: 'Edit', del: 'Delete', confirm: 'Confirm', confirmed: 'Received ✓', undo: 'Undo',
@@ -75,6 +79,8 @@ export default function Financeiro() {
     expected: 'Previsto (mês)', received: 'Recebido (mês)', pendingK: 'Por receber', contracts: 'Contratos ativos',
     contractsT: 'Contratos', monthT: 'Recebimentos do mês', new: '+ Novo contrato',
     client: 'Cliente', linkUser: 'Utilizador da plataforma (opcional)', none: '— nenhum —', service: 'Serviço',
+    contrato: 'Contrato', anexar: 'Anexar PDF', verContrato: 'Abrir contrato', trocar: 'Substituir',
+    semContrato: 'sem contrato', erroAnexo: 'N\u00e3o foi poss\u00edvel carregar o ficheiro.',
     amount: 'Valor (€)', periodicity: 'Periodicidade', monthly: 'Mensal', quarterly: 'Trimestral',
     annual: 'Anual', once: 'Pontual', startM: 'Início', notes: 'Notas', active: 'Ativo',
     save: 'Guardar', edit: 'Editar', del: 'Eliminar', confirm: 'Confirmar', confirmed: 'Recebido ✓', undo: 'Anular',
@@ -128,6 +134,31 @@ export default function Financeiro() {
     if (error) setErr(L.saveErr)
     load()
   }
+  // ── Contrato em PDF ──────────────────────────────────────────────────────
+  // Vai para a pasta do próprio cliente quando o contrato está ligado a uma
+  // conta: assim ele vê-o no Início dele (política de leitura da migração 019)
+  // e o ficheiro desaparece com o cliente quando este é eliminado. Sem conta
+  // associada, fica numa pasta a que só a Lúcia chega.
+  async function anexarContrato(b, file) {
+    if (!file) return
+    setBusyId(b.id); setErr('')
+    const nome = file.name.replace(/[^\w.\-@ ]+/g, '_')
+    const caminho = b.user_id ? `${b.user_id}/contratos/${nome}` : `contratos/${b.id}/${nome}`
+    const { error: eUp } = await supabase.storage.from('client-docs').upload(caminho, file, { upsert: true })
+    if (eUp) { setErr(L.erroAnexo); setBusyId(null); return }
+    const { error } = await supabase.from('client_billing')
+      .update({ contract_path: caminho, contract_name: file.name }).eq('id', b.id)
+    if (error) setErr(L.erroAnexo)
+    setBusyId(null); load()
+  }
+
+  // O bucket é privado: pede-se uma ligação temporária em vez de guardar URLs.
+  async function abrirContrato(caminho) {
+    const { data, error } = await supabase.storage.from('client-docs').createSignedUrl(caminho, 120)
+    if (error || !data?.signedUrl) { setErr(L.erroAnexo); return }
+    window.open(data.signedUrl, '_blank', 'noopener')
+  }
+
   async function toggleActive(b) {
     const { error } = await supabase.from('client_billing').update({ active: !b.active }).eq('id', b.id)
     if (error) setErr(L.saveErr)
@@ -266,6 +297,16 @@ export default function Financeiro() {
             </div>
             <span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.softCardBg, color: t.textMuted }}>{perLabel[b.periodicity]}</span>
             <div style={{ fontSize: '13px', fontWeight: 800, color: t.heading, width: '96px', textAlign: 'right' }}>{fmt(b.amount)}</div>
+            {b.contract_path ? (
+              <button onClick={() => abrirContrato(b.contract_path)} title={b.contract_name || L.verContrato}
+                style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: `1px solid ${t.cardBorder}`, cursor: 'pointer', background: 'transparent', color: t.accentText, whiteSpace: 'nowrap' }}>📄 {L.contrato}</button>
+            ) : (
+              <label title={L.anexar} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: `1px dashed ${t.cardBorder}`, cursor: busyId === b.id ? 'wait' : 'pointer', background: 'transparent', color: t.subtle, whiteSpace: 'nowrap' }}>
+                {busyId === b.id ? '…' : L.anexar}
+                <input type="file" accept="application/pdf,image/*" disabled={busyId === b.id}
+                  onChange={e => anexarContrato(b, e.target.files?.[0])} style={{ display: 'none' }} />
+              </label>
+            )}
             <button onClick={() => toggleActive(b)} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: 'none', cursor: 'pointer', background: b.active ? '#d1fae5' : '#f1f5f9', color: b.active ? '#065f46' : '#64748b' }}>{L.active}</button>
             <button onClick={() => openEdit(b)} title={L.edit} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.subtle, fontSize: '13px', padding: '2px' }}>✎</button>
             <button onClick={() => removeContract(b)} title={L.del} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.subtle, fontSize: '13px', padding: '2px' }}>✕</button>

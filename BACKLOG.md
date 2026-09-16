@@ -3,7 +3,7 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 14/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> **Última sincronização:** 15/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
@@ -182,16 +182,6 @@
 
 ### Onboarding e primeiro acesso
 
-- [ ] **Melhorar o fluxo de onboarding: pedir dados da empresa e país à entrada**
-  *Reunião 06/08/2026 · Parcial 14/09 · Resp.: Vinícius*
-  ↳ **Já feito a 14/09:** o Início avisa quando falta o país e leva à Empresa; a Lúcia passou
-  a poder registar país e serviço no momento em que cria a conta. Falta a página/checklist de
-  entrada e o botão **"Fazer Onboarding"** na visão dela.
-  O país determina todas as regras fiscais (IVA, calendário, módulo alemão) — pedi-lo no
-  primeiro acesso evita que o cliente veja números errados. Inclui a página/checklist de
-  entrada do cliente novo (dados, documentos, acessos) e o botão **"Fazer Onboarding"** na
-  visão do administrador, para a Lúcia conduzir o processo.
-
 - [ ] **Rever a comunicação de entrega das credenciais**
   *Levantado no desenvolvimento · Resp.: Vinícius*
   Com o fim do convite por email, deixou de haver mensagem automática: a Lúcia entrega a
@@ -293,10 +283,6 @@
   *Reunião 23/07/2026 · Resp.: Vinícius*
   Próximos pagamentos, pagamentos em aberto, faturação total — *"é mesmo mais na perspetiva
   comercial"* (controlling comercial).
-
-- [ ] **Anexar o contrato (PDF) ao contrato do Financeiro**
-  *Reunião 23/07/2026 · Resp.: Vinícius*
-  *"Contratos ficam aqui, qualquer coisa tem acesso."*
 
 - [ ] **Exportação no formato do Excel da Lúcia**
   *Reunião 23/07/2026 · Resp.: Vinícius*
@@ -434,6 +420,36 @@
 ---
 
 ## Concluídos
+
+### Contrato do cliente e checklist de onboarding — 15/09
+
+> Migração **035** por correr (duas colunas em `client_billing`, para o ficheiro do contrato).
+
+- [x] **O contrato passa a estar na plataforma — e o cliente vê o dele**
+  *Reunião 23/07/2026 · Resp.: Vinícius*
+  Era a peça que faltava do acesso básico definido a 10/09 — *"contrato, documentos e
+  notificações"*: as mensagens e os documentos já lá estavam, o contrato não.
+  No Financeiro, cada contrato ganhou **Anexar PDF** (e depois **📄 Contrato**, para abrir).
+  No Início do cliente, aparece **Ver contrato →** por baixo do próximo pagamento.
+  O ficheiro vai para a pasta do próprio cliente (`{user_id}/contratos/`) quando o contrato
+  está ligado a uma conta: assim ele lê o seu pela política que já existia, e o ficheiro
+  desaparece com ele na eliminação. Contratos sem conta associada ficam numa pasta a que só a
+  Lúcia chega. O bucket é privado, por isso abre-se sempre com uma ligação temporária.
+
+- [x] **Checklist de onboarding e "Fazer Onboarding"**
+  *Reunião 06/08/2026 · Resp.: Vinícius*
+  Na ficha do cliente, seis passos: conta criada, dados da empresa, contrato anexado, mensagem
+  de boas-vindas, primeiro acesso e primeiros documentos. Cada um com atalho para o resolver
+  quando faz sentido.
+  **Nenhum passo é marcado à mão** — todos são lidos do que já existe. Uma checklist com
+  caixas para marcar acaba sempre por mentir (alguém marca e não faz, ou faz e não marca);
+  assim, o que está verde está mesmo feito. Custo: não dá para registar passos que a
+  plataforma não vê (uma chamada telefónica, por exemplo) — se isso fizer falta, acrescenta-se
+  depois um campo livre.
+  Na lista de clientes, quem ainda não entrou mostra **Onboarding →** em vez do atalho para a
+  plataforma, que é o botão que a Lúcia pediu na visão dela.
+  **Verificado no browser** nos dois extremos: 1 de 6 num cliente recém-criado e "Onboarding
+  completo" quando está tudo feito.
 
 ### Percurso ESG e três pontas soltas — 14/09 (fim do dia)
 

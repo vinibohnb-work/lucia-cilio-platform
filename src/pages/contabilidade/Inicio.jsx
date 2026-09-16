@@ -44,6 +44,7 @@ export default function Inicio() {
     completaPais: 'Für korrekte Steuerregeln fehlt noch das Land Ihres Unternehmens.',
     completaCta: 'Jetzt ergänzen →', lido: 'Gelesen', marcarLido: 'Als gelesen markieren',
     porMes: { monthly: 'pro Monat', quarterly: 'pro Quartal', annual: 'pro Jahr', once: 'einmalig' },
+    verContrato: 'Vertrag ansehen →',
   } : lang === 'en' ? {
     eyebrow: 'Overview', ola: 'Welcome back', semNome: 'Your company',
     avisos: 'Messages from Lúcia', semAvisos: 'No new messages.',
@@ -54,6 +55,7 @@ export default function Inicio() {
     completaPais: 'Your company country is missing — the tax rules depend on it.',
     completaCta: 'Complete now →', lido: 'Read', marcarLido: 'Mark as read',
     porMes: { monthly: 'per month', quarterly: 'per quarter', annual: 'per year', once: 'one-off' },
+    verContrato: 'See contract →',
   } : {
     eyebrow: 'Resumo', ola: 'Bem-vinda de volta', semNome: 'A tua empresa',
     avisos: 'Mensagens da Lúcia', semAvisos: 'Não há mensagens novas.',
@@ -64,6 +66,7 @@ export default function Inicio() {
     completaPais: 'Falta o país da tua empresa — é ele que determina as regras fiscais.',
     completaCta: 'Completar agora →', lido: 'Lido', marcarLido: 'Marcar como lido',
     porMes: { monthly: 'por mês', quarterly: 'por trimestre', annual: 'por ano', once: 'pagamento único' },
+    verContrato: 'Ver contrato →',
   }
 
   const load = useCallback(async () => {
@@ -88,6 +91,12 @@ export default function Inicio() {
     setLoading(false)
   }, [eid])
   useEffect(() => { load() }, [load])
+
+  // O contrato vive no bucket privado: abre-se com uma ligação temporária.
+  async function abrirContrato(caminho) {
+    const { data } = await supabase.storage.from('client-docs').createSignedUrl(caminho, 120)
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener')
+  }
 
   async function marcarLido(aviso) {
     await supabase.from('client_notices').update({ lido_em: new Date().toISOString() }).eq('id', aviso.id)
@@ -194,6 +203,10 @@ export default function Inicio() {
                 {prox.data.toLocaleDateString(localeDe(lang), { month: 'long', year: 'numeric' })} · {L.porMes[contrato.periodicity] || ''}
               </div>
               {contrato.service && <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '5px' }}>{contrato.service}</div>}
+              {contrato.contract_path && (
+                <button onClick={() => abrirContrato(contrato.contract_path)}
+                  style={{ marginTop: '9px', background: 'none', border: 'none', padding: 0, color: t.accentText, fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>{L.verContrato}</button>
+              )}
             </>
           ) : <div style={{ fontSize: '13px', color: t.subtle }}>{L.semPag}</div>}
         </div>

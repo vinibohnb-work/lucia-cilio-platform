@@ -96,6 +96,7 @@ export default function ClientesAtivos() {
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
+    onboarding: 'Onboarding →',
     compacta: 'Kompakt', completa: 'Vollst\u00e4ndig', servico: 'Dienstleistung', semServico: 'ohne Dienstleistung',
     eyebrow: 'Verwaltung', title: 'Aktive Mandanten', subtitle: 'Übersicht der Mandanten und Schnellzugang zur vollständigen Ansicht.',
     platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchh. + ESG', active: 'aktiv', pending: 'ausstehend',
@@ -107,6 +108,7 @@ export default function ClientesAtivos() {
     alertTitle: 'Gewinngrenze (Familienversicherung)',
     alertNear: (n, list) => `${n} Mandant(en) nähern sich der Gewinngrenze oder liegen darüber: ${list}`,
   } : lang === 'en' ? {
+    onboarding: 'Onboarding →',
     compacta: 'Compact', completa: 'Full', servico: 'Service', semServico: 'no service',
     eyebrow: 'Management', title: 'Active Clients', subtitle: 'Overview of clients and quick access to the full view.',
     platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Acc. + ESG', active: 'active', pending: 'pending',
@@ -118,6 +120,7 @@ export default function ClientesAtivos() {
     alertTitle: 'Profit limit (family insurance)',
     alertNear: (n, list) => `${n} client(s) approaching or above the profit limit: ${list}`,
   } : {
+    onboarding: 'Onboarding →',
     compacta: 'Compacta', completa: 'Completa', servico: 'Servi\u00e7o', semServico: 'sem servi\u00e7o',
     eyebrow: 'Gestão', title: 'Clientes Ativos', subtitle: 'Visão geral dos clientes e acesso rápido à visualização completa.',
     platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contab. + ESG', active: 'ativo', pending: 'pendente',
@@ -229,8 +232,10 @@ export default function ClientesAtivos() {
                 <span style={{ flex: 'none', width: '8px', height: '8px', borderRadius: '50%', background: activated ? t.dueOk.ink : t.dueSoon.ink }} title={activated ? L.active : L.pending} />
 
                 <div style={{ flex: 'none', display: 'flex', gap: '7px' }}>
-                  {activated && (
+                  {activated ? (
                     <button onClick={() => viewClient(u)} style={{ minHeight: '32px', padding: '0 12px', borderRadius: '8px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '11.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.viewShort}</button>
+                  ) : (
+                    <button onClick={() => navigate(`/gestao/clientes/${u.id}`)} style={{ minHeight: '32px', padding: '0 12px', borderRadius: '8px', border: 'none', background: t.dueSoon.bg, color: t.dueSoon.ink, fontWeight: 700, fontSize: '11.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.onboarding}</button>
                   )}
                   <button onClick={() => navigate(`/gestao/clientes/${u.id}`)} style={{ minHeight: '32px', padding: '0 12px', borderRadius: '8px', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted, fontWeight: 700, fontSize: '11.5px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.file}</button>
                 </div>
