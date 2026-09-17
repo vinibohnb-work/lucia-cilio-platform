@@ -323,9 +323,7 @@
   Autorização para a Play Store obtida (App Store em curso). Caminho recomendado:
   **Capacitor** — o mesmo `dist/` do Vite dentro de uma casca nativa, sem segundo código.
   As fases, cada uma entregável por si:
-  1. **Base web (pré-requisito).** Não há *service worker* nenhum e o manifest declara o
-     mesmo `logo.png` como 192 e 512 — ícones reais, ecrã de arranque e uma camada offline
-     mínima têm de existir antes de qualquer submissão.
+  1. ~~**Base web (pré-requisito).**~~ **Feita a 16/09** — ver em Concluídos.
   2. **Android.** Gera o `.aab` e vai para a loja. O login é email+palavra-passe
      (`signInWithPassword`), sem redirecionamentos OAuth, por isso não precisa de *deep links*.
   3. **iOS.** Requer Mac com Xcode — o ambiente atual é Windows; ou máquina Apple ou build
@@ -431,6 +429,38 @@
 ---
 
 ## Concluídos
+
+### App nativa, fase 1 — a base web — 16/09
+
+- [x] **Ícones reais da aplicação**
+  *Resp.: Vinícius*
+  O manifest declarava o mesmo `public/logo.png` (1024×838, o lettering completo) como 192×192
+  **e** 512×512 maskable — dois tamanhos que o ficheiro nunca teve, e um desenho que fica
+  ilegível a 48px. Agora há ficheiros a sério em `public/icons/`: 192, 512, um 512 *maskable*
+  com a zona segura respeitada (o Android recorta até 20% de cada lado), um apple-touch de 180
+  e um favicon de 32. Todos usam só o **monograma dourado sobre o verde da marca** — o
+  lettering "Office Consulting" não se lê num ícone de ecrã inicial.
+  O `scripts/gerar_icones.py` regenera tudo a partir do logótipo, para não ficarem órfãos.
+
+- [x] **Service worker: a aplicação deixa de ser uma página em branco sem rede**
+  *Resp.: Vinícius*
+  `public/sw.js`, escrito à mão e sem dependências novas. Navegação vai à **rede primeiro** e
+  guarda a casca; sem rede, serve a última casca guardada e, se nem essa houver, a
+  `public/offline.html` (trilingue). Os ficheiros de `/assets/` são **cache primeiro** — como o
+  Vite lhes põe um hash no nome, o conteúdo nunca muda para o mesmo nome, por isso não é
+  preciso manter lista nenhuma de pré-cache (que é exatamente o que costuma deixar uma
+  aplicação presa numa versão antiga).
+  **Nunca toca** em `/api/`, no Supabase nem em nada de outra origem: são dados de clientes e
+  respostas autenticadas.
+  Sem `skipWaiting()` de propósito: uma versão nova só assume quando todos os separadores
+  fecham. Chega mais devagar, mas não troca o código por baixo de quem está a meio de um
+  lançamento no livro de caixa.
+  Regista-se **só em produção** (em dev tapava o servidor do Vite) e falha em silêncio — sem
+  service worker a plataforma funciona como funcionava, só não abre sem rede.
+  ⚠️ **Por verificar num telemóvel real:** o painel de browser desta sessão não permite
+  registar service workers (nem um ficheiro vazio), por isso as 7 regras foram exercitadas num
+  ambiente falso (15 verificações, todas a passar) em vez de no browser. Vale confirmar o
+  "Adicionar ao ecrã inicial" e o modo avião num Android depois do próximo deploy.
 
 ### Contrato do cliente e checklist de onboarding — 15/09
 
