@@ -318,11 +318,22 @@
   reversível.
   ↳ Liga-se ao **agendamento do diagnóstico de 20 min** (secção Consultoria e jornada).
 
-- [ ] **Aplicação nativa (Android e iOS) — viabilidade e processo**
-  *Reunião 10/09/2026 · Resp.: Vinícius*
-  Estudar o que custa e o que muda. A plataforma já funciona no telemóvel pelo browser, por
-  isso a pergunta real é o que uma app nativa acrescenta: notificações, câmara para
-  documentos, presença na loja. Avaliar antes de prometer.
+- [ ] **Aplicação nativa (Android e iOS) — Capacitor, por fases**
+  *Reunião 10/09/2026 · atualizado 16/09/2026 · Resp.: Vinícius*
+  Autorização para a Play Store obtida (App Store em curso). Caminho recomendado:
+  **Capacitor** — o mesmo `dist/` do Vite dentro de uma casca nativa, sem segundo código.
+  As fases, cada uma entregável por si:
+  1. **Base web (pré-requisito).** Não há *service worker* nenhum e o manifest declara o
+     mesmo `logo.png` como 192 e 512 — ícones reais, ecrã de arranque e uma camada offline
+     mínima têm de existir antes de qualquer submissão.
+  2. **Android.** Gera o `.aab` e vai para a loja. O login é email+palavra-passe
+     (`signInWithPassword`), sem redirecionamentos OAuth, por isso não precisa de *deep links*.
+  3. **iOS.** Requer Mac com Xcode — o ambiente atual é Windows; ou máquina Apple ou build
+     na nuvem. A Apple rejeita cascas puras (diretriz 4.2), por isso a fase 4 é obrigatória aqui.
+  4. **O que justifica a app:** câmara para fotografar faturas direto no envio de documentos,
+     notificações push das mensagens e das obrigações fiscais, biometria no login.
+  ⚠️ **A tratar antes de publicar:** política de privacidade com URL público e o formulário
+  *Data Safety* da Play — a app toca em documentos fiscais de clientes (RGPD).
 
 - [ ] **Investigar viabilidade e custos da integração do Instagram (API da Meta) para captura de leads**
   *Reunião 23/07/2026 · Resp.: Vinícius*
