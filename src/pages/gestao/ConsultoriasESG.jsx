@@ -6,6 +6,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { listUsers } from '../../lib/adminApi'
 import { FASES, rotuloFase, progressoESG } from '../../lib/esgPercurso'
+import ListaCasos from '../../components/gestao/ListaCasos'
 
 // Lista das consultorias ESG. Decisão de 18/09: a ESG é trabalho da Lúcia, como
 // a Consultoria — abre-se um caso por cliente, com ou sem conta na plataforma,
@@ -37,6 +38,7 @@ export default function ConsultoriasESG() {
     fase: 'Phase', proxima: 'Nächster Schritt', tudoPronto: 'Alle Phasen abgeschlossen',
     vazio: 'Noch keine ESG-Beratung. Legen Sie die erste an.',
     loading: 'Wird geladen…', erro: 'Fehler (Migration 036 nötig).', semNome: 'Der Ansprechpartner ist erforderlich.',
+    abrirLista: 'Öffnen', hCliente: 'Unternehmen', hEstado: 'Status', hFases: 'Phasen', hProximo: 'Nächster Schritt', comConta: 'Konto',
   } : lang === 'en' ? {
     eyebrow: 'Management', title: 'ESG consultancies', subtitle: 'One case per company — you fill it in, the client sees the journey and the report.',
     nova: '+ New ESG consultancy', nome: 'Contact person', empresa: 'Company', email: 'Email', telefone: 'Phone', setor: 'Sector',
@@ -46,6 +48,7 @@ export default function ConsultoriasESG() {
     fase: 'Phase', proxima: 'Next step', tudoPronto: 'Every phase complete',
     vazio: 'No ESG consultancies yet. Create the first one.',
     loading: 'Loading…', erro: 'Error (migration 036 required).', semNome: 'The contact person is required.',
+    abrirLista: 'Open', hCliente: 'Company', hEstado: 'Status', hFases: 'Phases', hProximo: 'Next step', comConta: 'Account',
   } : {
     eyebrow: 'Gestão', title: 'Consultorias ESG', subtitle: 'Um caso por empresa — a Lúcia preenche, o cliente vê o percurso e o relatório.',
     nova: '+ Nova consultoria ESG', nome: 'Pessoa de contacto', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor',
@@ -55,6 +58,7 @@ export default function ConsultoriasESG() {
     fase: 'Fase', proxima: 'Próximo passo', tudoPronto: 'Todas as fases fechadas',
     vazio: 'Ainda não há consultorias ESG. Cria a primeira.',
     loading: 'A carregar…', erro: 'Erro (é necessária a migração 036).', semNome: 'A pessoa de contacto é obrigatória.',
+    abrirLista: 'Abrir', hCliente: 'Empresa', hEstado: 'Estado', hFases: 'Fases', hProximo: 'Próximo passo', comConta: 'Conta',
   }
 
   const statusLabel = { ativa: L.ativa, concluida: L.concluida, pausada: L.pausada }
@@ -173,47 +177,31 @@ export default function ConsultoriasESG() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px' }}>
-        {visiveis.map(c => {
-          const p = progresso[c.id] || progressoESG({})
-          const tone = statusTone[c.status] || statusTone.ativa
-          const prox = FASES.find(f => f.key === p.proxima)
-          return (
-            <div key={c.id} onClick={() => navigate(`/gestao/esg/${c.id}`)} style={{ ...card, padding: '18px 20px', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: t.heading }}>{c.empresa || c.nome}</div>
-                  <div style={{ fontSize: '12px', color: t.textMuted, marginTop: '2px' }}>{c.empresa ? c.nome : (c.email || '')}{c.setor ? ` · ${c.setor}` : ''}</div>
-                </div>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: tone.bg, color: tone.ink }}>{statusLabel[c.status]}</span>
-              </div>
-
-              {/* As cinco fases, com a mesma régua do Percurso */}
-              <div style={{ display: 'flex', gap: '5px', marginBottom: '8px' }}>
-                {FASES.map(f => {
-                  const e = p[f.key]
-                  const atual = f.key === p.proxima
-                  return (
-                    <div key={f.key} style={{ flex: 1 }} title={`${f.n} · ${rotuloFase(f, lang)} — ${e.pct}%`}>
-                      <div style={{ height: '5px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
-                        <div style={{ width: `${e.pct}%`, height: '100%', background: e.estado === 'pronto' ? t.dueOk.ink : t.accent }} />
-                      </div>
-                      <div style={{ fontSize: '11px', fontWeight: atual ? 800 : 600, color: atual ? t.accentText : t.subtle, marginTop: '3px', textAlign: 'center' }}>{f.n}</div>
-                    </div>
-                  )
-                })}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '11.5px', color: t.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {prox ? <>{L.proxima}: <strong style={{ color: t.heading }}>{rotuloFase(prox, lang)}</strong></> : <span style={{ color: t.dueOk.ink, fontWeight: 700 }}>{L.tudoPronto}</span>}
-                  <span style={{ color: t.subtle }}> · {p.pctGeral}%</span>
-                </span>
-                <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.accentText, whiteSpace: 'nowrap' }}>{L.abrir}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {/* Uma linha por cliente; abre num separador próprio, para partilhar o
+          ecrã com a ESG a parecer o produto que é, e não uma aba da gestão. */}
+      {!loading && visiveis.length > 0 && (
+        <ListaCasos
+          abrirRotulo={L.abrirLista}
+          cabecalho={{ cliente: L.hCliente, estado: L.hEstado, fases: L.hFases, resumo: L.hProximo }}
+          linhas={visiveis.map(c => {
+            const p = progresso[c.id] || progressoESG({})
+            const tone = statusTone[c.status] || statusTone.ativa
+            const prox = FASES.find(f => f.key === p.proxima)
+            return {
+              id: c.id,
+              titulo: c.empresa || c.nome,
+              sub: [c.empresa ? c.nome : c.email, c.setor].filter(Boolean).join(' · '),
+              estado: { rotulo: statusLabel[c.status], bg: tone.bg, ink: tone.ink },
+              chips: c.user_id ? [L.comConta] : [],
+              fases: FASES.map(f => ({ n: f.n, titulo: rotuloFase(f, lang), pct: p[f.key].pct, atual: f.key === p.proxima, pronto: p[f.key].estado === 'pronto' })),
+              resumo: prox
+                ? <><strong style={{ color: t.heading }}>{rotuloFase(prox, lang)}</strong> · {p.pctGeral}%</>
+                : <span style={{ color: t.dueOk.ink, fontWeight: 700 }}>{L.tudoPronto}</span>,
+              href: `/gestao/esg/${c.id}`, novaGuia: true,
+            }
+          })}
+        />
+      )}
     </div>
   )
 }

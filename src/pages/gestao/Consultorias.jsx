@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { BLOCOS, progressoTotal, progressoBloco } from '../../data/consultoriaBlocos'
+import ListaCasos from '../../components/gestao/ListaCasos'
 
 // Lista de consultorias. A Lúcia trabalha aqui como administradora e regista o
 // contacto sem criar conta ao cliente (decisão da reunião de 13/08).
@@ -33,6 +34,7 @@ export default function Consultorias() {
     bloco: 'Block', vazio: 'Noch keine Beratung. Legen Sie die erste an.',
     loading: 'Wird geladen…', erro: 'Fehler (Migration 029 nötig).',
     semNome: 'Name ist erforderlich.',
+    abrirLista: 'Öffnen', hCliente: 'Kunde', hEstado: 'Status', hBlocos: 'Blöcke', hProgresso: 'Fortschritt',
   } : lang === 'en' ? {
     eyebrow: 'Management', title: 'Consultancies', subtitle: 'Guided consultancies — the contact is recorded without an account.',
     nova: '+ New consultancy', nome: 'Name', empresa: 'Company', email: 'Email', telefone: 'Phone', setor: 'Sector',
@@ -42,6 +44,7 @@ export default function Consultorias() {
     bloco: 'Block', vazio: 'No consultancies yet. Create the first one.',
     loading: 'Loading…', erro: 'Error (migration 029 required).',
     semNome: 'Name is required.',
+    abrirLista: 'Open', hCliente: 'Client', hEstado: 'Status', hBlocos: 'Blocks', hProgresso: 'Progress',
   } : {
     eyebrow: 'Gestão', title: 'Consultorias', subtitle: 'Consultorias acompanhadas — o contacto fica registado sem precisar de conta.',
     nova: '+ Nova consultoria', nome: 'Nome', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor',
@@ -51,6 +54,7 @@ export default function Consultorias() {
     bloco: 'Bloco', vazio: 'Ainda não há consultorias. Cria a primeira.',
     loading: 'A carregar…', erro: 'Erro (é necessária a migração 029).',
     semNome: 'O nome é obrigatório.',
+    abrirLista: 'Abrir', hCliente: 'Cliente', hEstado: 'Estado', hBlocos: 'Blocos', hProgresso: 'Progresso',
   }
 
   const tipoLabel = (x) => x === 'gratuita' ? L.tGratuita : L.tImplementacao
@@ -139,48 +143,27 @@ export default function Consultorias() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px' }}>
-        {visiveis.map(c => {
-          const prog = progressoTotal(c)
-          const tone = statusTone[c.status] || statusTone.ativa
-          return (
-            <div key={c.id} onClick={() => navigate(`/gestao/consultorias/${c.id}`)}
-              style={{ ...card, padding: '18px 20px', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: t.heading }}>{c.nome}</div>
-                  {c.empresa && <div style={{ fontSize: '12px', color: t.textMuted, marginTop: '2px' }}>{c.empresa}</div>}
-                </div>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: tone.bg, color: tone.ink }}>{statusLabel[c.status]}</span>
-              </div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.chipBg, color: t.chipText }}>{tipoLabel(c.tipo)}</span>
-                {c.setor && <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 600, background: t.softCardBg, color: t.textMuted }}>{c.setor}</span>}
-              </div>
-
-              {/* Progresso por bloco */}
-              <div style={{ display: 'flex', gap: '5px', marginBottom: '8px' }}>
-                {BLOCOS.map(b => {
-                  const p = progressoBloco(b.n, c)
-                  const atual = c.bloco === b.n
-                  return (
-                    <div key={b.n} style={{ flex: 1 }} title={`${L.bloco} ${b.n} · ${b[lang] || b.pt} — ${p.pct}%`}>
-                      <div style={{ height: '5px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
-                        <div style={{ width: `${p.pct}%`, height: '100%', background: b.porConstruir ? t.subtle : t.accent }} />
-                      </div>
-                      <div style={{ fontSize: '11px', fontWeight: atual ? 800 : 600, color: atual ? t.accentText : t.subtle, marginTop: '3px', textAlign: 'center' }}>{b.n}</div>
-                    </div>
-                  )
-                })}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: t.subtle }}>{prog.feitas}/{prog.total}</span>
-                <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.accentText, whiteSpace: 'nowrap' }}>{L.abrir}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {/* A mesma lista das Consultorias ESG — uma linha por cliente, blocos à vista */}
+      {!loading && visiveis.length > 0 && (
+        <ListaCasos
+          abrirRotulo={L.abrirLista}
+          cabecalho={{ cliente: L.hCliente, estado: L.hEstado, fases: L.hBlocos, resumo: L.hProgresso }}
+          linhas={visiveis.map(c => {
+            const prog = progressoTotal(c)
+            const tone = statusTone[c.status] || statusTone.ativa
+            return {
+              id: c.id,
+              titulo: c.nome,
+              sub: [c.empresa, c.setor].filter(Boolean).join(' · '),
+              estado: { rotulo: statusLabel[c.status], bg: tone.bg, ink: tone.ink },
+              chips: [tipoLabel(c.tipo)],
+              fases: BLOCOS.map(b => { const p = progressoBloco(b.n, c); return { n: b.n, titulo: b[lang] || b.pt, pct: p.pct, atual: c.bloco === b.n, pronto: p.pct >= 100, apagada: b.porConstruir } }),
+              resumo: <><strong style={{ color: t.heading }}>{L.bloco} {c.bloco}</strong> · {prog.feitas}/{prog.total}</>,
+              onAbrir: () => navigate(`/gestao/consultorias/${c.id}`),
+            }
+          })}
+        />
+      )}
     </div>
   )
 }

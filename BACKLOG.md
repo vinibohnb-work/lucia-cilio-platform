@@ -504,6 +504,17 @@
   passou a medir cinco fases.
   O botão "ESG" do admin no fundo do menu saiu: a ESG dele é trabalho e vive na Gestão, em
   **Serviços → Consultorias ESG**; a ver um cliente, o botão continua a existir.
+
+- [x] **A ESG abre num separador próprio, com o menu da ESG — e as listas ficam em tabela**
+  *Pedido 19/09 · Resp.: Vinícius*
+  Embrulhar as seis páginas dentro da gestão, com cabeçalho e abas, tirava-lhes o ar de
+  produto — e a Lúcia partilha o ecrã com clientes. Agora a lista `/gestao/esg` é uma
+  **tabela** (empresa, estado, as cinco fases, próximo passo) e o **Abrir ↗** abre o caso
+  **num separador novo**, onde a barra lateral mostra o menu da ESG tal como o cliente o
+  vê — Percurso, Materialidade, Diagnóstico, KPIs, Projetos, Relatórios — com o nome da
+  empresa em destaque por cima. Do caso só resta uma tira fina no topo (voltar, estado,
+  conta ligada, o que o cliente vê). A lista das **Consultorias** passou ao mesmo formato
+  de tabela (`ListaCasos`), com os quatro blocos no lugar das fases.
   Verificado num Supabase em memória: gravação a ir para `esg_materiality` com
   `onConflict=consultoria_id`, lista com fases certas (43 % / 0 %), casca do caso, projetos,
   Célia em só leitura, Nádia sem caso. Sem tocar em dados reais.

@@ -7,6 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
 import { getCompanySettings } from '../../lib/companySettings'
+import { supabase } from '../../lib/supabase'
 import { isLite, LITE_SECTIONS } from '../../lib/platformHome'
 import { useFiscalAlerts } from '../../hooks/useFiscalAlerts'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
@@ -58,15 +59,17 @@ const NAV = {
       { to: '/consultoria',                Icon: IconRelatorios, labelKey: 'nav_consultoria' },
     ]},
   ],
+  // ESG: as rotas são relativas ao caso — /esg/<rota> no cliente, /gestao/esg/:id/<rota>
+  // quando a Lúcia abre um caso na Gestão (o mesmo menu, o mesmo produto).
   esg: [
     { key: 'section_esg', items: [
-      { to: '/esg/percurso',      Icon: IconRelatorios,  labelKey: 'nav_esg_percurso' },
-      { to: '/esg/materialidade', Icon: IconMaterial,    labelKey: 'nav_esg_material' },
-      { to: '/esg/diagnostico',   Icon: IconDiag,        labelKey: 'nav_esg_diag' },
-      { to: '/esg/kpis',          Icon: IconKpi,         labelKey: 'nav_esg_kpis' },
-      { to: '/esg/projetos',      Icon: IconProjetos,    labelKey: 'nav_projects' },
-      { to: '/esg/relatorios',    Icon: IconRelatorios,  labelKey: 'nav_esg_reports' },
-      { to: '/consultoria',       Icon: IconCaixa,       labelKey: 'nav_consultoria' },
+      { rota: 'percurso',      Icon: IconRelatorios,  labelKey: 'nav_esg_percurso' },
+      { rota: 'materialidade', Icon: IconMaterial,    labelKey: 'nav_esg_material' },
+      { rota: 'diagnostico',   Icon: IconDiag,        labelKey: 'nav_esg_diag' },
+      { rota: 'kpis',          Icon: IconKpi,         labelKey: 'nav_esg_kpis' },
+      { rota: 'projetos',      Icon: IconProjetos,    labelKey: 'nav_projects' },
+      { rota: 'relatorios',    Icon: IconRelatorios,  labelKey: 'nav_esg_reports' },
+      { to: '/consultoria',    Icon: IconCaixa,       labelKey: 'nav_consultoria', soCliente: true },
     ]},
   ],
   // roles: quem vê cada item (ausente = todos). Papéis de equipa só veem a sua área.
@@ -107,7 +110,17 @@ export default function Sidebar() {
   // os papéis de equipa (comercial/marketing) vivem só na Gestão.
   // A plataforma ativa segue o URL (o toggle apenas navega).
   const isTeamRole = role === 'comercial' || role === 'marketing'
-  const platformFromPath = pathname.startsWith('/gestao') ? 'management' : pathname.startsWith('/esg') ? 'esg' : 'accounting'
+  // Um caso ESG aberto na Gestão (/gestao/esg/:id/…) mostra o menu da ESG, não o
+  // da gestão: abre num separador próprio e tem de parecer a plataforma ESG.
+  const casoId = pathname.match(/^\/gestao\/esg\/([^/]+)/)?.[1] || null
+  const esgBase = casoId ? `/gestao/esg/${casoId}` : '/esg'
+  const [casoNome, setCasoNome] = useState(null)
+  useEffect(() => {
+    if (!casoId) { setCasoNome(null); return }
+    supabase.from('esg_consultorias').select('empresa,nome').eq('id', casoId).maybeSingle()
+      .then(({ data }) => setCasoNome(data ? (data.empresa || data.nome) : null))
+  }, [casoId])
+  const platformFromPath = casoId ? 'esg' : pathname.startsWith('/gestao') ? 'management' : pathname.startsWith('/esg') ? 'esg' : 'accounting'
   const viewPlatform = isTeamRole
     ? 'management'
     : isAdmin
@@ -122,7 +135,10 @@ export default function Sidebar() {
     .filter(sec => !lite || LITE_SECTIONS.includes(sec.key))
     .map(sec => ({
       ...sec,
-      items: sec.items.filter(it => !it.roles || it.roles.includes(role)),
+      items: sec.items
+        .filter(it => !it.roles || it.roles.includes(role))
+        .filter(it => !(casoId && it.soCliente))
+        .map(it => it.rota ? { ...it, to: `${esgBase}/${it.rota}` } : it),
     })).filter(sec => sec.items.length > 0)
 
   const PLATFORM_HOME = { management: '/gestao/clientes', accounting: '/contabilidade/dashboard', esg: '/esg/percurso' }
@@ -193,6 +209,12 @@ export default function Sidebar() {
             <div style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 8px', color: t.sectionLabel }}>
               {sectionLabel[sec.key][lang] || sectionLabel[sec.key].pt}
             </div>
+            {/* Num caso aberto, o nome da empresa fica por cima do menu — é dela que se está a falar */}
+            {sec.key === 'section_esg' && casoNome && (
+              <div style={{ margin: '0 12px 10px', padding: '9px 12px', borderRadius: '9px', background: 'rgba(201,168,76,.12)', border: '1px solid rgba(201,168,76,.28)', fontSize: '13px', fontWeight: 700, color: '#f3ecdb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {casoNome}
+              </div>
+            )}
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>
               {sec.items.map(navRow)}
               {sec.key === 'section_mgmt' && country === 'DE' && navRow({ to: '/contabilidade/rucklagen', Icon: IconRucklagen, labelKey: 'nav_rucklagen' })}
@@ -220,7 +242,7 @@ export default function Sidebar() {
         </div>
         {/* Alternar plataforma — admin: 3 áreas · cliente 'both': Contab.+ESG ·
             durante "Ver como" de um cliente 'both': as 2 plataformas dele */}
-        {!isTeamRole && (isViewing ? viewAs?.platform === 'both' : (isAdmin || platform === 'both')) && (
+        {!isTeamRole && !casoId && (isViewing ? viewAs?.platform === 'both' : (isAdmin || platform === 'both')) && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
             {(isAdmin && !isViewing ? [
               ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],

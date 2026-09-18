@@ -147,7 +147,8 @@ function AppLayout() {
             {/* Consultorias ESG — a Lúcia preenche; as seis páginas são as mesmas do cliente, dentro do caso */}
             <Route path="/gestao/esg"     element={<RoleRoute requireRole="admin"><ConsultoriasESG /></RoleRoute>} />
             <Route path="/gestao/esg/:id" element={<RoleRoute requireRole="admin"><CasoESG /></RoleRoute>}>
-              <Route index                element={<PercursoESG />} />
+              <Route index                element={<Navigate to="percurso" replace />} />
+              <Route path="percurso"      element={<PercursoESG />} />
               <Route path="materialidade" element={<Materialidade />} />
               <Route path="diagnostico"   element={<DiagnosticoESG />} />
               <Route path="kpis"          element={<KPIs />} />
