@@ -3,8 +3,8 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 15/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
-> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026
+> **Última sincronização:** 18/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026, 18/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
@@ -34,6 +34,24 @@
   Cada relatório mantém **uma língua só** (decisão da reunião). O EÜR alemão já existe; falta
   o equivalente português e o corte entre as duas versões.
   ⚠️ **Depende de:** a Lúcia investigar o formato e a apresentação exigidos em Portugal.
+
+### ESG (prioridade da reunião de 18/09)
+
+> *"Vinícius envia proposta de estrutura ESG até o fim de semana."* — o próximo passo
+> definido na reunião. A ESG fica **módulo separado**, mas com acompanhamento individual
+> por cliente; e o preenchimento da consultoria ESG é **uso interno da Lúcia** — o cliente
+> não entra lá para responder.
+
+- [ ] **Proposta de estrutura da consultoria ESG dentro da plataforma**
+  *Reunião 18/09/2026 · Resp.: Vinícius · até 21/09*
+  Desenhar como a consultoria ESG se organiza como serviço, agora que o **Percurso** por
+  fases já existe. A decisão da reunião muda o enquadramento: é a Lúcia que preenche, como
+  ferramenta de apoio ao trabalho dela, não um questionário que se entrega ao cliente.
+
+- [ ] **Visualização do ESG por cliente, pronta para apresentar**
+  *Reunião 18/09/2026 · Resp.: Vinícius · até 25/09*
+  Uma vista por cliente que a Lúcia possa mostrar numa reunião, sem ser o ecrã de trabalho.
+  ↳ Assenta no **Percurso ESG** (concluído a 14/09), que já mede o progresso das cinco fases.
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
 
@@ -279,6 +297,13 @@
   ⚠️ **Bloqueado:** a Lúcia tem de obter, com a empresa alemã que fez o site, o acesso às
   configurações de domínio.
 
+- [ ] **Níveis de acesso conforme o tipo de serviço contratado**
+  *Reunião 18/09/2026 · Resp.: Lúcia (definição) + Vinícius (implementação)*
+  Hoje os papéis distinguem admin, equipa e cliente; falta a segunda dimensão — o que cada
+  cliente vê depende do que comprou (contabilidade, ESG, consultoria, ou só o canal de
+  comunicação). Liga-se à diretriz de 10/09: **todos** os clientes têm acesso básico.
+  ⚠️ **Depende de:** a Lúcia estruturar os níveis com a equipa.
+
 - [ ] **Dashboard macro da gestão**
   *Reunião 23/07/2026 · Resp.: Vinícius*
   Próximos pagamentos, pagamentos em aberto, faturação total — *"é mesmo mais na perspetiva
@@ -297,6 +322,11 @@
 ---
 
 ## Validações técnicas
+
+- [ ] **Testar a integração com o WhatsApp (cliente básico / número de telefone)**
+  *Reunião 18/09/2026 · Resp.: Vinícius*
+  Primeiro teste para perceber o que é viável antes de prometer automações. Liga-se à
+  conversa sobre suporte contínuo e histórico de consultorias, deixada para novembro.
 
 - [ ] **Validar o mapeamento de colunas da importação com extratos reais de vários bancos**
   *Reunião 20/08/2026 · Resp.: Vinícius*
@@ -343,6 +373,14 @@
 ---
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
+
+- **Reunião de 18/09:** a **ESG mantém-se módulo separado**, mas com visualização e
+  acompanhamento **individual por cliente**. O preenchimento da consultoria ESG é **uso
+  interno da Lúcia** — apoio ao trabalho dela, sem o cliente entrar para responder. No CRM,
+  a entrada de leads fica **manual** (botão "juntar ao CRM"), de propósito, para evitar
+  registos indevidos. O **contrato é válido até 14 de novembro**, com pausa em dezembro e
+  retoma em fevereiro; o modelo de suporte contínuo e as automações (WhatsApp, histórico de
+  consultorias) ficam para discutir nessa altura.
 
 - **Reunião de 10/09:** a plataforma passa a ter duas metades claras — **gestão interna**
   (clientes ativos, CRM, marketing, acessos) e **serviços** (consultorias, contabilidade, ESG).
@@ -423,6 +461,10 @@
 - ⚠️ **(27/08)** Dispersão de ferramentas e leads por vários canais pode atrasar a consolidação
   no CRM.
 - ⚠️ **(27/08)** O período de suporte incluído pode terminar sem modelo de recorrência definido.
+- ⚠️ **(18/09)** O desenvolvimento pode não estar concluído até ao **fim do contrato, a
+  14/11** — e a pausa de dezembro empurra o que sobrar para fevereiro.
+- ⚠️ **(18/09)** O **âmbito da ESG está em expansão constante**, com risco de retrabalho.
+- ⚠️ **(18/09)** Incerteza sobre a adesão dos clientes às licenças da plataforma.
 - ⚠️ **Não há ambiente de staging** — o `.env.local` aponta para o Supabase de produção. Testar
   escrita significa escrever na base real dos clientes; o QA de 13/08 correu só em leitura.
 
