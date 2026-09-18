@@ -14,20 +14,21 @@ import { ESG_TOPICS, isMaterial } from '../data/esgTopics'
 import { ESG_QUESTIONS } from '../data/esgQuestions'
 import { isAnswered, computeKpis } from './esgKpis'
 
+// `rota` é relativa ao caso: /gestao/esg/:id/<rota> na Gestão, /esg/<rota> no cliente.
 export const FASES = [
-  { key: 'materialidade', n: 1, rota: '/esg/materialidade',
+  { key: 'materialidade', n: 1, rota: 'materialidade',
     pt: 'Materialidade', de: 'Wesentlichkeit', en: 'Materiality',
     subPt: 'O que importa a este negócio', subDe: 'Was für dieses Unternehmen zählt', subEn: 'What matters to this business' },
-  { key: 'diagnostico', n: 2, rota: '/esg/diagnostico',
+  { key: 'diagnostico', n: 2, rota: 'diagnostico',
     pt: 'Diagnóstico', de: 'Diagnose', en: 'Diagnosis',
     subPt: 'Os números de partida', subDe: 'Die Ausgangszahlen', subEn: 'The starting numbers' },
-  { key: 'kpis', n: 3, rota: '/esg/kpis',
+  { key: 'kpis', n: 3, rota: 'kpis',
     pt: 'Indicadores', de: 'Kennzahlen', en: 'Indicators',
     subPt: 'O que os números dizem', subDe: 'Was die Zahlen sagen', subEn: 'What the numbers say' },
-  { key: 'projetos', n: 4, rota: '/esg/projetos',
+  { key: 'projetos', n: 4, rota: 'projetos',
     pt: 'Projetos', de: 'Projekte', en: 'Projects',
     subPt: 'O que vai mudar, e quanto custa', subDe: 'Was sich ändert und was es kostet', subEn: 'What will change, and what it costs' },
-  { key: 'relatorio', n: 5, rota: '/esg/relatorios',
+  { key: 'relatorio', n: 5, rota: 'relatorios',
     pt: 'Relatório', de: 'Bericht', en: 'Report',
     subPt: 'O que se entrega', subDe: 'Was übergeben wird', subEn: 'What gets delivered' },
 ]

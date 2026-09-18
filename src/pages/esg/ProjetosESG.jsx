@@ -3,11 +3,10 @@ import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useSearchParams, Link } from 'react-router-dom'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
-import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { useAlvoESG } from '../../context/AlvoESGContext'
 import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../data/esgTopics'
 
 // Projetos ESG do cliente — nascem da Dupla Materialidade ("os projetos devem
@@ -18,11 +17,9 @@ const EMPTY = { topic_key: '', name: '', description: '', status: 'planned', sta
 
 export default function ProjetosESG() {
   const { lang } = useLang()
-  const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const eid = useEffectiveUserId()
-  const { isViewing } = useViewAs()
+  const { caso, id: cid, base, soLeitura } = useAlvoESG()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [projects, setProjects] = useState([])
@@ -80,23 +77,23 @@ export default function ProjetosESG() {
   }
 
   const load = useCallback(async () => {
-    if (!eid) return
+    if (!cid) return
     setLoading(true)
     const [{ data: pj }, { data: mat }] = await Promise.all([
-      supabase.from('esg_projects').select('*').eq('user_id', eid).order('created_at', { ascending: true }),
-      supabase.from('esg_materiality').select('topics, threshold').eq('user_id', eid).maybeSingle(),
+      supabase.from('esg_projects').select('*').eq('consultoria_id', cid).order('created_at', { ascending: true }),
+      supabase.from('esg_materiality').select('topics, threshold').eq('consultoria_id', cid).maybeSingle(),
     ])
     setProjects(pj || [])
     setMateriality(mat || null)
     setLoading(false)
-  }, [eid])
+  }, [cid])
   useEffect(() => { load() }, [load])
 
   // Vindo da Materialidade: /esg/projetos?topic=clima → abre o form pré-preenchido
   // (herda investimento/poupança do financeiro do tema e a meta como impacto)
   useEffect(() => {
     const topic = searchParams.get('topic')
-    if (topic && !loading && !isViewing) {
+    if (topic && !loading && !soLeitura) {
       const e = materiality?.topics?.[topic]
       setForm({ ...EMPTY, topic_key: topic,
         investment: e?.financial?.investment || '', annual_saving: e?.financial?.saving || '',
@@ -104,17 +101,17 @@ export default function ProjetosESG() {
       searchParams.delete('topic')
       setSearchParams(searchParams, { replace: true })
     }
-  }, [searchParams, setSearchParams, materiality, isViewing, loading])
+  }, [searchParams, setSearchParams, materiality, soLeitura, loading])
 
   const materialKeys = new Set(materiality
     ? ESG_TOPICS.filter(tp => isMaterial(materiality.topics?.[tp.key], Number(materiality.threshold ?? 3.5))).map(tp => tp.key)
     : [])
 
   async function saveProject() {
-    if (isViewing || !user || !form?.name) return
+    if (soLeitura || !form?.name) return
     setSaving(true); setMsg('')
     const row = {
-      user_id: user.id, topic_key: form.topic_key || null, name: form.name, description: form.description || null,
+      consultoria_id: cid, user_id: caso.user_id || null, topic_key: form.topic_key || null, name: form.name, description: form.description || null,
       status: form.status, start_month: form.start_month || null, progress: Number(form.progress) || 0,
       investment: form.investment === '' ? null : Number(form.investment),
       annual_saving: form.annual_saving === '' ? null : Number(form.annual_saving),
@@ -131,7 +128,7 @@ export default function ProjetosESG() {
   }
 
   async function deleteProject(id) {
-    if (isViewing || !window.confirm(L.confirmDel)) return
+    if (soLeitura || !window.confirm(L.confirmDel)) return
     await supabase.from('esg_projects').delete().eq('id', id)
     load()
   }
@@ -159,7 +156,7 @@ export default function ProjetosESG() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {msg && <span style={{ fontSize: '12px', fontWeight: 700, color: msg === L.saved ? '#0a7a3e' : t.neg }}>{msg}</span>}
-          {!isViewing && !form && (
+          {!soLeitura && !form && (
             <button onClick={() => setForm({ ...EMPTY })} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.newProject}</button>
           )}
         </div>
@@ -180,7 +177,7 @@ export default function ProjetosESG() {
       )}
 
       {/* Formulário */}
-      {form && !isViewing && (
+      {form && !soLeitura && (
         <div style={{ ...card, padding: '18px 20px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1.4fr', gap: '12px' }}>
             <div><div style={labelStyle}>{L.name}</div>
@@ -224,7 +221,7 @@ export default function ProjetosESG() {
         <div style={{ ...card, padding: '34px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: '34px', marginBottom: '10px' }}>🚀</div>
           <div style={{ fontSize: '14px', color: t.textMuted, marginBottom: '16px', lineHeight: 1.5 }}>{L.empty}</div>
-          <Link to="/esg/materialidade" style={{ display: 'inline-block', padding: '10px 20px', background: t.btnBg, color: t.btnInk, borderRadius: '10px', fontWeight: 700, fontSize: '13px', textDecoration: 'none' }}>{L.emptyCta}</Link>
+          <Link to={`${base}/materialidade`} style={{ display: 'inline-block', padding: '10px 20px', background: t.btnBg, color: t.btnInk, borderRadius: '10px', fontWeight: 700, fontSize: '13px', textDecoration: 'none' }}>{L.emptyCta}</Link>
         </div>
       )}
 
@@ -246,7 +243,7 @@ export default function ProjetosESG() {
                 )}
                 <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: st.bg, color: st.ink }}>{st.label}</span>
                 {p.start_month && <span style={{ fontSize: '11px', color: t.subtle }}>{L.start}: {p.start_month}</span>}
-                {!isViewing && (
+                {!soLeitura && (
                   <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
                     <button onClick={() => setForm({ ...EMPTY, ...p, investment: p.investment ?? '', annual_saving: p.annual_saving ?? '', description: p.description || '', expected_impact: p.expected_impact || '', topic_key: p.topic_key || '', start_month: p.start_month || '' })} style={{ padding: '5px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>{L.edit}</button>
                     <button onClick={() => deleteProject(p.id)} style={{ padding: '5px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.neg }}>{L.del}</button>

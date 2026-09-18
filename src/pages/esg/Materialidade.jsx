@@ -3,11 +3,10 @@ import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useNavigate } from 'react-router-dom'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
-import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { useAlvoESG } from '../../context/AlvoESGContext'
 import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, topicHint, isMaterial } from '../../data/esgTopics'
 
 // Dupla materialidade simplificada (modelo VSME/PME):
@@ -26,11 +25,9 @@ const paybackYears = (fin) => {
 
 export default function Materialidade() {
   const { lang } = useLang()
-  const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const eid = useEffectiveUserId()
-  const { isViewing } = useViewAs()
+  const { caso, id: cid, base, soLeitura } = useAlvoESG()
 
   const [topics, setTopics] = useState({})       // key -> { applicable, stakeholder, company, note, goal }
   const [threshold, setThreshold] = useState(3.5)
@@ -91,20 +88,20 @@ export default function Materialidade() {
   }
 
   const load = useCallback(async () => {
-    if (!eid) return
+    if (!cid) return
     setLoading(true)
-    const { data } = await supabase.from('esg_materiality').select('topics, threshold').eq('user_id', eid).maybeSingle()
+    const { data } = await supabase.from('esg_materiality').select('topics, threshold').eq('consultoria_id', cid).maybeSingle()
     if (data) { setTopics(data.topics || {}); if (data.threshold != null) setThreshold(Number(data.threshold)) }
     setLoading(false)
-  }, [eid])
+  }, [cid])
   useEffect(() => { load() }, [load])
 
   async function save(next = topics, th = threshold) {
-    if (isViewing || !user) return
+    if (soLeitura) return
     setSaving(true); setMsg('')
     const { error } = await supabase.from('esg_materiality').upsert(
-      { user_id: user.id, topics: next, threshold: th, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id' }
+      { consultoria_id: cid, user_id: caso.user_id || null, topics: next, threshold: th, updated_at: new Date().toISOString() },
+      { onConflict: 'consultoria_id' }
     )
     setSaving(false)
     setMsg(error ? L.saveErr : L.saved)
@@ -244,7 +241,7 @@ export default function Materialidade() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {msg && <span style={{ fontSize: '12px', fontWeight: 700, color: msg === L.saved ? '#0a7a3e' : t.neg }}>{msg}</span>}
           <span style={{ fontSize: '11.5px', color: t.subtle }}>{L.scored}: <strong style={{ color: t.heading }}>{scoredCount}/{ESG_TOPICS.length}</strong></span>
-          {!isViewing && <button onClick={() => save()} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
+          {!soLeitura && <button onClick={() => save()} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
         </div>
       </div>
 
@@ -265,8 +262,8 @@ export default function Materialidade() {
                   return (
                     <div key={tp.key} style={{ padding: '10px 0', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
-                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: isViewing ? 'default' : 'pointer', flex: 1, minWidth: '190px' }}>
-                          <input type="checkbox" checked={on} disabled={isViewing} onChange={() => patch(tp.key, { applicable: !on })} style={{ marginTop: '3px', accentColor: meta.color }} />
+                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: soLeitura ? 'default' : 'pointer', flex: 1, minWidth: '190px' }}>
+                          <input type="checkbox" checked={on} disabled={soLeitura} onChange={() => patch(tp.key, { applicable: !on })} style={{ marginTop: '3px', accentColor: meta.color }} />
                           <span>
                             <span style={{ fontSize: '13px', fontWeight: 700, color: on ? t.heading : t.subtle }}>{topicLabel(tp, lang)}</span>
                             <span style={{ display: 'block', fontSize: '11px', color: t.subtle, marginTop: '1px' }}>{topicHint(tp, lang)}</span>
@@ -276,17 +273,17 @@ export default function Materialidade() {
                           <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                             <div>
                               <div style={{ fontSize: '9.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.stakeholder}</div>
-                              <ScoreRow value={e.stakeholder} color={meta.color} disabled={isViewing} onPick={v => patch(tp.key, { stakeholder: v })} />
+                              <ScoreRow value={e.stakeholder} color={meta.color} disabled={soLeitura} onPick={v => patch(tp.key, { stakeholder: v })} />
                             </div>
                             <div>
                               <div style={{ fontSize: '9.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.company}</div>
-                              <ScoreRow value={e.company} color={meta.color} disabled={isViewing} onPick={v => patch(tp.key, { company: v })} />
+                              <ScoreRow value={e.company} color={meta.color} disabled={soLeitura} onPick={v => patch(tp.key, { company: v })} />
                             </div>
                           </div>
                         )}
                       </div>
                       {on && (
-                        <input value={e.note || ''} disabled={isViewing} onChange={ev => patch(tp.key, { note: ev.target.value })} placeholder={L.note} style={{ ...inputStyle, marginTop: '8px', fontSize: '11.5px' }} />
+                        <input value={e.note || ''} disabled={soLeitura} onChange={ev => patch(tp.key, { note: ev.target.value })} placeholder={L.note} style={{ ...inputStyle, marginTop: '8px', fontSize: '11.5px' }} />
                       )}
                     </div>
                   )
@@ -303,7 +300,7 @@ export default function Materialidade() {
               <span style={{ fontFamily: t.fontDisplay, fontSize: '17px', fontWeight: 600, color: t.heading }}>{L.matrix}</span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: t.textMuted, fontWeight: 600 }}>
                 {L.thresholdL}
-                <select value={threshold} disabled={isViewing} onChange={e => { const th = Number(e.target.value); setThreshold(th); save(topics, th) }} style={{ ...inputStyle, width: 'auto', padding: '4px 7px', cursor: 'pointer' }}>
+                <select value={threshold} disabled={soLeitura} onChange={e => { const th = Number(e.target.value); setThreshold(th); save(topics, th) }} style={{ ...inputStyle, width: 'auto', padding: '4px 7px', cursor: 'pointer' }}>
                   {[2.5, 3, 3.5, 4].map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </label>
@@ -336,7 +333,7 @@ export default function Materialidade() {
                     <span style={{ width: '18px', height: '18px', borderRadius: '5px', background: meta.color, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 800, flex: 'none' }}>{topic.abbr}</span>
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.heading, flex: 1, minWidth: '110px' }}>{topicLabel(topic, lang)}</span>
                     <span style={{ fontSize: '10.5px', fontWeight: 700, color: t.subtle }}>{e.company}×{e.stakeholder}</span>
-                    {!isViewing && (
+                    {!soLeitura && (
                       <>
                         <button onClick={() => openGoal(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasGoal ? meta.color : t.cardBorder}`, background: hasGoal ? meta.bg : 'transparent', color: hasGoal ? meta.color : t.textMuted }}>
                           🎯 {hasGoal ? L.goalEdit : L.goal}
@@ -344,7 +341,7 @@ export default function Materialidade() {
                         <button onClick={() => openFin(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasFin ? '#0a7a3e' : t.cardBorder}`, background: hasFin ? '#eaf5ee' : 'transparent', color: hasFin ? '#0a7a3e' : t.textMuted }}>
                           💶 {L.fin}
                         </button>
-                        <button onClick={() => navigate(`/esg/projetos?topic=${topic.key}`)} title={L.toProject} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>
+                        <button onClick={() => navigate(`${base}/projetos?topic=${topic.key}`)} title={L.toProject} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>
                           🚀
                         </button>
                       </>
@@ -361,7 +358,7 @@ export default function Materialidade() {
                     </div>
                   )}
                   {/* Form financeiro */}
-                  {finOpen === topic.key && !isViewing && (
+                  {finOpen === topic.key && !soLeitura && (
                     <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '7px', background: t.softCardBg, borderRadius: '10px', padding: '10px' }}>
                       <div>
                         <div style={{ fontSize: '9.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.finImpact}</div>
@@ -399,7 +396,7 @@ export default function Materialidade() {
                       {e.goal.how && <span style={{ display: 'block', color: t.textMuted }}>→ {e.goal.how}</span>}
                     </div>
                   )}
-                  {goalOpen === topic.key && !isViewing && (
+                  {goalOpen === topic.key && !soLeitura && (
                     <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '7px', background: t.softCardBg, borderRadius: '10px', padding: '10px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
                         <input value={goalForm.baseline} onChange={e2 => setGoalForm(f => ({ ...f, baseline: e2.target.value }))} placeholder={L.baseline} style={inputStyle} />

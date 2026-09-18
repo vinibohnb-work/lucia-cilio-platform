@@ -7,8 +7,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useViewAs } from '../../context/ViewAsContext'
 import { supabase } from '../../lib/supabase'
 import { listUsers } from '../../lib/adminApi'
-import { ESG_QUESTIONS, ESG_TOTAL } from '../../data/esgQuestions'
-import { isAnswered } from '../../lib/esgKpis'
+import { FASES, rotuloFase, progressoESG } from '../../lib/esgPercurso'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 
 // Espelha a lista de serviços do cadastro (AdminHome) — é por aqui que a Lúcia
@@ -44,19 +43,23 @@ export default function ClientesAtivos() {
       // Indicadores por utilizador (admin lê todas as linhas via RLS)
       // Nota: o saldo é acumulado desde sempre, por isso cash_entries não pode
       // ser filtrado por data. Só se filtra o que não altera o resultado.
-      const [{ data: ce }, { data: fo }, { data: esg }, { data: cl }, { data: cs }, { data: mp }] = await Promise.all([
+      const [{ data: ce }, { data: fo }, { data: casos }, { data: cl }, { data: cs }, { data: mp }, { data: eMat }, { data: eDiag }, { data: eProj }, { data: eRep }] = await Promise.all([
         supabase.from('cash_entries').select('user_id,type,amount,private,entry_date'),
         supabase.from('fiscal_obligations').select('user_id,status').eq('status', 'pending'),
-        // Multi-ano: ordem ascendente para o ano mais recente ficar por último (vence)
-        supabase.from('esg_diagnostics').select('user_id,answers,reference_year').order('reference_year', { ascending: true }),
+        // ESG como consultoria (18/09): a fase de cada caso, medida como no Percurso
+        supabase.from('esg_consultorias').select('id,user_id').order('updated_at', { ascending: true }),
         supabase.from('clients').select('user_id'),
         supabase.from('company_settings').select('user_id,country,service,de_famv_limit'),
         supabase.from('monthly_plans').select('user_id,items,monthly_fixed,productive_hours'),
+        supabase.from('esg_materiality').select('consultoria_id,topics,threshold'),
+        supabase.from('esg_diagnostics').select('consultoria_id,reference_year,answers').eq('reference_year', new Date().getFullYear()),
+        supabase.from('esg_projects').select('consultoria_id,topic_key'),
+        supabase.from('esg_reports').select('consultoria_id,reference_year,sections').eq('reference_year', new Date().getFullYear()),
       ])
       const year = String(new Date().getFullYear())
       const monthsElapsed = new Date().getMonth() + 1
       const by = {}
-      const ensure = (id) => (by[id] ||= { revenue: 0, saldo: 0, yearProfit: 0, pending: 0, clients: 0, esgAnswered: null, esgYear: null, famv: null })
+      const ensure = (id) => (by[id] ||= { revenue: 0, saldo: 0, yearProfit: 0, pending: 0, clients: 0, esgProg: null, famv: null })
       ;(ce || []).forEach(e => {
         if (e.private) return
         const b = ensure(e.user_id); const amt = Number(e.amount) || 0
@@ -69,7 +72,14 @@ export default function ClientesAtivos() {
       })
       ;(fo || []).forEach(o => { if (o.status === 'pending') ensure(o.user_id).pending++ })
       ;(cl || []).forEach(c => ensure(c.user_id).clients++)
-      ;(esg || []).forEach(d => { const b = ensure(d.user_id); b.esgAnswered = ESG_QUESTIONS.filter(q => isAnswered(d.answers, q)).length; b.esgYear = d.reference_year })
+      // Um caso por utilizador (o mais recente vence, pela ordem ascendente)
+      const porCaso = {}
+      const de = (id) => (porCaso[id] ||= { materiality: null, diagnostic: null, projects: [], report: null })
+      ;(eMat || []).forEach(m => { if (m.consultoria_id) de(m.consultoria_id).materiality = m })
+      ;(eDiag || []).forEach(d => { if (d.consultoria_id) de(d.consultoria_id).diagnostic = d })
+      ;(eProj || []).forEach(p => { if (p.consultoria_id) de(p.consultoria_id).projects.push(p) })
+      ;(eRep || []).forEach(r => { if (r.consultoria_id) de(r.consultoria_id).report = r })
+      ;(casos || []).forEach(c => { if (c.user_id) ensure(c.user_id).esgProg = progressoESG(porCaso[c.id] || {}) })
       // Limite de lucro (Familienversicherung): clientes DE com limite definido.
       // Lucro mensal = Planeamento Mensal (se existir), senão média real do ano.
       const planBy = Object.fromEntries((mp || []).map(p => [p.user_id, p]))
@@ -101,7 +111,7 @@ export default function ClientesAtivos() {
     eyebrow: 'Verwaltung', title: 'Aktive Mandanten', subtitle: 'Übersicht der Mandanten und Schnellzugang zur vollständigen Ansicht.',
     platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchh. + ESG', active: 'aktiv', pending: 'ausstehend',
     revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen', clientsN: 'Mandanten',
-    esgProgress: 'ESG-Diagnose', view: 'Vollständige Ansicht', loading: 'Wird geladen…', empty: 'Noch keine Mandanten.',
+    esgProgress: 'ESG-Phase', esgPronto: 'Abgeschlossen', esgSem: 'kein Fall', view: 'Vollständige Ansicht', loading: 'Wird geladen…', empty: 'Noch keine Mandanten.',
     apiHint: 'Benötigt die bereitgestellte Version (Vercel).',
     limitLabel: 'Gewinn / Grenze (Monat)', fromPlan: 'aus Monatsplanung', fromReal: 'Ø real',
     file: 'Daten & Verlauf', viewShort: 'Plattform',
@@ -113,7 +123,7 @@ export default function ClientesAtivos() {
     eyebrow: 'Management', title: 'Active Clients', subtitle: 'Overview of clients and quick access to the full view.',
     platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Acc. + ESG', active: 'active', pending: 'pending',
     revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines', clientsN: 'Clients',
-    esgProgress: 'ESG assessment', view: 'Full view', loading: 'Loading…', empty: 'No clients yet.',
+    esgProgress: 'ESG phase', esgPronto: 'Complete', esgSem: 'no case', view: 'Full view', loading: 'Loading…', empty: 'No clients yet.',
     apiHint: 'Requires the published version (Vercel).',
     limitLabel: 'Profit / limit (month)', fromPlan: 'from Monthly Plan', fromReal: 'real avg.',
     file: 'Data & History', viewShort: 'Platform',
@@ -125,7 +135,7 @@ export default function ClientesAtivos() {
     eyebrow: 'Gestão', title: 'Clientes Ativos', subtitle: 'Visão geral dos clientes e acesso rápido à visualização completa.',
     platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contab. + ESG', active: 'ativo', pending: 'pendente',
     revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes', clientsN: 'Clientes',
-    esgProgress: 'Diagnóstico ESG', view: 'Visualização completa', loading: 'A carregar…', empty: 'Ainda não há clientes.',
+    esgProgress: 'Fase ESG', esgPronto: 'Concluída', esgSem: 'sem caso', view: 'Visualização completa', loading: 'A carregar…', empty: 'Ainda não há clientes.',
     apiHint: 'Requer a versão publicada (Vercel).',
     limitLabel: 'Lucro / limite (mês)', fromPlan: 'do Planeamento Mensal', fromReal: 'média real',
     file: 'Dados & Histórico', viewShort: 'Plataforma',
@@ -146,7 +156,7 @@ export default function ClientesAtivos() {
 
   function viewClient(u) {
     setViewAs({ id: u.id, name: u.display_name || u.email, platform: u.platform || 'accounting' })
-    navigate(u.platform === 'esg' ? '/esg/diagnostico' : '/contabilidade/dashboard')
+    navigate(u.platform === 'esg' ? '/esg/percurso' : '/contabilidade/dashboard')
   }
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '16px', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }
@@ -304,8 +314,8 @@ export default function ClientesAtivos() {
               )}
               {showEsg && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {miniStat(L.esgProgress, s.esgAnswered != null ? `${s.esgAnswered}/${ESG_TOTAL}` : '—', t.accent)}
-                  {miniStat(lang === 'de' ? 'Bezugsjahr' : lang === 'en' ? 'Ref. year' : 'Ano ref.', s.esgYear || '—')}
+                  {miniStat(L.esgProgress, !s.esgProg ? L.esgSem : s.esgProg.proxima ? (() => { const f = FASES.find(x => x.key === s.esgProg.proxima); return `${f.n} · ${rotuloFase(f, lang)}` })() : L.esgPronto, t.accent)}
+                  {miniStat(lang === 'de' ? 'ESG-Fortschritt' : lang === 'en' ? 'ESG progress' : 'Progresso ESG', s.esgProg ? `${s.esgProg.pctGeral}%` : '—')}
                 </div>
               )}
 

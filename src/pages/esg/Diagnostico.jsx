@@ -1,20 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
-import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { ESG_PILLARS, ESG_QUESTIONS, ESG_TOTAL, questionsByPillar } from '../../data/esgQuestions'
-import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { useAlvoESG } from '../../context/AlvoESGContext'
 
 export default function Diagnostico() {
   const { lang } = useLang()
-  const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const eid = useEffectiveUserId()
-  const { isViewing } = useViewAs()
+  const { caso, id: cid, soLeitura } = useAlvoESG()
 
   const [answers, setAnswers] = useState({})
   const [year, setYear] = useState(new Date().getFullYear())
@@ -55,9 +52,9 @@ export default function Diagnostico() {
 
   // Multi-ano: carrega todos os anos gravados; mostra o mais recente.
   const load = useCallback(async () => {
-    if (!eid) return
+    if (!cid) return
     setLoading(true)
-    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).order('reference_year', { ascending: false })
+    const { data } = await supabase.from('esg_diagnostics').select('answers, reference_year').eq('consultoria_id', cid).order('reference_year', { ascending: false })
     const map = {}
     ;(data || []).forEach(r => { map[r.reference_year] = r.answers || {} })
     setByYear(map)
@@ -66,7 +63,7 @@ export default function Diagnostico() {
     setYear(y)
     setAnswers(map[y] || {})
     setLoading(false)
-  }, [eid])
+  }, [cid])
   useEffect(() => { load() }, [load])
 
   const yearList = [...new Set([...Object.keys(byYear).map(Number), Number(year)])].sort((a, b) => b - a)
@@ -105,11 +102,11 @@ export default function Diagnostico() {
   const answeredIn = (key) => questionsByPillar(key).filter(isAnswered).length
 
   async function save() {
-    if (isViewing || !user) return
+    if (soLeitura) return
     setSaving(true); setMsg('')
     const { error } = await supabase.from('esg_diagnostics').upsert(
-      { user_id: user.id, reference_year: Number(year), answers, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,reference_year' }
+      { consultoria_id: cid, user_id: caso.user_id || null, reference_year: Number(year), answers, updated_at: new Date().toISOString() },
+      { onConflict: 'consultoria_id,reference_year' }
     )
     if (!error) setByYear(p => ({ ...p, [year]: answers }))
     setSaving(false)
@@ -244,13 +241,13 @@ export default function Diagnostico() {
               <select value={year} onChange={e => pickYear(Number(e.target.value))} style={{ ...inputStyle, width: '92px', cursor: 'pointer' }}>
                 {yearList.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
-              {!isViewing && (
+              {!soLeitura && (
                 <button onClick={addYear} title={lang === 'de' ? 'Neues Jahr (kopiert aktuelle Antworten)' : lang === 'en' ? 'New year (copies current answers)' : 'Novo ano (copia as respostas atuais)'}
                   style={{ width: '38px', height: '38px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.cardBg, color: t.accentText, fontSize: '18px', fontWeight: 800, cursor: 'pointer' }}>+</button>
               )}
             </div>
           </div>
-          {!isViewing && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
+          {!soLeitura && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
         </div>
       </div>
 

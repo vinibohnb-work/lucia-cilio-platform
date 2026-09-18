@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
-import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { useAlvoESG } from '../../context/AlvoESGContext'
 import { computeKpis } from '../../lib/esgKpis'
 import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../data/esgTopics'
 
@@ -21,11 +20,9 @@ const SECTIONS = ['materialidade', 'diagnostico', 'projetos', 'kpis']
 
 export default function RelatoriosESG() {
   const { lang } = useLang()
-  const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const eid = useEffectiveUserId()
-  const { isViewing } = useViewAs()
+  const { caso, id: cid, soLeitura } = useAlvoESG()
 
   const [byYear, setByYear] = useState({})
   const [year, setYear] = useState(null)
@@ -73,13 +70,13 @@ export default function RelatoriosESG() {
   }
 
   const load = useCallback(async () => {
-    if (!eid) return
+    if (!cid) return
     setLoading(true)
     const [{ data: diags }, { data: mat }, { data: pj }, { data: cs }] = await Promise.all([
-      supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).order('reference_year', { ascending: false }),
-      supabase.from('esg_materiality').select('topics, threshold').eq('user_id', eid).maybeSingle(),
-      supabase.from('esg_projects').select('*').eq('user_id', eid).order('created_at', { ascending: true }),
-      supabase.from('company_settings').select('company_name').eq('user_id', eid).maybeSingle(),
+      supabase.from('esg_diagnostics').select('answers, reference_year').eq('consultoria_id', cid).order('reference_year', { ascending: false }),
+      supabase.from('esg_materiality').select('topics, threshold').eq('consultoria_id', cid).maybeSingle(),
+      supabase.from('esg_projects').select('*').eq('consultoria_id', cid).order('created_at', { ascending: true }),
+      caso.user_id ? supabase.from('company_settings').select('company_name').eq('user_id', caso.user_id).maybeSingle() : Promise.resolve({ data: null }),
     ])
     const map = {}
     ;(diags || []).forEach(r => { if (r.answers && Object.keys(r.answers).length) map[r.reference_year] = r.answers })
@@ -89,25 +86,25 @@ export default function RelatoriosESG() {
     setYear(y)
     setMateriality(mat || null)
     setProjects(pj || [])
-    setCompany(cs || null)
-    const { data: rep } = await supabase.from('esg_reports').select('sections').eq('user_id', eid).eq('reference_year', y).maybeSingle()
+    setCompany(cs?.company_name ? cs : { company_name: caso.empresa || caso.nome })
+    const { data: rep } = await supabase.from('esg_reports').select('sections').eq('consultoria_id', cid).eq('reference_year', y).maybeSingle()
     setSections(rep?.sections || {})
     setLoading(false)
-  }, [eid])
+  }, [cid, caso.user_id, caso.empresa, caso.nome])
   useEffect(() => { load() }, [load])
 
   async function pickYear(y) {
     setYear(y)
-    const { data: rep } = await supabase.from('esg_reports').select('sections').eq('user_id', eid).eq('reference_year', y).maybeSingle()
+    const { data: rep } = await supabase.from('esg_reports').select('sections').eq('consultoria_id', cid).eq('reference_year', y).maybeSingle()
     setSections(rep?.sections || {})
   }
 
   async function save() {
-    if (isViewing || !user) return
+    if (soLeitura) return
     setSaving(true); setMsg('')
     const { error } = await supabase.from('esg_reports').upsert(
-      { user_id: user.id, reference_year: Number(year), sections, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,reference_year' }
+      { consultoria_id: cid, user_id: caso.user_id || null, reference_year: Number(year), sections, updated_at: new Date().toISOString() },
+      { onConflict: 'consultoria_id,reference_year' }
     )
     setSaving(false)
     setMsg(error ? L.saveErr : L.saved)
@@ -177,7 +174,7 @@ export default function RelatoriosESG() {
   const SectionCard = ({ id, title, children }) => (
     <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
       <h3 style={{ margin: '0 0 12px', fontFamily: t.fontDisplay, fontSize: '18px', fontWeight: 600, color: t.heading, borderBottom: `2px solid ${t.accent}`, paddingBottom: '6px' }}>{title}</h3>
-      <textarea value={sections[id] || ''} disabled={isViewing} onChange={e => setSections(p => ({ ...p, [id]: e.target.value }))}
+      <textarea value={sections[id] || ''} disabled={soLeitura} onChange={e => setSections(p => ({ ...p, [id]: e.target.value }))}
         placeholder={L.textPh} rows={3}
         style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', fontFamily: t.fontBody, resize: 'vertical', outline: 'none', marginBottom: '12px' }} />
       <div style={{ fontSize: '10px', fontWeight: 700, color: t.subtle, textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: '6px' }}>{L.dataLbl}</div>
@@ -201,7 +198,7 @@ export default function RelatoriosESG() {
             {(years.length ? years : [year]).map(y => <option key={y} value={y}>{y}</option>)}
           </select>
           <button onClick={printReport} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.print}</button>
-          {!isViewing && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
+          {!soLeitura && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
         </div>
       </div>
 

@@ -8,7 +8,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { computeKpis } from '../../lib/esgKpis'
 import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../data/esgTopics'
-import { useEffectiveUserId } from '../../context/ViewAsContext'
+import { useAlvoESG } from '../../context/AlvoESGContext'
 
 const E = '#0a7a3e', S = '#1e60c8', G = '#a9781a'
 
@@ -30,7 +30,7 @@ export default function KPIs() {
   const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString(loc, { minimumFractionDigits: d, maximumFractionDigits: d })
   const { t, night } = useTheme()
   const isMobile = useIsMobile()
-  const eid = useEffectiveUserId()
+  const { id: cid, base } = useAlvoESG()
 
   const [byYear, setByYear] = useState({})     // ano → answers (dados reais do diagnóstico)
   const [year, setYear] = useState(null)
@@ -38,11 +38,11 @@ export default function KPIs() {
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    if (!eid) return
+    if (!cid) return
     setLoading(true)
     const [{ data: diags }, { data: mat }] = await Promise.all([
-      supabase.from('esg_diagnostics').select('answers, reference_year').eq('user_id', eid).order('reference_year', { ascending: false }),
-      supabase.from('esg_materiality').select('topics, threshold').eq('user_id', eid).maybeSingle(),
+      supabase.from('esg_diagnostics').select('answers, reference_year').eq('consultoria_id', cid).order('reference_year', { ascending: false }),
+      supabase.from('esg_materiality').select('topics, threshold').eq('consultoria_id', cid).maybeSingle(),
     ])
     const map = {}
     ;(diags || []).forEach(r => { if (r.answers && Object.keys(r.answers).length) map[r.reference_year] = r.answers })
@@ -51,7 +51,7 @@ export default function KPIs() {
     setYear(years[0] || null)
     setMateriality(mat || null)
     setLoading(false)
-  }, [eid])
+  }, [cid])
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
@@ -126,7 +126,7 @@ export default function KPIs() {
         <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: '14px', padding: '34px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: '34px', marginBottom: '10px' }}>📊</div>
           <div style={{ fontSize: '14px', color: t.textMuted, marginBottom: '16px', lineHeight: 1.5 }}>{L.empty}</div>
-          <Link to="/esg/diagnostico" style={{ display: 'inline-block', padding: '10px 20px', background: t.btnBg, color: t.btnInk, borderRadius: '10px', fontWeight: 700, fontSize: '13px', textDecoration: 'none' }}>{L.emptyCta}</Link>
+          <Link to={`${base}/diagnostico`} style={{ display: 'inline-block', padding: '10px 20px', background: t.btnBg, color: t.btnInk, borderRadius: '10px', fontWeight: 700, fontSize: '13px', textDecoration: 'none' }}>{L.emptyCta}</Link>
         </div>
       </div>
     )

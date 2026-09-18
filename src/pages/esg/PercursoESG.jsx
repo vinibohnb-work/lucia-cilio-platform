@@ -5,7 +5,7 @@ import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { useEffectiveUserId } from '../../context/ViewAsContext'
+import { useAlvoESG } from '../../context/AlvoESGContext'
 import { FASES, rotuloFase, subFase, progressoESG } from '../../lib/esgPercurso'
 
 // Percurso ESG — a vista que faltava para a consultoria ESG se ler como
@@ -20,7 +20,7 @@ export default function PercursoESG() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
-  const eid = useEffectiveUserId()
+  const { id: cid, base } = useAlvoESG()
 
   const [dados, setDados] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -56,20 +56,20 @@ export default function PercursoESG() {
   }
 
   const load = useCallback(async () => {
-    if (!eid) return
+    if (!cid) return
     setLoading(true)
     const [mat, diag, proj, rep] = await Promise.all([
-      supabase.from('esg_materiality').select('*').eq('user_id', eid).maybeSingle(),
-      supabase.from('esg_diagnostics').select('*').eq('user_id', eid).eq('reference_year', ano).maybeSingle(),
-      supabase.from('esg_projects').select('id,topic_key,status').eq('user_id', eid),
-      supabase.from('esg_reports').select('*').eq('user_id', eid).eq('reference_year', ano).maybeSingle(),
+      supabase.from('esg_materiality').select('*').eq('consultoria_id', cid).maybeSingle(),
+      supabase.from('esg_diagnostics').select('*').eq('consultoria_id', cid).eq('reference_year', ano).maybeSingle(),
+      supabase.from('esg_projects').select('id,topic_key,status').eq('consultoria_id', cid),
+      supabase.from('esg_reports').select('*').eq('consultoria_id', cid).eq('reference_year', ano).maybeSingle(),
     ])
     setDados({
       materiality: mat.data, diagnostic: diag.data,
       projects: proj.data || [], report: rep.data,
     })
     setLoading(false)
-  }, [eid, ano])
+  }, [cid, ano])
   useEffect(() => { load() }, [load])
 
   if (loading) return <EsqueletoPagina cartoes={3} linhas={5} />
@@ -114,7 +114,7 @@ export default function PercursoESG() {
               </div>
               <div style={{ fontSize: '12px', color: t.textMuted, marginTop: '2px' }}>{subFase(faseProxima, lang)}</div>
             </div>
-            <button onClick={() => navigate(faseProxima.rota)}
+            <button onClick={() => navigate(`${base}/${faseProxima.rota}`)}
               style={{ flex: 'none', padding: '11px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.continuar}</button>
           </div>
         ) : (
@@ -158,7 +158,7 @@ export default function PercursoESG() {
               </div>
             )}
 
-            <button onClick={() => navigate(f.rota)}
+            <button onClick={() => navigate(`${base}/${f.rota}`)}
               style={{ flex: 'none', minHeight: '34px', padding: '0 14px', background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: '9px', fontSize: '12px', fontWeight: 700, color: t.accentText, cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.abrir}</button>
           </div>
         )

@@ -41,6 +41,11 @@ const FormularioDiagnostico = lazy(() => import('./pages/FormularioDiagnostico')
 const ConsultoriaDetalhe  = lazy(() => import('./pages/gestao/ConsultoriaDetalhe'))
 const ConsultoriaRelatorio= lazy(() => import('./pages/gestao/ConsultoriaRelatorio'))
 const Consultoria         = lazy(() => import('./pages/Consultoria'))
+// ESG como consultoria (18/09): a lista e a casca do caso vivem na Gestão; a
+// área /esg/* do cliente resolve o caso dele e mostra tudo em só leitura.
+const ConsultoriasESG     = lazy(() => import('./pages/gestao/ConsultoriasESG'))
+const CasoESG             = lazy(() => import('./pages/gestao/CasoESG'))
+const ClienteESG          = lazy(() => import('./pages/esg/ClienteESG'))
 
 const Dashboard           = lazy(() => import('./pages/contabilidade/Dashboard'))
 const Clientes            = lazy(() => import('./pages/contabilidade/Clientes'))
@@ -116,14 +121,16 @@ function AppLayout() {
               <Route path="/contabilidade/planeamento"   element={<PlaneamentoMensal />} />
             </Route>
 
-            {/* Plataforma ESG */}
+            {/* Plataforma ESG — o cliente vê o seu caso, só leitura */}
             <Route element={<PlatformRoute requirePlatform="esg" />}>
-              <Route path="/esg/percurso"      element={<PercursoESG />} />
-              <Route path="/esg/diagnostico"   element={<DiagnosticoESG />} />
-              <Route path="/esg/materialidade" element={<Materialidade />} />
-              <Route path="/esg/kpis"          element={<KPIs />} />
-              <Route path="/esg/projetos"      element={<ProjetosESG />} />
-              <Route path="/esg/relatorios"    element={<RelatoriosESG />} />
+              <Route element={<ClienteESG />}>
+                <Route path="/esg/percurso"      element={<PercursoESG />} />
+                <Route path="/esg/diagnostico"   element={<DiagnosticoESG />} />
+                <Route path="/esg/materialidade" element={<Materialidade />} />
+                <Route path="/esg/kpis"          element={<KPIs />} />
+                <Route path="/esg/projetos"      element={<ProjetosESG />} />
+                <Route path="/esg/relatorios"    element={<RelatoriosESG />} />
+              </Route>
             </Route>
 
             {/* Consultoria partilhada (qualquer utilizador autenticado; lê pelo utilizador efetivo) */}
@@ -137,6 +144,16 @@ function AppLayout() {
             <Route path="/gestao/diagnosticos"     element={<RoleRoute requireRole={['admin', 'comercial']}><Diagnosticos /></RoleRoute>} />
             <Route path="/gestao/consultorias/:id" element={<RoleRoute requireRole="admin"><ConsultoriaDetalhe /></RoleRoute>} />
             <Route path="/gestao/consultorias/:id/relatorio" element={<RoleRoute requireRole="admin"><ConsultoriaRelatorio /></RoleRoute>} />
+            {/* Consultorias ESG — a Lúcia preenche; as seis páginas são as mesmas do cliente, dentro do caso */}
+            <Route path="/gestao/esg"     element={<RoleRoute requireRole="admin"><ConsultoriasESG /></RoleRoute>} />
+            <Route path="/gestao/esg/:id" element={<RoleRoute requireRole="admin"><CasoESG /></RoleRoute>}>
+              <Route index                element={<PercursoESG />} />
+              <Route path="materialidade" element={<Materialidade />} />
+              <Route path="diagnostico"   element={<DiagnosticoESG />} />
+              <Route path="kpis"          element={<KPIs />} />
+              <Route path="projetos"      element={<ProjetosESG />} />
+              <Route path="relatorios"    element={<RelatoriosESG />} />
+            </Route>
             <Route path="/gestao/marketing"     element={<RoleRoute requireRole={['admin', 'marketing']}><Marketing /></RoleRoute>} />
             <Route path="/gestao/financeiro"    element={<RoleRoute requireRole="admin"><Financeiro /></RoleRoute>} />
             <Route path="/gestao/acessos"       element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />

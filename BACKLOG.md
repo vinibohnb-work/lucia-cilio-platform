@@ -42,16 +42,17 @@
 > por cliente; e o preenchimento da consultoria ESG é **uso interno da Lúcia** — o cliente
 > não entra lá para responder.
 
-- [ ] **Proposta de estrutura da consultoria ESG dentro da plataforma**
-  *Reunião 18/09/2026 · Resp.: Vinícius · até 21/09*
-  Desenhar como a consultoria ESG se organiza como serviço, agora que o **Percurso** por
-  fases já existe. A decisão da reunião muda o enquadramento: é a Lúcia que preenche, como
-  ferramenta de apoio ao trabalho dela, não um questionário que se entrega ao cliente.
-
 - [ ] **Visualização do ESG por cliente, pronta para apresentar**
   *Reunião 18/09/2026 · Resp.: Vinícius · até 25/09*
   Uma vista por cliente que a Lúcia possa mostrar numa reunião, sem ser o ecrã de trabalho.
-  ↳ Assenta no **Percurso ESG** (concluído a 14/09), que já mede o progresso das cinco fases.
+  Com a ESG já organizada por casos (19/09), o que falta é o **modo de apresentação** do
+  Percurso do caso: sem campos, letra maior, imprimível — o resto já lá está.
+
+- [ ] **Retirar `user_id` das quatro tabelas ESG** (migração posterior)
+  *Achado 19/09 · Resp.: Vinícius*
+  A 036 deixou a coluna antiga em paz de propósito. Quando o modelo por casos tiver dado a
+  volta com dados reais, sai numa migração própria — e o `scripts/seed_demo_esg.mjs`, que
+  ainda grava por `user_id`, passa a criar o caso.
 
 ### Consultoria — módulo novo (prioridade da reunião de 13/08)
 
@@ -471,6 +472,41 @@
 ---
 
 ## Concluídos
+
+### ESG como consultoria — 19/09
+
+> Migração **036** por correr (tabela `esg_consultorias`, coluna `consultoria_id` nas quatro
+> tabelas ESG, backfill e políticas). Até correr, a lista `/gestao/esg` dá erro e a área ESG
+> do cliente mostra "ainda não disponível". O próprio ficheiro termina numa consulta de
+> verificação: a coluna `sem_caso` tem de vir a 0 em todas as tabelas.
+
+- [x] **Proposta de estrutura da consultoria ESG dentro da plataforma — e a implementação**
+  *Reunião 18/09/2026 · Resp.: Vinícius*
+  O módulo ESG estava construído como a Contabilidade: os dados pertenciam ao utilizador e
+  era ele que preenchia — as seis páginas liam pelo utilizador visto (`useEffectiveUserId`)
+  mas **gravavam sempre no utilizador com sessão** (`user.id`), e a base de dados deixava o
+  admin ler tudo mas escrever só no dele. Ou seja, se a Lúcia entrasse em "Ver como Célia" e
+  preenchesse a materialidade, gravava na ESG **dela**, em silêncio.
+  Passa a comportar-se como a Consultoria: um **caso** (`esg_consultorias`) é o dono dos
+  dados, com contacto inline, `lead_id` e `user_id` opcionais e estado. As quatro tabelas
+  ganham `consultoria_id` (não são substituídas); o backfill cria um caso por cada
+  utilizador que já tinha dados. A **fase não se guarda** — é calculada, como o Percurso já
+  fazia.
+  As seis páginas não mudaram de aspeto: deixaram de perguntar "quem é o utilizador" e
+  passaram a perguntar "qual é o caso" (`useAlvoESG`: caso, rotas base, só-leitura). Dentro
+  da Gestão vivem em `/gestao/esg/:id/…`, com o nome da empresa sempre em cima e o menu do
+  percurso como navegação interna do caso; a lista `/gestao/esg` mostra a fase de cada um.
+  A área `/esg/*` do cliente resolve o caso ligado à conta dele e mostra tudo **só leitura**
+  — sem botões de guardar, sem criar projetos. Se não houver caso (ou estiver escondido pela
+  Lúcia, `visivel_cliente`), vê uma mensagem em vez de seis páginas vazias.
+  Nas fichas de cliente, a métrica `n/28 respondidas` deu lugar à **fase do caso** e ao
+  progresso geral — a contagem de perguntas deixou de ser a régua certa quando o Percurso
+  passou a medir cinco fases.
+  O botão "ESG" do admin no fundo do menu saiu: a ESG dele é trabalho e vive na Gestão, em
+  **Serviços → Consultorias ESG**; a ver um cliente, o botão continua a existir.
+  Verificado num Supabase em memória: gravação a ir para `esg_materiality` com
+  `onConflict=consultoria_id`, lista com fases certas (43 % / 0 %), casca do caso, projetos,
+  Célia em só leitura, Nádia sem caso. Sem tocar em dados reais.
 
 ### App nativa, fase 1 — a base web — 16/09
 

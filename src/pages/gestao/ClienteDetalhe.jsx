@@ -9,8 +9,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useViewAs } from '../../context/ViewAsContext'
 import { supabase } from '../../lib/supabase'
 import { listUsers } from '../../lib/adminApi'
-import { ESG_QUESTIONS, ESG_TOTAL } from '../../data/esgQuestions'
-import { isAnswered } from '../../lib/esgKpis'
+import { FASES, rotuloFase, progressoESG } from '../../lib/esgPercurso'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 import DocsBrowser from '../../components/DocsBrowser'
 import AvisosCliente from '../../components/AvisosCliente'
@@ -49,7 +48,7 @@ export default function ClienteDetalhe() {
     back: '← Aktive Mandanten', eyebrow: 'Mandantenakte',
     platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG', active: 'aktiv', pending: 'ausstehend',
     summary: 'Übersicht', revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen',
-    clientsN: 'Mandanten', esgProgress: 'ESG-Diagnose', refYear: 'Bezugsjahr',
+    clientsN: 'Mandanten', esgProgress: 'ESG-Phase', refYear: 'ESG-Fortschritt', esgPronto: 'Abgeschlossen', esgSem: 'kein Fall',
     limitLabel: 'Gewinn / Grenze (Monat)', fromPlan: 'aus Monatsplanung', fromReal: 'Ø real',
     onboarding: 'Onboarding', avisos: 'Nachrichten an die Kundin/den Kunden', docs: 'Dokumente', history: 'Beratung & Verlauf', new: '+ Neuer Eintrag',
     kind: 'Typ', note: 'Notiz', meeting: 'Besprechung', recommendation: 'Empfehlung', report: 'Bericht',
@@ -62,7 +61,7 @@ export default function ClienteDetalhe() {
     back: '← Active Clients', eyebrow: 'Client File',
     platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG', active: 'active', pending: 'pending',
     summary: 'Overview', revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines',
-    clientsN: 'Clients', esgProgress: 'ESG assessment', refYear: 'Ref. year',
+    clientsN: 'Clients', esgProgress: 'ESG phase', refYear: 'ESG progress', esgPronto: 'Complete', esgSem: 'no case',
     limitLabel: 'Profit / limit (month)', fromPlan: 'from Monthly Plan', fromReal: 'real avg.',
     onboarding: 'Onboarding', avisos: 'Messages to the client', docs: 'Documents', history: 'Consulting & History', new: '+ New entry',
     kind: 'Type', note: 'Note', meeting: 'Meeting', recommendation: 'Recommendation', report: 'Report',
@@ -75,7 +74,7 @@ export default function ClienteDetalhe() {
     back: '← Clientes Ativos', eyebrow: 'Ficha do Cliente',
     platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG', active: 'ativo', pending: 'pendente',
     summary: 'Resumo', revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes',
-    clientsN: 'Clientes', esgProgress: 'Diagnóstico ESG', refYear: 'Ano ref.',
+    clientsN: 'Clientes', esgProgress: 'Fase ESG', refYear: 'Progresso ESG', esgPronto: 'Concluída', esgSem: 'sem caso',
     limitLabel: 'Lucro / limite (mês)', fromPlan: 'do Planeamento Mensal', fromReal: 'média real',
     onboarding: 'Onboarding', avisos: 'Mensagens para o cliente', docs: 'Documentos', history: 'Consultoria & Histórico', new: '+ Novo registo',
     kind: 'Tipo', note: 'Nota', meeting: 'Reunião', recommendation: 'Recomendação', report: 'Relatório',
@@ -97,13 +96,25 @@ export default function ClienteDetalhe() {
         const [{ data: ce }, { data: fo }, { data: esg }, { data: cl }, { data: cs }, { data: mp }, { data: cn }] = await Promise.all([
           supabase.from('cash_entries').select('type,amount,private,entry_date').eq('user_id', id),
           supabase.from('fiscal_obligations').select('status').eq('user_id', id),
-          // Diagnóstico multi-ano: mostra sempre o ano mais recente
-          supabase.from('esg_diagnostics').select('answers,reference_year').eq('user_id', id).order('reference_year', { ascending: false }).limit(1).maybeSingle(),
+          // ESG como consultoria (18/09): o que interessa é o caso e a fase em que está
+          supabase.from('esg_consultorias').select('id').eq('user_id', id).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
           supabase.from('clients').select('id').eq('user_id', id),
           supabase.from('company_settings').select('country,de_famv_limit').eq('user_id', id).maybeSingle(),
           supabase.from('monthly_plans').select('items,monthly_fixed,productive_hours').eq('user_id', id).maybeSingle(),
           supabase.from('consulting_notes').select('*').eq('user_id', id).order('created_at', { ascending: false }),
         ])
+        // A fase mede-se com a mesma régua do Percurso, a partir do que o caso já tem.
+        let esgProg = null
+        if (esg?.id) {
+          const ano = new Date().getFullYear()
+          const [mat, diag, proj, rep] = await Promise.all([
+            supabase.from('esg_materiality').select('topics,threshold').eq('consultoria_id', esg.id).maybeSingle(),
+            supabase.from('esg_diagnostics').select('answers').eq('consultoria_id', esg.id).eq('reference_year', ano).maybeSingle(),
+            supabase.from('esg_projects').select('topic_key').eq('consultoria_id', esg.id),
+            supabase.from('esg_reports').select('sections').eq('consultoria_id', esg.id).eq('reference_year', ano).maybeSingle(),
+          ])
+          esgProg = progressoESG({ materiality: mat.data, diagnostic: diag.data, projects: proj.data || [], report: rep.data })
+        }
         const year = String(new Date().getFullYear())
         const monthsElapsed = new Date().getMonth() + 1
         let revenue = 0, saldo = 0, yearProfit = 0
@@ -126,8 +137,7 @@ export default function ClienteDetalhe() {
           revenue, saldo,
           pending: (fo || []).filter(o => o.status === 'pending').length,
           clients: (cl || []).length,
-          esgAnswered: esg ? ESG_QUESTIONS.filter(q => isAnswered(esg.answers, q)).length : null,
-          esgYear: esg?.reference_year || null,
+          esgCaso: esg?.id || null, esgProg,
           famv,
         })
         setNotes(cn || [])
@@ -157,7 +167,7 @@ export default function ClienteDetalhe() {
   function viewFull() {
     if (!client) return
     setViewAs({ id: client.id, name: client.display_name || client.email, platform: client.platform || 'accounting' })
-    navigate(client.platform === 'esg' ? '/esg/diagnostico' : '/contabilidade/dashboard')
+    navigate(client.platform === 'esg' ? '/esg/percurso' : '/contabilidade/dashboard')
   }
 
   const fmtDate = (d) => new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT')
@@ -229,8 +239,8 @@ export default function ClienteDetalhe() {
           )}
           {showEsg && (
             <>
-              {miniStat(L.esgProgress, s.esgAnswered != null ? `${s.esgAnswered}/${ESG_TOTAL}` : '—', t.accent)}
-              {miniStat(L.refYear, s.esgYear || '—')}
+              {miniStat(L.esgProgress, !s.esgCaso ? L.esgSem : s.esgProg?.proxima ? (() => { const f = FASES.find(x => x.key === s.esgProg.proxima); return `${f.n} · ${rotuloFase(f, lang)}` })() : L.esgPronto, t.accent)}
+              {miniStat(L.refYear, s.esgProg ? `${s.esgProg.pctGeral}%` : '—')}
             </>
           )}
         </div>

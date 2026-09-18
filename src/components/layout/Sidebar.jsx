@@ -84,6 +84,7 @@ const NAV = {
     { key: 'section_servicos', items: [
       { to: '/gestao/diagnosticos', Icon: IconKpi,        labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
       { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
+      { to: '/gestao/esg',          Icon: IconMaterial,   labelKey: 'nav_esg_consultorias', roles: ['admin'] },
     ]},
   ],
 }
@@ -124,7 +125,7 @@ export default function Sidebar() {
       items: sec.items.filter(it => !it.roles || it.roles.includes(role)),
     })).filter(sec => sec.items.length > 0)
 
-  const PLATFORM_HOME = { management: '/gestao/clientes', accounting: '/contabilidade/dashboard', esg: '/esg/diagnostico' }
+  const PLATFORM_HOME = { management: '/gestao/clientes', accounting: '/contabilidade/dashboard', esg: '/esg/percurso' }
   const closeOnMobile = () => { if (isMobile) setMobileOpen(false) }
   async function handleLogout() { setMobileOpen(false); await signOut(); navigate('/login', { replace: true }) }
   function switchAdminView(p) {
@@ -223,8 +224,7 @@ export default function Sidebar() {
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
             {(isAdmin && !isViewing ? [
               ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],
-              ['accounting', lang === 'de' ? 'Buchh.' : lang === 'en' ? 'Acc.' : 'Contábil'],
-              ['esg', 'ESG'],
+              ['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contabilidade'],
             ] : [
               ['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contabilidade'],
               ['esg', 'ESG'],
