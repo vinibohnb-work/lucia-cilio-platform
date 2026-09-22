@@ -3,7 +3,7 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 18/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> **Última sincronização:** 18/09/2026 · v2 do portal a 22/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026, 18/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
@@ -15,6 +15,35 @@
 ---
 
 ## Itens de desenvolvimento
+
+### Portal de gestão de clientes — v2 em avaliação (documento de 22/09)
+
+> Documento da Lúcia e da Letícia, *"Portal gestão de clientes"*, com mockup. A **v2** vive em
+> `/v2` (só admin), ao lado da plataforma atual e sem lhe tocar: dados de demonstração no
+> browser, sem Supabase nem migração. Serve para comparar e fechar o modelo antes de o
+> passar para tabelas reais.
+
+- [ ] **Validar a v2 com a Lúcia e a Letícia e fechar as decisões em aberto**
+  *Documento 22/09/2026 · Resp.: Vinícius*
+  Decisões que a v2 assume e que precisam de confirmação: (1) um cliente é **uma entidade da
+  Gestão**, com ou sem conta — hoje a lista que elas usam é a `/contabilidade/clientes` da
+  conta da Lúcia; (2) o cliente vê **a mesma página sem as áreas internas**, em vez de ter uma
+  página à parte; (3) "Documentos em falta" = documentos **esperados por mês** (faturas de
+  venda e compra, extrato, salários se houver trabalhadores); (4) "Em atraso" é **calculado
+  pela data**, além de poder ser marcado; (5) a **colaboradora** vê tudo menos avença e
+  pagamentos; (6) listas de forma jurídica, regime e software; (7) os dados fiscais passam a
+  ser mantidos pela equipa, não pelo cliente.
+  ⚠️ **Depende de:** a reunião com as duas.
+
+- [ ] **Passar a v2 a tabelas reais** (depois da validação)
+  *Resp.: Vinícius*
+  `src/v2/dados.js` tem, de propósito, a forma que as tabelas vão ter: clientes, obrigações
+  (com estado, valor, comprovativo e checklist em `jsonb`), tarefas (com recorrência e
+  lembrete), documentos com estado, mensagens nos dois sentidos, relatórios trimestrais,
+  notas internas, horas e pagamentos. Estender `fiscal_obligations` e `client_notices` em vez
+  de criar tabelas paralelas; trazer os clientes de `/contabilidade/clientes` da conta da
+  Lúcia; ligar Financeiro, Consultorias e ESG ao mesmo cliente.
+  ⚠️ **Depende de:** o item anterior.
 
 ### Estrutura de serviços (prioridade da reunião de 10/09)
 

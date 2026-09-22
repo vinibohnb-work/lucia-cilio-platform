@@ -46,6 +46,9 @@ const Consultoria         = lazy(() => import('./pages/Consultoria'))
 const ConsultoriasESG     = lazy(() => import('./pages/gestao/ConsultoriasESG'))
 const CasoESG             = lazy(() => import('./pages/gestao/CasoESG'))
 const ClienteESG          = lazy(() => import('./pages/esg/ClienteESG'))
+// v2 · portal de gestão de clientes (22/09) — pré-visualização ao lado da
+// plataforma atual, com dados de demonstração; não toca na base de dados.
+const V2App               = lazy(() => import('./v2/V2App'))
 
 const Dashboard           = lazy(() => import('./pages/contabilidade/Dashboard'))
 const Clientes            = lazy(() => import('./pages/contabilidade/Clientes'))
@@ -221,6 +224,9 @@ export default function App() {
               <Route path="/definir-senha"         element={<DefinirSenha />} />
               {/* Formulario publico de diagnostico (sem conta) */}
               <Route path="/diagnostico"           element={<FormularioDiagnostico />} />
+              <Route path="/v2/*" element={
+                <ProtectedRoute><RoleRoute requireRole="admin"><V2App /></RoleRoute></ProtectedRoute>
+              } />
               <Route path="/*" element={
                 <ProtectedRoute>
                   <AppLayout />

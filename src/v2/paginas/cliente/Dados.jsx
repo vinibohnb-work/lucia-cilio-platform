@@ -1,0 +1,93 @@
+import { useTheme } from '../../../context/ThemeContext'
+import { useIsMobile } from '../../../hooks/useIsMobile'
+import { acoes } from '../../dados'
+import { Cartao, Campo, useCampos, usePerfil, pode, Ic } from '../../ui'
+import { PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
+
+// Dados do cliente — os campos do cabeçalho do documento (secção 1) e o perfil
+// fiscal que decide o calendário (secção 3). Estes dados são mantidos pela
+// equipa: o cliente vê-os, não os altera.
+
+export default function Dados({ cliente, modoCliente, equipa }) {
+  const { t } = useTheme()
+  const isMobile = useIsMobile()
+  const c = useCampos()
+  const { papel } = usePerfil()
+  const up = (patch) => acoes.atualizarCliente(cliente.id, patch)
+  const inp = (k, extra = {}) => <input value={cliente[k] ?? ''} onChange={e => up({ [k]: e.target.value })} style={c.input} {...extra} />
+  const sel = (k, opcoes) => (
+    <select value={cliente[k] ?? ''} onChange={e => up({ [k]: e.target.value })} style={{ ...c.input, cursor: 'pointer' }}>
+      {opcoes.map(([v, r]) => <option key={v} value={v}>{r}</option>)}
+    </select>
+  )
+  const grelha = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '12px' }
+
+  if (modoCliente) {
+    const linhas = [
+      ['Empresa', cliente.nome], ['Pessoa de contacto', cliente.pessoa], ['País', PAISES[cliente.pais]], ['Forma jurídica', cliente.forma],
+      ['Setor', cliente.setor], ['Regime fiscal', rotuloRegime(cliente)], ['Serviços contratados', cliente.servicos.map(rotuloServico).join(', ')],
+      ['Acompanhamento', rotuloPeriodicidade(cliente.periodicidade)], ['Software contabilístico', cliente.software], ['E-mail', cliente.email], ['Telefone', cliente.telefone || '—'],
+    ]
+    return (
+      <Cartao titulo="Os dados da sua empresa" icone={<Ic.clientes />}>
+        <div style={grelha}>
+          {linhas.map(([k, v]) => <div key={k}><div style={c.rotulo}>{k}</div><div style={{ fontSize: '14px', fontWeight: 600, color: t.heading }}>{v || '—'}</div></div>)}
+        </div>
+        <div style={{ fontSize: '12px', color: t.subtle, marginTop: '14px' }}>Algo mudou? Envie uma mensagem — a equipa atualiza os dados e o calendário fiscal.</div>
+      </Cartao>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Cartao titulo="Identificação e contactos" icone={<Ic.clientes />} area="cliente">
+        <div style={grelha}>
+          <Campo rotulo="Nome do cliente ou empresa">{inp('nome')}</Campo>
+          <Campo rotulo="Pessoa de contacto">{inp('pessoa')}</Campo>
+          <Campo rotulo="Setor de atividade">{inp('setor')}</Campo>
+          <Campo rotulo="E-mail">{inp('email', { type: 'email' })}</Campo>
+          <Campo rotulo="Telefone (WhatsApp)">{inp('telefone', { placeholder: '+49 …' })}</Campo>
+          <Campo rotulo="Estado do cliente">{sel('estado', Object.entries(ESTADOS_CLIENTE).map(([k, v]) => [k, v.rotulo]))}</Campo>
+        </div>
+      </Cartao>
+
+      <Cartao titulo="Perfil fiscal e serviço" icone={<Ic.agenda />} area="cliente">
+        <div style={grelha}>
+          <Campo rotulo="País">{sel('pais', Object.entries(PAISES))}</Campo>
+          <Campo rotulo="Forma jurídica">{sel('forma', (FORMAS[cliente.pais] || []).map(x => [x, x]))}</Campo>
+          <Campo rotulo="Regime fiscal">{sel('regime', REGIMES[cliente.pais] || [])}</Campo>
+          <Campo rotulo="Periodicidade do acompanhamento">{sel('periodicidade', PERIODICIDADES)}</Campo>
+          <Campo rotulo="Software contabilístico">{sel('software', SOFTWARE.map(x => [x, x]))}</Campo>
+          <Campo rotulo="Trabalhadores">
+            <select value={String(!!cliente.trabalhadores)} onChange={e => up({ trabalhadores: e.target.value === 'true' })} style={{ ...c.input, cursor: 'pointer' }}>
+              <option value="false">Não tem</option><option value="true">Tem trabalhadores</option>
+            </select></Campo>
+        </div>
+        <div style={{ marginTop: '14px' }}>
+          <span style={c.rotulo}>Serviços contratados</span>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {SERVICOS.map(([k, r]) => {
+              const on = cliente.servicos.includes(k)
+              return (
+                <label key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '7px 12px', borderRadius: '9px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg, color: t.heading }}>
+                  <input type="checkbox" checked={on} onChange={() => up({ servicos: on ? cliente.servicos.filter(x => x !== k) : [...cliente.servicos, k] })} style={{ accentColor: t.btnBg }} />{r}
+                </label>
+              )
+            })}
+          </div>
+        </div>
+        <div style={{ fontSize: '12px', color: t.subtle, marginTop: '12px' }}>País, forma jurídica, regime, periodicidade, trabalhadores e serviços decidem o calendário fiscal. Depois de mudar, gere o ano outra vez em Obrigações fiscais — não duplica o que já existe.</div>
+      </Cartao>
+
+      <Cartao titulo="Gestão interna" icone={<Ic.cadeado size={17} />} area="interna">
+        <div style={grelha}>
+          <Campo rotulo="Responsável pelo cliente">{sel('responsavel', equipa.map(x => [x, x]))}</Campo>
+          <Campo rotulo="Horas incluídas por mês">{inp('horasIncluidas', { type: 'number', step: '0.5' })}</Campo>
+          <Campo rotulo="Cliente desde">{inp('cliente_desde', { type: 'date' })}</Campo>
+          {pode(papel, 'avenca') && <Campo rotulo="Avença (€)">{inp('avenca', { type: 'number', step: '0.01' })}</Campo>}
+          {pode(papel, 'avenca') && <Campo rotulo="Periodicidade da avença">{sel('avencaPeriodicidade', PERIODICIDADES)}</Campo>}
+        </div>
+      </Cartao>
+    </div>
+  )
+}
