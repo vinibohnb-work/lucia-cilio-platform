@@ -87,7 +87,7 @@ export default function Obrigacoes({ cliente, modoCliente }) {
       <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', overflowX: 'auto' }}>
         {lista.length === 0 ? <Vazio>{doAno.length ? 'Nenhuma obrigação com este filtro.' : `Ainda não há calendário para ${ano}.`}</Vazio> : (
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '720px' : 0 }}>
-            <thead><tr>{['Obrigação', 'Período', 'Data-limite', 'Estado', 'Valor', 'Comprovativo', ''].map((h, i) => <th key={i} style={c.th}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Obrigação', 'Período', 'Data-limite', 'Estado', 'Valor', 'Comprovativo'].map((h, i) => <th key={i} style={c.th}>{h}</th>)}</tr></thead>
             <tbody>
               {lista.map(o => {
                 const e = estadoEfetivo(o, hoje)
@@ -99,18 +99,22 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                     <tr style={{ background: aberto ? t.softCardBg : 'transparent' }}>
                       <td style={c.td}>
                         <div style={{ fontWeight: 700, color: t.heading }}>{o.nome}</div>
-                        {!modoCliente && <div style={{ fontSize: '11px', color: t.subtle }}>Checklist {feitos}/{CHECKLIST.length}</div>}
+                        {!modoCliente && (
+                          <button onClick={() => setAberta(aberto ? null : o.id)} style={{ background: 'none', border: 'none', padding: 0, marginTop: '2px', color: t.accentText, fontWeight: 700, cursor: 'pointer', fontSize: '11.5px', fontFamily: 'inherit' }}>
+                            Checklist {feitos}/{CHECKLIST.length} · {aberto ? 'fechar ▴' : 'detalhe ▾'}
+                          </button>
+                        )}
                       </td>
                       <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{o.periodo}</td>
                       <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
-                        {modoCliente ? fmtData(o.prazo) : <input type="date" value={o.prazo} onChange={ev => acoes.atualizarObrigacao(o.id, { prazo: ev.target.value })} style={{ ...c.input, width: '140px', padding: '6px 8px' }} />}
+                        {modoCliente ? fmtData(o.prazo) : <input type="date" value={o.prazo} onChange={ev => acoes.atualizarObrigacao(o.id, { prazo: ev.target.value })} style={{ ...c.input, width: '132px', padding: '6px 7px' }} />}
                         {!FECHADOS.includes(o.estado) && <div style={{ fontSize: '11px', color: e === 'em_atraso' ? t.neg : d <= 7 ? t.accentText : t.subtle, marginTop: '2px' }}>{d < 0 ? `${-d} dias em atraso` : d === 0 ? 'hoje' : `faltam ${d} dias`}</div>}
                       </td>
                       <td style={c.td}>
                         {modoCliente ? <Chip tom={ESTADOS_OBRIG[e].tom}>{ESTADOS_OBRIG[e].rotulo}</Chip> : (
                           <div>
                             <select value={o.estado} onChange={ev => acoes.atualizarObrigacao(o.id, { estado: ev.target.value })}
-                              style={{ ...c.input, width: 'auto', padding: '5px 8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+                              style={{ ...c.input, width: 'auto', maxWidth: '168px', padding: '5px 8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
                               {Object.entries(ESTADOS_OBRIG).map(([k, v]) => <option key={k} value={k}>{v.rotulo}</option>)}
                             </select>
                             {e === 'em_atraso' && o.estado !== 'em_atraso' && <div style={{ marginTop: '4px' }}><Chip tom="erro">Em atraso</Chip></div>}
@@ -121,10 +125,10 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                         {modoCliente ? (o.valor?.montante ? <>{fmtEur(o.valor.montante)} <div style={{ fontSize: '11px', color: t.subtle }}>{{ pagar: 'a pagar', credito: 'crédito', reembolso: 'reembolso' }[o.valor.tipo]}</div></> : '—') : (
                           <div style={{ display: 'flex', gap: '5px' }}>
                             <select value={o.valor?.tipo || ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: ev.target.value ? { tipo: ev.target.value, montante: o.valor?.montante ?? '' } : null })}
-                              style={{ ...c.input, width: '104px', padding: '5px 6px', fontSize: '12px', cursor: 'pointer' }} aria-label="Tipo de valor">
+                              style={{ ...c.input, width: '96px', padding: '5px 6px', fontSize: '12px', cursor: 'pointer' }} aria-label="Tipo de valor">
                               <option value="">Sem valor</option><option value="pagar">A pagar</option><option value="credito">Crédito</option><option value="reembolso">Reembolso</option>
                             </select>
-                            {o.valor?.tipo && <input type="number" step="0.01" value={o.valor.montante ?? ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: { ...o.valor, montante: ev.target.value } })} placeholder="€" style={{ ...c.input, width: '92px', padding: '5px 7px', fontSize: '12px' }} />}
+                            {o.valor?.tipo && <input type="number" step="0.01" value={o.valor.montante ?? ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: { ...o.valor, montante: ev.target.value } })} placeholder="€" style={{ ...c.input, width: '82px', padding: '5px 7px', fontSize: '12px' }} />}
                           </div>
                         )}
                       </td>
@@ -144,12 +148,9 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                           </label>
                         )}
                       </td>
-                      <td style={{ ...c.td, textAlign: 'right' }}>
-                        {!modoCliente && <button onClick={() => setAberta(aberto ? null : o.id)} style={{ background: 'none', border: 'none', color: t.accentText, fontWeight: 700, cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>{aberto ? 'Fechar ▴' : 'Detalhe ▾'}</button>}
-                      </td>
                     </tr>
                     {aberto && (
-                      <tr><td colSpan={7} style={{ padding: '4px 16px 18px', background: t.softCardBg }}>
+                      <tr><td colSpan={6} style={{ padding: '4px 16px 18px', background: t.softCardBg }}>
                         <Detalhe o={o} aoTarefa={() => setTarefa({ clienteId: cliente.id, obrigacaoId: o.id, titulo: `Entregar ${o.nome} (${o.periodo})`, prazo: o.prazo < hoje ? hoje : o.prazo, responsavel: cliente.responsavel })} aoWhats={() => setWhats(o.id)} />
                       </td></tr>
                     )}

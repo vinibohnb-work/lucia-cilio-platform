@@ -34,14 +34,14 @@ export default function Resumo({ cliente, base, modoCliente }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px' }}>
-        <Kpi icone={<Ic.agenda size={22} />} rotulo="Próxima obrigação" valor={prox ? <span style={{ fontSize: '14.5px' }}>{prox.nome} · {fmtData(prox.prazo)}</span> : 'Nenhuma'}
-          sub={prox ? <EstadoO o={prox} /> : null} />
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(176px, 1fr))', gap: '14px' }}>
+        <Kpi icone={<Ic.agenda size={22} />} rotulo="Próxima obrigação" valor={prox ? <span title={prox.nome} style={{ fontSize: '14px' }}>{prox.nome}</span> : 'Nenhuma'}
+          sub={prox ? <>{fmtData(prox.prazo)} · <EstadoO o={prox} /></> : null} />
         <Kpi icone={<Ic.doc size={22} />} rotulo="Documentos em falta" valor={falta.length} tom={falta.length ? 'erro' : undefined}
           sub={falta.length ? [...new Set(falta.map(d => d.tipo))].slice(0, 2).join(', ') : 'Tudo recebido'} />
         <Kpi icone={<Ic.euro size={22} />} rotulo="Valor a pagar" valor={fmtEur(aPagar)} sub={aPagar ? 'obrigações ainda por pagar' : 'nada em aberto'} />
         <Kpi icone={<Ic.euro size={22} />} rotulo="Créditos ou reembolsos" valor={fmtEur(somaCred)} tom={somaCred ? 'ok' : undefined} sub={`${cred.length} este ano`} />
-        <Kpi icone={<Ic.relatorios size={22} />} rotulo="Último relatório" valor={ult ? `${ult.trimestre}.º trimestre ${ult.ano}` : '—'} sub={ult ? `enviado a ${fmtData(ult.enviadoEm)}` : 'ainda nenhum'} />
+        <Kpi icone={<Ic.relatorios size={22} />} rotulo="Último relatório" valor={ult ? `T${ult.trimestre} ${ult.ano}` : '—'} sub={ult ? `enviado a ${fmtData(ult.enviadoEm)}` : 'ainda nenhum'} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile || modoCliente ? '1fr' : '1.35fr 1fr', gap: '16px', alignItems: 'start' }}>
@@ -114,7 +114,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
                 <div style={{ fontWeight: 700, color: t.heading, fontSize: '13px' }}>{o.nome} <span style={{ fontWeight: 500, color: t.subtle }}>· {o.periodo}</span></div>
                 <div style={{ fontSize: '11.5px', color: t.subtle }}>Entregue · {fmtData(o.comprovativo?.data || o.prazo)}{o.comprovativo ? ` · 📎 ${o.comprovativo.nome}` : ''}</div>
               </div>
-              {o.valor?.montante ? <span style={{ fontSize: '13px', fontWeight: 700, color: o.valor.tipo === 'pagar' ? t.heading : t.dueOk.ink }}>{fmtEur(o.valor.montante)} <span style={{ fontSize: '11px', fontWeight: 500, color: t.subtle }}>{ROTULO_VALOR[o.valor.tipo]}</span></span> : <span style={{ fontSize: '12px', color: t.subtle }}>sem valor</span>}
+              {o.valor?.montante ? <span style={{ fontSize: '13px', fontWeight: 700, color: o.valor.tipo === 'pagar' ? t.heading : t.dueOk.ink }}>{fmtEur(o.valor.montante)} <span style={{ fontSize: '11px', fontWeight: 500, color: t.subtle }}>{o.estado === 'pago' && o.valor.tipo === 'pagar' ? 'pago' : ROTULO_VALOR[o.valor.tipo]}</span></span> : <span style={{ fontSize: '12px', color: t.subtle }}>sem valor</span>}
               <Chip tom={ESTADOS_OBRIG[o.estado].tom}>{ESTADOS_OBRIG[o.estado].rotulo}</Chip>
             </div>
           ))}

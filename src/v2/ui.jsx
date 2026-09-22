@@ -126,11 +126,11 @@ export function Kpi({ icone, rotulo, valor, sub, tom }) {
   const { t } = useTheme()
   const tons = useTons()
   return (
-    <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
-      <span style={{ flex: 'none', width: '46px', height: '46px', borderRadius: '50%', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.accentText }}>{icone}</span>
+    <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', padding: '14px 14px', display: 'flex', alignItems: 'center', gap: '11px', minWidth: 0 }}>
+      <span style={{ flex: 'none', width: '38px', height: '38px', borderRadius: '50%', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.accentText }}>{icone}</span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: '12.5px', color: t.textMuted, fontWeight: 600 }}>{rotulo}</div>
-        <div style={{ fontSize: '19px', fontWeight: 800, color: tom ? tons[tom].ink : t.heading, lineHeight: 1.25, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{valor}</div>
+        <div style={{ fontSize: '17px', fontWeight: 800, color: tom ? tons[tom].ink : t.heading, lineHeight: 1.25, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{valor}</div>
         {sub && <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '2px' }}>{sub}</div>}
       </div>
     </div>
