@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useAuth } from '../context/AuthContext'
+import { homePathFor } from '../lib/platformHome'
 import { useV2, repor } from './dados'
 import { PerfilContext, Ic } from './ui'
 import { naoLidas, tarefaAtrasada, lembreteAtivo, clientePorId } from './seletores'
@@ -26,8 +28,11 @@ export default function V2App() {
   const isMobile = useIsMobile()
   const s = useV2()
   const navigate = useNavigate()
+  const { role, platform } = useAuth()
+  // Quem não é administradora entra como Colaboradora (o perfil da Letícia no documento).
+  const perfilInicial = { papel: role === 'admin' ? 'admin' : 'colaboradora', clienteId: 'vania' }
   const [perfil, setPerfil] = useState(() => {
-    try { return JSON.parse(sessionStorage.getItem('lc-v2-perfil')) || { papel: 'admin', clienteId: 'vania' } } catch { return { papel: 'admin', clienteId: 'vania' } }
+    try { return JSON.parse(sessionStorage.getItem('lc-v2-perfil')) || perfilInicial } catch { return perfilInicial }
   })
   const [sino, setSino] = useState(false)
   const mudarPerfil = (p) => {
@@ -137,7 +142,7 @@ export default function V2App() {
                 </span>
               )}
               <button onClick={() => { if (window.confirm('Repor os dados de demonstração? As alterações feitas na v2 perdem-se.')) repor() }} style={{ background: 'none', border: 'none', color: '#e9dfc4', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px', fontFamily: 'inherit' }}>Repor dados</button>
-              <a href="/gestao/clientes" style={{ color: '#c9a84c', fontWeight: 700, textDecoration: 'none' }}>← Plataforma atual</a>
+              <a href={homePathFor(role, platform)} style={{ color: '#c9a84c', fontWeight: 700, textDecoration: 'none' }}>← Plataforma atual</a>
             </span>
           </div>
           <main style={{ padding: isMobile ? '18px 14px 40px' : '28px 32px 48px', maxWidth: '1360px' }}>

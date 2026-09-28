@@ -224,8 +224,11 @@ export default function App() {
               <Route path="/definir-senha"         element={<DefinirSenha />} />
               {/* Formulario publico de diagnostico (sem conta) */}
               <Route path="/diagnostico"           element={<FormularioDiagnostico />} />
+              {/* v2: toda a equipa (a Letícia entra com um papel de equipa). Seguro
+                  porque a v2 não toca na base de dados; contas de cliente ficam de
+                  fora — a demonstração mostra os nomes dos clientes do escritório. */}
               <Route path="/v2/*" element={
-                <ProtectedRoute><RoleRoute requireRole="admin"><V2App /></RoleRoute></ProtectedRoute>
+                <ProtectedRoute><RoleRoute requireRole={['admin', 'comercial', 'marketing']}><V2App /></RoleRoute></ProtectedRoute>
               } />
               <Route path="/*" element={
                 <ProtectedRoute>
