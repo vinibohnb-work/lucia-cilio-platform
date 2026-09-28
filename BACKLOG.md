@@ -3,8 +3,8 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 18/09/2026 · v2 do portal a 22/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
-> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026, 18/09/2026
+> **Última sincronização:** 28/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026, 18/09/2026, 25/09/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
@@ -16,6 +16,42 @@
 
 ## Itens de desenvolvimento
 
+### Antes da pausa (prioridade da reunião de 25/09)
+
+> *"Ajustar módulo ESG e revisar/simplificar a plataforma."* — o próximo passo definido na
+> reunião. O desenvolvimento pausa agora e retoma no início do próximo ano; o objetivo é
+> deixar tudo **redondo até ao fecho do contrato, em novembro**.
+
+- [ ] **Corrigir o campo de texto do diagnóstico ESG, que perde o foco a cada tecla**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  Ao escrever, o cursor sai do campo e a página volta ao topo a cada dígito. Causa provável,
+  já identificada no código: em `src/pages/esg/Diagnostico.jsx` os componentes `QuestionCard`
+  e `ValueInput` são **declarados dentro** do componente da página, por isso o React
+  recria-os (e desmonta o campo) a cada tecla. É o aviso *"Cannot create components during
+  render"* do lint. Corrige-se tirando-os para fora. Prioritário: é o módulo onde a Lúcia vai
+  registar o resumo das reuniões ESG.
+
+- [ ] **Revisão minuciosa e simplificação da plataforma**
+  *Reuniões 18/09 e 25/09/2026 · Resp.: Vinícius*
+  Remover duplicidades e itens a mais — o risco de 25/09 é a complexidade afastar os clientes
+  finais. É também o *"arrumar a casa"* de 18/09, que na altura ficou fora do backlog por
+  parecer tarefa da Lúcia; a reunião de 25/09 esclareceu que é trabalho nosso. Candidatos já
+  conhecidos: as **quatro listas de clientes** (Contabilidade → Clientes da conta da Lúcia,
+  Clientes Ativos, nomes do Financeiro, contactos das consultorias), menus que repetem
+  entradas, e o que a v2 torna redundante quando passar a definitiva.
+
+- [ ] **Relatórios sem secções vazias**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  Rever os campos que aparecem nos relatórios e **não incluir secções que não foram
+  preenchidas**. A confirmar quais relatórios estavam em causa (ESG, consultoria ou o
+  trimestral da v2) — provavelmente todos seguem o mesmo padrão.
+
+- [ ] **Documentação da plataforma: de onde vem cada dado**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  Explicar, ecrã a ecrã, a origem de cada número e campo (o que é introduzido à mão, o que é
+  calculado, o que vem do livro de caixa). Responde ao risco de 25/09 — a insegurança da
+  Lúcia em operar sozinha depois do contrato — e serve de base ao suporte.
+
 ### Portal de gestão de clientes — v2 em avaliação (documento de 22/09)
 
 > Documento da Lúcia e da Letícia, *"Portal gestão de clientes"*, com mockup. A **v2** vive em
@@ -24,7 +60,11 @@
 > passar para tabelas reais.
 
 - [ ] **Validar a v2 com a Lúcia e a Letícia e fechar as decisões em aberto**
-  *Documento 22/09/2026 · Resp.: Vinícius*
+  *Documento 22/09/2026 · Reunião 25/09/2026 · Resp.: Vinícius*
+  ✔ **25/09: a v2 será a versão definitiva**, com alguns ajustes. Decisões já fechadas:
+  a (5) confirma-se — a Letícia fica **colaboradora, sem acesso ao financeiro interno**; e o
+  portal do cliente passa a ser **só informativo** (item seguinte). A Lúcia vai revê-la e
+  testá-la com a Letícia (o acesso da equipa à `/v2` foi aberto a 28/09).
   Decisões que a v2 assume e que precisam de confirmação: (1) um cliente é **uma entidade da
   Gestão**, com ou sem conta — hoje a lista que elas usam é a `/contabilidade/clientes` da
   conta da Lúcia; (2) o cliente vê **a mesma página sem as áreas internas**, em vez de ter uma
@@ -35,8 +75,16 @@
   ser mantidos pela equipa, não pelo cliente.
   ⚠️ **Depende de:** a reunião com as duas.
 
+- [ ] **Portal do cliente só informativo, sem valores**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  O que o cliente vê fica reduzido a **obrigação, data, período e estado da entrega** — sem
+  valores a pagar, créditos nem montantes. Na v2, o perfil Cliente hoje mostra os cartões de
+  valores e a coluna "Valor" das obrigações: saem.
+  ⚠️ **Depende de:** a Lúcia marcar os campos que não interessam no portal do cliente.
+
 - [ ] **Passar a v2 a tabelas reais** (depois da validação)
   *Resp.: Vinícius*
+  ↳ Ganha prioridade com a decisão de 25/09 de que a v2 é a definitiva.
   `src/v2/dados.js` tem, de propósito, a forma que as tabelas vão ter: clientes, obrigações
   (com estado, valor, comprovativo e checklist em `jsonb`), tarefas (com recorrência e
   lembrete), documentos com estado, mensagens nos dois sentidos, relatórios trimestrais,
@@ -357,6 +405,8 @@
   *Reunião 18/09/2026 · Resp.: Vinícius*
   Primeiro teste para perceber o que é viável antes de prometer automações. Liga-se à
   conversa sobre suporte contínuo e histórico de consultorias, deixada para novembro.
+  ↳ **25/09: fica em segundo plano** — a integração pela Meta é trabalhosa. Os modelos de
+  WhatsApp da v2 (abrir o WhatsApp com o texto pronto) cobrem o essencial sem integração.
 
 - [ ] **Validar o mapeamento de colunas da importação com extratos reais de vários bancos**
   *Reunião 20/08/2026 · Resp.: Vinícius*
@@ -403,6 +453,16 @@
 ---
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
+
+- **Reunião de 25/09:** a **v2 do portal de clientes será a definitiva**, com poucos ajustes; o
+  **portal do cliente fica só informativo** (obrigação, data, período, estado da entrega —
+  sem valores). A **Letícia mantém o perfil de colaboradora**, sem acesso ao financeiro
+  interno. **Prioridade ao diagnóstico ESG**, onde a Lúcia vai registar o resumo das reuniões
+  e traçar os próximos passos. A **integração com o WhatsApp fica em segundo plano**.
+  O desenvolvimento **pausa agora e retoma no início do próximo ano** (pensar num ciclo de
+  três meses); o contrato inclui **dois anos de suporte** para correções e melhorias pontuais,
+  e há a possibilidade de um suporte de ajustes a valor reduzido durante a pausa. Objetivo:
+  tudo redondo até ao fecho do contrato, em novembro.
 
 - **Reunião de 18/09:** a **ESG mantém-se módulo separado**, mas com visualização e
   acompanhamento **individual por cliente**. O preenchimento da consultoria ESG é **uso
@@ -494,6 +554,13 @@
 - ⚠️ **(18/09)** O desenvolvimento pode não estar concluído até ao **fim do contrato, a
   14/11** — e a pausa de dezembro empurra o que sobrar para fevereiro.
 - ⚠️ **(18/09)** O **âmbito da ESG está em expansão constante**, com risco de retrabalho.
+- ⚠️ **(25/09)** Prazo apertado até novembro para deixar a plataforma bem alinhada.
+- ⚠️ **(25/09)** A **complexidade da plataforma pode afastar os clientes finais** — motivo da
+  revisão e simplificação.
+- ⚠️ **(25/09)** Dependência de suporte depois do contrato e **insegurança da Lúcia em operar
+  sozinha** — motivo da documentação de origem dos dados.
+- ⚠️ **(25/09)** O sucesso do **piloto ESG** nos próximos três meses decide se vira contrato
+  recorrente.
 - ⚠️ **(18/09)** Incerteza sobre a adesão dos clientes às licenças da plataforma.
 - ⚠️ **Não há ambiente de staging** — o `.env.local` aponta para o Supabase de produção. Testar
   escrita significa escrever na base real dos clientes; o QA de 13/08 correu só em leitura.
