@@ -129,8 +129,10 @@ export default function Diagnostico() {
     }}>{children}</button>
   )
 
-  // Renderiza o input de valor de uma pergunta simples ou de um subcampo de grupo
-  function ValueInput({ spec, cur, onValue, onUnit, disabled }) {
+  // Renderiza o input de valor de uma pergunta simples ou de um subcampo de grupo.
+  // É uma função que devolve JSX, não um componente: declarado aqui dentro como
+  // componente, o React recriava-o a cada tecla e o campo perdia o foco (25/09).
+  function valueInput({ spec, cur, onValue, onUnit, disabled }) {
     if (spec.type === 'boolean' || spec.type === 'boolean3') {
       const opts = spec.type === 'boolean3' ? [['yes', L.yes], ['no', L.no], ['planned', L.planned]] : [['yes', L.yes], ['no', L.no]]
       const color = activePillarObj.color
@@ -163,7 +165,7 @@ export default function Diagnostico() {
     )
   }
 
-  function QuestionCard({ q }) {
+  function questionCard(q) {
     const a = answers[q.id] || {}
     const na = a.na || null
     const disabled = !!na
@@ -171,7 +173,7 @@ export default function Diagnostico() {
     const secondary = lang === 'de' ? q.pt : q.de
     let lastSub = null
     return (
-      <div style={{ ...card, padding: '18px 20px', marginBottom: '14px' }}>
+      <div key={q.id} style={{ ...card, padding: '18px 20px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', gap: '13px' }}>
           <span style={{ width: '26px', height: '26px', flex: 'none', borderRadius: '50%', background: activePillarObj.bg, color: activePillarObj.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800 }}>{q.id}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -190,18 +192,18 @@ export default function Diagnostico() {
                         {showSub && <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: activePillarObj.color, margin: '6px 0 4px' }}>{f.sub}</div>}
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '12.5px', color: t.text }}>{f.pt}</span>
-                          <ValueInput spec={f} cur={fcur} disabled={disabled}
-                            onValue={v => setField(q.id, f.key, { value: v })}
-                            onUnit={u => setField(q.id, f.key, { unit: u })} />
+                          {valueInput({ spec: f, cur: fcur, disabled,
+                            onValue: v => setField(q.id, f.key, { value: v }),
+                            onUnit: u => setField(q.id, f.key, { unit: u }) })}
                         </div>
                       </div>
                     )
                   })}
                 </div>
               ) : (
-                <ValueInput spec={q} cur={a} disabled={disabled}
-                  onValue={v => setSimple(q.id, { value: v })}
-                  onUnit={u => setSimple(q.id, { unit: u })} />
+                valueInput({ spec: q, cur: a, disabled,
+                  onValue: v => setSimple(q.id, { value: v }),
+                  onUnit: u => setSimple(q.id, { unit: u }) })
               )}
             </div>
 
@@ -286,7 +288,7 @@ export default function Diagnostico() {
       </div>
 
       {/* Perguntas do pilar ativo */}
-      {questionsByPillar(pillar).map(q => <QuestionCard key={q.id} q={q} />)}
+      {questionsByPillar(pillar).map(q => questionCard(q))}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginTop: '14px', fontSize: '11.5px', color: t.subtle }}>
         <span>ⓘ</span><span>{L.disclaimer}</span>

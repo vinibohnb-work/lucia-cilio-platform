@@ -25,7 +25,7 @@ function Delta({ atual, antes, menosEMelhor }) {
 
 export function exportarPdf(r, cli, ant) {
   const esc = (s) => String(s ?? '').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]))
-  const linhas = [...CAMPOS.slice(0, 2), ['resultado', 'Resultado'], ...CAMPOS.slice(2)].map(([k, rot]) => {
+  const linhas = [...CAMPOS.slice(0, 2), ['resultado', 'Resultado'], ...CAMPOS.slice(2)].filter(([k]) => k === 'resultado' || num(r[k]) != null || (ant && num(ant[k]) != null)).map(([k, rot]) => {
     const v = k === 'resultado' ? resultado(r) : num(r[k]); const a = ant ? (k === 'resultado' ? resultado(ant) : num(ant[k])) : null
     const d = a ? `${(((v - a) / Math.abs(a)) * 100).toFixed(1).replace('.', ',')} %` : '—'
     return `<tr${k === 'resultado' ? ' class="res"' : ''}><td>${esc(rot)}</td><td>${fmtEur(v)}</td><td>${a != null ? fmtEur(a) : '—'}</td><td>${d}</td></tr>`
@@ -95,10 +95,10 @@ export function EditorRelatorio({ inicial, aoFechar, soLeitura }) {
         </table>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
-        <Campo rotulo="Observações">{soLeitura ? <p style={{ margin: 0, fontSize: '13px', whiteSpace: 'pre-wrap' }}>{r.observacoes || '—'}</p> : <textarea value={r.observacoes || ''} onChange={set('observacoes')} rows={4} style={{ ...c.input, resize: 'vertical' }} />}</Campo>
-        <Campo rotulo="Recomendações">{soLeitura ? <p style={{ margin: 0, fontSize: '13px', whiteSpace: 'pre-wrap' }}>{r.recomendacoes || '—'}</p> : <textarea value={r.recomendacoes || ''} onChange={set('recomendacoes')} rows={4} style={{ ...c.input, resize: 'vertical' }} />}</Campo>
-      </div>
+      {!(soLeitura && !r.observacoes && !r.recomendacoes) && <div style={{ display: 'grid', gridTemplateColumns: isMobile || (soLeitura && !(r.observacoes && r.recomendacoes)) ? '1fr' : '1fr 1fr', gap: '12px' }}>
+        {!(soLeitura && !r.observacoes) && <Campo rotulo="Observações">{soLeitura ? <p style={{ margin: 0, fontSize: '13px', whiteSpace: 'pre-wrap' }}>{r.observacoes || '—'}</p> : <textarea value={r.observacoes || ''} onChange={set('observacoes')} rows={4} style={{ ...c.input, resize: 'vertical' }} />}</Campo>}
+        {!(soLeitura && !r.recomendacoes) && <Campo rotulo="Recomendações">{soLeitura ? <p style={{ margin: 0, fontSize: '13px', whiteSpace: 'pre-wrap' }}>{r.recomendacoes || '—'}</p> : <textarea value={r.recomendacoes || ''} onChange={set('recomendacoes')} rows={4} style={{ ...c.input, resize: 'vertical' }} />}</Campo>}
+      </div>}
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
         {!soLeitura && <Botao variante="primario" onClick={() => { guardar(); aoFechar?.() }}>Guardar</Botao>}

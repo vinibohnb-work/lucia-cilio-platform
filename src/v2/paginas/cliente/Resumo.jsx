@@ -39,8 +39,9 @@ export default function Resumo({ cliente, base, modoCliente }) {
           sub={prox ? <>{fmtData(prox.prazo)} · <EstadoO o={prox} /></> : null} />
         <Kpi icone={<Ic.doc size={22} />} rotulo="Documentos em falta" valor={falta.length} tom={falta.length ? 'erro' : undefined}
           sub={falta.length ? [...new Set(falta.map(d => d.tipo))].slice(0, 2).join(', ') : 'Tudo recebido'} />
-        <Kpi icone={<Ic.euro size={22} />} rotulo="Valor a pagar" valor={fmtEur(aPagar)} sub={aPagar ? 'obrigações ainda por pagar' : 'nada em aberto'} />
-        <Kpi icone={<Ic.euro size={22} />} rotulo="Créditos ou reembolsos" valor={fmtEur(somaCred)} tom={somaCred ? 'ok' : undefined} sub={`${cred.length} este ano`} />
+        {/* Valores só para a equipa: o portal do cliente é informativo (25/09) */}
+        {!modoCliente && <Kpi icone={<Ic.euro size={22} />} rotulo="Valor a pagar" valor={fmtEur(aPagar)} sub={aPagar ? 'obrigações ainda por pagar' : 'nada em aberto'} />}
+        {!modoCliente && <Kpi icone={<Ic.euro size={22} />} rotulo="Créditos ou reembolsos" valor={fmtEur(somaCred)} tom={somaCred ? 'ok' : undefined} sub={`${cred.length} este ano`} />}
         <Kpi icone={<Ic.relatorios size={22} />} rotulo="Último relatório" valor={ult ? `T${ult.trimestre} ${ult.ano}` : '—'} sub={ult ? `enviado a ${fmtData(ult.enviadoEm)}` : 'ainda nenhum'} />
       </div>
 
@@ -49,12 +50,12 @@ export default function Resumo({ cliente, base, modoCliente }) {
           acao={<Botao variante="fantasma" onClick={() => navigate(`${base}/obrigacoes`)}>Ver todas →</Botao>}>
           {lista.length === 0 ? <Vazio>Sem obrigações em aberto.</Vazio> : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr>{['Obrigação', 'Data-limite', 'Valor', 'Estado'].map(h => <th key={h} style={c.th}>{h}</th>)}</tr></thead>
+              <thead><tr>{['Obrigação', 'Data-limite', ...(modoCliente ? [] : ['Valor']), 'Estado'].map(h => <th key={h} style={c.th}>{h}</th>)}</tr></thead>
               <tbody>{lista.map(o => (
                 <tr key={o.id}>
                   <td style={c.td}><div style={{ fontWeight: 600, color: t.heading }}>{o.nome}</div><div style={{ fontSize: '11px', color: t.subtle }}>{o.periodo}</div></td>
                   <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{fmtData(o.prazo)}</td>
-                  <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{o.valor?.montante ? <>{fmtEur(o.valor.montante)} <span style={{ fontSize: '11px', color: t.subtle }}>{ROTULO_VALOR[o.valor.tipo]}</span></> : '—'}</td>
+                  {!modoCliente && <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{o.valor?.montante ? <>{fmtEur(o.valor.montante)} <span style={{ fontSize: '11px', color: t.subtle }}>{ROTULO_VALOR[o.valor.tipo]}</span></> : '—'}</td>}
                   <td style={c.td}><EstadoO o={o} /></td>
                 </tr>
               ))}</tbody>
@@ -114,7 +115,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
                 <div style={{ fontWeight: 700, color: t.heading, fontSize: '13px' }}>{o.nome} <span style={{ fontWeight: 500, color: t.subtle }}>· {o.periodo}</span></div>
                 <div style={{ fontSize: '11.5px', color: t.subtle }}>Entregue · {fmtData(o.comprovativo?.data || o.prazo)}{o.comprovativo ? ` · 📎 ${o.comprovativo.nome}` : ''}</div>
               </div>
-              {o.valor?.montante ? <span style={{ fontSize: '13px', fontWeight: 700, color: o.valor.tipo === 'pagar' ? t.heading : t.dueOk.ink }}>{fmtEur(o.valor.montante)} <span style={{ fontSize: '11px', fontWeight: 500, color: t.subtle }}>{o.estado === 'pago' && o.valor.tipo === 'pagar' ? 'pago' : ROTULO_VALOR[o.valor.tipo]}</span></span> : <span style={{ fontSize: '12px', color: t.subtle }}>sem valor</span>}
+              {modoCliente ? null : o.valor?.montante ? <span style={{ fontSize: '13px', fontWeight: 700, color: o.valor.tipo === 'pagar' ? t.heading : t.dueOk.ink }}>{fmtEur(o.valor.montante)} <span style={{ fontSize: '11px', fontWeight: 500, color: t.subtle }}>{o.estado === 'pago' && o.valor.tipo === 'pagar' ? 'pago' : ROTULO_VALOR[o.valor.tipo]}</span></span> : <span style={{ fontSize: '12px', color: t.subtle }}>sem valor</span>}
               <Chip tom={ESTADOS_OBRIG[o.estado].tom}>{ESTADOS_OBRIG[o.estado].rotulo}</Chip>
             </div>
           ))}

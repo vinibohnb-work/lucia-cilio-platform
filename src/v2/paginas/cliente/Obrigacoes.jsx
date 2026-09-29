@@ -4,7 +4,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import { useV2, acoes } from '../../dados'
 import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, Janela, Campo, Area, Ic } from '../../ui'
 import {
-  ESTADOS_OBRIG, CHECKLIST, estadoEfetivo, FECHADOS, fmtData, fmtEur, hojeIso, processo, PAISES, rotuloRegime,
+  ESTADOS_OBRIG, CHECKLIST, estadoEfetivo, FECHADOS, fmtData, hojeIso, processo, PAISES, rotuloRegime,
   rotuloPeriodicidade, rotuloServico, diasAte,
 } from '../../regras'
 import { obrigacoesDe } from '../../seletores'
@@ -87,7 +87,7 @@ export default function Obrigacoes({ cliente, modoCliente }) {
       <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', overflowX: 'auto' }}>
         {lista.length === 0 ? <Vazio>{doAno.length ? 'Nenhuma obrigação com este filtro.' : `Ainda não há calendário para ${ano}.`}</Vazio> : (
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '720px' : 0 }}>
-            <thead><tr>{['Obrigação', 'Período', 'Data-limite', 'Estado', 'Valor', 'Comprovativo'].map((h, i) => <th key={i} style={c.th}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Obrigação', 'Período', 'Data-limite', 'Estado', ...(modoCliente ? [] : ['Valor']), 'Comprovativo'].map((h, i) => <th key={i} style={c.th}>{h}</th>)}</tr></thead>
             <tbody>
               {lista.map(o => {
                 const e = estadoEfetivo(o, hoje)
@@ -121,8 +121,9 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                           </div>
                         )}
                       </td>
-                      <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
-                        {modoCliente ? (o.valor?.montante ? <>{fmtEur(o.valor.montante)} <div style={{ fontSize: '11px', color: t.subtle }}>{{ pagar: 'a pagar', credito: 'crédito', reembolso: 'reembolso' }[o.valor.tipo]}</div></> : '—') : (
+                      {/* O cliente não vê valores: o portal é informativo (25/09) */}
+                      {!modoCliente && <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
+                        {(
                           <div style={{ display: 'flex', gap: '5px' }}>
                             <select value={o.valor?.tipo || ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: ev.target.value ? { tipo: ev.target.value, montante: o.valor?.montante ?? '' } : null })}
                               style={{ ...c.input, width: '96px', padding: '5px 6px', fontSize: '12px', cursor: 'pointer' }} aria-label="Tipo de valor">
@@ -131,7 +132,7 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                             {o.valor?.tipo && <input type="number" step="0.01" value={o.valor.montante ?? ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: { ...o.valor, montante: ev.target.value } })} placeholder="€" style={{ ...c.input, width: '82px', padding: '5px 7px', fontSize: '12px' }} />}
                           </div>
                         )}
-                      </td>
+                      </td>}
                       <td style={c.td}>
                         {o.comprovativo ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: t.accentText }} title={`Arquivado a ${fmtData(o.comprovativo.data)}`}>

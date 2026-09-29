@@ -184,8 +184,10 @@ export function Projecao({ numeros, alterar }) {
   const inp = { padding: '5px 7px', borderRadius: '6px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '12px', outline: 'none', width: '100%', boxSizing: 'border-box', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }
   const GRID = 'minmax(120px, 1fr) 92px 92px 92px 22px'
 
-  const Tabela = ({ campo, titulo, cor }) => (
-    <div style={{ background: t.softCardBg, borderRadius: '11px', padding: '12px 14px', marginBottom: '10px' }}>
+  // Função que devolve JSX (não componente): como componente declarado aqui
+  // dentro, o React recriava-o a cada tecla e o campo perdia o foco (25/09).
+  const tabela = (campo, titulo, cor) => (
+    <div key={campo} style={{ background: t.softCardBg, borderRadius: '11px', padding: '12px 14px', marginBottom: '10px' }}>
       <div style={{ fontSize: '12px', fontWeight: 800, color: cor, marginBottom: '9px' }}>{titulo}</div>
       <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '6px', marginBottom: '5px' }}>
         <span style={{ fontSize: '10px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase' }}>{L.desc}</span>
@@ -207,8 +209,8 @@ export function Projecao({ numeros, alterar }) {
   return (
     <div style={{ overflowX: 'auto' }}>
       <div style={{ minWidth: '460px' }}>
-        <Tabela campo="receitas" titulo={L.rec} cor={t.dueOk.ink} />
-        <Tabela campo="custos" titulo={L.cus} cor={t.neg} />
+        {tabela('receitas', L.rec, t.dueOk.ink)}
+        {tabela('custos', L.cus, t.neg)}
 
         {/* Lucro por ano + a verificação que fecha o plano */}
         <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '6px', background: t.chipBg, borderRadius: '11px', padding: '12px 14px' }}>

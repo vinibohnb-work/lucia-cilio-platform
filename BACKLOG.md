@@ -22,15 +22,6 @@
 > reunião. O desenvolvimento pausa agora e retoma no início do próximo ano; o objetivo é
 > deixar tudo **redondo até ao fecho do contrato, em novembro**.
 
-- [ ] **Corrigir o campo de texto do diagnóstico ESG, que perde o foco a cada tecla**
-  *Reunião 25/09/2026 · Resp.: Vinícius*
-  Ao escrever, o cursor sai do campo e a página volta ao topo a cada dígito. Causa provável,
-  já identificada no código: em `src/pages/esg/Diagnostico.jsx` os componentes `QuestionCard`
-  e `ValueInput` são **declarados dentro** do componente da página, por isso o React
-  recria-os (e desmonta o campo) a cada tecla. É o aviso *"Cannot create components during
-  render"* do lint. Corrige-se tirando-os para fora. Prioritário: é o módulo onde a Lúcia vai
-  registar o resumo das reuniões ESG.
-
 - [ ] **Revisão minuciosa e simplificação da plataforma**
   *Reuniões 18/09 e 25/09/2026 · Resp.: Vinícius*
   Remover duplicidades e itens a mais — o risco de 25/09 é a complexidade afastar os clientes
@@ -39,12 +30,6 @@
   conhecidos: as **quatro listas de clientes** (Contabilidade → Clientes da conta da Lúcia,
   Clientes Ativos, nomes do Financeiro, contactos das consultorias), menus que repetem
   entradas, e o que a v2 torna redundante quando passar a definitiva.
-
-- [ ] **Relatórios sem secções vazias**
-  *Reunião 25/09/2026 · Resp.: Vinícius*
-  Rever os campos que aparecem nos relatórios e **não incluir secções que não foram
-  preenchidas**. A confirmar quais relatórios estavam em causa (ESG, consultoria ou o
-  trimestral da v2) — provavelmente todos seguem o mesmo padrão.
 
 - [ ] **Documentação da plataforma: de onde vem cada dado**
   *Reunião 25/09/2026 · Resp.: Vinícius*
@@ -63,7 +48,7 @@
   *Documento 22/09/2026 · Reunião 25/09/2026 · Resp.: Vinícius*
   ✔ **25/09: a v2 será a versão definitiva**, com alguns ajustes. Decisões já fechadas:
   a (5) confirma-se — a Letícia fica **colaboradora, sem acesso ao financeiro interno**; e o
-  portal do cliente passa a ser **só informativo** (item seguinte). A Lúcia vai revê-la e
+  portal do cliente passa a ser **só informativo** (feito a 28/09 — ver Concluídos). A Lúcia vai revê-la e
   testá-la com a Letícia (o acesso da equipa à `/v2` foi aberto a 28/09).
   Decisões que a v2 assume e que precisam de confirmação: (1) um cliente é **uma entidade da
   Gestão**, com ou sem conta — hoje a lista que elas usam é a `/contabilidade/clientes` da
@@ -74,13 +59,6 @@
   pagamentos; (6) listas de forma jurídica, regime e software; (7) os dados fiscais passam a
   ser mantidos pela equipa, não pelo cliente.
   ⚠️ **Depende de:** a reunião com as duas.
-
-- [ ] **Portal do cliente só informativo, sem valores**
-  *Reunião 25/09/2026 · Resp.: Vinícius*
-  O que o cliente vê fica reduzido a **obrigação, data, período e estado da entrega** — sem
-  valores a pagar, créditos nem montantes. Na v2, o perfil Cliente hoje mostra os cartões de
-  valores e a coluna "Valor" das obrigações: saem.
-  ⚠️ **Depende de:** a Lúcia marcar os campos que não interessam no portal do cliente.
 
 - [ ] **Passar a v2 a tabelas reais** (depois da validação)
   *Resp.: Vinícius*
@@ -568,6 +546,39 @@
 ---
 
 ## Concluídos
+
+### Correções de 25/09 — 28/09
+
+- [x] **O campo de texto do diagnóstico ESG já não perde o foco — e o mesmo bug em mais dois sítios**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  Ao escrever, o cursor saía do campo e a página voltava ao topo a cada tecla. A causa eram
+  componentes declarados **dentro** do componente da página: o React recriava-os a cada
+  render e desmontava o campo onde se estava a escrever. O mesmo padrão estava em mais dois
+  ecrãs com campos, que a Lúcia ainda não tinha reportado: a **caixa de texto de cada
+  secção do relatório ESG** e as **tabelas de números da consultoria** (faturação e custos —
+  usadas ao vivo com o cliente). Nos três passam a funções que devolvem o JSX.
+  Verificado a escrever de seguida em cada campo (dígitos e texto): o foco fica no mesmo
+  campo e o valor completo fica lá. Há o mesmo padrão em ecrãs só de leitura (Reservas &
+  Impostos, EÜR, KPIs, matriz) — sem campos, sem este efeito; entram na revisão geral.
+
+- [x] **Relatórios sem secções vazias**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  O **PDF do relatório ESG** só inclui cada secção se tiver texto escrito ou dados; os KPIs
+  sem valor em nenhum dos anos saem da tabela; sem nada, fica uma linha "ainda sem dados" em
+  vez de quatro títulos vazios. A maturidade de governança deixa de contar como dado quando
+  não há respostas do pilar G (dava 0 % e fazia aparecer a secção de KPIs num caso vazio).
+  No **trimestral da v2**, as linhas sem valor em nenhum dos dois trimestres saem do PDF, e o
+  cliente não vê caixas de observações ou recomendações vazias. O relatório de consultoria já
+  escondia as páginas vazias uma a uma.
+
+- [x] **Portal do cliente só informativo, sem valores (v2)**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  No perfil Cliente saem os cartões "Valor a pagar" e "Créditos ou reembolsos" e a coluna
+  Valor das obrigações e das declarações — fica obrigação, período, data e estado. A equipa
+  continua a ver tudo. Verificado: zero montantes no Resumo e nas Obrigações do cliente.
+  ⚠️ **A confirmar com a Lúcia** (na lista de campos que ela vai marcar): se o cliente
+  continua a ver os **comprovativos** e o **relatório trimestral** (que tem faturação e
+  resultado do negócio dele — não são valores fiscais, mas são números).
 
 ### ESG como consultoria — 19/09
 

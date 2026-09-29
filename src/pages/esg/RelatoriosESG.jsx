@@ -133,7 +133,9 @@ export default function RelatoriosESG() {
     [L.kpiRows.emp, k.social.employees, kPrev?.social.employees, 0],
     [L.kpiRows.women, k.social.womenAll, kPrev?.social.womenAll, 0],
     [L.kpiRows.train, k.social.trainingHours, kPrev?.social.trainingHours, 0],
-    [L.kpiRows.gov, k.gov.maturityPct, kPrev?.gov.maturityPct, 0],
+    // A maturidade de governança é uma percentagem calculada que dá 0 sem nada
+    // respondido — só conta quando há respostas do pilar G (como no Percurso).
+    [L.kpiRows.gov, k.completeness.G.done ? k.gov.maturityPct : null, kPrev?.completeness.G.done ? kPrev.gov.maturityPct : null, 0],
   ]
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
@@ -145,8 +147,19 @@ export default function RelatoriosESG() {
     const esc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
     const secText = (key) => sections[key] ? `<p class="txt">${esc(sections[key]).replace(/\n/g, '<br/>')}</p>` : ''
     const matRows = material.map(({ topic, e }) => `<tr><td>${esc(topicLabel(topic, lang))}</td><td>${e.stakeholder}/5</td><td>${e.company}/5</td><td>${e.financial?.impact ? e.financial.impact + '/5' : '—'}</td><td>${esc(e.goal?.target || '—')}</td></tr>`).join('')
-    const kpiRows = kpiTable.map(([lbl, cur, prev, d]) => `<tr><td>${esc(lbl)}</td><td>${fmt(cur, d)}</td><td>${prevYear ? fmt(prev, d) : '—'}</td></tr>`).join('')
+    // Só entram os KPIs com valor num dos dois anos (25/09: nada de secções vazias).
+    const kpiRows = kpiTable.filter(([, cur, prev]) => cur != null || (prevYear && prev != null))
+      .map(([lbl, cur, prev, d]) => `<tr><td>${esc(lbl)}</td><td>${fmt(cur, d)}</td><td>${prevYear ? fmt(prev, d) : '—'}</td></tr>`).join('')
     const pjRows = projects.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(L.stLbl[p.status] || p.status)}</td><td>${p.investment != null ? '€ ' + fmt(p.investment) : '—'}</td><td>${p.annual_saving != null ? '€ ' + fmt(p.annual_saving) : '—'}</td><td>${p.progress}%</td></tr>`).join('')
+    // Cada secção só entra se tiver texto escrito ou dados — um título seguido de
+    // "sem dados" não diz nada ao cliente (reunião de 25/09).
+    const bloco = (titulo, texto, tabela) => (texto || tabela) ? `<h2>${esc(titulo)}</h2>${texto}${tabela}` : ''
+    const corpo = [
+      bloco(L.s1, secText('materialidade'), matRows ? `<table><tr>${L.matHeader.map(h => `<th>${esc(h)}</th>`).join('')}</tr>${matRows}</table>` : ''),
+      bloco(L.s2, secText('diagnostico'), ''),
+      bloco(L.s3, secText('projetos'), pjRows ? `<table><tr><th>${esc(L.s3.slice(3))}</th><th>Status</th><th>${esc(L.invest)}</th><th>${esc(L.saving2)}</th><th>%</th></tr>${pjRows}</table>` : ''),
+      bloco(L.s4, secText('kpis'), kpiRows ? `<table><tr><th>KPI</th><th>${year}</th><th>${prevYear || '—'}</th></tr>${kpiRows}</table>` : ''),
+    ].join('')
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>ESG ${year}</title><style>
       body{font-family:Georgia,serif;color:#1a2b20;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.55}
       h1{font-size:26px;margin-bottom:4px} .sub{color:#667;font-size:13px;margin-bottom:28px}
@@ -157,13 +170,7 @@ export default function RelatoriosESG() {
     </style></head><body>
       <h1>${esc(L.title)} ${year}</h1>
       <div class="sub">${esc(company?.company_name || '')}</div>
-      <h2>${esc(L.s1)}</h2>${secText('materialidade')}
-      <table><tr>${L.matHeader.map(h => `<th>${esc(h)}</th>`).join('')}</tr>${matRows || `<tr><td colspan="5">${esc(L.noData)}</td></tr>`}</table>
-      <h2>${esc(L.s2)}</h2>${secText('diagnostico')}
-      <h2>${esc(L.s3)}</h2>${secText('projetos')}
-      <table><tr><th>${esc(L.s3.slice(3))}</th><th>Status</th><th>${esc(L.invest)}</th><th>${esc(L.saving2)}</th><th>%</th></tr>${pjRows || `<tr><td colspan="5">${esc(L.noData)}</td></tr>`}</table>
-      <h2>${esc(L.s4)}</h2>${secText('kpis')}
-      <table><tr><th>KPI</th><th>${year}</th><th>${prevYear || '—'}</th></tr>${kpiRows}</table>
+      ${corpo || `<p class="txt">${esc(L.noData)}</p>`}
     </body></html>`
     const w = window.open('', '_blank')
     if (!w) return
@@ -171,8 +178,10 @@ export default function RelatoriosESG() {
     setTimeout(() => w.print(), 300)
   }
 
-  const SectionCard = ({ id, title, children }) => (
-    <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
+  // Função que devolve JSX (não componente): assim a caixa de texto não perde o
+  // foco a cada tecla — o mesmo bug do diagnóstico ESG (25/09).
+  const secao = (id, title, children) => (
+    <div key={id} style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
       <h3 style={{ margin: '0 0 12px', fontFamily: t.fontDisplay, fontSize: '18px', fontWeight: 600, color: t.heading, borderBottom: `2px solid ${t.accent}`, paddingBottom: '6px' }}>{title}</h3>
       <textarea value={sections[id] || ''} disabled={soLeitura} onChange={e => setSections(p => ({ ...p, [id]: e.target.value }))}
         placeholder={L.textPh} rows={3}
@@ -203,7 +212,7 @@ export default function RelatoriosESG() {
       </div>
 
       {/* 1. Dupla Materialidade */}
-      <SectionCard id="materialidade" title={L.s1}>
+      {secao('materialidade', L.s1, <>
         {material.length === 0 ? <div style={{ fontSize: '12px', color: t.subtle }}>{L.noData}</div> : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -222,10 +231,10 @@ export default function RelatoriosESG() {
             </table>
           </div>
         )}
-      </SectionCard>
+      </>)}
 
       {/* 2. Diagnóstico */}
-      <SectionCard id="diagnostico" title={L.s2}>
+      {secao('diagnostico', L.s2, <>
         <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
           {[['E', '#0a7a3e'], ['S', '#1e60c8'], ['G', '#a9781a']].map(([p, color]) => {
             const c = k.completeness[p]
@@ -238,10 +247,10 @@ export default function RelatoriosESG() {
           })}
           <div style={{ fontSize: '12.5px', color: t.textMuted }}>{L.refYear}: <strong style={{ color: t.heading }}>{year}</strong>{prevYear ? <> · {L.vs} <strong style={{ color: t.heading }}>{prevYear}</strong></> : null}</div>
         </div>
-      </SectionCard>
+      </>)}
 
       {/* 3. Projetos */}
-      <SectionCard id="projetos" title={L.s3}>
+      {secao('projetos', L.s3, <>
         {projects.length === 0 ? <div style={{ fontSize: '12px', color: t.subtle }}>{L.noData}</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {projects.map(p => (
@@ -254,10 +263,10 @@ export default function RelatoriosESG() {
             ))}
           </div>
         )}
-      </SectionCard>
+      </>)}
 
       {/* 4. KPIs */}
-      <SectionCard id="kpis" title={L.s4}>
+      {secao('kpis', L.s4, <>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={th}>KPI</th><th style={th}>{year}</th><th style={th}>{prevYear || '—'}</th></tr></thead>
@@ -272,7 +281,7 @@ export default function RelatoriosESG() {
             </tbody>
           </table>
         </div>
-      </SectionCard>
+      </>)}
     </div>
   )
 }
