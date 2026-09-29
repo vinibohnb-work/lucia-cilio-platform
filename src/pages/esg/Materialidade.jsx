@@ -172,7 +172,7 @@ export default function Materialidade() {
   )
 
   // ── Matriz SVG ──
-  function Matrix() {
+  function matriz() {
     const S = isMobile ? 300 : 380
     const M = 42                    // margem p/ eixos
     const plot = S - M - 14
@@ -305,7 +305,7 @@ export default function Materialidade() {
                 </select>
               </label>
             </div>
-            <Matrix />
+            {matriz()}
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap' }}>
               {['E', 'S', 'G'].map(p => (
                 <span key={p} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: t.textMuted }}>

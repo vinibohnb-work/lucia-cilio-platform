@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLang } from '../../context/LangContext'
+import CabecalhoPagina from '../../components/CabecalhoPagina'
+import { t as traduzir } from '../../i18n/translations'
 import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -157,6 +159,7 @@ export default function ObrigacoesFiscais() {
 
   return (
     <div style={{ width: '100%' }}>
+      <CabecalhoPagina eyebrow={{ pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' }} titulo={traduzir(lang, 'nav_obligations')} sub={{ pt: 'Os prazos de entrega e de pagamento ao Fisco.', de: 'Abgabe- und Zahlungsfristen gegenüber dem Finanzamt.', en: 'Filing and payment deadlines with the tax office.' }} />
       <EstimateNote />
 
       {/* Header */}

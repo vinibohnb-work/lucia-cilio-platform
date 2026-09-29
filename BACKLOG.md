@@ -97,12 +97,6 @@
 > por cliente; e o preenchimento da consultoria ESG é **uso interno da Lúcia** — o cliente
 > não entra lá para responder.
 
-- [ ] **Visualização do ESG por cliente, pronta para apresentar**
-  *Reunião 18/09/2026 · Resp.: Vinícius · até 25/09*
-  Uma vista por cliente que a Lúcia possa mostrar numa reunião, sem ser o ecrã de trabalho.
-  Com a ESG já organizada por casos (19/09), o que falta é o **modo de apresentação** do
-  Percurso do caso: sem campos, letra maior, imprimível — o resto já lá está.
-
 - [ ] **Retirar `user_id` das quatro tabelas ESG** (migração posterior)
   *Achado 19/09 · Resp.: Vinícius*
   A 036 deixou a coluna antiga em paz de propósito. Quando o modelo por casos tiver dado a
@@ -223,18 +217,6 @@
   "Mostrar" da palavra-passe passou de 42×17 para 52×38 no login e na definição de senha; os
   botões de linha dos Acessos para 34×34). Falta a varredura das restantes ocorrências.
   *QA 13/08/2026 · Parcial 27/08 · Resp.: Vinícius*
-- [ ] **🟡 Sete ecrãs sem `<h1>`** — Painel, Livro de Caixa, Obrigações, Precificação,
-  Catálogo, Clientes e Empresa começam direto nos controlos. O login já foi resolvido a 27/08
-  (o nome da marca passou a `<h1>`, sem alteração visual).
-  **Não é ajuste rápido:** estes sete ecrãs não têm título nenhum para converter — é preciso
-  *acrescentar* o cabeçalho padrão (eyebrow + título + subtítulo), como o das páginas novas.
-  Muda o topo de sete ecrãs principais, por isso deve ser visto antes com o Vinícius.
-  *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟡 Tabela do Planeamento Mensal exige rolagem lateral no telemóvel** — largura mínima
-  de 1120px; veem-se 3 de 12 colunas e os cabeçalhos truncam. Sugestão: cartão por linha no
-  telemóvel.
-  *QA 13/08/2026 · Resp.: Vinícius*
-
 - [ ] **🔵 Livro de Caixa sem paginação** — com os 30 lançamentos da conta demo a página tem
   ~8.000 px no telemóvel. Com um ano real de dados, será várias vezes isso.
   *QA 13/08/2026 · Resp.: Vinícius*
@@ -264,10 +246,6 @@
   um email próprio enviado pela plataforma.
 
 ### Usabilidade e compreensão
-
-- [ ] **Corrigir bug de tradução no módulo ESG (opções não renováveis não mudam de idioma)**
-  *Reunião 06/08/2026 · Resp.: Vinícius*
-  Bug encontrado em uso real — há opções que ficam fixas numa língua.
 
 - [ ] **Adicionar ícone informativo (i) nos termos técnicos, como regime de IVA**
   *Reunião 06/08/2026 · Resp.: Vinícius*
@@ -546,6 +524,40 @@
 ---
 
 ## Concluídos
+
+### ESG para apresentar e ganhos rápidos — 29/09
+
+- [x] **Visualização do ESG por cliente, pronta para apresentar — modo apresentação**
+  *Reunião 18/09/2026 · Resp.: Vinícius*
+  Em cada caso ESG, **Modo apresentação ↗** abre uma página própria, sem menus, para
+  mostrar ao cliente ou partilhar o ecrã, e que imprime limpo em PDF. Tem o **percurso**
+  (progresso geral, as cinco fases e o próximo passo), **o que importa** (a matriz de dupla
+  materialidade em grande e os temas materiais com meta e payback), **os números** (CO₂,
+  eletricidade renovável, colaboradores, percentagem de mulheres e maturidade de governança,
+  com a variação face ao ano anterior) e **o plano** (projetos com investimento, poupança e
+  payback). Escolhe-se o ano de referência. Só aparecem as secções com conteúdo, como pedido
+  a 25/09. Só leitura — não grava nada.
+
+- [x] **Tradução dos subcampos do diagnóstico ESG**
+  *Reunião 06/08/2026 · Resp.: Vinícius*
+  "Não renováveis", "Gás natural", "Litros"… ficavam sempre em português: os 38 subcampos
+  (energia, emissões, resíduos, taxonomia, mulheres, acidentes, desligamentos) só tinham
+  texto em português. Passam a ter alemão e inglês, e os grupos (Nicht erneuerbar /
+  Non-renewable, Erneuerbar / Renewable, Strom / Electricity) também. As unidades guardadas
+  não mudam — só o rótulo ("Liter" / "Litres") — para não estragar respostas já gravadas.
+  Verificado nas três línguas: nenhum texto português a sobrar.
+
+- [x] **Sete ecrãs sem `<h1>`** *(QA de 13/08)*
+  Painel, Livro de Caixa, Obrigações, Calculadora de Preços, Catálogo, Clientes e Empresa
+  ganham o cabeçalho padrão (eyebrow + título + subtítulo) — um componente partilhado,
+  `CabecalhoPagina`, para não repetir código. A Empresa tinha um `<h2>` a fazer de título,
+  que passou a este cabeçalho. Verificado: um `<h1>` em cada um dos sete.
+
+- [x] **Nenhum componente recriado a cada render em toda a plataforma**
+  Depois da correção de 28/09 (campos que perdiam o foco), o mesmo padrão ficava em quatro
+  ecrãs só de leitura: Reservas & Impostos, EÜR, KPIs e a matriz da materialidade. Sem
+  campos não se perdia texto, mas redesenhavam tudo a cada mudança. Passam a funções
+  chamadas diretamente; o lint confirma **zero** ocorrências no projeto.
 
 ### Correções de 25/09 — 28/09
 

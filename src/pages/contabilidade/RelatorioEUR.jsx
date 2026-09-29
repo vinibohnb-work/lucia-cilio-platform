@@ -206,7 +206,7 @@ export default function RelatorioEUR() {
     )
   }
 
-  const LinhaIVA = ({ nome, valor }) => (
+  const linhaIVA = ({ nome, valor }) => (
     <div style={{ display: 'flex', gap: '10px', alignItems: 'baseline', padding: '10px 0', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
       <span style={{ flex: 'none', width: '34px' }} />
       <span style={{ flex: 1, fontSize: '13px', color: t.heading }}>{nome}</span>
@@ -214,7 +214,7 @@ export default function RelatorioEUR() {
     </div>
   )
 
-  const Total = ({ nome, valor }) => (
+  const linhaTotal = ({ nome, valor }) => (
     <div style={{ display: 'flex', gap: '10px', alignItems: 'baseline', padding: '11px 0 2px', borderTop: `2px solid ${t.heading}` }}>
       <span style={{ flex: 'none', width: '34px' }} />
       <span style={{ flex: 1, fontSize: '13px', fontWeight: 800, color: t.heading }}>{nome}</span>
@@ -266,15 +266,15 @@ export default function RelatorioEUR() {
           <div style={{ ...card, padding: '18px 22px', marginBottom: '14px' }}>
             <h3 style={{ margin: '0 0 6px', fontFamily: t.fontDisplay, fontSize: '18px', fontWeight: 600, color: t.heading }}>{L.secReceitas}</h3>
             {r.linhasReceita.map(l => <Linha key={l.key} l={l} />)}
-            {r.vatRecebido > 0 && <LinhaIVA nome={NOME_LINHA.vatRecebido} valor={r.vatRecebido} />}
-            <Total nome={L.einnahmen} valor={r.totalReceitas} />
+            {r.vatRecebido > 0 && linhaIVA({ nome: NOME_LINHA.vatRecebido, valor: r.vatRecebido })}
+            {linhaTotal({ nome: L.einnahmen, valor: r.totalReceitas })}
           </div>
 
           <div style={{ ...card, padding: '18px 22px', marginBottom: '14px' }}>
             <h3 style={{ margin: '0 0 6px', fontFamily: t.fontDisplay, fontSize: '18px', fontWeight: 600, color: t.heading }}>{L.secDespesas}</h3>
             {r.linhasDespesa.map(l => <Linha key={l.key} l={l} />)}
-            {r.vatPago > 0 && <LinhaIVA nome={NOME_LINHA.vatPago} valor={r.vatPago} />}
-            <Total nome={L.ausgaben} valor={r.totalDespesas} />
+            {r.vatPago > 0 && linhaIVA({ nome: NOME_LINHA.vatPago, valor: r.vatPago })}
+            {linhaTotal({ nome: L.ausgaben, valor: r.totalDespesas })}
           </div>
 
           <p style={{ fontSize: '11px', color: t.subtle, lineHeight: 1.5, margin: '0 0 20px' }}>ⓘ {L.avisoForm}</p>

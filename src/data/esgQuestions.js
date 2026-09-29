@@ -13,7 +13,8 @@
 //   'group'     → várias linhas (fields[]), cada uma number/percent com units
 // Todas as perguntas oferecem ainda as opções padrão "não consegui responder"
 // (indisponível / pergunta não clara) — tratadas no formulário via estado `na`.
-// Nota: os rótulos de subcampo (fields[].pt) são partilhados por todos os idiomas.
+// Subcampos (fields[]): pt / de / en, e o grupo em sub / subDe / subEn.
+// As unidades guardadas ficam em português ('Litros'); só o rótulo é traduzido.
 // ============================================================================
 
 export const ESG_PILLARS = [
@@ -57,25 +58,25 @@ export const ESG_QUESTIONS = [
     pt: 'Qual foi o consumo de energia da sua empresa no ano de referência, por fonte de energia?',
     en: 'What was your company\'s energy consumption in the reference year, by energy source?',
     fields: [
-      { key: 'erdgas',      sub: 'Não renováveis', pt: 'Gás natural (Erdgas L e H)', type: 'number', units: ['m³', 'kWh', 'Joule'] },
-      { key: 'fluessiggas', sub: 'Não renováveis', pt: 'Gás liquefeito (GLP / Flüssiggas)', type: 'number', units: ['t', 'm³', 'kWh', 'Joule'] },
-      { key: 'heizoel_l',   sub: 'Não renováveis', pt: 'Óleo de aquecimento leve (Heizöl leicht)', type: 'number', units: ['Litros'] },
-      { key: 'heizoel_s',   sub: 'Não renováveis', pt: 'Óleo de aquecimento pesado (Heizöl schwer)', type: 'number', units: ['Litros'] },
-      { key: 'steinkohle',  sub: 'Não renováveis', pt: 'Hulha (Steinkohle)', type: 'number', units: ['t'] },
-      { key: 'braunkohle',  sub: 'Não renováveis', pt: 'Linhito (Braunkohle)', type: 'number', units: ['t'] },
-      { key: 'benzin',      sub: 'Não renováveis', pt: 'Gasolina (veículos da empresa)', type: 'number', units: ['Litros'] },
-      { key: 'diesel',      sub: 'Não renováveis', pt: 'Diesel (veículos da empresa)', type: 'number', units: ['Litros'] },
-      { key: 'fernwaerme_nr', sub: 'Não renováveis', pt: 'Aquecimento/refrigeração distrital (Nah-/Fernwärme/-Kälte)', type: 'number', units: ['kWh', 'Joule'] },
-      { key: 'outras_nr',   sub: 'Não renováveis', pt: 'Outras fontes não especificadas', type: 'number', units: ['kWh', 'Joule'] },
-      { key: 'biomasse',    sub: 'Renováveis', pt: 'Biomassa / madeira (Biomasse/Holz)', type: 'number', units: ['t', 'kWh', 'Joule'] },
-      { key: 'biogas',      sub: 'Renováveis', pt: 'Biogás (Biogas)', type: 'number', units: ['m³', 'kWh', 'Joule'] },
-      { key: 'biodiesel',   sub: 'Renováveis', pt: 'Biodiesel', type: 'number', units: ['Litros', 'kWh', 'Joule'] },
-      { key: 'holzpellets', sub: 'Renováveis', pt: 'Pellets de madeira (Holzpellets)', type: 'number', units: ['t', 'kWh', 'Joule'] },
-      { key: 'fernwaerme_r', sub: 'Renováveis', pt: 'Aquecimento/refrigeração distrital renovável', type: 'number', units: ['kWh', 'Joule'] },
-      { key: 'outras_r',    sub: 'Renováveis', pt: 'Outras fontes renováveis não especificadas', type: 'number', units: ['kWh', 'Joule'] },
-      { key: 'elet_total',  sub: 'Eletricidade', pt: 'Consumo total de eletricidade', type: 'number', units: ['kWh'] },
-      { key: 'elet_renov',  sub: 'Eletricidade', pt: 'Parcela de fontes renováveis', type: 'percent' },
-      { key: 'elet_auto',   sub: 'Eletricidade', pt: 'Parcela autogerada', type: 'percent' },
+      { key: 'erdgas',      sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Gás natural (Erdgas L e H)', de: 'Erdgas (L und H)', en: 'Natural gas (L and H)', type: 'number', units: ['m³', 'kWh', 'Joule'] },
+      { key: 'fluessiggas', sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Gás liquefeito (GLP / Flüssiggas)', de: 'Flüssiggas', en: 'Liquefied petroleum gas (LPG)', type: 'number', units: ['t', 'm³', 'kWh', 'Joule'] },
+      { key: 'heizoel_l',   sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Óleo de aquecimento leve (Heizöl leicht)', de: 'Heizöl leicht', en: 'Light heating oil', type: 'number', units: ['Litros'] },
+      { key: 'heizoel_s',   sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Óleo de aquecimento pesado (Heizöl schwer)', de: 'Heizöl schwer', en: 'Heavy heating oil', type: 'number', units: ['Litros'] },
+      { key: 'steinkohle',  sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Hulha (Steinkohle)', de: 'Steinkohle', en: 'Hard coal', type: 'number', units: ['t'] },
+      { key: 'braunkohle',  sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Linhito (Braunkohle)', de: 'Braunkohle', en: 'Lignite', type: 'number', units: ['t'] },
+      { key: 'benzin',      sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Gasolina (veículos da empresa)', de: 'Benzin (Firmenfahrzeuge)', en: 'Petrol (company vehicles)', type: 'number', units: ['Litros'] },
+      { key: 'diesel',      sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Diesel (veículos da empresa)', de: 'Diesel (Firmenfahrzeuge)', en: 'Diesel (company vehicles)', type: 'number', units: ['Litros'] },
+      { key: 'fernwaerme_nr', sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Aquecimento/refrigeração distrital (Nah-/Fernwärme/-Kälte)', de: 'Nah-/Fernwärme/-Kälte', en: 'District heating/cooling', type: 'number', units: ['kWh', 'Joule'] },
+      { key: 'outras_nr',   sub: 'Não renováveis', subDe: 'Nicht erneuerbar', subEn: 'Non-renewable', pt: 'Outras fontes não especificadas', de: 'Sonstige, nicht näher bezeichnete Quellen', en: 'Other unspecified sources', type: 'number', units: ['kWh', 'Joule'] },
+      { key: 'biomasse',    sub: 'Renováveis', subDe: 'Erneuerbar', subEn: 'Renewable', pt: 'Biomassa / madeira (Biomasse/Holz)', de: 'Biomasse/Holz', en: 'Biomass / wood', type: 'number', units: ['t', 'kWh', 'Joule'] },
+      { key: 'biogas',      sub: 'Renováveis', subDe: 'Erneuerbar', subEn: 'Renewable', pt: 'Biogás (Biogas)', de: 'Biogas', en: 'Biogas', type: 'number', units: ['m³', 'kWh', 'Joule'] },
+      { key: 'biodiesel',   sub: 'Renováveis', subDe: 'Erneuerbar', subEn: 'Renewable', pt: 'Biodiesel', de: 'Biodiesel', en: 'Biodiesel', type: 'number', units: ['Litros', 'kWh', 'Joule'] },
+      { key: 'holzpellets', sub: 'Renováveis', subDe: 'Erneuerbar', subEn: 'Renewable', pt: 'Pellets de madeira (Holzpellets)', de: 'Holzpellets', en: 'Wood pellets', type: 'number', units: ['t', 'kWh', 'Joule'] },
+      { key: 'fernwaerme_r', sub: 'Renováveis', subDe: 'Erneuerbar', subEn: 'Renewable', pt: 'Aquecimento/refrigeração distrital renovável', de: 'Erneuerbare Nah-/Fernwärme/-Kälte', en: 'Renewable district heating/cooling', type: 'number', units: ['kWh', 'Joule'] },
+      { key: 'outras_r',    sub: 'Renováveis', subDe: 'Erneuerbar', subEn: 'Renewable', pt: 'Outras fontes renováveis não especificadas', de: 'Sonstige erneuerbare Quellen', en: 'Other renewable sources', type: 'number', units: ['kWh', 'Joule'] },
+      { key: 'elet_total',  sub: 'Eletricidade', subDe: 'Strom', subEn: 'Electricity', pt: 'Consumo total de eletricidade', de: 'Gesamtstromverbrauch', en: 'Total electricity consumption', type: 'number', units: ['kWh'] },
+      { key: 'elet_renov',  sub: 'Eletricidade', subDe: 'Strom', subEn: 'Electricity', pt: 'Parcela de fontes renováveis', de: 'Anteil aus erneuerbaren Quellen', en: 'Share from renewable sources', type: 'percent' },
+      { key: 'elet_auto',   sub: 'Eletricidade', subDe: 'Strom', subEn: 'Electricity', pt: 'Parcela autogerada', de: 'Anteil Eigenerzeugung', en: 'Self-generated share', type: 'percent' },
     ],
   },
   {
@@ -96,10 +97,10 @@ export const ESG_QUESTIONS = [
     pt: 'Qual foi a emissão de CO₂ da sua empresa no ano de referência?',
     en: 'What were your company\'s CO₂ emissions in the reference year?',
     fields: [
-      { key: 'total',   pt: 'Emissão total de CO₂', type: 'number', units: ['t CO₂'] },
-      { key: 'scope1',  pt: 'Scope 1 (emissões diretas)', type: 'number', units: ['t CO₂'] },
-      { key: 'scope2',  pt: 'Scope 2 (energia adquirida)', type: 'number', units: ['t CO₂'] },
-      { key: 'scope3',  pt: 'Scope 3 (cadeia de valor)', type: 'number', units: ['t CO₂'] },
+      { key: 'total',   pt: 'Emissão total de CO₂', de: 'CO₂-Emissionen gesamt', en: 'Total CO₂ emissions', type: 'number', units: ['t CO₂'] },
+      { key: 'scope1',  pt: 'Scope 1 (emissões diretas)', de: 'Scope 1 (direkte Emissionen)', en: 'Scope 1 (direct emissions)', type: 'number', units: ['t CO₂'] },
+      { key: 'scope2',  pt: 'Scope 2 (energia adquirida)', de: 'Scope 2 (eingekaufte Energie)', en: 'Scope 2 (purchased energy)', type: 'number', units: ['t CO₂'] },
+      { key: 'scope3',  pt: 'Scope 3 (cadeia de valor)', de: 'Scope 3 (Wertschöpfungskette)', en: 'Scope 3 (value chain)', type: 'number', units: ['t CO₂'] },
     ],
   },
   {
@@ -126,10 +127,10 @@ export const ESG_QUESTIONS = [
     pt: 'Qual foi a geração de resíduos da sua empresa no ano de referência?',
     en: 'What was your company\'s waste generation in the reference year?',
     fields: [
-      { key: 'total',        pt: 'Resíduos totais', type: 'number', units: ['t', 'Euro'] },
-      { key: 'total_recic',  pt: 'Resíduos totais: parcela reciclada', type: 'percent' },
-      { key: 'perigosos',    pt: 'Resíduos perigosos', type: 'number', units: ['t', 'Euro'] },
-      { key: 'perigosos_recic', pt: 'Resíduos perigosos: parcela reciclada', type: 'percent' },
+      { key: 'total',        pt: 'Resíduos totais', de: 'Abfall gesamt', en: 'Total waste', type: 'number', units: ['t', 'Euro'] },
+      { key: 'total_recic',  pt: 'Resíduos totais: parcela reciclada', de: 'Abfall gesamt: recycelter Anteil', en: 'Total waste: recycled share', type: 'percent' },
+      { key: 'perigosos',    pt: 'Resíduos perigosos', de: 'Gefährliche Abfälle', en: 'Hazardous waste', type: 'number', units: ['t', 'Euro'] },
+      { key: 'perigosos_recic', pt: 'Resíduos perigosos: parcela reciclada', de: 'Gefährliche Abfälle: recycelter Anteil', en: 'Hazardous waste: recycled share', type: 'percent' },
     ],
   },
   {
@@ -138,9 +139,9 @@ export const ESG_QUESTIONS = [
     pt: 'Quais foram as receitas, investimentos e despesas operacionais elegíveis e alinhados à Taxonomia (UE) no ano de referência?',
     en: 'What were your taxonomy-eligible and taxonomy-aligned revenues, investments and operating expenses (EU Taxonomy) in the reference year?',
     fields: [
-      { key: 'total',     pt: 'Total (receitas + investimentos + despesas op.)', type: 'number', units: ['Euro'] },
-      { key: 'elegivel',  pt: 'Elegível à taxonomia (taxonomiefähig)', type: 'percent' },
-      { key: 'alinhado',  pt: 'Alinhado à taxonomia (taxonomiekonform)', type: 'percent' },
+      { key: 'total',     pt: 'Total (receitas + investimentos + despesas op.)', de: 'Gesamt (Umsatz + Investitionen + Betriebsausgaben)', en: 'Total (revenue + capex + opex)', type: 'number', units: ['Euro'] },
+      { key: 'elegivel',  pt: 'Elegível à taxonomia (taxonomiefähig)', de: 'Taxonomiefähig', en: 'Taxonomy-eligible', type: 'percent' },
+      { key: 'alinhado',  pt: 'Alinhado à taxonomia (taxonomiekonform)', de: 'Taxonomiekonform', en: 'Taxonomy-aligned', type: 'percent' },
     ],
   },
 
@@ -157,10 +158,10 @@ export const ESG_QUESTIONS = [
     pt: 'Qual foi o percentual de mulheres na sua empresa nas seguintes posições?',
     en: 'What was the share of women in your company in the following positions?',
     fields: [
-      { key: 'todos',     pt: 'Todos os funcionários', type: 'percent' },
-      { key: 'liderancas', pt: 'Lideranças (com gestão de equipa)', type: 'percent' },
-      { key: 'alta_gestao', pt: 'Alta gestão (diretoria, conselho executivo)', type: 'percent' },
-      { key: 'controle',  pt: 'Nível de controlo (conselho fiscal, representação dos sócios)', type: 'percent' },
+      { key: 'todos',     pt: 'Todos os funcionários', de: 'Alle Beschäftigten', en: 'All employees', type: 'percent' },
+      { key: 'liderancas', pt: 'Lideranças (com gestão de equipa)', de: 'Führungskräfte (mit Personalverantwortung)', en: 'Leaders (managing a team)', type: 'percent' },
+      { key: 'alta_gestao', pt: 'Alta gestão (diretoria, conselho executivo)', de: 'Top-Management (Geschäftsführung, Vorstand)', en: 'Top management (executive board)', type: 'percent' },
+      { key: 'controle',  pt: 'Nível de controlo (conselho fiscal, representação dos sócios)', de: 'Kontrollebene (Aufsichtsrat, Gesellschaftervertretung)', en: 'Control level (supervisory board, shareholders)', type: 'percent' },
     ],
   },
   {
@@ -175,8 +176,8 @@ export const ESG_QUESTIONS = [
     pt: 'Quantos acidentes de trabalho registados houve na sua empresa no ano de referência?',
     en: 'How many reported occupational accidents occurred in your company in the reference year?',
     fields: [
-      { key: 'com_afastamento', pt: 'Acidentes com 3 ou mais dias de afastamento', type: 'number' },
-      { key: 'fatais',          pt: 'Acidentes de trabalho fatais', type: 'number' },
+      { key: 'com_afastamento', pt: 'Acidentes com 3 ou mais dias de afastamento', de: 'Unfälle mit 3 oder mehr Ausfalltagen', en: 'Accidents with 3 or more days off work', type: 'number' },
+      { key: 'fatais',          pt: 'Acidentes de trabalho fatais', de: 'Tödliche Arbeitsunfälle', en: 'Fatal work accidents', type: 'number' },
     ],
   },
   {
@@ -185,8 +186,8 @@ export const ESG_QUESTIONS = [
     pt: 'Quantos desligamentos houve na sua empresa no ano de referência?',
     en: 'How many terminations were there in your company in the reference year?',
     fields: [
-      { key: 'todos',          pt: 'Todos os desligamentos', type: 'number' },
-      { key: 'por_iniciativa', pt: 'Apenas por iniciativa do funcionário', type: 'number' },
+      { key: 'todos',          pt: 'Todos os desligamentos', de: 'Alle Austritte', en: 'All departures', type: 'number' },
+      { key: 'por_iniciativa', pt: 'Apenas por iniciativa do funcionário', de: 'Nur auf Wunsch der Beschäftigten', en: 'Employee-initiated only', type: 'number' },
     ],
   },
   {

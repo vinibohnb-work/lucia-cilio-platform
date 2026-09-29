@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { Link } from 'react-router-dom'
 import { localeDe } from '../../lib/formato'
@@ -196,7 +196,7 @@ export default function KPIs() {
     { label: L.top, v: k.social.womenTop }, { label: L.control, v: k.social.womenControl },
   ]
 
-  const Flag = ({ label, value }) => {
+  const sinal = ({ label, value }) => {
     const on = value === 'yes', planned = value === 'planned'
     const bg = on ? '#eaf5ee' : planned ? '#fbf3d9' : (night ? 'rgba(255,255,255,.05)' : '#f3f5f4')
     const ink = on ? '#0a7a3e' : planned ? '#a9781a' : t.subtle
@@ -336,9 +336,9 @@ export default function KPIs() {
         <div style={card}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '12px' }}>{L.flags}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <Flag label={L.target} value={k.env.hasTarget} />
-            <Flag label={L.compensate} value={k.env.compensates} />
-            <Flag label={L.ecoInvest} value={k.env.ecoInvest} />
+            {sinal({ label: L.target, value: k.env.hasTarget })}
+            {sinal({ label: L.compensate, value: k.env.compensates })}
+            {sinal({ label: L.ecoInvest, value: k.env.ecoInvest })}
           </div>
         </div>
       </div>
@@ -394,7 +394,7 @@ export default function KPIs() {
         <div style={{ ...card, gridColumn: isMobile ? 'auto' : 'span 1' }}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '12px' }}>{L.checklist}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-            {k.gov.checklist.map(c => <Flag key={c.key} label={checklistLabels[c.key]} value={c.value} />)}
+            {k.gov.checklist.map(c => <Fragment key={c.key}>{sinal({ label: checklistLabels[c.key], value: c.value })}</Fragment>)}
           </div>
         </div>
       </div>

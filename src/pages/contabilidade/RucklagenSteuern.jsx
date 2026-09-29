@@ -249,14 +249,14 @@ export default function RucklagenSteuern() {
   const sub = { fontSize: '11.5px', color: t.subtle }
   const inputStyle = { width: '100%', boxSizing: 'border-box', textAlign: 'right', padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '15px', fontWeight: 700, outline: 'none' }
 
-  const SectionHead = ({ n, title }) => (
+  const cabecalhoSecao = ({ n, title }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '13px', background: HEAD, padding: '15px 22px' }}>
       <span style={{ width: '26px', height: '26px', flex: 'none', borderRadius: '50%', background: '#fff', color: HEAD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800 }}>{n}</span>
       <h3 style={{ margin: 0, fontFamily: t.fontDisplay, fontSize: '19px', fontWeight: 600, color: '#f3ecdb' }}>{title}</h3>
     </div>
   )
 
-  const InfoBar = ({ text, toneKey = 'green' }) => (
+  const barraInfo = ({ text, toneKey = 'green' }) => (
     <div style={{ display: 'flex', gap: '9px', alignItems: 'flex-start', background: tone[toneKey].bg, borderRadius: '10px', padding: '12px 15px', fontSize: '12.5px', color: t.text, lineHeight: 1.5 }}>
       <span style={{ color: tone[toneKey].ink, fontWeight: 800 }}>ⓘ</span><span>{text}</span>
     </div>
@@ -294,7 +294,7 @@ export default function RucklagenSteuern() {
 
           {/* 1. Einkommensteuer-Rücklage */}
           <div style={card}>
-            <SectionHead n="1" title={L.s1} />
+            {cabecalhoSecao({ n: "1", title: L.s1 })}
             <div style={{ padding: '20px 22px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.1fr', gap: '16px', alignItems: 'stretch' }}>
                 <div>
@@ -317,13 +317,13 @@ export default function RucklagenSteuern() {
                   <div style={sub}>{L.recTaxSub(pct, fmt2(gewinnPos))}</div>
                 </div>
               </div>
-              <div style={{ marginTop: '16px' }}><InfoBar text={L.s1Hint} toneKey="green" /></div>
+              <div style={{ marginTop: '16px' }}>{barraInfo({ text: L.s1Hint, toneKey: "green" })}</div>
             </div>
           </div>
 
           {/* 2. Umsatzsteuer */}
           <div style={card}>
-            <SectionHead n="2" title={L.s2} />
+            {cabecalhoSecao({ n: "2", title: L.s2 })}
             <div style={{ padding: '20px 22px' }}>
               <div style={{ fontSize: '12.5px', fontWeight: 700, color: tone.blue.ink, marginBottom: '15px' }}>{L.s2Only}</div>
               {isRegel ? (
@@ -345,17 +345,17 @@ export default function RucklagenSteuern() {
                       <div style={sub}>{L.zahllastSub(fmt2(ustEin), fmt2(vorsteuer))}</div>
                     </div>
                   </div>
-                  <div style={{ marginTop: '16px' }}><InfoBar text={L.s2Hint} toneKey="blue" /></div>
+                  <div style={{ marginTop: '16px' }}>{barraInfo({ text: L.s2Hint, toneKey: "blue" })}</div>
                 </>
               ) : (
-                <InfoBar text={L.s2Klein} toneKey="yellow" />
+                barraInfo({ text: L.s2Klein, toneKey: "yellow" })
               )}
             </div>
           </div>
 
           {/* 3. Vorsorge / Versicherungen */}
           <div style={card}>
-            <SectionHead n="3" title={L.s3} />
+            {cabecalhoSecao({ n: "3", title: L.s3 })}
             <div style={{ padding: '20px 22px' }}>
               <div style={{ fontSize: '12.5px', fontWeight: 700, color: tone.blue.ink, marginBottom: '15px' }}>{L.s3Sub}</div>
               {[
@@ -387,7 +387,7 @@ export default function RucklagenSteuern() {
 
           {/* 4. Familienversicherung Check */}
           <div style={card}>
-            <SectionHead n="4" title={L.famvTitle} />
+            {cabecalhoSecao({ n: "4", title: L.famvTitle })}
             <div style={{ padding: '20px 22px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.1fr', gap: '16px', alignItems: 'stretch' }}>
                 <div>
@@ -417,7 +417,7 @@ export default function RucklagenSteuern() {
               <div style={{ marginTop: '14px', height: '9px', borderRadius: '20px', background: night ? 'rgba(255,255,255,.1)' : '#e6ede8', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${Math.min(100, famv.ratio * 100)}%`, background: famv.ok ? tone.green.ink : t.neg, transition: 'width .3s' }} />
               </div>
-              <div style={{ marginTop: '14px' }}><InfoBar text={L.famvNote} toneKey={famv.ok ? 'green' : 'yellow'} /></div>
+              <div style={{ marginTop: '14px' }}>{barraInfo({ text: L.famvNote, toneKey: famv.ok ? 'green' : 'yellow' })}</div>
             </div>
           </div>
 

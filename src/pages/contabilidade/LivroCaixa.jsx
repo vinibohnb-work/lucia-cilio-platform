@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
+import CabecalhoPagina from '../../components/CabecalhoPagina'
+import { t as traduzir } from '../../i18n/translations'
 import { supabase } from '../../lib/supabase'
 import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
 import InfoTooltip from '../../components/InfoTooltip'
@@ -282,6 +284,8 @@ export default function LivroCaixa() {
       {erro && (
         <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{erro}</div>
       )}
+
+      <CabecalhoPagina eyebrow={{ pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' }} titulo={traduzir(lang, 'nav_caixa')} sub={{ pt: 'Todas as entradas e saídas, uma a uma.', de: 'Alle Einnahmen und Ausgaben, einzeln.', en: 'Every income and expense, one by one.' }} />
 
       {/* Header (sem botão de Nova Entrada — está no topo) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLang } from '../../context/LangContext'
+import CabecalhoPagina from '../../components/CabecalhoPagina'
+import { t as traduzir } from '../../i18n/translations'
 import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -92,6 +94,8 @@ export default function Clientes() {
 
   return (
     <div style={{ width: '100%' }}>
+
+      <CabecalhoPagina eyebrow={{ pt: 'Gestão', de: 'Verwaltung', en: 'Management' }} titulo={traduzir(lang, 'nav_clients')} sub={{ pt: 'Os clientes do seu negócio.', de: 'Die Kunden Ihres Unternehmens.', en: 'Your business’s customers.' }} />
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>

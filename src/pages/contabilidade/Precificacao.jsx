@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
+import CabecalhoPagina from '../../components/CabecalhoPagina'
+import { t as traduzir } from '../../i18n/translations'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
@@ -589,6 +591,7 @@ export default function Precificacao() {
 
   return (
     <div style={{ width: '100%' }}>
+      <CabecalhoPagina eyebrow={{ pt: 'Gestão', de: 'Verwaltung', en: 'Management' }} titulo={traduzir(lang, 'nav_preco')} sub={{ pt: 'Quanto cobrar para cobrir os custos e ficar com margem.', de: 'Wie viel verlangen, um die Kosten zu decken und Marge zu behalten.', en: 'How much to charge to cover costs and keep a margin.' }} />
       <EstimateNote />
 
       {/* Type selector */}

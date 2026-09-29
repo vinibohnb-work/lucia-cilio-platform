@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import EsqueletoPagina from '../components/EsqueletoPagina'
 import { useLang } from '../context/LangContext'
+import CabecalhoPagina from '../components/CabecalhoPagina'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useTheme } from '../context/ThemeContext'
 import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } from '../lib/companySettings'
@@ -18,7 +19,7 @@ const MONTHS_EN = ['January','February','March','April','May','June','July','Aug
 export default function Empresa() {
   const { lang } = useLang()
   const { t } = useTheme()
-  const G = t.heading, GOLD = t.accent, BG = t.softCardBg
+  const GOLD = t.accent
   const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
@@ -111,8 +112,7 @@ export default function Empresa() {
 
   return (
     <div style={{ width: '100%', maxWidth: '760px' }}>
-      <h2 style={{ fontSize: '20px', fontWeight: 900, color: G, margin: '0 0 4px' }}>{L.title}</h2>
-      <p style={{ fontSize: '13px', color: t.textMuted, margin: '0 0 22px' }}>{L.subtitle}</p>
+      <CabecalhoPagina eyebrow={{ pt: 'Gestão', de: 'Verwaltung', en: 'Management' }} titulo={L.title} sub={L.subtitle} />
 
       {/* Geral */}
       <div style={{ ...card, marginBottom: '16px' }}>

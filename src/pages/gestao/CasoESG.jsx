@@ -24,15 +24,15 @@ export default function CasoESG() {
   const [erro, setErro] = useState('')
 
   const L = lang === 'de' ? {
-    voltar: 'ESG-Beratungen', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
+    voltar: 'ESG-Beratungen', apresentar: 'Präsentationsmodus', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
     conta: 'Konto verknüpft', semConta: 'ohne Konto', visivel: 'Kunde sieht Weg & Bericht', oculto: 'Für den Kunden ausgeblendet',
     naoEncontrado: 'ESG-Beratung nicht gefunden.', erroSave: 'Speichern fehlgeschlagen.',
   } : lang === 'en' ? {
-    voltar: 'ESG consultancies', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
+    voltar: 'ESG consultancies', apresentar: 'Presentation mode', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
     conta: 'Account linked', semConta: 'no account', visivel: 'Client sees journey & report', oculto: 'Hidden from the client',
     naoEncontrado: 'ESG consultancy not found.', erroSave: 'Save failed.',
   } : {
-    voltar: 'Consultorias ESG', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
+    voltar: 'Consultorias ESG', apresentar: 'Modo apresentação', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
     conta: 'Conta ligada', semConta: 'sem conta', visivel: 'O cliente vê percurso e relatório', oculto: 'Escondido do cliente',
     naoEncontrado: 'Consultoria ESG não encontrada.', erroSave: 'Falha ao guardar.',
   }
@@ -74,6 +74,9 @@ export default function CasoESG() {
           <span style={{ fontWeight: 700, color: t.heading }}>{caso.empresa || caso.nome}</span>
           {caso.empresa && <span>{caso.nome}</span>}
           <span style={{ marginLeft: 'auto' }} />
+          {/* Abre num separador próprio, sem menus — para mostrar ao cliente (18/09) */}
+          <a href={`/apresentacao/esg/${id}`} target="_blank" rel="noopener"
+            style={{ padding: '5px 12px', borderRadius: '8px', background: t.btnBg, color: t.btnInk, fontSize: '11.5px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>{L.apresentar} ↗</a>
           <select value={caso.status} onChange={e => alterar({ status: e.target.value })}
             style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: 'none', background: tone.bg, color: tone.ink, cursor: 'pointer', outline: 'none' }}>
             {['ativa', 'concluida', 'pausada'].map(s => <option key={s} value={s}>{L[s]}</option>)}

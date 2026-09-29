@@ -3,6 +3,8 @@ import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useNavigate } from 'react-router-dom'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
+import CabecalhoPagina from '../../components/CabecalhoPagina'
+import { t as traduzir } from '../../i18n/translations'
 import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
 import { getCompanySettings } from '../../lib/companySettings'
@@ -279,6 +281,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ width: '100%' }}>
+      <CabecalhoPagina eyebrow={{ pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' }} titulo={traduzir(lang, 'nav_dash')} sub={{ pt: 'Como está o negócio: entradas, saídas, resultado e o que vem a seguir.', de: 'Wie das Geschäft läuft: Einnahmen, Ausgaben, Ergebnis und was als Nächstes kommt.', en: 'How the business is doing: income, expenses, result and what comes next.' }} />
       <EstimateNote />
 
       {/* Toggle período */}

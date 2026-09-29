@@ -129,6 +129,8 @@ export default function Diagnostico() {
     }}>{children}</button>
   )
 
+  const rotuloUnidade = (u) => u === 'Litros' ? (lang === 'de' ? 'Liter' : lang === 'en' ? 'Litres' : 'Litros') : u
+
   // Renderiza o input de valor de uma pergunta simples ou de um subcampo de grupo.
   // É uma função que devolve JSX, não um componente: declarado aqui dentro como
   // componente, o React recriava-o a cada tecla e o campo perdia o foco (25/09).
@@ -155,10 +157,10 @@ export default function Diagnostico() {
     return (
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
         <input type="number" step="any" value={cur.value ?? ''} disabled={disabled} onChange={e => onValue(e.target.value)} placeholder="0" style={{ ...inputStyle, opacity: disabled ? 0.45 : 1 }} />
-        {units.length === 1 && <span style={{ fontSize: '13px', color: t.textMuted, fontWeight: 600 }}>{units[0]}</span>}
+        {units.length === 1 && <span style={{ fontSize: '13px', color: t.textMuted, fontWeight: 600 }}>{rotuloUnidade(units[0])}</span>}
         {units.length > 1 && (
           <select value={cur.unit ?? units[0]} disabled={disabled} onChange={e => onUnit(e.target.value)} style={{ ...selStyle, opacity: disabled ? 0.45 : 1 }}>
-            {units.map(u => <option key={u} value={u}>{u}</option>)}
+            {units.map(u => <option key={u} value={u}>{rotuloUnidade(u)}</option>)}
           </select>
         )}
       </div>
@@ -189,9 +191,9 @@ export default function Diagnostico() {
                     const fcur = a.fields?.[f.key] || {}
                     return (
                       <div key={f.key}>
-                        {showSub && <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: activePillarObj.color, margin: '6px 0 4px' }}>{f.sub}</div>}
+                        {showSub && <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: activePillarObj.color, margin: '6px 0 4px' }}>{(lang === 'de' ? f.subDe : lang === 'en' ? f.subEn : null) || f.sub}</div>}
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '12.5px', color: t.text }}>{f.pt}</span>
+                          <span style={{ fontSize: '12.5px', color: t.text }}>{f[lang] || f.pt}</span>
                           {valueInput({ spec: f, cur: fcur, disabled,
                             onValue: v => setField(q.id, f.key, { value: v }),
                             onUnit: u => setField(q.id, f.key, { unit: u }) })}

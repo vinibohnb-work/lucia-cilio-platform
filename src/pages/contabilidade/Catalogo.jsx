@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
+import CabecalhoPagina from '../../components/CabecalhoPagina'
+import { t as traduzir } from '../../i18n/translations'
 import { supabase } from '../../lib/supabase'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
@@ -93,6 +95,8 @@ export default function Catalogo() {
 
   return (
     <div style={{ width: '100%' }}>
+
+      <CabecalhoPagina eyebrow={{ pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' }} titulo={traduzir(lang, 'nav_catalogo')} />
 
       {/* Intro + header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '16px' }}>

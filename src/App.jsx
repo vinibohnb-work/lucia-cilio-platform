@@ -46,6 +46,8 @@ const Consultoria         = lazy(() => import('./pages/Consultoria'))
 const ConsultoriasESG     = lazy(() => import('./pages/gestao/ConsultoriasESG'))
 const CasoESG             = lazy(() => import('./pages/gestao/CasoESG'))
 const ClienteESG          = lazy(() => import('./pages/esg/ClienteESG'))
+// Modo apresentação de um caso ESG: página própria, sem menus, para partilhar o ecrã e imprimir.
+const ApresentacaoESG     = lazy(() => import('./pages/gestao/ApresentacaoESG'))
 // v2 · portal de gestão de clientes (22/09) — pré-visualização ao lado da
 // plataforma atual, com dados de demonstração; não toca na base de dados.
 const V2App               = lazy(() => import('./v2/V2App'))
@@ -227,6 +229,9 @@ export default function App() {
               {/* v2: toda a equipa (a Letícia entra com um papel de equipa). Seguro
                   porque a v2 não toca na base de dados; contas de cliente ficam de
                   fora — a demonstração mostra os nomes dos clientes do escritório. */}
+              <Route path="/apresentacao/esg/:id" element={
+                <ProtectedRoute><RoleRoute requireRole="admin"><ApresentacaoESG /></RoleRoute></ProtectedRoute>
+              } />
               <Route path="/v2/*" element={
                 <ProtectedRoute><RoleRoute requireRole={['admin', 'comercial', 'marketing']}><V2App /></RoleRoute></ProtectedRoute>
               } />
