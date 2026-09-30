@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2 } from '../dados'
+import { usePortal } from '../dados'
 import { Titulo, Botao, Cartao, useCampos, Ic, Chip, Vazio } from '../ui'
 import { PAISES, hojeIso, somaDias, fmtData, MESES_LONGOS, FECHADOS, estadoEfetivo } from '../regras'
 import { tarefaAtrasada, docsEmFalta, clientePorId } from '../seletores'
@@ -16,7 +16,7 @@ import { FormTarefa, TabelaTarefas } from '../partes/Tarefas'
 export default function Tarefas() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const navigate = useNavigate()
   const hoje = hojeIso()
@@ -76,7 +76,7 @@ export default function Tarefas() {
               <div key={cid} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 0', borderTop: `1px solid ${t.rowBorder}`, flexWrap: 'wrap' }}>
                 <strong style={{ color: t.heading, minWidth: '180px' }}>{cli?.nome}</strong>
                 <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', flex: 1 }}>{ds.map(d => <Chip key={d.id} tom="erro">{d.tipo} · {MESES_LONGOS[d.mes - 1].slice(0, 3)}</Chip>)}</div>
-                <Botao variante="fantasma" onClick={() => navigate(`/v2/clientes/${cid}/documentos`)}>Abrir →</Botao>
+                <Botao variante="fantasma" onClick={() => navigate(`/gestao/clientes/${cid}/documentos`)}>Abrir →</Botao>
               </div>
             )
           })}
@@ -94,7 +94,7 @@ export default function Tarefas() {
           {f.prazo === '7dias' && obrigProx.length > 0 && (
             <Cartao titulo="Obrigações com prazo nos próximos 7 dias" icone={<Ic.agenda />} estilo={{ marginTop: '16px' }}>
               {obrigProx.sort((a, b) => a.prazo.localeCompare(b.prazo)).map(o => (
-                <div key={o.id} onClick={() => navigate(`/v2/clientes/${o.clienteId}/obrigacoes`)} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '9px 0', borderTop: `1px solid ${t.rowBorder}`, cursor: 'pointer', flexWrap: 'wrap' }}>
+                <div key={o.id} onClick={() => navigate(`/gestao/clientes/${o.clienteId}/obrigacoes`)} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '9px 0', borderTop: `1px solid ${t.rowBorder}`, cursor: 'pointer', flexWrap: 'wrap' }}>
                   <span style={{ width: '90px', fontWeight: 700, color: t.heading, fontSize: '12.5px' }}>{fmtData(o.prazo)}</span>
                   <span style={{ flex: 1, fontSize: '13px' }}><strong>{clientePorId(s, o.clienteId)?.nome}</strong> · {o.nome} ({o.periodo})</span>
                   <Chip tom={estadoEfetivo(o) === 'em_atraso' ? 'erro' : 'aviso'}>{o.estado === 'aguardar_docs' ? 'A aguardar documentos' : o.estado === 'em_preparacao' ? 'Em preparação' : 'Por preparar'}</Chip>

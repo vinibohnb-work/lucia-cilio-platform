@@ -1,7 +1,7 @@
 import { useState, Fragment } from 'react'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
-import { useV2, acoes } from '../../dados'
+import { usePortal, acoes, abrirFicheiro } from '../../dados'
 import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, Janela, Campo, Area, Ic } from '../../ui'
 import {
   ESTADOS_OBRIG, CHECKLIST, estadoEfetivo, FECHADOS, fmtData, hojeIso, processo, PAISES, rotuloRegime,
@@ -18,7 +18,7 @@ import { CompositorWhatsApp } from '../../partes/Comunicacao'
 export default function Obrigacoes({ cliente, modoCliente }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const hoje = hojeIso()
   const anoAtual = Number(hoje.slice(0, 4))
@@ -136,15 +136,15 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                       <td style={c.td}>
                         {o.comprovativo ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: t.accentText }} title={`Arquivado a ${fmtData(o.comprovativo.data)}`}>
-                            📎 {o.comprovativo.nome}
+                            <button onClick={() => abrirFicheiro(o.comprovativo.caminho)} disabled={!o.comprovativo.caminho} style={{ background: 'none', border: 'none', padding: 0, cursor: o.comprovativo.caminho ? 'pointer' : 'default', color: 'inherit', fontWeight: 600, fontSize: '12px', fontFamily: 'inherit' }}>📎 {o.comprovativo.nome}</button>
                             {!modoCliente && <button onClick={() => acoes.atualizarObrigacao(o.id, { comprovativo: null })} aria-label="Remover comprovativo" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', padding: 0 }}>✕</button>}
                           </span>
                         ) : modoCliente ? <span style={{ color: t.subtle }}>—</span> : (
                           <label style={{ fontSize: '12px', fontWeight: 700, color: t.textMuted, cursor: 'pointer', border: `1px dashed ${t.inputBorder}`, borderRadius: '8px', padding: '5px 9px', whiteSpace: 'nowrap' }}>
                             Anexar
                             <input type="file" style={{ display: 'none' }} onChange={ev => {
-                              const nome = ev.target.files?.[0]?.name; ev.target.value = ''
-                              if (nome) acoes.atualizarObrigacao(o.id, { comprovativo: { nome, data: hoje }, checklist: { ...o.checklist, comprov_arquivado: true } })
+                              const fx = ev.target.files?.[0]; ev.target.value = ''
+                              if (fx) acoes.anexarComprovativo(o.id, fx)
                             }} />
                           </label>
                         )}
@@ -189,7 +189,7 @@ export default function Obrigacoes({ cliente, modoCliente }) {
 function Detalhe({ o, aoTarefa, aoWhats }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const passos = processo(o, s.tarefas)
   const tarefas = s.tarefas.filter(x => x.obrigacaoId === o.id)
   return (

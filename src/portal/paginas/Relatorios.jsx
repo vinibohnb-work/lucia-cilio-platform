@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2 } from '../dados'
+import { usePortal } from '../dados'
 import { Titulo, Chip, useCampos } from '../ui'
 import { hojeIso, fmtEur } from '../regras'
 import { resultado } from '../partes/Relatorio'
@@ -12,7 +12,7 @@ import { resultado } from '../partes/Relatorio'
 export default function Relatorios() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const navigate = useNavigate()
   const hoje = hojeIso()
@@ -36,7 +36,7 @@ export default function Relatorios() {
               const rs = s.relatorios.filter(r => r.clienteId === cli.id)
               const ultimo = rs.filter(r => r.estado === 'enviado').sort((a, b) => (b.ano - a.ano) || (b.trimestre - a.trimestre))[0]
               return (
-                <tr key={cli.id} onClick={() => navigate(`/v2/clientes/${cli.id}/relatorios`)} style={{ cursor: 'pointer' }}>
+                <tr key={cli.id} onClick={() => navigate(`/gestao/clientes/${cli.id}/relatorios`)} style={{ cursor: 'pointer' }}>
                   <td style={c.td}><strong style={{ color: t.heading }}>{cli.nome}</strong><div style={{ fontSize: '11px', color: t.subtle }}>{cli.software}</div></td>
                   {tris.map(([y, q], i) => {
                     const r = rs.find(x => x.ano === y && x.trimestre === q)

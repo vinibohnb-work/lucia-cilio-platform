@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2, acoes } from '../dados'
+import { usePortal, acoes } from '../dados'
 import { Titulo, Botao, Chip, Campo, useCampos, Cartao, Ic } from '../ui'
 import { PAISES, FORMAS, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, REGIMES, rotuloServico, fmtData, iniciais, estadoEfetivo, ESTADOS_OBRIG } from '../regras'
 import { proximaObrigacao, docsEmFalta, naoLidas, tarefaAtrasada } from '../seletores'
@@ -16,7 +16,7 @@ const VAZIO = { nome: '', pais: '', setor: '', servico: 'contabilidade', estado:
 export default function ListaClientes() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const navigate = useNavigate()
   const c = useCampos()
   const [f, setF] = useState({ nome: '', pais: '', servico: '', estado: '', responsavel: '' })
@@ -32,10 +32,10 @@ export default function ListaClientes() {
     const id = acoes.criarCliente({
       nome: novo.nome.trim(), pais: novo.pais, setor: novo.setor, servicos: [novo.servico], estado: novo.estado,
       forma: novo.forma || FORMAS[novo.pais][0], periodicidade: novo.periodicidade,
-      regime: novo.regime || REGIMES[novo.pais][0][0], software: novo.pais === 'PT' ? 'TOConline' : 'Lexware', responsavel: s.equipa[0], avenca: 0, avencaPeriodicidade: 'mensal',
+      regime: novo.regime || REGIMES[novo.pais][0][0], software: novo.pais === 'PT' ? 'TOConline' : 'Lexware', responsavel: s.eu,
     })
     acoes.gerarAno(id, new Date().getFullYear())
-    navigate(`/v2/clientes/${id}`)
+    navigate(`/gestao/clientes/${id}`)
   }
 
   const sel = (k, opts, vazio) => (
@@ -114,7 +114,7 @@ export default function ListaClientes() {
               const msgs = naoLidas(s, x.id).length
               const ef = po ? estadoEfetivo(po) : null
               return (
-                <tr key={x.id} onClick={() => navigate(`/v2/clientes/${x.id}`)} style={{ cursor: 'pointer' }}
+                <tr key={x.id} onClick={() => navigate(`/gestao/clientes/${x.id}`)} style={{ cursor: 'pointer' }}
                   onMouseEnter={e => { e.currentTarget.style.background = t.softCardBg }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
                   <td style={c.td}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>

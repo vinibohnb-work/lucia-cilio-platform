@@ -12,6 +12,8 @@ import { isLite, LITE_SECTIONS } from '../../lib/platformHome'
 import { useFiscalAlerts } from '../../hooks/useFiscalAlerts'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import Flag from '../Flag'
+import { usePortal } from '../../portal/dados'
+import { tarefaAtrasada } from '../../portal/seletores'
 
 // ── Ícones (stroke = currentColor) ─────────────────────────────────────────
 const Icon = ({ d, size = 17, sw = 1.7, children }) => (
@@ -37,6 +39,9 @@ const IconKpi = () => <Icon><path d="M4 20V4M4 20h16"/><path d="M8 16l3-4 3 2 4-
 const IconMarketing = () => <Icon><path d="M4 10v4h3l6 3.5v-11L7 10H4z"/><path d="M17 9.5a3.5 3.5 0 0 1 0 5" strokeWidth="1.6"/></Icon>
 const IconProjetos = () => <Icon><path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.2h6.5a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></Icon>
 const IconRelatorios = () => <Icon><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18M8.5 13h7M8.5 16.5h7" strokeWidth="1.4"/></Icon>
+const IconTarefas = () => <Icon><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></Icon>
+const IconMensagens = () => <Icon><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></Icon>
+const STAFF = ['admin', 'comercial', 'marketing']
 const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
 const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
 const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -76,18 +81,27 @@ const NAV = {
   // Reunião de 10/09: a gestão interna (como ela trabalha) fica separada dos
   // serviços (o que ela vende). Sem isto, a Consultoria e os Diagnósticos
   // apareciam no meio dos Acessos e do Marketing.
+  // 29/09: o portal de gestão de clientes (a antiga v2) abre a Gestão — é onde
+  // a equipa passa o dia. O Marketing sai do menu da administradora (era um
+  // marcador de lugar); continua a ser a área do papel "marketing".
   management: [
-    { key: 'section_gestao', items: [
-      { to: '/gestao/clientes',   Icon: IconClientes, labelKey: 'nav_clientes_ativos', roles: ['admin'] },
-      { to: '/gestao/crm',        Icon: IconKpi,      labelKey: 'nav_crm',             roles: ['admin', 'comercial'] },
-      { to: '/gestao/marketing',  Icon: IconMarketing, labelKey: 'nav_marketing',      roles: ['admin', 'marketing'] },
-      { to: '/gestao/financeiro', Icon: IconCaixa,    labelKey: 'nav_fin_gestao',      roles: ['admin'] },
-      { to: '/gestao/acessos',    Icon: IconAdmin,    labelKey: 'nav_acessos',         roles: ['admin'] },
+    { key: 'section_carteira', items: [
+      { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
+      { to: '/gestao/agenda',     Icon: IconObrig,      labelKey: 'nav_agenda',          roles: STAFF },
+      { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },
+      { to: '/gestao/relatorios', Icon: IconKpi,        labelKey: 'nav_relatorios_trim', roles: STAFF },
+      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
     ]},
     { key: 'section_servicos', items: [
-      { to: '/gestao/diagnosticos', Icon: IconKpi,        labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
       { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
       { to: '/gestao/esg',          Icon: IconMaterial,   labelKey: 'nav_esg_consultorias', roles: ['admin'] },
+      { to: '/gestao/diagnosticos', Icon: IconKpi,        labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
+    ]},
+    { key: 'section_gestao', items: [
+      { to: '/gestao/crm',        Icon: IconKpi,       labelKey: 'nav_crm',        roles: ['admin', 'comercial'] },
+      { to: '/gestao/marketing',  Icon: IconMarketing, labelKey: 'nav_marketing',  roles: ['marketing'] },
+      { to: '/gestao/financeiro', Icon: IconCaixa,     labelKey: 'nav_fin_gestao', roles: ['admin'] },
+      { to: '/gestao/acessos',    Icon: IconAdmin,     labelKey: 'nav_acessos',    roles: ['admin'] },
     ]},
   ],
 }
@@ -99,6 +113,7 @@ export default function Sidebar() {
   const { t, night, toggle } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
+  const portal = usePortal()
   const { pathname } = useLocation()
   const eid = useEffectiveUserId()
   const { isViewing, viewAs } = useViewAs()
@@ -150,10 +165,13 @@ export default function Sidebar() {
   }
 
   const W = isMobile ? 264 : 238
+  const tarefasAtrasadas = portal.tarefas.filter(x => tarefaAtrasada(x)).length
 
   const navRow = (item) => {
     // Badge dinâmico: obrigações fiscais vencidas / a vencer
-    const badge = item.to === '/contabilidade/obrigacoes' ? (alertCount || null) : item.badge
+    // …e tarefas em atraso da equipa (quando o portal já foi aberto nesta sessão)
+    const badge = item.to === '/contabilidade/obrigacoes' ? (alertCount || null)
+      : item.to === '/gestao/tarefas' ? (tarefasAtrasadas || null) : item.badge
     return (
     <NavLink key={item.to} to={item.to} onClick={closeOnMobile}
       style={({ isActive }) => ({
@@ -182,6 +200,7 @@ export default function Sidebar() {
     section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung', en: 'ESG Consulting' },
     section_gestao: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' },
     section_servicos: { pt: 'Serviços', de: 'Dienstleistungen', en: 'Services' },
+    section_carteira: { pt: 'Clientes', de: 'Mandanten', en: 'Clients' },
   }
 
   return (

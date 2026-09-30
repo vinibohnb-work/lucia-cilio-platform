@@ -1,18 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
-import { useV2, acoes } from '../../dados'
+import { usePortal, acoes, abrirFicheiro, listarPasta } from '../../dados'
 import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, Ic } from '../../ui'
-import { ESTADOS_DOC, TIPOS_DOC, MESES_LONGOS, hojeIso } from '../../regras'
+import { ESTADOS_DOC, TIPOS_DOC, MESES_LONGOS, hojeIso, fmtData } from '../../regras'
 
 // Documentos (documento, secção 6): enviados pelo cliente pela plataforma e
 // organizados por cliente → ano → mês ou trimestre → tipo, com quatro estados.
-// Na demonstração guarda-se só o nome do ficheiro.
+// Os ficheiros vão para a pasta do cliente, no mês certo — com conta, é a
+// mesma pasta para onde ele envia os dele na plataforma.
 
 export default function Documentos({ cliente, modoCliente }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const hoje = hojeIso()
   const docs = s.documentos.filter(d => d.clienteId === cliente.id)
@@ -29,12 +30,25 @@ export default function Documentos({ cliente, modoCliente }) {
   const rotuloGrupo = (g) => agrupar === 'mes' ? `${MESES_LONGOS[g - 1][0].toUpperCase()}${MESES_LONGOS[g - 1].slice(1)} ${ano}` : `${g}.º trimestre ${ano}`
   const contagem = Object.fromEntries(Object.keys(ESTADOS_DOC).map(k => [k, docs.filter(d => d.ano === ano && d.estado === k).length]))
 
-  // Enviar um ficheiro: se havia um "em falta" deste tipo e mês, é esse que fica recebido.
-  function receber(nome, mes, tipo) {
-    const falta = docs.find(d => d.ano === ano && d.mes === mes && d.tipo === tipo && d.estado === 'em_falta')
-    if (falta) acoes.atualizarDocumento(falta.id, { nome, estado: 'recebido', data: hoje, enviadoPor: modoCliente ? 'cliente' : 'equipa' })
-    else acoes.criarDocumento({ clienteId: cliente.id, ano, mes, tipo, nome, enviadoPor: modoCliente ? 'cliente' : 'equipa' })
+  const [aEnviar, setAEnviar] = useState(false)
+  // Enviar ficheiros: se havia um "em falta" deste tipo e mês, é esse que fica recebido.
+  async function receber(ficheiros, mes, tipo) {
+    setAEnviar(true)
+    for (const ficheiro of ficheiros) await acoes.carregarDocumento({ clienteId: cliente.id, ano, mes, tipo, ficheiro })
+    setAEnviar(false)
+    setAviso(`${ficheiros.length} ficheiro(s) recebido(s).`); setTimeout(() => setAviso(''), 3000)
   }
+
+  // O que o cliente enviou pela plataforma dele (Empresa → Enviar documentos), no mês escolhido.
+  const [daConta, setDaConta] = useState([])
+  const mesConta = `${ano}-${String(envio.mes).padStart(2, '0')}`
+  const jaRegistados = docs.map(d => d.caminho).filter(Boolean).join('|')
+  useEffect(() => {
+    let vivo = true
+    if (!cliente.userId) return
+    listarPasta(`${cliente.userId}/${mesConta}`).then(l => { if (vivo) setDaConta(l.filter(x => !jaRegistados.split('|').includes(x.caminho))) })
+    return () => { vivo = false }
+  }, [cliente.userId, mesConta, jaRegistados])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -49,14 +63,29 @@ export default function Documentos({ cliente, modoCliente }) {
             </select>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '18px', borderRadius: '12px', border: `1.5px dashed ${t.accent}`, background: t.softCardBg, cursor: 'pointer', fontSize: '13px', fontWeight: 700, color: t.accentText }}>
-            <Ic.clip />Escolher ficheiros
-            <input type="file" multiple style={{ display: 'none' }} onChange={e => {
+            <Ic.clip />{aEnviar ? 'A carregar…' : 'Escolher ficheiros'}
+            <input type="file" multiple disabled={aEnviar} style={{ display: 'none' }} onChange={e => {
               const fs = [...(e.target.files || [])]; e.target.value = ''
-              fs.forEach(f => receber(f.name, envio.mes, envio.tipo))
-              if (fs.length) { setAviso(`${fs.length} ficheiro(s) recebido(s).`); setTimeout(() => setAviso(''), 3000) }
+              if (fs.length) receber(fs, envio.mes, envio.tipo)
             }} />
           </label>
           {aviso && <div style={{ marginTop: '8px', fontSize: '12.5px', fontWeight: 700, color: t.dueOk.ink }}>{aviso}</div>}
+          {!modoCliente && cliente.userId && (
+            <div style={{ marginTop: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.6px', color: t.textMuted, marginBottom: '6px' }}>Enviados pelo cliente em {MESES_LONGOS[envio.mes - 1]}</div>
+              {daConta.length === 0 && <div style={{ fontSize: '12.5px', color: t.subtle }}>Nada por classificar na pasta deste mês.</div>}
+              {daConta.map(x => (
+                <div key={x.caminho} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderTop: `1px solid ${t.rowBorder}`, fontSize: '12.5px' }}>
+                  <button onClick={() => abrirFicheiro(x.caminho)} style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 600, fontFamily: 'inherit', fontSize: '12.5px' }}>📄 {x.nome}</button>
+                  <span style={{ color: t.subtle }}>{fmtData(x.data)}</span>
+                  <select value="" onChange={e => { if (e.target.value) acoes.criarDocumento({ clienteId: cliente.id, ano, mes: envio.mes, tipo: e.target.value, nome: x.nome, caminho: x.caminho, enviadoPor: 'cliente', data: x.data || hoje }) }}
+                    style={{ ...c.input, width: 'auto', padding: '4px 6px', fontSize: '11.5px', cursor: 'pointer' }} aria-label="Classificar">
+                    <option value="">Classificar…</option>{TIPOS_DOC.map(k => <option key={k}>{k}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+          )}
         </Cartao>
         <Cartao titulo={`Estado em ${ano}`}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -93,7 +122,7 @@ export default function Documentos({ cliente, modoCliente }) {
               {doAno.filter(d => grupoDe(d) === g).sort((a, b) => b.mes - a.mes || a.tipo.localeCompare(b.tipo)).map(d => (
                 <tr key={d.id}>
                   <td style={{ ...c.td, width: isMobile ? 'auto' : '220px' }}><strong style={{ color: t.heading }}>{d.tipo}</strong>{agrupar === 'trimestre' && <div style={{ fontSize: '11px', color: t.subtle }}>{MESES_LONGOS[d.mes - 1]}</div>}</td>
-                  <td style={c.td}>{d.nome ? <span style={{ fontSize: '12.5px' }}>📄 {d.nome}</span> : <span style={{ color: t.subtle, fontSize: '12.5px' }}>ainda não enviado</span>}
+                  <td style={c.td}>{d.nome ? (d.caminho ? <button onClick={() => abrirFicheiro(d.caminho)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '12.5px', color: t.accentText, fontWeight: 600, fontFamily: 'inherit', textAlign: 'left' }}>📄 {d.nome}</button> : <span style={{ fontSize: '12.5px' }}>📄 {d.nome}</span>) : <span style={{ color: t.subtle, fontSize: '12.5px' }}>ainda não enviado</span>}
                     {d.data && <div style={{ fontSize: '11px', color: t.subtle }}>{d.enviadoPor === 'cliente' ? 'enviado pelo cliente' : 'carregado pela equipa'}</div>}</td>
                   <td style={{ ...c.td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {modoCliente || d.estado === 'em_falta' ? (
@@ -101,7 +130,7 @@ export default function Documentos({ cliente, modoCliente }) {
                         <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                           <Chip tom="erro">Em falta</Chip>
                           <span style={{ fontSize: '12px', fontWeight: 700, color: t.accentText }}>Enviar</span>
-                          <input type="file" style={{ display: 'none' }} onChange={e => { const n = e.target.files?.[0]?.name; e.target.value = ''; if (n) acoes.atualizarDocumento(d.id, { nome: n, estado: 'recebido', data: hoje, enviadoPor: modoCliente ? 'cliente' : 'equipa' }) }} />
+                          <input type="file" style={{ display: 'none' }} onChange={e => { const fx = e.target.files?.[0]; e.target.value = ''; if (fx) acoes.carregarDocumento({ clienteId: cliente.id, ano: d.ano, mes: d.mes, tipo: d.tipo, ficheiro: fx }) }} />
                         </label>
                       ) : <Chip tom={ESTADOS_DOC[d.estado].tom}>{ESTADOS_DOC[d.estado].rotulo}</Chip>
                     ) : (

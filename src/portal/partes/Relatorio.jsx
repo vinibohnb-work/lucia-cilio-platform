@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2, acoes } from '../dados'
+import { usePortal, acoes } from '../dados'
 import { Botao, Campo, useCampos, Chip } from '../ui'
 import { fmtEur, fmtData, PAISES } from '../regras'
 
@@ -56,13 +56,13 @@ export function exportarPdf(r, cli, ant) {
 export function EditorRelatorio({ inicial, aoFechar, soLeitura }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const [r, setR] = useState(inicial)
   const cli = s.clientes.find(x => x.id === r.clienteId)
   const ant = anteriorDe(s.relatorios, r)
   const set = (k) => (e) => setR(p => ({ ...p, [k]: e.target.value }))
-  const guardar = () => { acoes.guardarRelatorio({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])) }); return r.id }
+  const guardar = () => acoes.guardarRelatorio({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])) })
 
   return (
     <div>
@@ -103,7 +103,7 @@ export function EditorRelatorio({ inicial, aoFechar, soLeitura }) {
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
         {!soLeitura && <Botao variante="primario" onClick={() => { guardar(); aoFechar?.() }}>Guardar</Botao>}
         <Botao onClick={() => exportarPdf({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])) }, cli, ant)}>Exportar PDF</Botao>
-        {!soLeitura && r.estado !== 'enviado' && <Botao variante="ouro" onClick={() => { guardar(); acoes.enviarRelatorio(r.id); aoFechar?.() }}>Guardar e enviar ao cliente</Botao>}
+        {!soLeitura && r.estado !== 'enviado' && <Botao variante="ouro" onClick={() => { acoes.marcarRelatorioEnviado(guardar()); aoFechar?.() }} title="Depois de exportar o PDF e o enviar ao cliente">Guardar e marcar como enviado</Botao>}
         {aoFechar && <Botao variante="fantasma" onClick={aoFechar}>Fechar</Botao>}
       </div>
     </div>

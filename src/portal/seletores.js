@@ -1,4 +1,4 @@
-// v2 · leituras derivadas do estado — o que o Resumo, a Agenda e as listas
+// Portal · leituras derivadas do estado — o que o Resumo, a Agenda e as listas
 // mostram é sempre calculado daqui, nunca guardado à parte.
 import { estadoEfetivo, FECHADOS, hojeIso, diasAte } from './regras'
 

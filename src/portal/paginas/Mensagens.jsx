@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2 } from '../dados'
+import { usePortal } from '../dados'
 import { Titulo, Cartao, Ic, Botao, Janela } from '../ui'
-import { fmtData, iniciais } from '../regras'
+import { fmtData, iniciais, iso } from '../regras'
 import { naoLidas } from '../seletores'
 import { Chat, CompositorWhatsApp } from '../partes/Comunicacao'
 
@@ -13,7 +13,7 @@ import { Chat, CompositorWhatsApp } from '../partes/Comunicacao'
 export default function Mensagens() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const navigate = useNavigate()
   const ultima = (cid) => s.mensagens.filter(m => m.clienteId === cid).sort((a, b) => b.data.localeCompare(a.data))[0]
   const ordem = [...s.clientes].sort((a, b) => (naoLidas(s, b.id).length - naoLidas(s, a.id).length) || (ultima(b.id)?.data || '').localeCompare(ultima(a.id)?.data || ''))
@@ -34,7 +34,7 @@ export default function Mensagens() {
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'flex', gap: '6px' }}>
                     <strong style={{ fontSize: '13px', color: t.heading, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.nome}</strong>
-                    <span style={{ fontSize: '10.5px', color: t.subtle }}>{u ? fmtData(u.data.slice(0, 10)).slice(0, 6) : ''}</span>
+                    <span style={{ fontSize: '10.5px', color: t.subtle }}>{u ? fmtData(iso(new Date(u.data))).slice(0, 6) : ''}</span>
                   </span>
                   <span style={{ display: 'block', fontSize: '12px', color: n ? t.heading : t.subtle, fontWeight: n ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u ? `${u.de === 'equipa' ? 'Tu: ' : ''}${u.texto || '📎 ' + u.anexo?.nome}` : 'Sem mensagens'}</span>
                 </span>
@@ -47,7 +47,7 @@ export default function Mensagens() {
           <Cartao titulo={cli.nome} icone={<Ic.mensagens />} acao={
             <div style={{ display: 'flex', gap: '8px' }}>
               <Botao variante="whats" onClick={() => setWhats(true)}><Ic.whats size={15} />WhatsApp</Botao>
-              <Botao variante="fantasma" onClick={() => navigate(`/v2/clientes/${cli.id}`)}>Página do cliente →</Botao>
+              <Botao variante="fantasma" onClick={() => navigate(`/gestao/clientes/${cli.id}`)}>Página do cliente →</Botao>
             </div>}>
             <Chat key={cli.id} clienteId={cli.id} como="equipa" />
           </Cartao>

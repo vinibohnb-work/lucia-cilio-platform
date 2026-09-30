@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
-import { useV2, acoes } from '../../dados'
+import { usePortal, acoes } from '../../dados'
 import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, usePerfil, pode, Ic } from '../../ui'
+import { isDueInPeriod } from '../../../pages/gestao/Financeiro'
 import { TIPOS_NOTA, ESCLARECER_COM, fmtData, fmtEur, hojeIso, somaMeses, rotuloServico, MESES_LONGOS } from '../../regras'
 
 // Área interna (documento, secção 9) — nunca visível ao cliente: notas,
@@ -13,7 +14,7 @@ import { TIPOS_NOTA, ESCLARECER_COM, fmtData, fmtEur, hojeIso, somaMeses, rotulo
 export default function AreaInterna({ cliente }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const { papel } = usePerfil()
   const hoje = hojeIso()
@@ -33,13 +34,13 @@ export default function AreaInterna({ cliente }) {
 
   // Controlo da avença: os últimos seis períodos, pagos ou não.
   const pags = s.pagamentos.filter(p => p.clienteId === cliente.id)
-  const periodos = cliente.avencaPeriodicidade === 'anual'
-    ? [hoje.slice(0, 4) + '-01', String(Number(hoje.slice(0, 4)) - 1) + '-01']
-    : [...Array(6)].map((_, i) => somaMeses(mesAtual + '-01', -i).slice(0, 7))
+  // Os períodos devidos segundo o contrato do Financeiro (a mesma regra de lá).
+  const periodos = !cliente.contrato ? [] : [...Array(24)].map((_, i) => somaMeses(mesAtual + '-01', -i).slice(0, 7))
+    .filter(per => isDueInPeriod(cliente.contrato, per)).slice(0, 6)
 
   function guardarNota() {
     if (!nova.texto.trim()) return
-    acoes.criarNota({ clienteId: cliente.id, tipo: nova.tipo, texto: nova.texto.trim(), autor: papel === 'colaboradora' ? 'Letícia Rodrigues' : 'Lúcia Cílio', com: nova.tipo === 'esclarecer' ? nova.com : null })
+    acoes.criarNota({ clienteId: cliente.id, tipo: nova.tipo, texto: nova.texto.trim(), com: nova.tipo === 'esclarecer' ? nova.com : null })
     setNova(p => ({ ...p, texto: '' }))
   }
 
@@ -105,14 +106,17 @@ export default function AreaInterna({ cliente }) {
           <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr auto', gap: '6px' }}>
             <input type="number" step="0.25" min="0" value={horas.horas} onChange={e => setHoras(p => ({ ...p, horas: e.target.value }))} style={c.input} aria-label="Horas" />
             <input value={horas.descricao} onChange={e => setHoras(p => ({ ...p, descricao: e.target.value }))} placeholder="O que foi feito" style={c.input} />
-            <Botao onClick={() => { if (Number(horas.horas) > 0) { acoes.registarHoras({ clienteId: cliente.id, horas: Number(horas.horas), descricao: horas.descricao || 'Trabalho', pessoa: cliente.responsavel }); setHoras({ horas: '1', descricao: '' }) } }}>+</Botao>
+            <Botao onClick={() => { if (Number(horas.horas) > 0) { acoes.registarHoras({ clienteId: cliente.id, horas: Number(horas.horas), descricao: horas.descricao || 'Trabalho' }); setHoras({ horas: '1', descricao: '' }) } }}>+</Botao>
           </div>
           {hs.slice(0, 4).map(h => <div key={h.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', padding: '6px 0', borderTop: `1px solid ${t.rowBorder}`, marginTop: '6px' }}><span style={{ color: t.subtle, width: '80px' }}>{fmtData(h.data)}</span><span style={{ flex: 1 }}>{h.descricao}</span><strong>{h.horas} h</strong></div>)}
         </Cartao>
 
         {pode(papel, 'avenca') && (
           <Cartao titulo="Controlo da avença" area="interna">
-            <div style={{ fontSize: '13px', marginBottom: '10px' }}><strong style={{ fontSize: '18px', color: t.heading }}>{fmtEur(cliente.avenca)}</strong> <span style={{ color: t.subtle }}>/ {cliente.avencaPeriodicidade === 'anual' ? 'ano' : 'mês'}</span></div>
+            {cliente.contratoId
+              ? <div style={{ fontSize: '13px', marginBottom: '10px' }}><strong style={{ fontSize: '18px', color: t.heading }}>{fmtEur(cliente.avenca)}</strong> <span style={{ color: t.subtle }}>/ {{ anual: 'ano', trimestral: 'trimestre', unico: 'uma vez' }[cliente.avencaPeriodicidade] || 'mês'}</span>
+                <a href="/gestao/financeiro" style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Financeiro →</a></div>
+              : <div style={{ fontSize: '12.5px', color: t.subtle }}>Sem contrato no Financeiro. A avença cria-se em <a href="/gestao/financeiro" style={{ color: t.accentText, fontWeight: 700 }}>Financeiro</a>, com o nome do cliente ou a conta dele.</div>}
             {periodos.map(per => {
               const pg = pags.find(p => p.periodo === per)
               const [y, m] = per.split('-')

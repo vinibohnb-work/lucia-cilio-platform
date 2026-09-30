@@ -28,8 +28,8 @@
   finais. É também o *"arrumar a casa"* de 18/09, que na altura ficou fora do backlog por
   parecer tarefa da Lúcia; a reunião de 25/09 esclareceu que é trabalho nosso. Candidatos já
   conhecidos: as **quatro listas de clientes** (Contabilidade → Clientes da conta da Lúcia,
-  Clientes Ativos, nomes do Financeiro, contactos das consultorias), menus que repetem
-  entradas, e o que a v2 torna redundante quando passar a definitiva.
+  nomes do Financeiro, contactos das consultorias e dos casos ESG), menus que repetem
+  entradas. A v2 já passou a definitiva (29/09) e substituiu os Clientes Ativos.
 
 - [ ] **Documentação da plataforma: de onde vem cada dado**
   *Reunião 25/09/2026 · Resp.: Vinícius*
@@ -37,48 +37,53 @@
   calculado, o que vem do livro de caixa). Responde ao risco de 25/09 — a insegurança da
   Lúcia em operar sozinha depois do contrato — e serve de base ao suporte.
 
-### Portal de gestão de clientes — v2 em avaliação (documento de 22/09)
+### Portal de gestão de clientes (documento de 22/09 — oficial desde 29/09)
 
-> Documento da Lúcia e da Letícia, *"Portal gestão de clientes"*, com mockup. A **v2** vive em
-> `/v2` (a equipa toda — admin, comercial, marketing — desde 28/09), ao lado da plataforma
-> atual e sem lhe tocar: dados de demonstração no
-> browser, sem Supabase nem migração. Serve para comparar e fechar o modelo antes de o
-> passar para tabelas reais.
+> A antiga **v2** passou a ser a Gestão: Clientes, Agenda, Tarefas, Relatórios e Mensagens
+> vivem dentro da plataforma, em endereços limpos (`/gestao/clientes`…), e leem e gravam no
+> Supabase (migração 037). A vista do **cliente** continua a ser a v1 por agora.
 
-- [ ] **Validar a v2 com a Lúcia e a Letícia e fechar as decisões em aberto**
+- [ ] **Aplicar a migração 037 e publicar o portal**
+  *Resp.: Vinícius (com a Lúcia)*
+  O código está na branch `portal-oficial` e **não vai para `main` antes da 037** — sem as
+  tabelas, a Gestão → Clientes ficaria vazia em produção. A 037 é só aditiva (não apaga nada e
+  as telas do cliente não mudam) e traz para a tabela `clientes` as contas de cliente e a lista
+  de Contabilidade → Clientes da conta da Lúcia. Depois de a correr: ver o painel de
+  verificação (contratos por ligar = nomes do Financeiro que não bateram com nenhum cliente),
+  fazer merge e conferir cada ficha com a Lúcia.
+  ⚠️ **Depende de:** aplicar a `supabase/migration_037.sql` no SQL Editor.
+
+- [ ] **Validar o portal com a Lúcia e a Letícia e fechar as decisões em aberto**
   *Documento 22/09/2026 · Reunião 25/09/2026 · Resp.: Vinícius*
-  ✔ **25/09: a v2 será a versão definitiva**, com alguns ajustes. Decisões já fechadas:
-  a (5) confirma-se — a Letícia fica **colaboradora, sem acesso ao financeiro interno**; e o
-  portal do cliente passa a ser **só informativo** (feito a 28/09 — ver Concluídos). A Lúcia vai revê-la e
-  testá-la com a Letícia (o acesso da equipa à `/v2` foi aberto a 28/09).
-  Decisões que a v2 assume e que precisam de confirmação: (1) um cliente é **uma entidade da
-  Gestão**, com ou sem conta — hoje a lista que elas usam é a `/contabilidade/clientes` da
-  conta da Lúcia; (2) o cliente vê **a mesma página sem as áreas internas**, em vez de ter uma
-  página à parte; (3) "Documentos em falta" = documentos **esperados por mês** (faturas de
-  venda e compra, extrato, salários se houver trabalhadores); (4) "Em atraso" é **calculado
-  pela data**, além de poder ser marcado; (5) a **colaboradora** vê tudo menos avença e
-  pagamentos; (6) listas de forma jurídica, regime e software; (7) os dados fiscais passam a
-  ser mantidos pela equipa, não pelo cliente.
+  ✔ 25/09: a v2 é a definitiva; a Letícia é **colaboradora, sem acesso ao financeiro interno**;
+  o portal do cliente é **só informativo**. Decisões que o portal assume e que precisam de
+  confirmação: (1) um cliente é **uma entidade da Gestão**, com ou sem conta; (2) o cliente vê
+  **a mesma página sem as áreas internas** (quando o portal do cliente for ligado);
+  (3) "Documentos em falta" = documentos **esperados por mês**; (4) "Em atraso" é **calculado
+  pela data**, além de poder ser marcado; (6) listas de forma jurídica, regime e software;
+  (7) os dados fiscais passam a ser mantidos pela equipa, não pelo cliente.
   ⚠️ **Depende de:** a revisão da Lúcia (com a Letícia) e a lista de campos que ela vai
-  marcar para o portal do cliente — a reunião com as duas já foi a 25/09.
+  marcar para o portal do cliente.
 
-- [ ] **Passar a v2 a tabelas reais** (depois da validação)
-  *Resp.: Vinícius*
-  ↳ Ganha prioridade com a decisão de 25/09 de que a v2 é a definitiva.
-  `src/v2/dados.js` tem, de propósito, a forma que as tabelas vão ter: clientes, obrigações
-  (com estado, valor, comprovativo e checklist em `jsonb`), tarefas (com recorrência e
-  lembrete), documentos com estado, mensagens nos dois sentidos, relatórios trimestrais,
-  notas internas, horas e pagamentos. Estender `fiscal_obligations` e `client_notices` em vez
-  de criar tabelas paralelas; trazer os clientes de `/contabilidade/clientes` da conta da
-  Lúcia; ligar Financeiro, Consultorias e ESG ao mesmo cliente.
-  Absorve dois itens antigos (revisão de 29/09):
+- [ ] **Ligar o portal do cliente (a vista do cliente passa a ser a do portal)**
+  *Documento 22/09/2026 · Resp.: Vinícius*
+  As páginas já sabem mostrar a "área visível" (`modoCliente`), mas o cliente continua na v1:
+  vê as obrigações (com o estado sincronizado), as mensagens no Início e a sua pasta de
+  documentos. Falta: políticas de leitura do cliente nas tabelas novas, os relatórios
+  trimestrais visíveis (hoje "enviado" quer dizer que a Lúcia exportou o PDF e o mandou), e
+  decidir o que sai da v1 quando o portal entrar.
+  Inclui os dois itens absorvidos na revisão de 29/09:
   · **Guião de reunião na ficha do cliente** *(23/07)* — roteiro base (data, tema, próximos
-    passos, diagnóstico). As Notas internas da v2 já registam contactos e reuniões; falta
-    oferecer um modelo de guião ao criar o registo.
+    passos, diagnóstico) ao criar um registo nas Notas internas.
   · **Níveis de acesso conforme o serviço contratado** *(18/09 — definição da Lúcia)* — o que
-    cada cliente vê depende do que comprou. Os perfis e a área visível da v2 são a base;
-    falta a segunda dimensão, por serviço.
-  ⚠️ **Depende de:** o item anterior.
+    cada cliente vê depende do que comprou.
+  ⚠️ **Depende de:** a validação acima.
+
+- [ ] **Um só cliente para Financeiro, Consultorias e ESG**
+  *Resp.: Vinícius*
+  A 037 liga os contratos do Financeiro ao cliente (a avença aparece na ficha, só de leitura).
+  Falta o mesmo para as Consultorias e os casos ESG, e retirar a lista de Contabilidade →
+  Clientes da conta da Lúcia, que a 037 copiou para o portal. Faz parte da simplificação.
 
 ### Estrutura de serviços (prioridade da reunião de 10/09)
 
@@ -503,6 +508,34 @@
 ---
 
 ## Concluídos
+
+### Portal de gestão de clientes oficial — 29/09 *(na branch `portal-oficial`, até à 037)*
+
+- [x] **A v2 passa a ser a Gestão, com dados reais**
+  *Pedido de 29/09 · Resp.: Vinícius*
+  O endereço `/v2` desaparece (quem o tiver guardado vai parar aos Clientes). Clientes,
+  Agenda, Tarefas, Relatórios e Mensagens abrem no topo do menu da Gestão, dentro da
+  plataforma e com o menu de sempre, para a equipa toda; a avença e a ficha da conta são só da
+  administradora. Tudo passa a ler e gravar no Supabase — **migração 037**, só aditiva:
+  tabela `clientes` (com ou sem conta), obrigações fiscais com os oito estados, valor,
+  comprovativo e checklist (o estado antigo do cliente fica em sincronia por um gatilho, por
+  isso a v1 do cliente continua a funcionar), tarefas com recorrência, documentos, registo de
+  mensagens, relatórios trimestrais, notas internas e horas.
+  O que deixou de ser demonstração: **ficheiros a sério** (documentos por mês, comprovativos e
+  anexos vão para a pasta do cliente — com conta, a mesma pasta para onde ele envia os dele, e
+  o que ele enviou aparece para classificar); **mensagens** a clientes com conta vão para o
+  Início dele, e sem conta ficam registadas na ficha (o WhatsApp fica também registado);
+  **avença e pagamentos** vêm do Financeiro; o **calendário** gerado não duplica o que o cliente
+  já gerou na conta dele; **ligar a ficha a uma conta** traz as obrigações dessa conta.
+  Saiu: os dados de demonstração e o "Repor dados", o seletor simulado "Ver como" (fica o
+  **Visualização completa** a sério, no separador *Conta na plataforma*), a faixa da
+  pré-visualização, a lista **Clientes Ativos** (a ficha antiga vive agora nesse separador) e
+  o **Marketing** do menu da administradora (era um marcador de lugar; continua a ser a área do
+  papel marketing). "Enviar relatório ao cliente" passou a **"marcar como enviado"**, porque o
+  cliente ainda não vê relatórios na plataforma.
+  Verificado com uma base de dados falsa: gerar o calendário sem duplicar, mudar estados,
+  anexar comprovativo, mensagens com e sem conta, documentos, ligar conta, tarefas
+  recorrentes, avença e a vista da colaboradora (sem avença nem conta).
 
 ### Revisão do backlog — 29/09
 
