@@ -558,7 +558,7 @@ const TYPES = {
   evento:     { pt: 'Evento / Catering',   de: 'Event / Catering',        en: 'Event / Catering',   icon: '🍽️' },
   servico:    { pt: 'Serviço por Hora',    de: 'Stundenbasierter Dienst', en: 'Hourly Service',     icon: '⏱️' },
   produto:    { pt: 'Produto / Revenda',   de: 'Produkt / Handel',        en: 'Product / Resale',   icon: '📦' },
-  tratamento: { pt: 'Tratamento',          de: 'Behandlung',              en: 'Treatment',          icon: '💅' },
+  tratamento: { pt: 'Tratamento',          de: 'Behandlung',              en: 'Treatment',          icon: '⏱️' },  // genérico: um tratamento é um serviço à hora (06/08)
 }
 
 export default function Precificacao() {

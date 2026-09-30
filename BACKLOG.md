@@ -40,7 +40,8 @@
 ### Portal de gestão de clientes — v2 em avaliação (documento de 22/09)
 
 > Documento da Lúcia e da Letícia, *"Portal gestão de clientes"*, com mockup. A **v2** vive em
-> `/v2` (só admin), ao lado da plataforma atual e sem lhe tocar: dados de demonstração no
+> `/v2` (a equipa toda — admin, comercial, marketing — desde 28/09), ao lado da plataforma
+> atual e sem lhe tocar: dados de demonstração no
 > browser, sem Supabase nem migração. Serve para comparar e fechar o modelo antes de o
 > passar para tabelas reais.
 
@@ -58,7 +59,8 @@
   pela data**, além de poder ser marcado; (5) a **colaboradora** vê tudo menos avença e
   pagamentos; (6) listas de forma jurídica, regime e software; (7) os dados fiscais passam a
   ser mantidos pela equipa, não pelo cliente.
-  ⚠️ **Depende de:** a reunião com as duas.
+  ⚠️ **Depende de:** a revisão da Lúcia (com a Letícia) e a lista de campos que ela vai
+  marcar para o portal do cliente — a reunião com as duas já foi a 25/09.
 
 - [ ] **Passar a v2 a tabelas reais** (depois da validação)
   *Resp.: Vinícius*
@@ -69,6 +71,13 @@
   notas internas, horas e pagamentos. Estender `fiscal_obligations` e `client_notices` em vez
   de criar tabelas paralelas; trazer os clientes de `/contabilidade/clientes` da conta da
   Lúcia; ligar Financeiro, Consultorias e ESG ao mesmo cliente.
+  Absorve dois itens antigos (revisão de 29/09):
+  · **Guião de reunião na ficha do cliente** *(23/07)* — roteiro base (data, tema, próximos
+    passos, diagnóstico). As Notas internas da v2 já registam contactos e reuniões; falta
+    oferecer um modelo de guião ao criar o registo.
+  · **Níveis de acesso conforme o serviço contratado** *(18/09 — definição da Lúcia)* — o que
+    cada cliente vê depende do que comprou. Os perfis e a área visível da v2 são a base;
+    falta a segunda dimensão, por serviço.
   ⚠️ **Depende de:** o item anterior.
 
 ### Estrutura de serviços (prioridade da reunião de 10/09)
@@ -109,7 +118,9 @@
   *Reunião 20/08/2026 · Resp.: Vinícius*
   A estrutura já foi desenhada para isto: as perguntas vivem em
   `src/data/consultoriaBlocos.js` e remover não perde respostas.
-  ⚠️ **Depende de:** a Lúcia indicar quais.
+  ⚠️ **Depende de:** a Lúcia indicar quais — e dos **8 passos da metodologia do mentor
+  Luís** que ela ficou de enviar a 25/09, que podem mudar a estrutura toda e não só tirar
+  perguntas. Convém ver os dois juntos.
 
 ### Cybersecurity e Compliance (auditoria de 21/08 — pedido da Lúcia)
 
@@ -227,15 +238,6 @@
 
 ### CRM e prospeção
 
-- [ ] **Entrada automática de leads dos formulários (JotForm / landing page / e-book) para o CRM**
-  *Reunião 30/07/2026 · Resp.: Vinícius*
-  A Lúcia vai lançar um e-book ("o que fazer depois de abrir atividade") com formulário —
-  *"todos estes dados, isto é CRM, não é? São leads"*. O campo `source` já está pronto a
-  recebê-los.
-  ⚠️ **Bloqueado:** falta saber que campos os formulários vão enviar — a alinhar com o Filipe.
-  ↳ A 27/08 ficou decidido reconstruir o próprio formulário dentro da plataforma (item abaixo),
-  o que resolve a dependência para esta origem de leads.
-
 ### Onboarding e primeiro acesso
 
 - [ ] **Rever a comunicação de entrega das credenciais**
@@ -256,20 +258,7 @@
   *Reunião 06/08/2026 · Resp.: Vinícius*
   Complementa os ícones informativos: explicação longa dos termos num sítio próprio.
 
-- [ ] **Substituir a imagem estética do tratamento por uma imagem genérica na calculadora de preços**
-  *Reunião 06/08/2026 · Resp.: Vinícius*
-  A calculadora nasceu do caso da Célia (cosmética); a imagem não serve outros nichos.
-
 ### Consultoria e jornada do cliente
-
-- [ ] **Validar o desenho da página de Consultoria com a Lúcia**
-  *Reunião 30/07/2026 · Resp.: Vinícius*
-  Está hoje focada em documentos; ficou de ser enviada para ela validar.
-
-- [ ] **Guião de reunião na ficha do cliente**
-  *Reunião 23/07/2026 · Resp.: Vinícius*
-  Roteiro base (data, tema, próximos passos, diagnóstico) — *"para eu ter um guião básico
-  também, quando eu abro isso"*.
 
 - [ ] **IA nas transcrições de reunião**
   *Reunião 23/07/2026 · Resp.: Vinícius*
@@ -296,9 +285,10 @@
   *Reunião 20/08/2026 · Resp.: Vinícius*
   Notas internas abaixo de cada item, para ela registar contexto junto dos números.
 
-- [ ] **Indicador de break-even no somatório do Planeamento Mensal**
+- [ ] **Indicador de break-even também no Planeamento Mensal**
   *Reunião 20/08/2026 · Resp.: Vinícius*
-  Quanto falta faturar para cobrir os custos — no rodapé dos totais.
+  Quanto falta faturar para cobrir os custos — no rodapé dos totais. A análise de break-even
+  **já existe no Painel** (revisão de 29/09); falta mostrá-la aqui, onde ela planeia.
 
 - [ ] **Exportação em PDF e rótulos de valores nos gráficos do painel**
   *Reunião 20/08/2026 · Resp.: Vinícius*
@@ -331,18 +321,6 @@
   ⚠️ **Bloqueado:** a Lúcia tem de obter, com a empresa alemã que fez o site, o acesso às
   configurações de domínio.
 
-- [ ] **Níveis de acesso conforme o tipo de serviço contratado**
-  *Reunião 18/09/2026 · Resp.: Lúcia (definição) + Vinícius (implementação)*
-  Hoje os papéis distinguem admin, equipa e cliente; falta a segunda dimensão — o que cada
-  cliente vê depende do que comprou (contabilidade, ESG, consultoria, ou só o canal de
-  comunicação). Liga-se à diretriz de 10/09: **todos** os clientes têm acesso básico.
-  ⚠️ **Depende de:** a Lúcia estruturar os níveis com a equipa.
-
-- [ ] **Dashboard macro da gestão**
-  *Reunião 23/07/2026 · Resp.: Vinícius*
-  Próximos pagamentos, pagamentos em aberto, faturação total — *"é mesmo mais na perspetiva
-  comercial"* (controlling comercial).
-
 - [ ] **Exportação no formato do Excel da Lúcia**
   *Reunião 23/07/2026 · Resp.: Vinícius*
   Para o que ela já entrega ao contabilista/IRS.
@@ -357,25 +335,12 @@
 
 ## Validações técnicas
 
-- [ ] **Testar a integração com o WhatsApp (cliente básico / número de telefone)**
-  *Reunião 18/09/2026 · Resp.: Vinícius*
-  Primeiro teste para perceber o que é viável antes de prometer automações. Liga-se à
-  conversa sobre suporte contínuo e histórico de consultorias, deixada para novembro.
-  ↳ **25/09: fica em segundo plano** — a integração pela Meta é trabalhosa. Os modelos de
-  WhatsApp da v2 (abrir o WhatsApp com o texto pronto) cobrem o essencial sem integração.
-
 - [ ] **Validar o mapeamento de colunas da importação com extratos reais de vários bancos**
   *Reunião 20/08/2026 · Resp.: Vinícius*
   A deteção automática de formato já está construída (separador, decimais, débito/crédito,
   cabeçalho deslocado) e testada com extratos sintéticos PT/DE/EN — falta validá-la contra
   ficheiros reais.
   ⚠️ **Depende de:** os exemplos de CSV bancário que a Lúcia vai enviar.
-
-- [ ] **Investigar soluções de backup e onde os dados ficam guardados (AWS / ferramentas Microsoft)**
-  ↳ Cruza com o R3 da secção Cybersecurity e Compliance — tratar juntos.
-  *Reunião 16/07/2026 · Resp.: Vinícius*
-  Comparar com a proposta Microsoft (100–200 €/mês para 50 utilizadores) e apresentar custos.
-  Alternativas (AWS/GCP) tendem a ser mais baratas.
 
 - [ ] **Integração de calendários (Outlook e Google, ou via Calendly)**
   *Reunião 10/09/2026 · Resp.: Vinícius*
@@ -405,6 +370,20 @@
   contactos existentes, com triagem manual pela Lúcia, e a mensagem inicial de abordagem.
   ⚠️ **Depende de:** a Lúcia vai apurar com o Filipe como fazer chegar o formulário/mensagem
   aos leads do Instagram (27/08).
+
+---
+
+## Adiados — retomar depois da pausa
+
+> Itens que continuam a fazer sentido mas que uma reunião mandou esperar. Não contam para o
+> trabalho até novembro.
+
+- [ ] **Testar a integração com o WhatsApp (cliente básico / número de telefone)**
+  *Reunião 18/09/2026 · Resp.: Vinícius*
+  Primeiro teste para perceber o que é viável antes de prometer automações. Liga-se à
+  conversa sobre suporte contínuo e histórico de consultorias, deixada para novembro.
+  ↳ **25/09: fica em segundo plano** — a integração pela Meta é trabalhosa. Os modelos de
+  WhatsApp da v2 (abrir o WhatsApp com o texto pronto) cobrem o essencial sem integração.
 
 ---
 
@@ -524,6 +503,38 @@
 ---
 
 ## Concluídos
+
+### Revisão do backlog — 29/09
+
+> Os itens em aberto foram conferidos um a um contra o código e as decisões das reuniões.
+> Os que já estavam resolvidos fecham; os que foram ultrapassados ficam aqui registados como
+> **desconsiderados**, com o motivo, para não voltarem numa próxima sincronização.
+
+- [x] **Investigar soluções de backup e onde os dados ficam guardados** *(16/07)*
+  ✔ Resolvido pelo **R3** da auditoria (25/08): plano Pro, backups diários com 7 dias de
+  retenção em Frankfurt, mais o backup lógico local. A comparação com a proposta Microsoft
+  deixou de ser necessária.
+
+- [x] **Dashboard macro da gestão** *(23/07)*
+  ✔ Coberto pelo **Financeiro**: previsto, recebido e por receber no mês, e contratos ativos —
+  o "controlling comercial" pedido. Se ela quiser a faturação acumulada do ano, entra como
+  pedido novo.
+
+- [x] **Imagem estética do tratamento na calculadora de preços** *(06/08)*
+  ✔ Não era uma imagem: era o emoji 💅 no separador "Tratamento", que prendia a calculadora
+  à cosmética. Passou a um relógio (⏱️) — um tratamento é um serviço à hora, em qualquer nicho.
+
+- [x] **Desconsiderado — Entrada automática de leads dos formulários no CRM** *(30/07)*
+  A reunião de 18/09 decidiu o contrário: entrada **manual**, de propósito, para evitar
+  registos indevidos. E o formulário já vive na plataforma, com "Juntar ao CRM".
+
+- [x] **Desconsiderado — Validar o desenho da página de Consultoria** *(30/07)*
+  Era a página do lado do cliente "focada em documentos". O modelo mudou: a consultoria é
+  trabalho interno da Lúcia e o cliente passa a ver o portal da v2.
+
+- ↳ **Guião de reunião** *(23/07)* e **Níveis de acesso por serviço** *(18/09)* passaram para
+  dentro do item "Passar a v2 a tabelas reais", que os absorve.
+- ↳ **Testar a integração com o WhatsApp** *(18/09)* passou para **Adiados** (decisão de 25/09).
 
 ### ESG para apresentar e ganhos rápidos — 29/09
 
