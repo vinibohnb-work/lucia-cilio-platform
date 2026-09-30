@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
 
-// v2 · peças de interface partilhadas pelas páginas do portal.
+// Portal · peças de interface partilhadas pelas páginas do portal.
 
 // ── Perfil (documento, secção 10: Administrador · Colaboradora · Cliente) ──
 export const PerfilContext = createContext({ papel: 'admin', clienteId: null })

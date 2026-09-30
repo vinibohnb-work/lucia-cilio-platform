@@ -23,9 +23,13 @@ const KIND_STYLE = {
 }
 const EMPTY = { kind: 'meeting', title: '', body: '', link_url: '' }
 
-// Ficha interna do cliente (Gestão): resumo de dados + histórico de consultoria.
-export default function ClienteDetalhe() {
-  const { id } = useParams()
+// A conta do cliente na plataforma: o que ele faz lá (números, onboarding,
+// avisos, pasta de documentos) e o histórico de consultoria. Desde 29/09 vive
+// dentro da página do cliente do portal, no separador "Conta na plataforma"
+// (embutido), e já não tem rota própria.
+export default function ClienteDetalhe({ userId, embutido = false }) {
+  const params = useParams()
+  const id = userId || params.id
   const { lang } = useLang()
   const loc = localeDe(lang)
   const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
@@ -197,11 +201,12 @@ export default function ClienteDetalhe() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '860px' }}>
-      <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '13px', padding: 0, marginBottom: '14px' }}>{L.back}</button>
+      {!embutido && <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '13px', padding: 0, marginBottom: '14px' }}>{L.back}</button>}
 
       {/* Cabeçalho */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', flexWrap: 'wrap', marginBottom: embutido ? '12px' : '20px' }}>
+        {/* Embutido, o nome já está no cabeçalho da página do cliente */}
+        <div style={{ display: embutido ? 'none' : 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: '52px', height: '52px', flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '17px', fontWeight: 700, fontFamily: t.fontDisplay, background: t.avatarBg, color: t.avatarInk, border: t.avatarBorder }}>
             {(client.display_name || client.email || 'LC').slice(0, 2).toUpperCase()}
           </div>
@@ -264,11 +269,12 @@ export default function ClienteDetalhe() {
         <ChecklistOnboarding userId={id} cliente={client} />
       </div>
 
-      {/* Avisos — o que o cliente vê no Início dele (10/09) */}
-      <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
+      {/* Avisos — o que o cliente vê no Início dele (10/09). Embutido no portal,
+          vivem no separador Mensagens, na mesma conversa. */}
+      {!embutido && <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
         <div style={{ fontSize: '11px', fontWeight: 800, color: t.accentText, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.avisos}</div>
         <AvisosCliente userId={id} />
-      </div>
+      </div>}
 
       {/* Documentos (repositório tipo Drive) */}
       <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>

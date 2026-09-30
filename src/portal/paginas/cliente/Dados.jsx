@@ -1,8 +1,8 @@
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
-import { acoes } from '../../dados'
-import { Cartao, Campo, useCampos, usePerfil, pode, Ic } from '../../ui'
-import { PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
+import { acoes, usePortal } from '../../dados'
+import { Cartao, Campo, Chip, useCampos, usePerfil, pode, Ic } from '../../ui'
+import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
 
 // Dados do cliente — os campos do cabeçalho do documento (secção 1) e o perfil
 // fiscal que decide o calendário (secção 3). Estes dados são mantidos pela
@@ -13,6 +13,9 @@ export default function Dados({ cliente, modoCliente, equipa }) {
   const isMobile = useIsMobile()
   const c = useCampos()
   const { papel } = usePerfil()
+  const s = usePortal()
+  const conta = s.contas.find(x => x.id === cliente.userId)
+  const livres = s.contas.filter(x => x.id === cliente.userId || !s.clientes.some(k => k.userId === x.id))
   const up = (patch) => acoes.atualizarCliente(cliente.id, patch)
   const inp = (k, extra = {}) => <input value={cliente[k] ?? ''} onChange={e => up({ [k]: e.target.value })} style={c.input} {...extra} />
   const sel = (k, opcoes) => (
@@ -84,9 +87,33 @@ export default function Dados({ cliente, modoCliente, equipa }) {
           <Campo rotulo="Responsável pelo cliente">{sel('responsavel', equipa.map(x => [x, x]))}</Campo>
           <Campo rotulo="Horas incluídas por mês">{inp('horasIncluidas', { type: 'number', step: '0.5' })}</Campo>
           <Campo rotulo="Cliente desde">{inp('cliente_desde', { type: 'date' })}</Campo>
-          {pode(papel, 'avenca') && <Campo rotulo="Avença (€)">{inp('avenca', { type: 'number', step: '0.01' })}</Campo>}
-          {pode(papel, 'avenca') && <Campo rotulo="Periodicidade da avença">{sel('avencaPeriodicidade', PERIODICIDADES)}</Campo>}
+          {pode(papel, 'avenca') && (
+            <Campo rotulo="Avença">
+              <div style={{ fontSize: '13.5px', padding: '9px 0' }}>
+                {cliente.contratoId ? <><strong style={{ color: t.heading }}>{fmtEur(cliente.avenca)}</strong> · {(rotuloPeriodicidade(cliente.avencaPeriodicidade) || cliente.avencaPeriodicidade).toLowerCase()}</> : <span style={{ color: t.subtle }}>sem contrato</span>}
+                <a href="/gestao/financeiro" style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Financeiro →</a>
+              </div>
+            </Campo>
+          )}
         </div>
+      </Cartao>
+
+      {/* Conta na plataforma: é o que liga esta ficha ao que o cliente vê e faz na conta dele. */}
+      <Cartao titulo="Conta na plataforma" icone={<Ic.cadeado size={17} />} area="interna">
+        {s.admin ? (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select value={cliente.userId || ''} onChange={e => { if (!e.target.value || window.confirm('Ligar esta ficha à conta escolhida? As obrigações fiscais da conta passam a aparecer aqui e as desta ficha passam a aparecer ao cliente.')) acoes.ligarConta(cliente.id, e.target.value || null) }}
+              style={{ ...c.input, width: 'auto', minWidth: '260px', cursor: 'pointer' }} aria-label="Conta na plataforma">
+              <option value="">Sem conta (só WhatsApp e e-mail)</option>
+              {livres.map(x => <option key={x.id} value={x.id}>{x.nome} · {x.email}</option>)}
+            </select>
+            {conta && <Chip tom={conta.ativo ? 'ok' : 'aviso'}>{conta.ativo ? 'Conta ativa' : 'Ainda não entrou'}</Chip>}
+            <a href="/gestao/acessos" style={{ fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Criar conta em Acessos →</a>
+          </div>
+        ) : (
+          <div style={{ fontSize: '13px', color: t.text }}>{cliente.userId ? 'Tem conta na plataforma.' : 'Sem conta na plataforma.'}</div>
+        )}
+        <div style={{ fontSize: '12px', color: t.subtle, marginTop: '10px' }}>Com conta, as mensagens daqui aparecem no Início do cliente e os documentos carregados por mês ficam na pasta dele. Sem conta, fica tudo registado aqui e a comunicação é por WhatsApp.</div>
       </Cartao>
     </div>
   )

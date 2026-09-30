@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { useParams, useNavigate, NavLink, Navigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2 } from '../dados'
+import { usePortal } from '../dados'
 import { usePerfil, Chip, Botao, Janela, Ic, Cartao } from '../ui'
 import { PAISES, ESTADOS_CLIENTE, rotuloServico, rotuloPeriodicidade, rotuloRegime, iniciais, linkWhatsApp } from '../regras'
 import { naoLidas } from '../seletores'
@@ -15,6 +15,9 @@ import RelatoriosCliente from './cliente/RelatoriosCliente'
 import Dados from './cliente/Dados'
 import AreaInterna from './cliente/AreaInterna'
 
+// A ficha da conta (números, onboarding, avisos, pasta, histórico de consultoria).
+const ContaPlataforma = lazy(() => import('../../pages/gestao/ClienteDetalhe'))
+
 // Página individual do cliente (documento, secção 1), com o cabeçalho e os
 // separadores do mockup. A mesma página serve a equipa e o cliente: no perfil
 // Cliente os separadores e os cartões internos simplesmente não existem — é a
@@ -23,19 +26,20 @@ import AreaInterna from './cliente/AreaInterna'
 export default function PaginaCliente({ idFixo }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const { papel } = usePerfil()
   const params = useParams()
   const navigate = useNavigate()
   const modoCliente = papel === 'cliente'
   const id = idFixo || params.id
   const sep = params.sep || 'resumo'
-  const cliente = s.clientes.find(c => c.id === id)
+  // Também aceita o id da conta (ligações antigas da ficha da v1 apontavam para ele)
+  const cliente = s.clientes.find(c => c.id === id) || s.clientes.find(c => c.userId === id)
   const [tarefa, setTarefa] = useState(false)
   const [whats, setWhats] = useState(false)
 
   if (!cliente) return <Navigate to="/v2/clientes" replace />
-  const base = modoCliente ? '/v2/portal' : `/v2/clientes/${id}`
+  const base = modoCliente ? '/v2/portal' : `/gestao/clientes/${id}`
   const porLer = naoLidas(s, id).length
 
   const separadores = [
@@ -44,6 +48,8 @@ export default function PaginaCliente({ idFixo }) {
     ['documentos', 'Documentos'], ['relatorios', 'Relatórios'],
     ['mensagens', 'Mensagens', !modoCliente && porLer], ['dados', modoCliente ? 'Os meus dados' : 'Dados do cliente'],
     ...(modoCliente ? [] : [['notas', 'Notas internas', null, true]]),
+    // Só a administradora: a ficha da conta usa a lista de contas, que é dela.
+    ...(!modoCliente && papel === 'admin' && cliente?.userId ? [['conta', 'Conta na plataforma', null, true]] : []),
   ]
   if (!separadores.some(([k]) => k === sep)) return <Navigate to={base} replace />
 
@@ -52,7 +58,7 @@ export default function PaginaCliente({ idFixo }) {
   return (
     <div>
       {!modoCliente && (
-        <button onClick={() => navigate('/v2/clientes')} style={{ background: 'none', border: 'none', padding: 0, marginBottom: '14px', color: t.accentText, fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>← Todos os clientes</button>
+        <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', padding: 0, marginBottom: '14px', color: t.accentText, fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>← Todos os clientes</button>
       )}
 
       {/* ── Cabeçalho (secção 1) ── */}
@@ -125,7 +131,7 @@ export default function PaginaCliente({ idFixo }) {
       {sep === 'relatorios' && <RelatoriosCliente cliente={cliente} modoCliente={modoCliente} />}
       {sep === 'mensagens' && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile || modoCliente ? '1fr' : '1.4fr 1fr', gap: '16px', alignItems: 'start' }}>
-          <Cartao titulo={modoCliente ? 'Conversa com a LC Office Consulting' : `Conversa com ${cliente.pessoa || cliente.nome}`} icone={<Ic.mensagens />} area={modoCliente ? undefined : 'cliente'}>
+          <Cartao titulo={modoCliente ? 'Conversa com a LC Office Consulting' : `Conversa com ${cliente.pessoa || cliente.nome}`} icone={<Ic.mensagens />} area={modoCliente || !cliente.userId ? undefined : 'cliente'}>
             <Chat clienteId={id} como={modoCliente ? 'cliente' : 'equipa'} />
           </Cartao>
           {!modoCliente && (
@@ -137,6 +143,7 @@ export default function PaginaCliente({ idFixo }) {
       )}
       {sep === 'dados' && <Dados cliente={cliente} modoCliente={modoCliente} equipa={s.equipa} />}
       {sep === 'notas' && <AreaInterna cliente={cliente} />}
+      {sep === 'conta' && <Suspense fallback={null}><ContaPlataforma key={cliente.userId} userId={cliente.userId} embutido /></Suspense>}
 
       {tarefa && <FormTarefa inicial={{ clienteId: id, responsavel: cliente.responsavel }} aoFechar={() => setTarefa(false)} />}
       {whats && (

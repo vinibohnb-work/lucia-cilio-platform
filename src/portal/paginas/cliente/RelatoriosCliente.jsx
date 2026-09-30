@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../../../context/ThemeContext'
-import { useV2 } from '../../dados'
+import { usePortal } from '../../dados'
 import { Cartao, Chip, Botao, useCampos, Vazio, Ic } from '../../ui'
 import { fmtEur, fmtData, hojeIso, uid } from '../../regras'
 import { relatoriosDe } from '../../seletores'
@@ -10,7 +10,7 @@ import { EditorRelatorio, resultado, anteriorDe } from '../../partes/Relatorio'
 
 export default function RelatoriosCliente({ cliente, modoCliente }) {
   const { t } = useTheme()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const lista = relatoriosDe(s, cliente.id).filter(r => !modoCliente || r.estado === 'enviado')
   const [aberto, setAberto] = useState(null)

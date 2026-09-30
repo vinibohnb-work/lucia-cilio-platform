@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
-import { useV2, acoes } from '../../dados'
+import { usePortal, acoes } from '../../dados'
 import { Cartao, Kpi, Chip, Ic, Vazio, useCampos, Botao } from '../../ui'
 import { CHECKLIST, ESTADOS_OBRIG, estadoEfetivo, fmtData, fmtEur, hojeIso } from '../../regras'
 import { obrigacoesDe, abertas, proximaObrigacao, docsEmFalta, valorAPagar, creditos, entregues, ultimoRelatorio } from '../../seletores'
@@ -17,7 +17,7 @@ function EstadoO({ o }) { const e = estadoEfetivo(o); return <Chip tom={ESTADOS_
 export default function Resumo({ cliente, base, modoCliente }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const navigate = useNavigate()
   const cid = cliente.id

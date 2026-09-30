@@ -27,8 +27,13 @@ import FiscalBell from './components/FiscalBell'
 // Cada plataforma só descarrega o seu próprio código: o arranque deixa de
 // puxar as três plataformas de uma vez.
 const AdminHome           = lazy(() => import('./pages/admin/AdminHome'))
-const ClientesAtivos      = lazy(() => import('./pages/gestao/ClientesAtivos'))
-const ClienteDetalhe      = lazy(() => import('./pages/gestao/ClienteDetalhe'))
+const Portal              = lazy(() => import('./portal/Portal'))
+const ListaClientes       = lazy(() => import('./portal/paginas/ListaClientes'))
+const PaginaCliente       = lazy(() => import('./portal/paginas/PaginaCliente'))
+const AgendaPortal        = lazy(() => import('./portal/paginas/Agenda'))
+const TarefasPortal       = lazy(() => import('./portal/paginas/Tarefas'))
+const RelatoriosPortal    = lazy(() => import('./portal/paginas/Relatorios'))
+const MensagensPortal     = lazy(() => import('./portal/paginas/Mensagens'))
 const Crm                 = lazy(() => import('./pages/gestao/Crm'))
 const Financeiro          = lazy(() => import('./pages/gestao/Financeiro'))
 const Marketing           = lazy(() => import('./pages/gestao/Marketing'))
@@ -48,9 +53,6 @@ const CasoESG             = lazy(() => import('./pages/gestao/CasoESG'))
 const ClienteESG          = lazy(() => import('./pages/esg/ClienteESG'))
 // Modo apresentação de um caso ESG: página própria, sem menus, para partilhar o ecrã e imprimir.
 const ApresentacaoESG     = lazy(() => import('./pages/gestao/ApresentacaoESG'))
-// v2 · portal de gestão de clientes (22/09) — pré-visualização ao lado da
-// plataforma atual, com dados de demonstração; não toca na base de dados.
-const V2App               = lazy(() => import('./v2/V2App'))
 
 const Dashboard           = lazy(() => import('./pages/contabilidade/Dashboard'))
 const Clientes            = lazy(() => import('./pages/contabilidade/Clientes'))
@@ -142,8 +144,15 @@ function AppLayout() {
             <Route path="/consultoria" element={<Consultoria />} />
 
             {/* Plataforma Gestão (apenas admin, por agora) */}
-            <Route path="/gestao/clientes"      element={<RoleRoute requireRole="admin"><ClientesAtivos /></RoleRoute>} />
-            <Route path="/gestao/clientes/:id"  element={<RoleRoute requireRole="admin"><ClienteDetalhe /></RoleRoute>} />
+            {/* Portal de gestão de clientes (a antiga v2, oficial desde 29/09) — a equipa toda */}
+            <Route element={<RoleRoute requireRole={['admin', 'comercial', 'marketing']}><Portal /></RoleRoute>}>
+              <Route path="/gestao/clientes"          element={<ListaClientes />} />
+              <Route path="/gestao/clientes/:id/:sep?" element={<PaginaCliente />} />
+              <Route path="/gestao/agenda"            element={<AgendaPortal />} />
+              <Route path="/gestao/tarefas"           element={<TarefasPortal />} />
+              <Route path="/gestao/relatorios"        element={<RelatoriosPortal />} />
+              <Route path="/gestao/mensagens"         element={<MensagensPortal />} />
+            </Route>
             <Route path="/gestao/crm"           element={<RoleRoute requireRole={['admin', 'comercial']}><Crm /></RoleRoute>} />
             <Route path="/gestao/consultorias"     element={<RoleRoute requireRole="admin"><Consultorias /></RoleRoute>} />
             <Route path="/gestao/diagnosticos"     element={<RoleRoute requireRole={['admin', 'comercial']}><Diagnosticos /></RoleRoute>} />
@@ -226,15 +235,10 @@ export default function App() {
               <Route path="/definir-senha"         element={<DefinirSenha />} />
               {/* Formulario publico de diagnostico (sem conta) */}
               <Route path="/diagnostico"           element={<FormularioDiagnostico />} />
-              {/* v2: toda a equipa (a Letícia entra com um papel de equipa). Seguro
-                  porque a v2 não toca na base de dados; contas de cliente ficam de
-                  fora — a demonstração mostra os nomes dos clientes do escritório. */}
               <Route path="/apresentacao/esg/:id" element={
                 <ProtectedRoute><RoleRoute requireRole="admin"><ApresentacaoESG /></RoleRoute></ProtectedRoute>
               } />
-              <Route path="/v2/*" element={
-                <ProtectedRoute><RoleRoute requireRole={['admin', 'comercial', 'marketing']}><V2App /></RoleRoute></ProtectedRoute>
-              } />
+              <Route path="/v2/*" element={<Navigate to="/gestao/clientes" replace />} />
               <Route path="/*" element={
                 <ProtectedRoute>
                   <AppLayout />

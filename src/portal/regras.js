@@ -1,4 +1,4 @@
-// v2 · Portal de gestão de clientes — as regras do documento da Lúcia e da Letícia.
+// Portal · Portal de gestão de clientes — as regras do documento da Lúcia e da Letícia.
 //
 // Tudo o que aqui está vem do documento "Portal gestão de clientes" (22/09):
 // os campos do cabeçalho, os oito estados das obrigações, a checklist de nove

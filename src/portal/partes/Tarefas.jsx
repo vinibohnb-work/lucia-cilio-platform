@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2, acoes } from '../dados'
+import { usePortal, acoes } from '../dados'
 import { Janela, Campo, Botao, Chip, useCampos, Vazio } from '../ui'
 import { RECORRENCIAS, ESTADOS_TAREFA, FECHADOS, fmtData, hojeIso, diasAte, PAISES } from '../regras'
 import { tarefaAtrasada, lembreteAtivo, clientePorId } from '../seletores'
@@ -11,7 +11,7 @@ import { tarefaAtrasada, lembreteAtivo, clientePorId } from '../seletores'
 // um cliente e a uma obrigação, atribuídas a alguém, fechadas com um check.
 
 export function FormTarefa({ inicial, aoFechar }) {
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const isMobile = useIsMobile()
   const [f, setF] = useState({ titulo: '', clienteId: '', obrigacaoId: '', responsavel: s.equipa[0], prazo: hojeIso(), recorrencia: 'nenhuma', lembreteDias: 2, notas: '', ...inicial })
@@ -65,7 +65,7 @@ export function FormTarefa({ inicial, aoFechar }) {
 
 export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não há tarefas.' }) {
   const { t } = useTheme()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
@@ -102,7 +102,7 @@ export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não h�
                 </td>
                 {mostrarCliente && (
                   <td style={c.td}>
-                    {cli ? <button onClick={() => navigate(`/v2/clientes/${cli.id}`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.heading, fontWeight: 600, fontSize: '13px', fontFamily: 'inherit', textAlign: 'left' }}>{cli.nome}<div style={{ fontSize: '11px', color: t.subtle, fontWeight: 500 }}>{PAISES[cli.pais]}</div></button> : <span style={{ color: t.subtle }}>Interna</span>}
+                    {cli ? <button onClick={() => navigate(`/gestao/clientes/${cli.id}`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.heading, fontWeight: 600, fontSize: '13px', fontFamily: 'inherit', textAlign: 'left' }}>{cli.nome}<div style={{ fontSize: '11px', color: t.subtle, fontWeight: 500 }}>{PAISES[cli.pais]}</div></button> : <span style={{ color: t.subtle }}>Interna</span>}
                   </td>
                 )}
                 <td style={{ ...c.td, fontSize: '12.5px' }}>{x.responsavel}</td>

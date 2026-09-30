@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useV2, acoes } from '../dados'
+import { usePortal, acoes } from '../dados'
 import { Titulo, Botao, Pilulas, useCampos, Ic } from '../ui'
 import { PAISES, hojeIso, somaDias, somaMeses, dataDe, iso, fmtData, MESES_LONGOS, FECHADOS, estadoEfetivo } from '../regras'
 import { tarefaAtrasada, clientePorId } from '../seletores'
@@ -17,7 +17,7 @@ const inicioSemana = (s) => { const d = dataDe(s); const w = (d.getDay() + 6) % 
 export default function Agenda() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const navigate = useNavigate()
   const hoje = hojeIso()
@@ -46,7 +46,7 @@ export default function Agenda() {
     const cli = it.cid ? clientePorId(s, it.cid) : null
     const cor = it.atraso ? { bg: t.dueLate.bg, ink: t.dueLate.ink } : it.tipo === 'obrig' ? { bg: t.chipBg, ink: t.chipText } : { bg: t.softCardBg, ink: t.heading }
     return (
-      <div onClick={() => it.cid ? navigate(`/v2/clientes/${it.cid}/${it.tipo === 'obrig' ? 'obrigacoes' : 'tarefas'}`) : setNova(it.x)}
+      <div onClick={() => it.cid ? navigate(`/gestao/clientes/${it.cid}/${it.tipo === 'obrig' ? 'obrigacoes' : 'tarefas'}`) : setNova(it.x)}
         title={`${cli ? cli.nome + ' — ' : ''}${it.titulo}`}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: compacto ? '2px 6px' : '8px 10px', borderRadius: '7px', background: cor.bg, color: cor.ink, fontSize: compacto ? '11px' : '13px', cursor: 'pointer', opacity: it.feita ? 0.5 : 1, overflow: 'hidden', whiteSpace: compacto ? 'nowrap' : 'normal', marginBottom: '3px', border: it.tipo === 'obrig' ? `1px solid ${t.accent}55` : 'none' }}>
         {it.tipo === 'tarefa' && !compacto && <input type="checkbox" checked={it.feita} onClick={e => e.stopPropagation()} onChange={() => acoes.alternarTarefa(it.id)} style={{ accentColor: '#1f6b45', flex: 'none' }} />}

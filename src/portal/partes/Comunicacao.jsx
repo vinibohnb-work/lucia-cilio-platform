@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '../../context/ThemeContext'
-import { useV2, acoes } from '../dados'
+import { usePortal, acoes, abrirFicheiro } from '../dados'
 import { Botao, Chip, useCampos, Ic, Vazio } from '../ui'
-import { MODELOS_WHATSAPP, linkWhatsApp, fmtEur, fmtData, FECHADOS } from '../regras'
+import { MODELOS_WHATSAPP, linkWhatsApp, fmtEur, fmtData, FECHADOS, iso } from '../regras'
 import { docsEmFalta } from '../seletores'
 
 // Mensagens (documento, secção 7): o chat com histórico e anexos, e o
@@ -10,7 +10,7 @@ import { docsEmFalta } from '../seletores'
 
 export function Chat({ clienteId, como = 'equipa', altura = 420 }) {
   const { t } = useTheme()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const [texto, setTexto] = useState('')
   const [anexo, setAnexo] = useState(null)
@@ -23,11 +23,15 @@ export function Chat({ clienteId, como = 'equipa', altura = 420 }) {
   useEffect(() => { if (como === 'equipa' && porLer) acoes.marcarLidas(clienteId) }, [clienteId, como, porLer])
   useEffect(() => { fim.current?.scrollIntoView({ block: 'nearest' }) }, [msgs.length])
 
-  function enviar() {
-    if (!texto.trim() && !anexo) return
-    acoes.enviarMensagem({ clienteId, de: como, autor: como === 'equipa' ? 'Lúcia Cílio' : cli?.pessoa || cli?.nome, texto: texto.trim(), anexo: anexo ? { nome: anexo } : null })
+  const [aEnviar, setAEnviar] = useState(false)
+  async function enviar() {
+    if ((!texto.trim() && !anexo) || aEnviar) return
+    setAEnviar(true)
+    await acoes.enviarMensagem({ clienteId, texto: texto.trim(), canal: 'plataforma', ficheiro: anexo })
+    setAEnviar(false)
     setTexto(''); setAnexo(null)
   }
+  const semConta = !cli?.userId
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -38,11 +42,11 @@ export function Chat({ clienteId, como = 'equipa', altura = 420 }) {
           return (
             <div key={m.id} style={{ alignSelf: minha ? 'flex-end' : 'flex-start', maxWidth: '78%' }}>
               <div style={{ fontSize: '10.5px', color: t.subtle, marginBottom: '3px', textAlign: minha ? 'right' : 'left' }}>
-                {m.autor} · {fmtData(m.data.slice(0, 10))} {m.data.slice(11, 16)}{m.canal === 'whatsapp' ? ' · via WhatsApp' : ''}
+                {m.autor} · {fmtData(iso(new Date(m.data)))} {new Date(m.data).toTimeString().slice(0, 5)}{m.canal === 'whatsapp' ? ' · via WhatsApp' : m.canal === 'registo' ? ' · registo interno' : m.lidaPeloCliente ? ' · lida' : ''}
               </div>
               <div style={{ padding: '10px 13px', borderRadius: minha ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: m.canal === 'whatsapp' ? '#e3f4e8' : minha ? t.btnBg : t.softCardBg, color: m.canal === 'whatsapp' ? '#14532d' : minha ? t.btnInk : t.text, border: minha ? 'none' : `1px solid ${t.cardBorder}`, fontSize: '13px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                 {m.texto}
-                {m.anexo && <div style={{ marginTop: m.texto ? '7px' : 0, display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', borderRadius: '8px', background: 'rgba(255,255,255,.14)', border: '1px solid rgba(201,168,76,.4)', fontSize: '12px', fontWeight: 600 }}><Ic.clip size={13} />{m.anexo.nome}</div>}
+                {m.anexo && <div onClick={() => abrirFicheiro(m.anexo.caminho)} style={{ cursor: m.anexo.caminho ? 'pointer' : 'default', marginTop: m.texto ? '7px' : 0, display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', borderRadius: '8px', background: 'rgba(255,255,255,.14)', border: '1px solid rgba(201,168,76,.4)', fontSize: '12px', fontWeight: 600 }}><Ic.clip size={13} />{m.anexo.nome}</div>}
               </div>
             </div>
           )
@@ -50,15 +54,16 @@ export function Chat({ clienteId, como = 'equipa', altura = 420 }) {
         <div ref={fim} />
       </div>
       <div style={{ borderTop: `1px solid ${t.rowBorder}`, paddingTop: '10px' }}>
-        {anexo && <div style={{ marginBottom: '7px' }}><Chip tom="ouro">📎 {anexo} <button onClick={() => setAnexo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}>✕</button></Chip></div>}
-        <textarea value={texto} onChange={e => setTexto(e.target.value)} rows={2} placeholder="Escrever uma mensagem…"
+        {semConta && como === 'equipa' && <div style={{ fontSize: '12px', color: t.subtle, marginBottom: '7px' }}>Este cliente não tem conta na plataforma: o que escrever fica registado aqui. Para lhe chegar, use o WhatsApp.</div>}
+        {anexo && <div style={{ marginBottom: '7px' }}><Chip tom="ouro">📎 {anexo.name} <button onClick={() => setAnexo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}>✕</button></Chip></div>}
+        <textarea value={texto} onChange={e => setTexto(e.target.value)} rows={2} placeholder={semConta ? 'Registar uma nota de contacto…' : 'Escrever uma mensagem — aparece no Início do cliente…'}
           onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) enviar() }} style={{ ...c.input, resize: 'vertical' }} />
         <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 700, color: t.accentText, cursor: 'pointer' }}>
             <Ic.clip />Anexar
-            <input type="file" style={{ display: 'none' }} onChange={e => { setAnexo(e.target.files?.[0]?.name || null); e.target.value = '' }} />
+            <input type="file" style={{ display: 'none' }} onChange={e => { setAnexo(e.target.files?.[0] || null); e.target.value = '' }} />
           </label>
-          <Botao variante="verde" estilo={{ marginLeft: 'auto' }} onClick={enviar} disabled={!texto.trim() && !anexo}><Ic.enviar />Enviar</Botao>
+          <Botao variante="verde" estilo={{ marginLeft: 'auto' }} onClick={enviar} disabled={aEnviar || (!texto.trim() && !anexo)}><Ic.enviar />{aEnviar ? 'A enviar…' : semConta ? 'Registar' : 'Enviar'}</Botao>
         </div>
       </div>
     </div>
@@ -81,7 +86,7 @@ const modeloPara = (o) => !o ? 'docs' : o.valor?.tipo === 'credito' ? 'credito' 
 
 export function CompositorWhatsApp({ clienteId, obrigacaoId, compacto, aoEnviar }) {
   const { t } = useTheme()
-  const s = useV2()
+  const s = usePortal()
   const c = useCampos()
   const cli = s.clientes.find(x => x.id === clienteId)
   const obrigs = s.obrigacoes.filter(o => o.clienteId === clienteId).sort((a, b) => b.prazo.localeCompare(a.prazo))
@@ -105,7 +110,7 @@ export function CompositorWhatsApp({ clienteId, obrigacaoId, compacto, aoEnviar 
 
   function enviar() {
     window.open(linkWhatsApp(cli?.telefone, texto), '_blank', 'noopener')
-    acoes.enviarMensagem({ clienteId, de: 'equipa', autor: 'Lúcia Cílio', texto, canal: 'whatsapp' })
+    acoes.enviarMensagem({ clienteId, texto, canal: 'whatsapp' })
     // "Cliente informado" é um passo da checklist e do processo: fica marcado.
     if (o && !o.checklist?.cliente_informado) acoes.alternarChecklist(o.id, 'cliente_informado')
     aoEnviar?.()
