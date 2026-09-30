@@ -43,15 +43,12 @@
 > vivem dentro da plataforma, em endereços limpos (`/gestao/clientes`…), e leem e gravam no
 > Supabase (migração 037). A vista do **cliente** continua a ser a v1 por agora.
 
-- [ ] **Aplicar a migração 037 e publicar o portal**
+- [ ] **Conferir as fichas dos clientes com a Lúcia**
   *Resp.: Vinícius (com a Lúcia)*
-  O código está na branch `portal-oficial` e **não vai para `main` antes da 037** — sem as
-  tabelas, a Gestão → Clientes ficaria vazia em produção. A 037 é só aditiva (não apaga nada e
-  as telas do cliente não mudam) e traz para a tabela `clientes` as contas de cliente e a lista
-  de Contabilidade → Clientes da conta da Lúcia. Depois de a correr: ver o painel de
-  verificação (contratos por ligar = nomes do Financeiro que não bateram com nenhum cliente),
-  fazer merge e conferir cada ficha com a Lúcia.
-  ⚠️ **Depende de:** aplicar a `supabase/migration_037.sql` no SQL Editor.
+  A 037 foi aplicada e o portal publicado a 29/09. Falta passar ficha a ficha: nomes
+  duplicados entre as contas e a lista antiga, contratos do Financeiro que não ficaram ligados
+  a nenhum cliente (o painel de verificação da 037 mostra quantos), responsável, forma jurídica,
+  regime e periodicidade — é o que decide o calendário fiscal.
 
 - [ ] **Validar o portal com a Lúcia e a Letícia e fechar as decisões em aberto**
   *Documento 22/09/2026 · Reunião 25/09/2026 · Resp.: Vinícius*
@@ -509,7 +506,7 @@
 
 ## Concluídos
 
-### Portal de gestão de clientes oficial — 29/09 *(na branch `portal-oficial`, até à 037)*
+### Portal de gestão de clientes oficial — 29/09 *(037 aplicada, publicado)*
 
 - [x] **A v2 passa a ser a Gestão, com dados reais**
   *Pedido de 29/09 · Resp.: Vinícius*
