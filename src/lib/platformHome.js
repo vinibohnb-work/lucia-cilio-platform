@@ -27,9 +27,10 @@ export const basePlatform = (platform) => (isLite(platform) ? 'accounting' : pla
 // Secções do menu visíveis em lite
 export const LITE_SECTIONS = ['section_acc']
 
-// Rotas permitidas em lite. Inclui /contabilidade/recorrentes: não está no menu,
-// mas o Painel tem um botão para lá — bloqueá-la deixaria um botão morto.
+// Rotas permitidas em lite. O Início é a página de entrada (é lá que estão as
+// mensagens da Lúcia e o próximo pagamento) — antes o Lite era devolvido ao Painel (R-D3).
 export const LITE_PATHS = [
+  '/contabilidade/inicio',
   '/contabilidade/dashboard',
   '/contabilidade/caixa',
   '/contabilidade/recorrentes',

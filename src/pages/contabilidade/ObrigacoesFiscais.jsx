@@ -6,8 +6,6 @@ import { supabase } from '../../lib/supabase'
 import { getCountryOptions, countryName } from '../../data/countries'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
-import { getCompanySettings } from '../../lib/companySettings'
-import { generateFiscalCalendar } from '../../lib/fiscalCalendar'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 
@@ -40,9 +38,6 @@ export default function ObrigacoesFiscais() {
   const [countryFilter, setCountryFilter] = useState('all')
   const [form, setForm]       = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
-  const [genYear, setGenYear] = useState(new Date().getFullYear())
-  const [generating, setGenerating] = useState(false)
-  const [genMsg, setGenMsg]   = useState('')
 
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
@@ -68,30 +63,24 @@ export default function ObrigacoesFiscais() {
     all: 'Alle', save: 'Speichern', loading: 'Wird geladen…',
     empty: 'Noch keine Termine. Fügen Sie den ersten hinzu.', typePh: 'z.B. Umsatzsteuervoranmeldung',
     days: 'Tage', today: 'Heute', overdue: 'überfällig', markDone: 'Als erledigt markieren',
-    alert1: 'offene Frist', alert2: 'offene Fristen', allCountries: 'Alle Länder', selectCountry: '— Land wählen —',
-    generate: 'Kalender erzeugen', auto: 'auto', genNone: 'Keine neuen Fristen — bereits erzeugt.',
-    genOk: (n) => `${n} Frist(en) erzeugt.`, genErr: 'Erzeugen fehlgeschlagen (Migration 015 nötig).',
-    genHint: 'Erzeugt USt-, Gewerbe- und Einkommensteuertermine aus den Firmendaten (Schätzung).',
+    alert1: 'Frist überfällig oder in den nächsten 14 Tagen', alert2: 'Fristen überfällig oder in den nächsten 14 Tagen', allCountries: 'Alle Länder', selectCountry: '— Land wählen —',
+    equipa: 'Team', equipaHint: 'Wird vom Team von Lúcia betreut — Status und Belege pflegt das Team.',
   } : lang === 'en' ? {
     new: '+ New Obligation', pending: 'Pending', done: 'Submitted', deadline: 'Deadline',
     country: 'Country', client: 'Client', type: 'Obligation', status: 'Status',
     all: 'All', save: 'Save', loading: 'Loading…',
     empty: 'No obligations yet. Add the first one.', typePh: 'e.g. VAT return, income tax…',
     days: 'days', today: 'Today', overdue: 'overdue', markDone: 'Mark as submitted',
-    alert1: 'pending obligation', alert2: 'pending obligations', allCountries: 'All countries', selectCountry: '— Select country —',
-    generate: 'Generate calendar', auto: 'auto', genNone: 'No new deadlines — already generated.',
-    genOk: (n) => `${n} deadline(s) generated.`, genErr: 'Generation failed (migration 015 required).',
-    genHint: 'Generates VAT, trade and income tax deadlines from the company details (estimate).',
+    alert1: 'obligation overdue or due in the next 14 days', alert2: 'obligations overdue or due in the next 14 days', allCountries: 'All countries', selectCountry: '— Select country —',
+    equipa: 'team', equipaHint: "Managed by Lúcia's team — they keep the status and receipts up to date.",
   } : {
     new: '+ Nova Obrigação', pending: 'Pendente', done: 'Entregue', deadline: 'Prazo',
     country: 'País', client: 'Cliente', type: 'Obrigação', status: 'Estado',
     all: 'Todas', save: 'Guardar', loading: 'A carregar…',
     empty: 'Ainda não há obrigações. Adicione a primeira.', typePh: 'ex: DMR, IRS, IVA…',
     days: 'dias', today: 'Hoje', overdue: 'em atraso', markDone: 'Marcar como entregue',
-    alert1: 'obrigação pendente', alert2: 'obrigações pendentes', allCountries: 'Todos os países', selectCountry: '— Selecionar país —',
-    generate: 'Gerar calendário', auto: 'auto', genNone: 'Sem novos prazos — já foram gerados.',
-    genOk: (n) => `${n} prazo(s) gerado(s).`, genErr: 'Falha ao gerar (é necessária a migração 015).',
-    genHint: 'Gera prazos de IVA, Segurança Social e IRS a partir dos Dados da Empresa (estimativa).',
+    alert1: 'obrigação em atraso ou nos próximos 14 dias', alert2: 'obrigações em atraso ou nos próximos 14 dias', allCountries: 'Todos os países', selectCountry: '— Selecionar país —',
+    equipa: 'equipa', equipaHint: 'Gerida pela equipa da Lúcia — é a equipa que atualiza o estado e o comprovativo.',
   }
 
   const visible = items.filter(o => {
@@ -106,7 +95,8 @@ export default function ObrigacoesFiscais() {
     background: filter === val ? t.accent : t.cardBg, color: filter === val ? '#fff' : '#64748b',
   })
 
-  const pendingCount = items.filter(o => o.status === 'pending').length
+  // A mesma régua do menu e do sino: em atraso + próximos 14 dias (R-B3)
+  const pendingCount = items.filter(o => o.status === 'pending' && daysUntil(o.deadline) <= 14).length
 
   async function addItem() {
     if (isViewing) return
@@ -117,40 +107,21 @@ export default function ObrigacoesFiscais() {
     if (error) { alert(error.message); return }
     setForm(EMPTY); setShowForm(false); load()
   }
+  // Ligada a uma ficha da Gestão = gerida pela equipa da Lúcia: o cliente vê, não
+  // altera nem apaga (migração 038). O calendário é gerado pela equipa no portal.
+  const daEquipa = (o) => !!o.cliente_id
   async function toggleStatus(o) {
-    if (isViewing) return
+    if (isViewing || daEquipa(o)) return
     const next = o.status === 'done' ? 'pending' : 'done'
     setItems(prev => prev.map(x => x.id === o.id ? { ...x, status: next } : x))
     const { error } = await supabase.from('fiscal_obligations').update({ status: next }).eq('id', o.id)
     if (error) { alert(error.message); load() }
   }
   async function removeItem(id) {
-    if (isViewing) return
+    if (isViewing || daEquipa(items.find(o => o.id === id) || {})) return
     setItems(prev => prev.filter(o => o.id !== id))
     const { error } = await supabase.from('fiscal_obligations').delete().eq('id', id)
     if (error) { alert(error.message); load() }
-  }
-
-  // Gera o calendário fiscal do ano a partir dos Dados da Empresa (país/regime),
-  // ignorando os prazos já gerados (por `code`).
-  async function generateCalendar() {
-    if (isViewing) return
-    setGenerating(true); setGenMsg('')
-    try {
-      const settings = await getCompanySettings(eid)
-      const generated = generateFiscalCalendar(settings, Number(genYear))
-      const existingCodes = new Set(items.filter(o => o.code).map(o => o.code))
-      const toInsert = generated.filter(g => !existingCodes.has(g.code)).map(g => ({ ...g, status: 'pending' }))
-      if (toInsert.length === 0) { setGenMsg(L.genNone); setGenerating(false); return }
-      const { error } = await supabase.from('fiscal_obligations').insert(toInsert)
-      if (error) throw error
-      setGenMsg(L.genOk(toInsert.length))
-      await load()
-    } catch (e) {
-      setGenMsg(L.genErr)
-    }
-    setGenerating(false)
-    setTimeout(() => setGenMsg(''), 4000)
   }
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
@@ -175,17 +146,12 @@ export default function ObrigacoesFiscais() {
         </div>
         {!isViewing && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <input type="number" value={genYear} onChange={e => setGenYear(e.target.value)} title={L.genHint} style={{ ...selectStyle, width: '84px', padding: '8px 10px' }} />
-          <button onClick={generateCalendar} disabled={generating} title={L.genHint} style={{ padding: '9px 14px', background: BG, color: '#4a6355', border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontWeight: 700, fontSize: '12px', cursor: generating ? 'wait' : 'pointer' }}>
-            📅 {generating ? '…' : L.generate}
-          </button>
           <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
             {L.new}
           </button>
         </div>
         )}
       </div>
-      {genMsg && <div style={{ fontSize: '12px', fontWeight: 700, color: genMsg === L.genErr ? t.neg : '#0a7a3e', marginBottom: '14px' }}>{genMsg}</div>}
 
       {/* Alert */}
       {!loading && pendingCount > 0 && (
@@ -246,7 +212,8 @@ export default function ObrigacoesFiscais() {
             <div key={o.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#1a2e1a', lineHeight: 1.4 }}>
                 {o.obligation_type}
-                {o.source === 'auto' && <span style={{ marginLeft: '7px', fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#ede9fe', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.auto}</span>}
+                {daEquipa(o) && <span title={L.equipaHint} style={{ marginLeft: '7px', fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#eaf5ee', color: '#0a7a3e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.equipa}</span>}
+                {!daEquipa(o) && o.source === 'auto' && <span style={{ marginLeft: '7px', fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#ede9fe', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.auto}</span>}
               </div>
               <div style={{ fontSize: '12px', color: t.text, fontWeight: 500 }}>{o.client || '—'}</div>
               <div style={{ fontSize: '12px', color: t.text }}>{countryName(o.country, lang) || '—'}</div>
@@ -259,11 +226,11 @@ export default function ObrigacoesFiscais() {
                 )}
               </div>
               <div>
-                <button onClick={() => toggleStatus(o)} disabled={isViewing} title={L.markDone} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: isViewing ? 'default' : 'pointer' }}>
+                <button onClick={() => toggleStatus(o)} disabled={isViewing || daEquipa(o)} title={daEquipa(o) ? L.equipaHint : L.markDone} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: isViewing || daEquipa(o) ? 'default' : 'pointer' }}>
                   {isDone ? `✓ ${L.done}` : L.pending}
                 </button>
               </div>
-              {!isViewing && <button onClick={() => removeItem(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1, justifySelf: 'start' }} title="Remover">✕</button>}
+              {!isViewing && !daEquipa(o) && <button onClick={() => removeItem(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1, justifySelf: 'start' }} title="Remover">✕</button>}
             </div>
           )
         })}

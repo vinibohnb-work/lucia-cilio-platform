@@ -35,6 +35,7 @@ export default function Catalogo() {
   const [filter, setFilter]   = useState('all')
   const [form, setForm]       = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)   // editar um item existente (R-D9)
 
   const load = useCallback(async () => {
     if (!eid) return
@@ -46,17 +47,17 @@ export default function Catalogo() {
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
-    new: '+ Neuer Eintrag', name: 'Bezeichnung', kind: 'Typ', price: 'Preis (€)',
+    new: '+ Neuer Eintrag', edit: 'Bearbeiten', name: 'Bezeichnung', kind: 'Typ', price: 'Preis (€)',
     product: 'Produkt', service: 'Dienstleistung', all: 'Alle',
     save: 'Speichern', loading: 'Wird geladen…', empty: 'Noch keine Einträge. Fügen Sie den ersten hinzu.',
     namePh: 'z.B. Beratungsstunde, Menü A…', intro: 'Produkte und Dienstleistungen, die Sie mit Buchungen verknüpfen können.',
   } : lang === 'en' ? {
-    new: '+ New Item', name: 'Name', kind: 'Type', price: 'Price (€)',
+    new: '+ New Item', edit: 'Edit', name: 'Name', kind: 'Type', price: 'Price (€)',
     product: 'Product', service: 'Service', all: 'All',
     save: 'Save', loading: 'Loading…', empty: 'No items yet. Add the first one.',
     namePh: 'e.g. Consulting hour, Menu A…', intro: 'Products and services you can link to Cash Book entries.',
   } : {
-    new: '+ Novo Item', name: 'Designação', kind: 'Tipo', price: 'Preço (€)',
+    new: '+ Novo Item', edit: 'Editar', name: 'Designação', kind: 'Tipo', price: 'Preço (€)',
     product: 'Produto', service: 'Serviço', all: 'Todos',
     save: 'Guardar', loading: 'A carregar…', empty: 'Ainda não há itens. Adicione o primeiro.',
     namePh: 'ex: Hora de consultoria, Menu A…', intro: 'Produtos e serviços que pode vincular aos lançamentos do Livro de Caixa.',
@@ -74,13 +75,13 @@ export default function Catalogo() {
     if (isViewing) return
     if (!form.name) return
     setSaving(true)
-    const { error } = await supabase.from('catalog_items').insert({
-      name: form.name, kind: form.kind,
-      price: form.price === '' ? null : parseFloat(form.price),
-    })
+    const payload = { name: form.name, kind: form.kind, price: form.price === '' ? null : parseFloat(form.price) }
+    const { error } = editingId
+      ? await supabase.from('catalog_items').update(payload).eq('id', editingId)
+      : await supabase.from('catalog_items').insert(payload)
     setSaving(false)
     if (error) { alert(error.message); return }
-    setForm(EMPTY); setShowForm(false); load()
+    setForm(EMPTY); setShowForm(false); setEditingId(null); load()
   }
   async function removeItem(id) {
     if (isViewing) return
@@ -91,7 +92,8 @@ export default function Catalogo() {
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const GRID = '1fr 140px 140px 36px'
+  const GRID = '1fr 140px 140px 64px'
+  function editar(it) { setEditingId(it.id); setForm({ name: it.name || '', kind: it.kind || 'service', price: it.price ?? '' }); setShowForm(true) }
 
   return (
     <div style={{ width: '100%' }}>
@@ -101,7 +103,7 @@ export default function Catalogo() {
       {/* Intro + header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '16px' }}>
         <p style={{ fontSize: '13px', color: t.textMuted, margin: 0 }}>{L.intro}</p>
-        {!isViewing && <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        {!isViewing && <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY); setEditingId(null) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
           {L.new}
         </button>}
       </div>
@@ -154,7 +156,10 @@ export default function Catalogo() {
               <div style={{ fontSize: '13px', fontWeight: 700, color: G }}>{it.name}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: ks.bg, color: ks.color }}>{it.kind === 'product' ? L.product : L.service}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: t.text }}>{fmt(it.price)}</div>
-              {!isViewing && <button onClick={() => removeItem(it.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>}
+              {!isViewing && <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={() => editar(it)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', padding: '2px', lineHeight: 1 }} title={L.edit}>✏️</button>
+                <button onClick={() => removeItem(it.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>
+              </div>}
             </div>
           )
         })}

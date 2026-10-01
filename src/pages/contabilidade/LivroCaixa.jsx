@@ -12,14 +12,11 @@ import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
 import { entryTypeLabel } from '../../lib/cashEntry'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { devidoNoPeriodo } from '../../lib/periodicidade'
 
 // IVA contido num montante total (com IVA): total × taxa/(100+taxa)
 const vatFromGross = (gross, rate) => (rate > 0 ? Number(gross) * rate / (100 + rate) : 0)
 
-// Recorrência: mês devido e vigência
-const isRecDue = (per, m) => per === 'monthly' || (per === 'quarterly' && [1,4,7,10].includes(m)) || (per === 'annual' && m === 1)
-const toYm = (p) => { const [y, m] = p.split('-').map(Number); return y * 12 + (m - 1) }
-const inRecRange = (p, s, e) => { const ym = toYm(p); if (s && ym < toYm(s)) return false; if (e && ym > toYm(e)) return false; return true }
 
 const NL2 = String.fromCharCode(10) + String.fromCharCode(10)
 const G = '#0a2f1a'
@@ -75,6 +72,7 @@ export default function LivroCaixa() {
   const [form, setForm]       = useState(EMPTY_FORM)
   const [showForm, setShowForm] = useState(false)
   const [filterMonth, setFilterMonth] = useState('all')
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear())
   const [erro, setErro] = useState('')
 
   const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
@@ -113,7 +111,9 @@ export default function LivroCaixa() {
     }
   }, [searchParams, setSearchParams])
 
-  const filtered = filterMonth === 'all' ? entries : entries.filter(e => e.entry_date.slice(5,7) === filterMonth)
+  // Ano e mês (antes o mês ignorava o ano e o ano estava fixo em 2026 — R-B1, R-B2)
+  const anos = [...new Set([new Date().getFullYear(), ...entries.map(e => Number(e.entry_date?.slice(0, 4))).filter(Boolean)])].sort((a, b) => b - a)
+  const filtered = entries.filter(e => (filterYear === 'all' || e.entry_date.slice(0, 4) === String(filterYear)) && (filterYear === 'all' || filterMonth === 'all' || e.entry_date.slice(5, 7) === filterMonth))
 
   let running = 0
   const withBalance = filtered.map(e => {
@@ -127,16 +127,16 @@ export default function LivroCaixa() {
   const bankBal  = filtered.reduce((s,e)=> e.destination==='banco' ? s+(e.type==='entrada'?Number(e.amount):-Number(e.amount)) : s, 0)
 
   // ── Saídas previstas: recorrentes devidas no âmbito do filtro e ainda por confirmar ──
-  const YEAR = 2026
+  const YEAR = filterYear === 'all' ? new Date().getFullYear() : filterYear
   const confirmedByPeriod = {}
   entries.forEach(e => { if (e.recurring_expense_id && e.period) { (confirmedByPeriod[e.period] ||= new Set()).add(e.recurring_expense_id) } })
-  const scopeMonths = filterMonth === 'all' ? Array.from({ length: 12 }, (_, i) => i + 1) : [Number(filterMonth)]
+  const scopeMonths = filterMonth === 'all' || filterYear === 'all' ? Array.from({ length: 12 }, (_, i) => i + 1) : [Number(filterMonth)]
   let predictedOut = 0
   scopeMonths.forEach(m => {
     const periodStr = `${YEAR}-${String(m).padStart(2, '0')}`
     const done = confirmedByPeriod[periodStr]
     recurring.forEach(r => {
-      if (isRecDue(r.periodicity, m) && inRecRange(periodStr, r.start_month, r.end_month) && !(done && done.has(r.id))) {
+      if (devidoNoPeriodo(r, periodStr) && !(done && done.has(r.id))) {
         predictedOut += Number(r.amount)
       }
     })
@@ -230,7 +230,7 @@ export default function LivroCaixa() {
     amount: 'Betrag (€)', qty: 'Menge', dest: 'Konto', running: 'Bestand', entrada: 'Einnahme', saida: 'Ausgabe',
     einlage: 'Privateinlage', entnahme: 'Privatentnahme',
     privHint: 'Privater Vorgang: zählt für den Kassenbestand, aber nicht für Gewinn, MwSt. oder Rücklagen.',
-    caixa: 'Kasse', banco: 'Bank', save: 'Speichern', all: 'Alle Monate',
+    caixa: 'Kasse', banco: 'Bank', save: 'Speichern', all: 'Alle Monate', allYears: 'Alle Jahre', yearLbl: 'Jahr',
     noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
     catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
@@ -243,7 +243,7 @@ export default function LivroCaixa() {
     amount: 'Amount (€)', qty: 'Qty.', dest: 'Account', running: 'Balance', entrada: 'Income', saida: 'Expense',
     einlage: 'Private deposit (Privateinlage)', entnahme: 'Private withdrawal (Privatentnahme)',
     privHint: 'Private movement: counts toward the cash balance, but not toward profit, VAT or reserves.',
-    caixa: 'Cash', banco: 'Bank', save: 'Save', all: 'All months',
+    caixa: 'Cash', banco: 'Bank', save: 'Save', all: 'All months', allYears: 'All years', yearLbl: 'Year',
     noEntries: 'No entries yet. Add one via "+ New Entry" at the top.',
     loading: 'Loading…', total: 'Total', category: 'Category', catalog: 'Product/Service',
     catalogNone: '— none —', catHint: 'Choose the expense category.', costType: 'Cost type',
@@ -256,7 +256,7 @@ export default function LivroCaixa() {
     amount: 'Valor (€)', qty: 'Qtd.', dest: 'Destino', running: 'Saldo', entrada: 'Entrada', saida: 'Saída',
     einlage: 'Privateinlage (entrada privada)', entnahme: 'Privatentnahme (saída privada)',
     privHint: 'Movimento privado: conta para o saldo de caixa, mas não para o lucro, IVA nem reservas.',
-    caixa: 'Caixa', banco: 'Banco', save: 'Guardar', all: 'Todos os meses',
+    caixa: 'Caixa', banco: 'Banco', save: 'Guardar', all: 'Todos os meses', allYears: 'Todos os anos', yearLbl: 'Ano',
     noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
     loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
     catalogNone: '— nenhum —', catHint: 'Escolha a categoria da despesa.', costType: 'Tipo de custo',
@@ -289,10 +289,16 @@ export default function LivroCaixa() {
 
       {/* Header (sem botão de Nova Entrada — está no topo) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
-        <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} style={{ ...selectStyle, width: 'auto', padding: '7px 12px' }}>
-          <option value="all">{L.all}</option>
-          {months.map((m,i) => <option key={i} value={String(i+1).padStart(2,'0')}>{m} 2026</option>)}
-        </select>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <select value={filterYear} onChange={e => setFilterYear(e.target.value === 'all' ? 'all' : Number(e.target.value))} aria-label={L.yearLbl} style={{ ...selectStyle, width: 'auto', padding: '7px 12px', fontWeight: 700 }}>
+            {anos.map(y => <option key={y} value={y}>{y}</option>)}
+            <option value="all">{L.allYears}</option>
+          </select>
+          <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} disabled={filterYear === 'all'} style={{ ...selectStyle, width: 'auto', padding: '7px 12px' }}>
+            <option value="all">{L.all}</option>
+            {months.map((m,i) => <option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>)}
+          </select>
+        </div>
         <button onClick={() => exportCSV(filtered, lang)} style={{ padding: '8px 14px', background: BG, border: `1px solid ${t.cardBorder}`, borderRadius: '8px', fontWeight: 600, fontSize: '12px', cursor: 'pointer', color: '#4a6355', whiteSpace: 'nowrap' }}>
           ⬇ {L.export}
         </button>

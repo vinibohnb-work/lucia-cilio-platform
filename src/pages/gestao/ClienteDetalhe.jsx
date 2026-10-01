@@ -9,8 +9,8 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useViewAs } from '../../context/ViewAsContext'
 import { supabase } from '../../lib/supabase'
 import { listUsers } from '../../lib/adminApi'
-import { FASES, rotuloFase, progressoESG } from '../../lib/esgPercurso'
-import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
+import { FASES, rotuloFase, progressoESG, anoDeReferencia } from '../../lib/esgPercurso'
+import { famvCheck } from '../../lib/planCalc'
 import DocsBrowser from '../../components/DocsBrowser'
 import AvisosCliente from '../../components/AvisosCliente'
 import ChecklistOnboarding from '../../components/ChecklistOnboarding'
@@ -97,27 +97,26 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
       const u = users.find(x => x.id === id) || null
       setClient(u)
       if (u) {
-        const [{ data: ce }, { data: fo }, { data: esg }, { data: cl }, { data: cs }, { data: mp }, { data: cn }] = await Promise.all([
+        const [{ data: ce }, { data: fo }, { data: esg }, { data: cl }, { data: cs }, { data: cn }] = await Promise.all([
           supabase.from('cash_entries').select('type,amount,private,entry_date').eq('user_id', id),
           supabase.from('fiscal_obligations').select('status').eq('user_id', id),
           // ESG como consultoria (18/09): o que interessa é o caso e a fase em que está
           supabase.from('esg_consultorias').select('id').eq('user_id', id).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
           supabase.from('clients').select('id').eq('user_id', id),
           supabase.from('company_settings').select('country,de_famv_limit').eq('user_id', id).maybeSingle(),
-          supabase.from('monthly_plans').select('items,monthly_fixed,productive_hours').eq('user_id', id).maybeSingle(),
           supabase.from('consulting_notes').select('*').eq('user_id', id).order('created_at', { ascending: false }),
         ])
         // A fase mede-se com a mesma régua do Percurso, a partir do que o caso já tem.
         let esgProg = null
         if (esg?.id) {
-          const ano = new Date().getFullYear()
           const [mat, diag, proj, rep] = await Promise.all([
             supabase.from('esg_materiality').select('topics,threshold').eq('consultoria_id', esg.id).maybeSingle(),
-            supabase.from('esg_diagnostics').select('answers').eq('consultoria_id', esg.id).eq('reference_year', ano).maybeSingle(),
+            supabase.from('esg_diagnostics').select('answers,reference_year').eq('consultoria_id', esg.id),
             supabase.from('esg_projects').select('topic_key').eq('consultoria_id', esg.id),
-            supabase.from('esg_reports').select('sections').eq('consultoria_id', esg.id).eq('reference_year', ano).maybeSingle(),
+            supabase.from('esg_reports').select('sections,reference_year').eq('consultoria_id', esg.id),
           ])
-          esgProg = progressoESG({ materiality: mat.data, diagnostic: diag.data, projects: proj.data || [], report: rep.data })
+          const ano = anoDeReferencia(diag.data || [])   // a mesma regra do Percurso (R-B9)
+          esgProg = progressoESG({ materiality: mat.data, diagnostic: (diag.data || []).find(d => d.reference_year === ano), projects: proj.data || [], report: (rep.data || []).find(r => r.reference_year === ano) })
         }
         const year = String(new Date().getFullYear())
         const monthsElapsed = new Date().getMonth() + 1
@@ -132,10 +131,9 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
         let famv = null
         if (cs?.country === 'DE' && Number(cs.de_famv_limit) > 0) {
           const limit = Number(cs.de_famv_limit)
-          const monthlyProfit = mp?.items?.length
-            ? computePlanTotals(mp.items, overheadPerHour(mp.monthly_fixed, mp.productive_hours), 0, 'gewinn').profit
-            : yearProfit / monthsElapsed
-          famv = { ...famvCheck(monthlyProfit, limit), monthlyProfit, limit, fromPlan: !!mp?.items?.length }
+          // Lucro real (média do ano) — a mesma regra do Painel e de Reservas (R-B6)
+          const monthlyProfit = yearProfit / monthsElapsed
+          famv = { ...famvCheck(monthlyProfit, limit), monthlyProfit, limit, fromPlan: false }
         }
         setStats({
           revenue, saldo,

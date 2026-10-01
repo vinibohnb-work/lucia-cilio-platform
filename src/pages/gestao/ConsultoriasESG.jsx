@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { listUsers } from '../../lib/adminApi'
-import { FASES, rotuloFase, progressoESG } from '../../lib/esgPercurso'
+import { FASES, rotuloFase, progressoESG, anoDeReferencia } from '../../lib/esgPercurso'
 import ListaCasos from '../../components/gestao/ListaCasos'
 
 // Lista das consultorias ESG. Decisão de 18/09: a ESG é trabalho da Lúcia, como
@@ -77,14 +77,17 @@ export default function ConsultoriasESG() {
     if (casos.error) { setErr(L.erro); setLoading(false); return }
     setLista(casos.data || [])
 
-    // Agrupa por caso e mede a fase com a mesma régua do Percurso. No
-    // diagnóstico e no relatório, o ano corrente vence; senão, o mais recente.
+    // Agrupa por caso e mede a fase com a mesma régua do Percurso, no ano de
+    // referência do caso (o mais recente com diagnóstico — R-B9).
     const por = {}
     const de = (id) => (por[id] ||= { materiality: null, diagnostic: null, projects: [], report: null })
     ;(mat.data || []).forEach(m => { if (m.consultoria_id) de(m.consultoria_id).materiality = m })
-    ;(diag.data || []).forEach(d => { if (!d.consultoria_id) return; const b = de(d.consultoria_id); if (!b.diagnostic || d.reference_year === ano || b.diagnostic.reference_year !== ano) b.diagnostic = d })
+    const diagsDe = {}
+    ;(diag.data || []).forEach(d => { if (d.consultoria_id) (diagsDe[d.consultoria_id] ||= []).push(d) })
+    const anoDe = Object.fromEntries(Object.entries(diagsDe).map(([id, ds]) => [id, anoDeReferencia(ds)]))
+    ;(diag.data || []).forEach(d => { if (d.consultoria_id && d.reference_year === anoDe[d.consultoria_id]) de(d.consultoria_id).diagnostic = d })
     ;(proj.data || []).forEach(p => { if (p.consultoria_id) de(p.consultoria_id).projects.push(p) })
-    ;(rep.data || []).forEach(r => { if (!r.consultoria_id) return; const b = de(r.consultoria_id); if (!b.report || r.reference_year === ano || b.report.reference_year !== ano) b.report = r })
+    ;(rep.data || []).forEach(r => { if (r.consultoria_id && r.reference_year === (anoDe[r.consultoria_id] ?? ano)) de(r.consultoria_id).report = r })
     const prog = {}
     ;(casos.data || []).forEach(c => { prog[c.id] = progressoESG(por[c.id] || {}) })
     setProgresso(prog)

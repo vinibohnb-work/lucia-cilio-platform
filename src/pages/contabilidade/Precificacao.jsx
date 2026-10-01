@@ -443,7 +443,7 @@ function TratamentoCalculator({ lang, irDefault, settings }) {
   const [monthlyFixed, setMonthlyFixed] = useState(550)
   const [productiveHours, setProductiveHours] = useState(100)
   const [profitPct, setProfitPct] = useState(20)
-  const [reservePct, setReservePct] = useState(irDefault || 20)
+  const [reservePct, setReservePct] = useState(irDefault || 25)
   const [currentPrice, setCurrentPrice] = useState(75)
   const [reserveBasis, setReserveBasis] = useState('gewinn')
 

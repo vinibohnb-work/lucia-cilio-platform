@@ -7,9 +7,21 @@
 //   2. O lucro previsto cobre as retiradas privadas + as amortizações?
 // ============================================================================
 
+// Números como as pessoas os escrevem em PT/DE: "1.500", "1.500,50", "1500,5"
+// (e também "1,500.50"). Antes "1.000" era lido como 1 (R-A6).
 const n = (v) => {
   if (v === undefined || v === null || v === '') return 0
-  const x = Number(String(v).replace(/\s/g, '').replace(',', '.'))
+  if (typeof v === 'number') return Number.isFinite(v) ? v : 0
+  let s = String(v).replace(/[\s€]/g, '')
+  const ultPonto = s.lastIndexOf('.'), ultVirg = s.lastIndexOf(',')
+  if (ultPonto >= 0 && ultVirg >= 0) {
+    s = ultVirg > ultPonto ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '')
+  } else if (ultVirg >= 0) {
+    s = /^-?\d{1,3}(,\d{3})+$/.test(s) && s.split(',').length > 2 ? s.replace(/,/g, '') : s.replace(',', '.')
+  } else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) {
+    s = s.replace(/\./g, '')
+  }
+  const x = Number(s)
   return Number.isFinite(x) ? x : 0
 }
 

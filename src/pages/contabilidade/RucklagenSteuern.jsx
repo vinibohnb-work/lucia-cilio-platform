@@ -40,7 +40,7 @@ export default function RucklagenSteuern() {
   const [year] = useState(new Date().getFullYear())
 
   // Estado editável
-  const [pct, setPct] = useState(25)
+  const [pct, setPct] = useState(25)  // a % da Empresa (só leitura aqui)
   const [kranken, setKranken]   = useState('')
   const [renten, setRenten]     = useState('')
   const [sonstige, setSonstige] = useState('')
@@ -90,7 +90,7 @@ export default function RucklagenSteuern() {
     heroTitle: 'Dieses Geld ist nicht frei verfügbar', heroText: 'Es ist für Steuern und Verpflichtungen reserviert.',
     // 1
     s1: 'Einkommensteuer-Rücklage', gewinn: 'Gewinn bis heute', gewinnSub: '(Einnahmen − Ausgaben)',
-    pctLabel: 'Rücklagen-Prozentsatz', pctSub: '(editierbar)',
+    pctLabel: 'Rücklagen-Prozentsatz', pctSub: 'In den Firmendaten ändern',
     recTax: 'Empfohlene Steuerrücklage', recTaxSub: (p, g) => `(${p}% von ${g})`,
     s1Hint: 'Schätzung – abhängig von deiner persönlichen steuerlichen Situation.',
     // 2
@@ -129,7 +129,7 @@ export default function RucklagenSteuern() {
     subtitle: 'Stay in control and avoid surprises with the Finanzamt (German tax office).',
     heroTitle: 'This money is not freely available', heroText: 'It is reserved for taxes and obligations.',
     s1: 'Income Tax Reserve', gewinn: 'Profit to date', gewinnSub: '(Income − Expenses)',
-    pctLabel: 'Reserve percentage', pctSub: '(editable)',
+    pctLabel: 'Reserve percentage', pctSub: 'Change in Company details',
     recTax: 'Recommended tax reserve', recTaxSub: (p, g) => `(${p}% of ${g})`,
     s1Hint: 'Estimate – depends on your personal tax situation.',
     s2: 'VAT (Umsatzsteuer)', s2Only: 'Only under standard taxation (Regelbesteuerung)',
@@ -165,7 +165,7 @@ export default function RucklagenSteuern() {
     subtitle: 'Mantém o controlo e evita surpresas com o Finanzamt (autoridade fiscal alemã).',
     heroTitle: 'Este dinheiro não está livre', heroText: 'Está reservado para impostos e obrigações.',
     s1: 'Reserva de Imposto de Rendimento', gewinn: 'Lucro até hoje', gewinnSub: '(Receitas − Despesas)',
-    pctLabel: 'Percentagem de reserva', pctSub: '(editável)',
+    pctLabel: 'Percentagem de reserva', pctSub: 'Alterar em Empresa',
     recTax: 'Reserva de imposto recomendada', recTaxSub: (p, g) => `(${p}% de ${g})`,
     s1Hint: 'Estimativa – depende da tua situação fiscal pessoal.',
     s2: 'Umsatzsteuer (IVA alemão)', s2Only: 'Apenas em Regelbesteuerung (com IVA)',
@@ -214,7 +214,9 @@ export default function RucklagenSteuern() {
     ? computePlanTotals(plan.items, overheadPerHour(plan.monthly_fixed, plan.productive_hours), pct, plan.reserve_basis)
     : null
   const monthsElapsed = year === new Date().getFullYear() ? new Date().getMonth() + 1 : 12
-  const famvProfit = planTotals ? planTotals.profit : gewinn / monthsElapsed
+  // A verificação usa o lucro real (média do ano); o Planeamento aparece ao lado
+  // como simulação. Antes usava o plano quando existia, e o Painel a média real (R-B6).
+  const famvProfit = gewinn / monthsElapsed
   const famv = famvCheck(famvProfit, famvLimit)
 
   async function persist(partial) {
@@ -229,11 +231,6 @@ export default function RucklagenSteuern() {
     setTimeout(() => setSavingMsg(''), 2500)
   }
 
-  function changePct(next) {
-    const v = Math.max(0, Math.min(60, next))
-    setPct(v)
-    persist({ ir_reserve_pct: v })
-  }
 
   // ── Cores do módulo (fixas, alinhadas ao mockup; suaves no modo claro) ──
   const HEAD = night ? '#123a24' : '#0a2f1a'
@@ -304,12 +301,9 @@ export default function RucklagenSteuern() {
                 </div>
                 <div>
                   <div style={capLabel}>{L.pctLabel}</div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', border: `1px solid ${t.inputBorder}`, borderRadius: '10px', overflow: 'hidden', background: t.inputBg }}>
-                    <button onClick={() => changePct(pct - 1)} style={{ width: '34px', height: '38px', border: 'none', background: 'transparent', color: t.textMuted, fontSize: '18px', cursor: 'pointer' }}>−</button>
-                    <span style={{ minWidth: '54px', textAlign: 'center', fontSize: '16px', fontWeight: 800, color: t.heading }}>{pct} %</span>
-                    <button onClick={() => changePct(pct + 1)} style={{ width: '34px', height: '38px', border: 'none', background: 'transparent', color: t.textMuted, fontSize: '18px', cursor: 'pointer' }}>+</button>
-                  </div>
-                  <div style={{ ...sub, marginTop: '5px' }}>{L.pctSub}</div>
+                  {/* A percentagem edita-se só na Empresa — antes havia dois sítios com limites diferentes (R-B8) */}
+                  <div style={{ fontSize: '22px', fontWeight: 800, color: t.heading, lineHeight: '38px' }}>{pct} %</div>
+                  <a href="/contabilidade/empresa" style={{ ...sub, marginTop: '5px', display: 'inline-block', color: t.accentText, fontWeight: 700, textDecoration: 'none' }}>{L.pctSub} →</a>
                 </div>
                 <div style={{ background: tone.green.bg, borderRadius: '12px', padding: '14px 16px' }}>
                   <div style={{ fontSize: '11.5px', fontWeight: 700, color: t.text, marginBottom: '4px', lineHeight: 1.3 }}>{L.recTax}</div>
@@ -393,7 +387,8 @@ export default function RucklagenSteuern() {
                 <div>
                   <div style={capLabel}>{L.famvProfit}</div>
                   <div style={money(t.heading)}>{fmt2(famvProfit)}</div>
-                  <div style={sub}>{planTotals ? L.famvSrcPlan : L.famvSrcReal}</div>
+                  <div style={sub}>{L.famvSrcReal}</div>
+                  {planTotals && <div style={{ ...sub, marginTop: '3px' }}>{L.famvSrcPlan}: {fmt2(planTotals.profit)}</div>}
                 </div>
                 <div>
                   <div style={capLabel}>{L.famvLimitL}</div>

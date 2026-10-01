@@ -119,3 +119,14 @@ export function progressoESG({ materiality, diagnostic, projects = [], report } 
 
   return { ...fases, proxima, pctGeral: Math.round(somaPct / FASES.length) }
 }
+
+// ── Ano de referência de um caso ────────────────────────────────────────────
+// Uma regra para todos os ecrãs (R-B9): o ano mais recente com diagnóstico
+// preenchido; sem nenhum, o ano corrente. Antes o Percurso usava sempre o ano
+// corrente e o resto o mais recente — o mesmo caso mostrava progressos diferentes.
+export function anoDeReferencia(diagnosticos = []) {
+  const anos = diagnosticos
+    .filter(d => d && Object.keys(d.answers || {}).length)
+    .map(d => Number(d.reference_year)).filter(Boolean)
+  return anos.length ? Math.max(...anos) : new Date().getFullYear()
+}

@@ -23,22 +23,22 @@
 > reunião. O desenvolvimento pausa agora e retoma no início do próximo ano; o objetivo é
 > deixar tudo **redondo até ao fecho do contrato, em novembro**.
 
-- [ ] **Simplificação — Fase 1: acertos sem mudar o modelo** *(antes de novembro)*
-  *Reuniões 18/09 e 25/09/2026 · Revisão de 01/10 · Resp.: Vinícius*
-  A revisão completa está na última parte do **Guia da plataforma**
-  (`docs/Guia-da-Plataforma-Origem-dos-Dados.pdf`, códigos R-…). Esta fase:
-  · **Dados e segurança:** o cliente pode mudar e apagar as obrigações da equipa (R-A1); as regras
-    antigas da ESG deixam o cliente escrever e ler casos escondidos (R-A2, migração 038); saídas
-    das Recorrentes e do extrato gravam sem IVA (R-A3); a consultoria perde edições e lê mal
-    "1.500" (R-A6); papéis comercial/marketing (R-A4, depois de decidir com a Lúcia).
-  · **Parte em janeiro:** ano 2026 fixo no Painel, Livro de Caixa e Recorrentes (R-B1); filtro de
-    mês sem ano (R-B2).
-  · **Uma regra por conceito:** obrigações em aberto (R-B3), periodicidade (R-B4), resultado/
-    reserva (R-B5), Familienversicherung (R-B6), % de reserva (R-B8), ano da ESG (R-B9),
-    Segurança Social PT (R-B12).
-  · **Limpeza:** ficheiros sem uso (R-D1), Recorrentes no menu (R-D2), menu Lite (R-D3),
-    Marketing (R-D6), campos sem uso (R-D8), editar no Catálogo/Clientes (R-D9).
-  · **Um só gerador fiscal:** retirar o do cliente (R-C3).
+- [ ] **Aplicar a migração 038 e publicar a Fase 1 da simplificação**
+  *Resp.: Vinícius (com a Lúcia)*
+  O código está na branch `simplificacao-fase1` e **não vai para `main` antes da 038**: o modelo
+  de despesa recorrente grava a taxa de IVA numa coluna nova. A 038 só mexe em regras de acesso
+  e acrescenta essa coluna. Depois de a correr, ver o painel de verificação (regras antigas da
+  ESG = vazio; chaves por conta = 0) e fazer o merge.
+  ⚠️ **Depende de:** aplicar `supabase/migration_038.sql` no SQL Editor.
+
+- [ ] **Simplificação — o que ficou da Fase 1 à espera de decisão**
+  *Revisão de 01/10 · Resp.: Vinícius (com a Lúcia)*
+  · **Papéis da equipa** (R-A4): o que vê a comercial e o que vê o marketing.
+  · **Reserva de imposto** (resto do R-B5): sobre o resultado com ou sem o IVA por pagar; o
+    "Total" de Reservas soma o ano com um mês.
+  · **Calculadora de Preços** (R-B7): na sessão de revisão combinada a 01/10.
+  · **Contabilidade → Clientes** (R-D7): retirar ou não.
+  · Ainda sem decisão pendente: R-A5 (triagem no servidor), R-B10 e R-B11 (acertos ESG e portal).
 
 - [ ] **Simplificação — Fase 2: uma ficha de cliente**
   *Revisão de 01/10 · Resp.: Vinícius*
@@ -576,6 +576,34 @@
 ---
 
 ## Concluídos
+
+### Simplificação, fase 1 — 01/10 *(na branch `simplificacao-fase1`, até à 038)*
+
+- [x] **Acertos da revisão geral sem mudar o modelo**
+  *Reuniões 18/09 e 25/09 · Revisão de 01/10 · Resp.: Vinícius*
+  Referências do Guia da plataforma (v1.2, atualizado):
+  · **Dados e segurança** — o cliente só altera ou apaga as obrigações que não são da equipa
+    (etiqueta "equipa", só leitura) e a ESG deixa de aceitar gravações do cliente (migração
+    038, R-A1 e R-A2); IVA nas despesas recorrentes (taxa do modelo ou da empresa) e ao criar
+    lançamentos a partir do extrato (R-A3); a consultoria junta as alterações antes de gravar e
+    grava ao sair, lê "1.500" e "1.500,50", e a origem das estratégias TOWS acompanha os pontos
+    da SWOT apagados (R-A6).
+  · **O que partia em janeiro** — ano livre no Painel (seletor), no Livro de Caixa (filtro por
+    ano e mês) e nas Recorrentes (R-B1, R-B2).
+  · **Uma regra por conceito** — obrigações em aberto = em atraso + 14 dias, em todo o lado, e o
+    Início mostra primeiro as em atraso (R-B3); periodicidade a contar do início para avenças e
+    recorrentes (`lib/periodicidade.js`, R-B4); custos fixos do Painel só até ao mês corrente e
+    "Resultado após reserva" (R-B5, parte); Familienversicherung pela média real, com o
+    Planeamento como simulação (R-B6); % de reserva só na Empresa e 25% por omissão (R-B8); um
+    ano de referência por caso ESG (R-B9); Segurança Social do Painel só para independentes (R-B12).
+  · **Um só gerador fiscal** — sai o do cliente; o calendário é gerado pela equipa no portal (R-C3).
+  · **Limpeza** — seis ficheiros sem uso apagados e o gerador antigo (R-D1); Recorrentes no menu
+    (R-D2); menu Lite com o Início e sem a Conciliação (R-D3); Moeda e Início do ano fiscal fora
+    da Empresa (R-D8); editar no Catálogo e nos Clientes, e o botão de editar das Recorrentes com
+    texto (R-D9).
+  Verificado com uma base de dados falsa: periodicidade (anual de maio só em maio; trimestral de
+  fevereiro em fev/mai/ago/nov), IVA ao confirmar e ao criar do extrato, régua das obrigações,
+  reservas, ano de referência da ESG, menu Lite e a gravação da consultoria.
 
 ### Contabilidade de demonstração para a administradora — 01/10
 

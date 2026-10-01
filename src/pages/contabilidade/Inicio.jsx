@@ -72,10 +72,9 @@ export default function Inicio() {
   const load = useCallback(async () => {
     if (!eid) return
     setLoading(true)
-    const hoje = new Date().toISOString().slice(0, 10)
     const [{ data: av }, { data: ob }, { data: cb }, cs] = await Promise.all([
       supabase.from('client_notices').select('*').eq('user_id', eid).order('created_at', { ascending: false }).limit(5),
-      supabase.from('fiscal_obligations').select('*').eq('user_id', eid).eq('status', 'pending').gte('deadline', hoje).order('deadline', { ascending: true }).limit(1),
+      supabase.from('fiscal_obligations').select('*').eq('user_id', eid).eq('status', 'pending').order('deadline', { ascending: true }).limit(1),   // a mais antiga primeiro: uma em atraso aparece aqui (R-B3)
       supabase.from('client_billing').select('*').eq('user_id', eid).eq('active', true).limit(1),
       getCompanySettings(eid),
     ])

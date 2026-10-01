@@ -354,8 +354,9 @@ export function conciliar(movimentos, entries) {
   return { sugestoes: resultado, semPar, entriesSemPar }
 }
 
-// Um movimento do extrato que não existe no Livro de Caixa vira lançamento
-export function movimentoParaLancamento(m) {
+// Um movimento do extrato que não existe no Livro de Caixa vira lançamento.
+// O valor do extrato é bruto: o IVA sai da taxa escolhida (R-A3 — antes ia sempre a 0).
+export function movimentoParaLancamento(m, taxa = 0) {
   return {
     entry_date: m.data,
     description: m.descricao,
@@ -363,8 +364,8 @@ export function movimentoParaLancamento(m) {
     amount: m.valor,
     destination: 'banco',
     doc: null,
-    vat_rate: 0,
-    vat_amount: 0,
+    vat_rate: taxa,
+    vat_amount: taxa > 0 ? Math.round(m.valor * taxa / (100 + taxa) * 100) / 100 : 0,
     quantity: 1,
     private: false,
   }

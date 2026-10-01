@@ -27,7 +27,7 @@ export default function PlaneamentoMensal() {
   const [monthlyFixed, setMonthlyFixed] = useState('')
   const [productiveHours, setProductiveHours] = useState('')
   const [reserveBasis, setReserveBasis] = useState('gewinn')
-  const [reservePct, setReservePct] = useState(20)
+  const [reservePct, setReservePct] = useState(25)   // omissão comum: 25% (R-B8)
   const [catalog, setCatalog] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
