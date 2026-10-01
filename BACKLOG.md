@@ -49,6 +49,9 @@
   duplicados entre as contas e a lista antiga, contratos do Financeiro que não ficaram ligados
   a nenhum cliente (o painel de verificação da 037 mostra quantos), responsável, forma jurídica,
   regime e periodicidade — é o que decide o calendário fiscal.
+  ↳ `supabase/consulta_clientes_duplicados.sql` (30/09, só leitura) lista os pares suspeitos
+  — nome igual sem acentos, um nome que começa pelo outro, mesmo e-mail ou as duas primeiras
+  palavras iguais — com o que cada ficha tem ligado e qual manter. A junção vem depois.
 
 - [ ] **Validar o portal com a Lúcia e a Letícia e fechar as decisões em aberto**
   *Documento 22/09/2026 · Reunião 25/09/2026 · Resp.: Vinícius*
