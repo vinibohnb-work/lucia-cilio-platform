@@ -27,11 +27,12 @@ from reportlab.lib.units import cm
 from reportlab.platypus import (BaseDocTemplate, Frame, Image, KeepTogether, NextPageTemplate, PageBreak,
                                 PageTemplate, Paragraph, Spacer, Table, TableStyle)
 
-VERSAO = "1.0"
+VERSAO = "1.1"
 DATA = date(2026, 10, 1)
 
 # (data, o que mudou na plataforma, o que mudou neste guia) — mais recente primeiro
 REGISTO = [
+    ("01/10/2026", "A administradora volta a ter a Contabilidade, como demonstração: usa a própria conta (os dados ficam nela e nenhum cliente os vê), com o botão Gestão / Demonstração no menu e uma faixa a indicá-lo. A ESG do cliente continua só pela Visualização completa.", "v1.1: Quem vê o quê."),
     ("01/10/2026", "Correções encontradas durante a revisão: o calendário das sociedades PT (os três pagamentos por conta "
      "tinham o mesmo código e o calendário inteiro falhava); relatórios trimestrais novos não gravavam; apagar "
      "\"Horas incluídas\" dava erro; contratos novos do Financeiro passam a ligar-se à ficha do cliente (pela conta ou "
@@ -210,9 +211,10 @@ S += [PageBreak(), P("PARA COMEÇAR", kicker), P("Quem vê o quê", h1)]
 S.append(P("Cada pessoa entra com um perfil. O perfil decide o menu; os dados que cada um pode ler e escrever são "
            "decididos também na base de dados (as regras de acesso), não só no ecrã."))
 S.append(tabela(["Perfil", "O que vê", "Notas"], [
-    ["<b>Administradora</b> (Lúcia)", "Só a Gestão: Clientes, Agenda, Tarefas, Relatórios, Mensagens; Consultorias, Consultorias ESG, "
-     "Diagnósticos; CRM, Financeiro, Gestão de Acessos.", "Entra na plataforma de um cliente só pela <b>Visualização completa</b> "
-     "(separador Conta na plataforma). Desde 30/09 não tem Contabilidade própria."],
+    ["<b>Administradora</b> (Lúcia)", "A Gestão: Clientes, Agenda, Tarefas, Relatórios, Mensagens; Consultorias, Consultorias ESG, "
+     "Diagnósticos; CRM, Financeiro, Gestão de Acessos. E a <b>Contabilidade de demonstração</b> (botão Gestão / Demonstração no menu).",
+     "A demonstração usa a conta dela: o que lança fica lá e nenhum cliente vê — serve para testar e mostrar. A plataforma de um cliente "
+     "abre-se pela <b>Visualização completa</b> (separador Conta na plataforma)."],
     ["<b>Comercial</b> (equipa)", "O portal de clientes (Clientes, Agenda, Tarefas, Relatórios, Mensagens), Diagnósticos e CRM.",
      "Não vê a avença, os pagamentos nem a Conta na plataforma. É o perfil pensado para a Letícia (decisão de 25/09)."],
     ["<b>Marketing</b> (equipa)", "O portal de clientes e a página de Marketing (em preparação).", "Ver R-A4: tem mais acesso do que a página diz."],

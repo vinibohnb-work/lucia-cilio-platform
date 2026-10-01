@@ -71,12 +71,6 @@
   retirá-la — R-D6 — mas passa a ter conteúdo). A integração de métricas Meta/Google continua
   um item à parte (Gestão interna).
 
-- [ ] **Contabilidade de demonstração no menu da administradora**
-  *Reunião 01/10/2026 · Resp.: Vinícius*
-  Para a Lúcia ver tudo o que o cliente vê sem depender de uma conta real. Desde 30/09 a
-  administradora só vê a Gestão; a proposta é uma conta de demonstração com dados fictícios,
-  aberta por uma entrada no menu (como a Visualização completa, mas sempre disponível).
-
 - [ ] **Rever a Calculadora de Preços com a Lúcia**
   *Reunião 01/10/2026 · Resp.: Vinícius (com a Lúcia)*
   Base: R-B7 do Guia da plataforma — quatro definições de margem, reserva de IR somada ao
@@ -582,6 +576,18 @@
 ---
 
 ## Concluídos
+
+### Contabilidade de demonstração para a administradora — 01/10
+
+- [x] **A Lúcia volta a ter a Contabilidade, como demonstração**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  Volta atrás no que foi feito a 30/09 (administradora só na Gestão), a pedido do Vinícius
+  como mais urgente: a demonstração funciona como antes, com a **conta da própria Lúcia** — o
+  que ela lança fica guardado lá, pode testar e mostrar, e nenhum cliente vê. No menu, o botão
+  **Gestão / Demonstração** alterna entre as duas; nas páginas da Contabilidade aparece uma
+  faixa dourada "Demonstração — a sua própria conta". O sino de prazos fiscais aparece-lhe só
+  dentro da Contabilidade. A ESG do cliente continua só pela Visualização completa (os casos ESG
+  da Lúcia vivem na Gestão). Guia da plataforma atualizado (v1.1).
 
 ### Guia da plataforma e revisão geral — 01/10
 

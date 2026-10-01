@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
@@ -19,9 +19,11 @@ export default function FiscalBell() {
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
   const { role } = useAuth()
-  // A equipa (admin incluído, desde 30/09) não tem obrigações próprias: os prazos
-  // dos clientes vivem no portal (Tarefas e Agenda).
-  const semConta = role === 'comercial' || role === 'marketing' || role === 'admin'
+  // A equipa não tem obrigações próprias. O admin tem as da demonstração, por isso
+  // o sino só lhe aparece dentro da Contabilidade (na Gestão, os prazos dos clientes
+  // estão nas Tarefas e na Agenda).
+  const { pathname } = useLocation()
+  const semConta = role === 'comercial' || role === 'marketing' || (role === 'admin' && !pathname.startsWith('/contabilidade'))
   const { alerts, count } = useFiscalAlerts(14, semConta ? null : eid)
   const [open, setOpen] = useState(false)
 

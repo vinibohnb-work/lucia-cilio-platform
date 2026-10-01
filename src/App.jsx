@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { ViewAsProvider, useViewAs } from './context/ViewAsContext'
 import { useIsMobile } from './hooks/useIsMobile'
 import ViewAsBanner from './components/ViewAsBanner'
+import DemonstracaoBanner from './components/DemonstracaoBanner'
 
 // Public pages
 import Login from './pages/Login'
@@ -105,6 +106,7 @@ function AppLayout() {
       )}
       <div style={{ marginLeft: ml, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', transition: 'margin-left .22s ease' }}>
         <ViewAsBanner />
+        <DemonstracaoBanner />
         <main style={{
           flex: 1, background: t.mainBg, minWidth: 0, color: t.text, fontFamily: t.fontBody,
           padding: isMobile ? 'calc(env(safe-area-inset-top) + 64px) 14px 40px' : '30px 34px 40px',

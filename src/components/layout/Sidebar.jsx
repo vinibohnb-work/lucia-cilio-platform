@@ -140,7 +140,7 @@ export default function Sidebar() {
   const viewPlatform = isTeamRole
     ? 'management'
     : isAdmin
-      ? (isViewing || casoId ? platformFromPath : 'management')
+      ? platformFromPath
       : platform === 'both'
         ? (platformFromPath === 'management' ? 'accounting' : platformFromPath)
         : (platform === 'esg' ? 'esg' : 'accounting')
@@ -260,14 +260,18 @@ export default function Sidebar() {
             <IconLogout />
           </button>
         </div>
-        {/* Alternar plataforma — só para clientes 'both' (Contab.+ESG), também
-            durante a "Visualização completa" de um deles. O admin já não alterna. */}
-        {!isTeamRole && !casoId && (isViewing ? viewAs?.platform === 'both' : (!isAdmin && platform === 'both')) && (
+        {/* Alternar plataforma — admin: Gestão e a Contabilidade de demonstração
+            (conta própria, 01/10) · cliente 'both': Contab.+ESG, também durante a
+            "Visualização completa" de um deles. */}
+        {!isTeamRole && !casoId && (isViewing ? viewAs?.platform === 'both' : (isAdmin || platform === 'both')) && (
           <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '12px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
-            {[
+            {(isAdmin && !isViewing ? [
+              ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],
+              ['accounting', lang === 'de' ? 'Demo' : lang === 'en' ? 'Demo' : 'Demonstração'],
+            ] : [
               ['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contabilidade'],
               ['esg', 'ESG'],
-            ].map(([p, lbl]) => (
+            ]).map(([p, lbl]) => (
               <button key={p} onClick={() => switchAdminView(p)} style={{
                 flex: 1, padding: '7px 4px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
                 background: viewPlatform === p ? t.accent : 'transparent',
