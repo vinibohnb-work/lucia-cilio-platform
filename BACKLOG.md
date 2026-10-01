@@ -3,8 +3,9 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 28/09/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
-> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026, 18/09/2026, 25/09/2026
+> **Última sincronização:** 01/10/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026, 18/09/2026, 25/09/2026,
+> 01/10/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
@@ -49,6 +50,45 @@
   ⚠️ **Depende de:** confirmar com a Lúcia que páginas do lado do cliente são usadas (uma página
   que ninguém usa sai em vez de ser corrigida).
 
+### Ajustes da reunião de 01/10 (validação da jornada do cliente)
+
+- [ ] **Retirar "Créditos ou reembolsos" da visão do cliente**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  Pedido: tirar o campo de valor a pagar em créditos/reembolsos da visão do cliente. Na vista
+  do cliente do portal os valores já não aparecem (28/09); o cartão continua no **Resumo da
+  página do cliente** na Gestão — confirmar se é esse que ela quer retirar (a revisão de 01/10
+  já apontava que "Valor a pagar" e "Créditos" usam regras diferentes, R-B11).
+
+- [ ] **Uma só indicação de "Documentos em falta" no Resumo**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  Hoje aparece duas vezes no Resumo da página do cliente: o indicador do topo e o cartão com a
+  lista no fundo. Ficar com uma (o indicador, que abre a lista em Documentos).
+
+- [ ] **Aba de Marketing com a prévia do Instagram**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  Prévia do feed, legenda, agenda de publicações e anotações partilhadas entre a Lúcia, a
+  Letícia e a Nicole. Substitui a página de espera de Marketing (a revisão de 01/10 propunha
+  retirá-la — R-D6 — mas passa a ter conteúdo). A integração de métricas Meta/Google continua
+  um item à parte (Gestão interna).
+
+- [ ] **Contabilidade de demonstração no menu da administradora**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  Para a Lúcia ver tudo o que o cliente vê sem depender de uma conta real. Desde 30/09 a
+  administradora só vê a Gestão; a proposta é uma conta de demonstração com dados fictícios,
+  aberta por uma entrada no menu (como a Visualização completa, mas sempre disponível).
+
+- [ ] **Rever a Calculadora de Preços com a Lúcia**
+  *Reunião 01/10/2026 · Resp.: Vinícius (com a Lúcia)*
+  Base: R-B7 do Guia da plataforma — quatro definições de margem, reserva de IR somada ao
+  preço, IVA por omissão pela língua, catálogo bruto/líquido. Fechar as regras na sessão e
+  depois corrigir.
+
+- [ ] **Completar o guia com as integrações**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  O guia de 01/10 cobre a origem dos dados ecrã a ecrã; falta a parte das integrações para a
+  equipa: e-mail (SMTP), pasta de documentos, relatório com IA, WhatsApp (só ligação com texto),
+  alojamento (Vercel) e base de dados (Supabase, Frankfurt).
+
 ### Portal de gestão de clientes (documento de 22/09 — oficial desde 29/09)
 
 > A antiga **v2** passou a ser a Gestão: Clientes, Agenda, Tarefas, Relatórios e Mensagens
@@ -64,6 +104,8 @@
   ↳ `supabase/consulta_clientes_duplicados.sql` (30/09, só leitura) lista os pares suspeitos
   — nome igual sem acentos, um nome que começa pelo outro, mesmo e-mail ou as duas primeiras
   palavras iguais — com o que cada ficha tem ligado e qual manter. A junção vem depois.
+  ↳ **01/10:** apagar a **conta duplicada da Célia** na plataforma (pedido da reunião) — ver
+  antes qual das duas tem lançamentos e obrigações, para não perder dados.
 
 - [ ] **Validar o portal com a Lúcia e a Letícia e fechar as decisões em aberto**
   *Documento 22/09/2026 · Reunião 25/09/2026 · Resp.: Vinícius*
@@ -352,6 +394,16 @@
 
 ## Validações técnicas
 
+- [ ] **Testar a jornada do cliente em três etapas**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  1) teste interno com uma conta de teste própria, para encontrar erros; 2) com a conta da
+  Nicole; 3) com uma cliente externa (Vânia). Ajustar o que aparecer em cada etapa.
+
+- [ ] **Erro de certificado SMTP no Outlook (envio de e-mails)**
+  *Reunião 01/10/2026 · Resp.: Vinícius*
+  Investigar o erro e contactar a I Love Design (com a Lúcia em cópia), que gere o domínio.
+  ⚠️ **Depende de:** a Lúcia encaminhar o contacto da I Love Design e dar acesso ao Outlook.
+
 - [ ] **Validar o mapeamento de colunas da importação com extratos reais de vários bancos**
   *Reunião 20/08/2026 · Resp.: Vinícius*
   A deteção automática de formato já está construída (separador, decimais, débito/crédito,
@@ -405,6 +457,16 @@
 ---
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
+
+- **Reunião de 01/10:** fase de **validação** — testar a jornada do cliente e aplicar os
+  ajustes. **Contabilidade e gestão interna ficam na mesma plataforma** por agora (versão Pro
+  já paga); a separação num produto de licença com domínio próprio fica para o futuro (risco de
+  retrabalho se o desenho atual não a previr). **Notificações por WhatsApp ficam para depois**:
+  a plataforma só gera a mensagem para copiar e enviar. As **vendas** são feitas pela Lúcia e
+  pela Letícia (social selling no Instagram e diagnósticos gratuitos de 15 min), sem
+  departamento comercial externo. A aba de Marketing é partilhada pelas três da equipa.
+  Riscos: dependência da I Love Design (domínio/DNS) para o e-mail; agenda carregada de
+  outubro a dezembro.
 
 - **Reunião de 25/09:** a **v2 do portal de clientes será a definitiva**, com poucos ajustes; o
   **portal do cliente fica só informativo** (obrigação, data, período, estado da entrega —
