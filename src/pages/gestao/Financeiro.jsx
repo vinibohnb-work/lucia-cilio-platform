@@ -194,7 +194,7 @@ export default function Financeiro() {
   if (loading) return <EsqueletoPagina />
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '980px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
         <div>

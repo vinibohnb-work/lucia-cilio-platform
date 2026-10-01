@@ -18,6 +18,9 @@ import { CompositorWhatsApp } from '../../partes/Comunicacao'
 export default function Obrigacoes({ cliente, modoCliente }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
+  // Até 1200 px a tabela junta colunas (período sob o nome; valor e comprovativo
+  // na mesma célula) para caber sem deslizar para o lado.
+  const compacto = useIsMobile(1200)
   const s = usePortal()
   const c = useCampos()
   const hoje = hojeIso()
@@ -28,6 +31,32 @@ export default function Obrigacoes({ cliente, modoCliente }) {
   const [ano, setAno] = useState(anoAtual)
   const [filtro, setFiltro] = useState(modoCliente ? 'todas' : 'abertas')
   const [aberta, setAberta] = useState(null)
+
+  const valorDe = (o) => (
+    <div style={{ display: 'flex', gap: '5px' }}>
+      <select value={o.valor?.tipo || ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: ev.target.value ? { tipo: ev.target.value, montante: o.valor?.montante ?? '' } : null })}
+        style={{ ...c.input, width: '96px', padding: '5px 6px', fontSize: '12px', cursor: 'pointer' }} aria-label="Tipo de valor">
+        <option value="">Sem valor</option><option value="pagar">A pagar</option><option value="credito">Crédito</option><option value="reembolso">Reembolso</option>
+      </select>
+      {o.valor?.tipo && <input type="number" step="0.01" value={o.valor.montante ?? ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: { ...o.valor, montante: ev.target.value } })} placeholder="€" style={{ ...c.input, width: '82px', padding: '5px 7px', fontSize: '12px' }} />}
+    </div>
+  )
+  const comprovativoDe = (o) => (
+    o.comprovativo ? (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: t.accentText }} title={`Arquivado a ${fmtData(o.comprovativo.data)}`}>
+        <button onClick={() => abrirFicheiro(o.comprovativo.caminho)} disabled={!o.comprovativo.caminho} style={{ background: 'none', border: 'none', padding: 0, cursor: o.comprovativo.caminho ? 'pointer' : 'default', color: 'inherit', fontWeight: 600, fontSize: '12px', fontFamily: 'inherit' }}>📎 {o.comprovativo.nome}</button>
+        {!modoCliente && <button onClick={() => acoes.atualizarObrigacao(o.id, { comprovativo: null })} aria-label="Remover comprovativo" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', padding: 0 }}>✕</button>}
+      </span>
+    ) : modoCliente ? <span style={{ color: t.subtle }}>—</span> : (
+      <label style={{ fontSize: '12px', fontWeight: 700, color: t.textMuted, cursor: 'pointer', border: `1px dashed ${t.inputBorder}`, borderRadius: '8px', padding: '5px 9px', whiteSpace: 'nowrap' }}>
+        Anexar
+        <input type="file" style={{ display: 'none' }} onChange={ev => {
+          const fx = ev.target.files?.[0]; ev.target.value = ''
+          if (fx) acoes.anexarComprovativo(o.id, fx)
+        }} />
+      </label>
+    )
+  )
   const [manual, setManual] = useState(null)
   const [tarefa, setTarefa] = useState(null)
   const [whats, setWhats] = useState(null)
@@ -87,7 +116,9 @@ export default function Obrigacoes({ cliente, modoCliente }) {
       <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', overflowX: 'auto' }}>
         {lista.length === 0 ? <Vazio>{doAno.length ? 'Nenhuma obrigação com este filtro.' : `Ainda não há calendário para ${ano}.`}</Vazio> : (
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '720px' : 0 }}>
-            <thead><tr>{['Obrigação', 'Período', 'Data-limite', 'Estado', ...(modoCliente ? [] : ['Valor']), 'Comprovativo'].map((h, i) => <th key={i} style={c.th}>{h}</th>)}</tr></thead>
+            <thead><tr>{(compacto
+              ? ['Obrigação', 'Data-limite', 'Estado', modoCliente ? 'Comprovativo' : 'Valor · comprovativo']
+              : ['Obrigação', 'Período', 'Data-limite', 'Estado', ...(modoCliente ? [] : ['Valor']), 'Comprovativo']).map((h, i) => <th key={i} style={c.th}>{h}</th>)}</tr></thead>
             <tbody>
               {lista.map(o => {
                 const e = estadoEfetivo(o, hoje)
@@ -99,22 +130,23 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                     <tr style={{ background: aberto ? t.softCardBg : 'transparent' }}>
                       <td style={c.td}>
                         <div style={{ fontWeight: 700, color: t.heading }}>{o.nome}</div>
+                        {compacto && <div style={{ fontSize: '11.5px', color: t.subtle }}>{o.periodo}</div>}
                         {!modoCliente && (
                           <button onClick={() => setAberta(aberto ? null : o.id)} style={{ background: 'none', border: 'none', padding: 0, marginTop: '2px', color: t.accentText, fontWeight: 700, cursor: 'pointer', fontSize: '11.5px', fontFamily: 'inherit' }}>
                             Checklist {feitos}/{CHECKLIST.length} · {aberto ? 'fechar ▴' : 'detalhe ▾'}
                           </button>
                         )}
                       </td>
-                      <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{o.periodo}</td>
+                      {!compacto && <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{o.periodo}</td>}
                       <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
-                        {modoCliente ? fmtData(o.prazo) : <input type="date" value={o.prazo} onChange={ev => acoes.atualizarObrigacao(o.id, { prazo: ev.target.value })} style={{ ...c.input, width: '132px', padding: '6px 7px' }} />}
+                        {modoCliente ? fmtData(o.prazo) : <input type="date" value={o.prazo} onChange={ev => acoes.atualizarObrigacao(o.id, { prazo: ev.target.value })} style={{ ...c.input, width: compacto ? '122px' : '132px', padding: '6px 7px' }} />}
                         {!FECHADOS.includes(o.estado) && <div style={{ fontSize: '11px', color: e === 'em_atraso' ? t.neg : d <= 7 ? t.accentText : t.subtle, marginTop: '2px' }}>{d < 0 ? `${-d} dias em atraso` : d === 0 ? 'hoje' : `faltam ${d} dias`}</div>}
                       </td>
                       <td style={c.td}>
                         {modoCliente ? <Chip tom={ESTADOS_OBRIG[e].tom}>{ESTADOS_OBRIG[e].rotulo}</Chip> : (
                           <div>
                             <select value={o.estado} onChange={ev => acoes.atualizarObrigacao(o.id, { estado: ev.target.value })}
-                              style={{ ...c.input, width: 'auto', maxWidth: '168px', padding: '5px 8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+                              style={{ ...c.input, width: 'auto', maxWidth: compacto ? '150px' : '168px', padding: '5px 8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
                               {Object.entries(ESTADOS_OBRIG).map(([k, v]) => <option key={k} value={k}>{v.rotulo}</option>)}
                             </select>
                             {e === 'em_atraso' && o.estado !== 'em_atraso' && <div style={{ marginTop: '4px' }}><Chip tom="erro">Em atraso</Chip></div>}
@@ -122,36 +154,20 @@ export default function Obrigacoes({ cliente, modoCliente }) {
                         )}
                       </td>
                       {/* O cliente não vê valores: o portal é informativo (25/09) */}
-                      {!modoCliente && <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
-                        {(
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <select value={o.valor?.tipo || ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: ev.target.value ? { tipo: ev.target.value, montante: o.valor?.montante ?? '' } : null })}
-                              style={{ ...c.input, width: '96px', padding: '5px 6px', fontSize: '12px', cursor: 'pointer' }} aria-label="Tipo de valor">
-                              <option value="">Sem valor</option><option value="pagar">A pagar</option><option value="credito">Crédito</option><option value="reembolso">Reembolso</option>
-                            </select>
-                            {o.valor?.tipo && <input type="number" step="0.01" value={o.valor.montante ?? ''} onChange={ev => acoes.atualizarObrigacao(o.id, { valor: { ...o.valor, montante: ev.target.value } })} placeholder="€" style={{ ...c.input, width: '82px', padding: '5px 7px', fontSize: '12px' }} />}
-                          </div>
-                        )}
-                      </td>}
-                      <td style={c.td}>
-                        {o.comprovativo ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: t.accentText }} title={`Arquivado a ${fmtData(o.comprovativo.data)}`}>
-                            <button onClick={() => abrirFicheiro(o.comprovativo.caminho)} disabled={!o.comprovativo.caminho} style={{ background: 'none', border: 'none', padding: 0, cursor: o.comprovativo.caminho ? 'pointer' : 'default', color: 'inherit', fontWeight: 600, fontSize: '12px', fontFamily: 'inherit' }}>📎 {o.comprovativo.nome}</button>
-                            {!modoCliente && <button onClick={() => acoes.atualizarObrigacao(o.id, { comprovativo: null })} aria-label="Remover comprovativo" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', padding: 0 }}>✕</button>}
-                          </span>
-                        ) : modoCliente ? <span style={{ color: t.subtle }}>—</span> : (
-                          <label style={{ fontSize: '12px', fontWeight: 700, color: t.textMuted, cursor: 'pointer', border: `1px dashed ${t.inputBorder}`, borderRadius: '8px', padding: '5px 9px', whiteSpace: 'nowrap' }}>
-                            Anexar
-                            <input type="file" style={{ display: 'none' }} onChange={ev => {
-                              const fx = ev.target.files?.[0]; ev.target.value = ''
-                              if (fx) acoes.anexarComprovativo(o.id, fx)
-                            }} />
-                          </label>
-                        )}
-                      </td>
+                      {compacto ? (
+                        <td style={c.td}>
+                          {!modoCliente && valorDe(o)}
+                          <div style={{ marginTop: modoCliente ? 0 : '7px' }}>{comprovativoDe(o)}</div>
+                        </td>
+                      ) : (
+                        <>
+                          {!modoCliente && <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{valorDe(o)}</td>}
+                          <td style={c.td}>{comprovativoDe(o)}</td>
+                        </>
+                      )}
                     </tr>
                     {aberto && (
-                      <tr><td colSpan={6} style={{ padding: '4px 16px 18px', background: t.softCardBg }}>
+                      <tr><td colSpan={compacto ? 4 : 6} style={{ padding: '4px 16px 18px', background: t.softCardBg }}>
                         <Detalhe o={o} aoTarefa={() => setTarefa({ clienteId: cliente.id, obrigacaoId: o.id, titulo: `Entregar ${o.nome} (${o.periodo})`, prazo: o.prazo < hoje ? hoje : o.prazo, responsavel: cliente.responsavel })} aoWhats={() => setWhats(o.id)} />
                       </td></tr>
                     )}

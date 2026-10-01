@@ -105,7 +105,7 @@ export default function PaginaCliente({ idFixo }) {
       </div>
 
       {/* ── Separadores ── */}
-      <nav style={{ display: 'flex', gap: isMobile ? '2px' : '8px', borderBottom: `1px solid ${t.cardBorder}`, marginBottom: '20px', overflowX: 'auto' }}>
+      <nav style={{ display: 'flex', gap: isMobile ? '2px' : '4px 8px', borderBottom: `1px solid ${t.cardBorder}`, marginBottom: '20px', overflowX: isMobile ? 'auto' : 'visible', flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
         {separadores.map(([k, rot, badge, interno]) => (
           <NavLink key={k} to={k === 'resumo' ? base : `${base}/${k}`} end
             style={() => ({

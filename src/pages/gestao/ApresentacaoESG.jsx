@@ -156,7 +156,7 @@ export default function ApresentacaoESG() {
         </span>
       </div>
 
-      <main style={{ maxWidth: '1080px', margin: '0 auto', padding: isMobile ? '26px 14px 60px' : '46px 32px 80px' }}>
+      <main style={{ padding: isMobile ? '26px 14px 60px' : '46px 34px 80px' }}>
         {/* Capa */}
         <header style={{ marginBottom: '30px' }}>
           <div style={{ fontSize: '12px', letterSpacing: '3px', textTransform: 'uppercase', fontWeight: 700, color: t.accentText }}>{L.eyebrow}</div>

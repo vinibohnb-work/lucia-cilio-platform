@@ -28,7 +28,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div style={{ maxWidth: '1100px' }}>
+    <div style={{ width: '100%' }}>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '24px' }}>

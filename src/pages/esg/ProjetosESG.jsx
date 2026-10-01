@@ -146,7 +146,7 @@ export default function ProjetosESG() {
   const totSaving = projects.reduce((s, p) => s + (Number(p.annual_saving) || 0), 0)
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '900px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
         <div>

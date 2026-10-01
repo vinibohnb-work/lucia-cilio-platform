@@ -111,7 +111,7 @@ export default function Empresa() {
   if (loading) return <EsqueletoPagina />
 
   return (
-    <div style={{ width: '100%', maxWidth: '760px' }}>
+    <div style={{ width: '100%' }}>
       <CabecalhoPagina eyebrow={{ pt: 'Gestão', de: 'Verwaltung', en: 'Management' }} titulo={L.title} sub={L.subtitle} />
 
       {/* Geral */}

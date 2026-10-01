@@ -88,7 +88,7 @@ export default function Consultorias() {
   const lblStyle = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '1020px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
         <div>
           <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>

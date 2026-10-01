@@ -227,7 +227,7 @@ export default function RelatorioEUR() {
   const temDados = entries.some(e => !e.private)
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '920px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <div>
           <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>

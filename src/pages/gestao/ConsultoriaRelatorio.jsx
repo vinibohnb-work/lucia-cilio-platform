@@ -140,7 +140,7 @@ export default function ConsultoriaRelatorio() {
   if (!c) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.naoEncontrada}</div>
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '860px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <button onClick={() => navigate(`/gestao/consultorias/${id}`)} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '16px' }}>

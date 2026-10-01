@@ -90,7 +90,7 @@ export default function Diagnosticos() {
   if (loading) return <EsqueletoPagina cartoes={3} />
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '1020px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ marginBottom: '18px' }}>
         <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
         <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.titulo}</h1>

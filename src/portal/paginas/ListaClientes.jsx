@@ -16,6 +16,11 @@ const VAZIO = { nome: '', pais: '', setor: '', servico: 'contabilidade', estado:
 export default function ListaClientes() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
+  // Em ecrãs médios a tabela junta colunas para caber sem deslizar para o lado:
+  // até 1320 px, país e setor numa só; até 1100 px, o estado vai para o serviço
+  // e o responsável para debaixo do nome.
+  const medio = useIsMobile(1320)
+  const estreito = useIsMobile(1100) && !isMobile
   const s = usePortal()
   const navigate = useNavigate()
   const c = useCampos()
@@ -93,7 +98,7 @@ export default function ListaClientes() {
       )}
 
       {/* Filtros: por nome, país, serviço, estado e responsável */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr repeat(4, 1fr)', gap: '10px', marginBottom: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : estreito ? '1fr 1fr 1fr' : '2fr repeat(4, 1fr)', gap: '10px', marginBottom: '14px' }}>
         <input value={f.nome} onChange={e => setF(p => ({ ...p, nome: e.target.value }))} placeholder="Procurar por nome, pessoa ou setor…" style={{ ...c.input, gridColumn: isMobile ? '1 / -1' : undefined }} />
         {sel('pais', Object.entries(PAISES), 'Todos os países')}
         {sel('servico', SERVICOS, 'Todos os serviços')}
@@ -104,7 +109,9 @@ export default function ListaClientes() {
       <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '760px' : 0 }}>
           <thead><tr>
-            {['Nome', 'País', 'Setor', 'Serviço', 'Estado', 'Próxima obrigação', 'Atenção', 'Responsável'].map(h => <th key={h} style={{ ...c.th, textTransform: 'uppercase', letterSpacing: '.6px', fontSize: '10.5px' }}>{h}</th>)}
+            {(estreito ? ['Nome', 'País · setor', 'Serviço · estado', 'Próxima obrigação', 'Atenção']
+              : medio ? ['Nome', 'País · setor', 'Serviço', 'Estado', 'Próxima obrigação', 'Atenção', 'Responsável']
+              : ['Nome', 'País', 'Setor', 'Serviço', 'Estado', 'Próxima obrigação', 'Atenção', 'Responsável']).map(h => <th key={h} style={{ ...c.th, textTransform: 'uppercase', letterSpacing: '.6px', fontSize: '10.5px' }}>{h}</th>)}
           </tr></thead>
           <tbody>
             {visiveis.map(x => {
@@ -119,13 +126,14 @@ export default function ListaClientes() {
                   <td style={c.td}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
                       <span style={{ flex: 'none', width: '34px', height: '34px', borderRadius: '9px', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: t.fontDisplay, fontWeight: 700, fontSize: '14px', color: t.accentText }}>{iniciais(x.nome)}</span>
-                      <div><div style={{ fontWeight: 800, color: t.heading, fontSize: '14px' }}>{x.nome}</div><div style={{ fontSize: '11.5px', color: t.subtle }}>{x.forma}</div></div>
+                      <div><div style={{ fontWeight: 800, color: t.heading, fontSize: '14px' }}>{x.nome}</div><div style={{ fontSize: '11.5px', color: t.subtle }}>{x.forma}{estreito && x.responsavel ? ` · ${x.responsavel}` : ''}</div></div>
                     </div>
                   </td>
-                  <td style={c.td}>{PAISES[x.pais]}</td>
-                  <td style={c.td}>{x.setor || '—'}</td>
-                  <td style={c.td}><div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>{x.servicos.map(k => <Chip key={k} tom="ouro">{rotuloServico(k)}</Chip>)}</div></td>
-                  <td style={c.td}><Chip tom={ESTADOS_CLIENTE[x.estado]?.tom}>{ESTADOS_CLIENTE[x.estado]?.rotulo}</Chip></td>
+                  {medio
+                    ? <td style={c.td}>{PAISES[x.pais]}<div style={{ fontSize: '11.5px', color: t.subtle }}>{x.setor || '—'}</div></td>
+                    : <><td style={c.td}>{PAISES[x.pais]}</td><td style={c.td}>{x.setor || '—'}</td></>}
+                  <td style={c.td}><div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>{x.servicos.map(k => <Chip key={k} tom="ouro">{rotuloServico(k)}</Chip>)}{estreito && <Chip tom={ESTADOS_CLIENTE[x.estado]?.tom}>{ESTADOS_CLIENTE[x.estado]?.rotulo}</Chip>}</div></td>
+                  {!estreito && <td style={c.td}><Chip tom={ESTADOS_CLIENTE[x.estado]?.tom}>{ESTADOS_CLIENTE[x.estado]?.rotulo}</Chip></td>}
                   <td style={c.td}>
                     {po ? <><div style={{ fontWeight: 700, color: t.heading, fontSize: '12.5px' }}>{po.nome}</div><div style={{ fontSize: '11.5px', color: ef === 'em_atraso' ? t.neg : t.subtle }}>{fmtData(po.prazo)} · {ESTADOS_OBRIG[ef].rotulo}</div></> : <span style={{ color: t.subtle }}>—</span>}
                   </td>
@@ -137,7 +145,7 @@ export default function ListaClientes() {
                       {!falta && !atrasadas && !msgs && <span style={{ color: t.subtle, fontSize: '12px' }}>Tudo em dia</span>}
                     </div>
                   </td>
-                  <td style={{ ...c.td, fontSize: '12.5px' }}>{x.responsavel}</td>
+                  {!estreito && <td style={{ ...c.td, fontSize: '12.5px' }}>{x.responsavel}</td>}
                 </tr>
               )
             })}

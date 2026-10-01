@@ -200,7 +200,7 @@ export default function DespesasRecorrentes() {
   if (loading) return <EsqueletoPagina />
 
   return (
-    <div style={{ width: '100%', maxWidth: '1000px' }}>
+    <div style={{ width: '100%' }}>
       <h2 style={{ fontSize: '20px', fontWeight: 900, color: G, margin: '0 0 4px' }}>{L.title}</h2>
       <p style={{ fontSize: '13px', color: t.textMuted, margin: '0 0 20px' }}>{L.subtitle}</p>
 

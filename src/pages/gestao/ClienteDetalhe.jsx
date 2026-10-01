@@ -200,7 +200,7 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
   const s = stats || {}
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '860px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       {!embutido && <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '13px', padding: 0, marginBottom: '14px' }}>{L.back}</button>}
 
       {/* Cabeçalho */}

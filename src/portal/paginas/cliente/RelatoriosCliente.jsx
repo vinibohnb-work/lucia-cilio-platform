@@ -40,7 +40,7 @@ export default function RelatoriosCliente({ cliente, modoCliente }) {
         </div>
       )}>
       {lista.length === 0 ? <Vazio>Ainda não há relatórios.</Vazio> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr>{['Trimestre', 'Faturação', 'Despesas', 'Resultado', 'Estado', ''].map((h, i) => <th key={i} style={c.th}>{h}</th>)}</tr></thead>
           <tbody>{lista.map(r => {
             const res = resultado(r)
@@ -55,7 +55,7 @@ export default function RelatoriosCliente({ cliente, modoCliente }) {
               </tr>
             )
           })}</tbody>
-        </table>
+        </table></div>
       )}
     </Cartao>
   )

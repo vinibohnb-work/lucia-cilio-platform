@@ -49,7 +49,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
         <Cartao titulo="Obrigações fiscais" icone={<Ic.agenda />} area={modoCliente ? undefined : 'cliente'}
           acao={<Botao variante="fantasma" onClick={() => navigate(`${base}/obrigacoes`)}>Ver todas →</Botao>}>
           {lista.length === 0 ? <Vazio>Sem obrigações em aberto.</Vazio> : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Obrigação', 'Data-limite', ...(modoCliente ? [] : ['Valor']), 'Estado'].map(h => <th key={h} style={c.th}>{h}</th>)}</tr></thead>
               <tbody>{lista.map(o => (
                 <tr key={o.id}>
@@ -59,7 +59,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
                   <td style={c.td}><EstadoO o={o} /></td>
                 </tr>
               ))}</tbody>
-            </table>
+            </table></div>
           )}
         </Cartao>
 
@@ -83,7 +83,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
           <Cartao titulo="Próximas tarefas" icone={<Ic.lista />} area="interna"
             acao={<Botao variante="fantasma" onClick={() => navigate(`${base}/tarefas`)}>Ver todas →</Botao>}>
             {tarefas.length === 0 ? <Vazio>Sem tarefas em aberto.</Vazio> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>{['Data', 'Tarefa', 'Estado'].map(h => <th key={h} style={c.th}>{h}</th>)}</tr></thead>
                 <tbody>{tarefas.map(x => {
                   const atraso = x.prazo < hojeIso()
@@ -95,7 +95,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
                     </tr>
                   )
                 })}</tbody>
-              </table>
+              </table></div>
             )}
           </Cartao>
         )}

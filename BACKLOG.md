@@ -506,6 +506,23 @@
 
 ## Concluídos
 
+### Todas as páginas usam a largura toda — 30/09
+
+- [x] **Páginas adaptáveis a qualquer largura, sem limite à direita**
+  *Pedido de 30/09 · Resp.: Vinícius*
+  21 páginas tinham uma largura máxima (entre 640 e 1100 px) e deixavam metade de um ecrã
+  largo vazio — Consultorias, Consultorias ESG, Diagnósticos, Financeiro, as seis páginas da
+  ESG, as da Contabilidade do cliente, a ficha da conta, entre outras. Passam a ocupar toda a
+  área, com a mesma margem dos dois lados (34 px). O modo apresentação ESG também.
+  Para caber sem deslizar para o lado em ecrãs médios: a **lista de clientes** junta país e
+  setor até 1320 px e, até 1100 px, põe o estado junto ao serviço e o responsável sob o nome
+  (os filtros passam a duas linhas); a **tabela de obrigações** põe o período sob o nome e o
+  valor com o comprovativo na mesma célula até 1200 px; os **separadores** da página do
+  cliente passam a uma segunda linha em vez de esconder os últimos. No telemóvel, as tabelas
+  do Resumo e dos Relatórios do cliente deslizam dentro do cartão em vez de saírem do ecrã.
+  Verificado em 42 páginas a 1024, 1280, 1366, 1440 e 1920 px e no telemóvel (390 px):
+  nenhuma página com rolagem horizontal nem conteúdo cortado, e todas usam a área toda.
+
 ### A administradora vive só na Gestão — 30/09
 
 - [x] **Sai o botão Gestão / Contabilidade do menu da administradora**

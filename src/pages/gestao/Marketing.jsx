@@ -55,7 +55,7 @@ export default function Marketing() {
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '820px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ marginBottom: '20px' }}>
         <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>

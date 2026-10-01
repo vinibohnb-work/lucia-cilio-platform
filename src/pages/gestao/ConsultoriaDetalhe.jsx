@@ -179,7 +179,7 @@ export default function ConsultoriaDetalhe() {
   const swotItens = (q) => c.swot?.[q] || []
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '1020px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       {/* Cabeçalho */}
       <button onClick={() => navigate('/gestao/consultorias')} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
 

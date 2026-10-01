@@ -57,7 +57,7 @@ export default function Consultoria() {
   if (loading) return <EsqueletoPagina />
 
   return (
-    <div style={{ width: '100%', fontFamily: t.fontBody, maxWidth: '780px' }}>
+    <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ marginBottom: '22px' }}>
         <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
         <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '38px', lineHeight: 1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
