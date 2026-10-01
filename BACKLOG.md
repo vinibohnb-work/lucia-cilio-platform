@@ -506,6 +506,18 @@
 
 ## Concluídos
 
+### A administradora vive só na Gestão — 30/09
+
+- [x] **Sai o botão Gestão / Contabilidade do menu da administradora**
+  *Pedido de 30/09 · Resp.: Vinícius*
+  A administradora vê apenas a visão interna de gestão. Os endereços da Contabilidade e da
+  ESG do cliente levam-na aos Clientes; só lá entra pela **Visualização completa** de um
+  cliente (e o caso ESG aberto na Gestão continua com o menu da ESG). O sino de prazos
+  fiscais da conta própria também sai — os prazos dos clientes estão nas Tarefas e na Agenda.
+  O botão continua para os clientes com Contabilidade + ESG.
+  O menu lateral ficou mais compacto (itens, títulos de secção, logótipo e rodapé com menos
+  espaço): os 11 itens cabem sem rolagem num portátil de 768 px de altura.
+
 ### Portal de gestão de clientes oficial — 29/09 *(037 aplicada, publicado)*
 
 - [x] **A v2 passa a ser a Gestão, com dados reais**

@@ -121,8 +121,9 @@ export default function Sidebar() {
   useEffect(() => { if (eid) getCompanySettings(eid).then(cs => setCountry(cs?.country || 'PT')) }, [eid])
   const { count: alertCount } = useFiscalAlerts(14, eid)
 
-  // O admin acede às três plataformas; utilizadores 'both' às duas (Contab.+ESG);
-  // os papéis de equipa (comercial/marketing) vivem só na Gestão.
+  // O admin vive só na Gestão (30/09) — vê a Contabilidade ou a ESG apenas em
+  // "Visualização completa" de um cliente; utilizadores 'both' alternam entre
+  // Contab.+ESG; os papéis de equipa (comercial/marketing) vivem só na Gestão.
   // A plataforma ativa segue o URL (o toggle apenas navega).
   const isTeamRole = role === 'comercial' || role === 'marketing'
   // Um caso ESG aberto na Gestão (/gestao/esg/:id/…) mostra o menu da ESG, não o
@@ -139,7 +140,7 @@ export default function Sidebar() {
   const viewPlatform = isTeamRole
     ? 'management'
     : isAdmin
-      ? platformFromPath
+      ? (isViewing || casoId ? platformFromPath : 'management')
       : platform === 'both'
         ? (platformFromPath === 'management' ? 'accounting' : platformFromPath)
         : (platform === 'esg' ? 'esg' : 'accounting')
@@ -176,7 +177,7 @@ export default function Sidebar() {
     <NavLink key={item.to} to={item.to} onClick={closeOnMobile}
       style={({ isActive }) => ({
         position: 'relative', display: 'flex', alignItems: 'center', gap: '12px',
-        padding: '11px 14px', borderRadius: '9px', fontSize: '13.5px', textDecoration: 'none',
+        padding: '8px 14px', borderRadius: '9px', fontSize: '13.5px', textDecoration: 'none',
         background: isActive ? t.navActiveBg : 'transparent',
         color: isActive ? t.navActiveText : t.navText,
         fontWeight: isActive ? 600 : 500,
@@ -184,7 +185,7 @@ export default function Sidebar() {
     >
       {({ isActive }) => (
         <>
-          <span style={{ position: 'absolute', left: 0, top: '9px', bottom: '9px', width: '3px', borderRadius: '3px', background: isActive ? t.accent : 'transparent' }} />
+          <span style={{ position: 'absolute', left: 0, top: '7px', bottom: '7px', width: '3px', borderRadius: '3px', background: isActive ? t.accent : 'transparent' }} />
           <span style={{ color: isActive ? t.accent : 'currentColor', display: 'flex' }}><item.Icon /></span>
           {translate(lang, item.labelKey)}
           {badge && <span style={{ marginLeft: 'auto', fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '20px', background: t.badgeBg, color: t.badgeInk }}>{badge}</span>}
@@ -206,14 +207,14 @@ export default function Sidebar() {
   return (
     <aside style={{
       position: 'fixed', top: 0, left: 0, width: `${W}px`, height: '100vh', zIndex: 100,
-      display: 'flex', flexDirection: 'column', padding: '26px 0',
+      display: 'flex', flexDirection: 'column', padding: '20px 0',
       background: t.sidebarBg, fontFamily: t.fontBody,
       transform: isMobile ? (mobileOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
       transition: 'transform .25s ease', boxShadow: isMobile ? '4px 0 24px rgba(0,0,0,.3)' : 'none',
-      paddingTop: 'calc(26px + env(safe-area-inset-top))', paddingBottom: 'calc(0px + env(safe-area-inset-bottom))',
+      paddingTop: 'calc(20px + env(safe-area-inset-top))', paddingBottom: 'calc(0px + env(safe-area-inset-bottom))',
     }}>
       {/* Logo */}
-      <div style={{ padding: '0 24px 22px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
+      <div style={{ padding: '0 24px 16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
         <img src="/logo.png" alt="LC" style={{ width: '42px', height: '42px', flex: 'none', objectFit: 'contain' }} />
         <div>
           <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '19px', lineHeight: 1, color: '#f3ecdb' }}>Lúcia Cílio</div>
@@ -224,8 +225,8 @@ export default function Sidebar() {
       {/* Nav */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {sections.map((sec, si) => (
-          <div key={sec.key} style={{ marginTop: si ? '20px' : 0 }}>
-            <div style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 8px', color: t.sectionLabel }}>
+          <div key={sec.key} style={{ marginTop: si ? '14px' : 0 }}>
+            <div style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 5px', color: t.sectionLabel }}>
               {sectionLabel[sec.key][lang] || sectionLabel[sec.key].pt}
             </div>
             {/* Num caso aberto, o nome da empresa fica por cima do menu — é dela que se está a falar */}
@@ -244,9 +245,9 @@ export default function Sidebar() {
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: 'auto', padding: '18px 20px 22px', borderTop: `1px solid ${t.sidebarBorder}` }}>
+      <div style={{ marginTop: 'auto', padding: '12px 20px 14px', borderTop: `1px solid ${t.sidebarBorder}` }}>
         {/* Utilizador + sair */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px 10px' }}>
           <div style={{ width: '30px', height: '30px', flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, fontFamily: t.fontDisplay, background: t.avatarBg, color: t.avatarInk, border: t.avatarBorder }}>
             {(user?.user_metadata?.display_name || user?.email || 'LC').slice(0,2).toUpperCase()}
           </div>
@@ -259,17 +260,14 @@ export default function Sidebar() {
             <IconLogout />
           </button>
         </div>
-        {/* Alternar plataforma — admin: 3 áreas · cliente 'both': Contab.+ESG ·
-            durante "Ver como" de um cliente 'both': as 2 plataformas dele */}
-        {!isTeamRole && !casoId && (isViewing ? viewAs?.platform === 'both' : (isAdmin || platform === 'both')) && (
-          <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '14px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
-            {(isAdmin && !isViewing ? [
-              ['management', lang === 'de' ? 'Verwaltung' : lang === 'en' ? 'Management' : 'Gestão'],
-              ['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contabilidade'],
-            ] : [
+        {/* Alternar plataforma — só para clientes 'both' (Contab.+ESG), também
+            durante a "Visualização completa" de um deles. O admin já não alterna. */}
+        {!isTeamRole && !casoId && (isViewing ? viewAs?.platform === 'both' : (!isAdmin && platform === 'both')) && (
+          <div style={{ display: 'flex', gap: '4px', padding: '2px', marginBottom: '12px', borderRadius: '9px', border: `1px solid ${t.sidebarBorder}` }}>
+            {[
               ['accounting', lang === 'de' ? 'Buchhaltung' : lang === 'en' ? 'Accounting' : 'Contabilidade'],
               ['esg', 'ESG'],
-            ]).map(([p, lbl]) => (
+            ].map(([p, lbl]) => (
               <button key={p} onClick={() => switchAdminView(p)} style={{
                 flex: 1, padding: '7px 4px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
                 background: viewPlatform === p ? t.accent : 'transparent',

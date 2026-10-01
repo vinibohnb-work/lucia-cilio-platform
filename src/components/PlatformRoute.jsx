@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useViewAs } from '../context/ViewAsContext'
 import { homePathFor, basePlatform } from '../lib/platformHome'
 
 const Loading = () => (
@@ -12,12 +13,16 @@ const Loading = () => (
   </div>
 )
 
-// Protege rotas por plataforma. O admin acede a tudo; os restantes só à sua.
+// Protege rotas por plataforma. Cada utilizador só acede à sua. O admin vive só
+// na Gestão (30/09): entra na Contabilidade ou na ESG apenas em "Visualização
+// completa" de um cliente.
 export default function PlatformRoute({ requirePlatform, children }) {
   const { session, role, platform, loading } = useAuth()
+  const { isViewing } = useViewAs()
 
   if (loading) return <Loading />
   if (!session) return <Navigate to="/login" replace />
+  if (role === 'admin' && !isViewing) return <Navigate to="/gestao/clientes" replace />
 
   // 'both' acede a ambas as plataformas (tal como o admin).
   // 'accounting_lite' é Contabilidade — o que muda é o âmbito de páginas,

@@ -19,8 +19,10 @@ export default function FiscalBell() {
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
   const { role } = useAuth()
-  const isTeamRole = role === 'comercial' || role === 'marketing'
-  const { alerts, count } = useFiscalAlerts(14, isTeamRole ? null : eid)
+  // A equipa (admin incluído, desde 30/09) não tem obrigações próprias: os prazos
+  // dos clientes vivem no portal (Tarefas e Agenda).
+  const semConta = role === 'comercial' || role === 'marketing' || role === 'admin'
+  const { alerts, count } = useFiscalAlerts(14, semConta ? null : eid)
   const [open, setOpen] = useState(false)
 
   // Durante "Ver como", o banner ocupa o topo — evita sobreposição.
