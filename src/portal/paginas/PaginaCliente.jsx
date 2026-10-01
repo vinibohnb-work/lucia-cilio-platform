@@ -38,7 +38,7 @@ export default function PaginaCliente({ idFixo }) {
   const [tarefa, setTarefa] = useState(false)
   const [whats, setWhats] = useState(false)
 
-  if (!cliente) return <Navigate to="/v2/clientes" replace />
+  if (!cliente) return <Navigate to="/gestao/clientes" replace />
   const base = modoCliente ? '/v2/portal' : `/gestao/clientes/${id}`
   const porLer = naoLidas(s, id).length
 

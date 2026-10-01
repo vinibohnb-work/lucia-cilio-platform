@@ -39,6 +39,7 @@ export default function Financeiro() {
   const [billing, setBilling] = useState([])
   const [payments, setPayments] = useState([])
   const [users, setUsers] = useState([])
+  const [fichas, setFichas] = useState([])   // clientes da Gestão (portal)
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
   const [form, setForm] = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
@@ -93,11 +94,13 @@ export default function Financeiro() {
   const load = useCallback(async () => {
     setLoading(true); setErr('')
     try {
-      const [{ data: b, error: e1 }, { data: p, error: e2 }, us] = await Promise.all([
+      const [{ data: b, error: e1 }, { data: p, error: e2 }, us, { data: fx }] = await Promise.all([
         supabase.from('client_billing').select('*').order('created_at', { ascending: true }),
         supabase.from('billing_payments').select('*').eq('period', period),
         listUsers().catch(() => []),
+        supabase.from('clientes').select('id,nome,user_id').order('nome'),
       ])
+      setFichas(fx || [])
       if (e1 || e2) throw (e1 || e2)
       setBilling(b || []); setPayments(p || []); setUsers((us || []).filter(u => u.role !== 'admin'))
     } catch { setErr(L.saveErr) }
@@ -117,8 +120,12 @@ export default function Financeiro() {
   async function saveContract() {
     if (!form.client_name.trim() || form.amount === '') return
     setErr('')
+    // O contrato liga-se à ficha do cliente na Gestão — é daí que a página do
+    // cliente lê a avença. Pela conta, se houver; senão pelo nome (sem acentos).
+    const norm = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+    const ficha = (form.user_id && fichas.find(f => f.user_id === form.user_id)) || fichas.find(f => norm(f.nome) === norm(form.client_name))
     const payload = {
-      client_name: form.client_name.trim(), user_id: form.user_id || null,
+      client_name: form.client_name.trim(), user_id: form.user_id || null, cliente_id: ficha?.id || null,
       service: form.service || null, amount: parseFloat(form.amount) || 0,
       periodicity: form.periodicity, start_month: form.start_month || null, notes: form.notes || null,
     }
@@ -230,7 +237,8 @@ export default function Financeiro() {
         <div style={{ ...card, border: `2px solid ${t.accent}`, padding: '16px 18px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1.2fr 1fr', gap: '11px', marginBottom: '11px' }}>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.client}</div>
-              <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} style={inputStyle} /></div>
+              <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} list="fichas-clientes" style={inputStyle} />
+              <datalist id="fichas-clientes">{fichas.map(f => <option key={f.id} value={f.nome} />)}</datalist></div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.linkUser}</div>
               <select value={form.user_id} onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
                 <option value="">{L.none}</option>

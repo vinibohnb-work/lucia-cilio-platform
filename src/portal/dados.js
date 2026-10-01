@@ -71,7 +71,7 @@ function paraCliente(p) {
   const out = {}
   for (const [k, v] of Object.entries(p)) {
     if (['id', 'contratoId', 'avenca', 'avencaPeriodicidade', 'contrato'].includes(k)) continue
-    out[m[k] || k] = v === '' && ['cliente_desde', 'userId'].includes(k) ? null : v
+    out[m[k] || k] = v === '' && ['cliente_desde', 'userId'].includes(k) ? null : v === '' && k === 'horasIncluidas' ? 0 : v
   }
   return out
 }

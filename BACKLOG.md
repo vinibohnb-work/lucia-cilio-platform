@@ -22,20 +22,32 @@
 > reunião. O desenvolvimento pausa agora e retoma no início do próximo ano; o objetivo é
 > deixar tudo **redondo até ao fecho do contrato, em novembro**.
 
-- [ ] **Revisão minuciosa e simplificação da plataforma**
-  *Reuniões 18/09 e 25/09/2026 · Resp.: Vinícius*
-  Remover duplicidades e itens a mais — o risco de 25/09 é a complexidade afastar os clientes
-  finais. É também o *"arrumar a casa"* de 18/09, que na altura ficou fora do backlog por
-  parecer tarefa da Lúcia; a reunião de 25/09 esclareceu que é trabalho nosso. Candidatos já
-  conhecidos: as **quatro listas de clientes** (Contabilidade → Clientes da conta da Lúcia,
-  nomes do Financeiro, contactos das consultorias e dos casos ESG), menus que repetem
-  entradas. A v2 já passou a definitiva (29/09) e substituiu os Clientes Ativos.
+- [ ] **Simplificação — Fase 1: acertos sem mudar o modelo** *(antes de novembro)*
+  *Reuniões 18/09 e 25/09/2026 · Revisão de 01/10 · Resp.: Vinícius*
+  A revisão completa está na última parte do **Guia da plataforma**
+  (`docs/Guia-da-Plataforma-Origem-dos-Dados.pdf`, códigos R-…). Esta fase:
+  · **Dados e segurança:** o cliente pode mudar e apagar as obrigações da equipa (R-A1); as regras
+    antigas da ESG deixam o cliente escrever e ler casos escondidos (R-A2, migração 038); saídas
+    das Recorrentes e do extrato gravam sem IVA (R-A3); a consultoria perde edições e lê mal
+    "1.500" (R-A6); papéis comercial/marketing (R-A4, depois de decidir com a Lúcia).
+  · **Parte em janeiro:** ano 2026 fixo no Painel, Livro de Caixa e Recorrentes (R-B1); filtro de
+    mês sem ano (R-B2).
+  · **Uma regra por conceito:** obrigações em aberto (R-B3), periodicidade (R-B4), resultado/
+    reserva (R-B5), Familienversicherung (R-B6), % de reserva (R-B8), ano da ESG (R-B9),
+    Segurança Social PT (R-B12).
+  · **Limpeza:** ficheiros sem uso (R-D1), Recorrentes no menu (R-D2), menu Lite (R-D3),
+    Marketing (R-D6), campos sem uso (R-D8), editar no Catálogo/Clientes (R-D9).
+  · **Um só gerador fiscal:** retirar o do cliente (R-C3).
 
-- [ ] **Documentação da plataforma: de onde vem cada dado**
-  *Reunião 25/09/2026 · Resp.: Vinícius*
-  Explicar, ecrã a ecrã, a origem de cada número e campo (o que é introduzido à mão, o que é
-  calculado, o que vem do livro de caixa). Responde ao risco de 25/09 — a insegurança da
-  Lúcia em operar sozinha depois do contrato — e serve de base ao suporte.
+- [ ] **Simplificação — Fase 2: uma ficha de cliente**
+  *Revisão de 01/10 · Resp.: Vinícius*
+  O cliente existe em sete sítios sem chave comum (R-C1). A ficha da Gestão passa a ser o
+  cliente: contratos, consultorias, casos ESG e leads apontam para ela; fechar um lead ou criar
+  uma conta cria-a; ecrã para juntar duplicados (a consulta de 30/09 é o ponto de partida). O
+  perfil fiscal vive só na ficha (R-C2) e os serviços decidem a plataforma (R-C4). Um sítio para
+  notas, mensagens, pagamentos e documentos (R-C5, R-C7, R-C8).
+  ⚠️ **Depende de:** confirmar com a Lúcia que páginas do lado do cliente são usadas (uma página
+  que ninguém usa sai em vez de ser corrigida).
 
 ### Portal de gestão de clientes (documento de 22/09 — oficial desde 29/09)
 
@@ -508,6 +520,27 @@
 ---
 
 ## Concluídos
+
+### Guia da plataforma e revisão geral — 01/10
+
+- [x] **Documentação da plataforma: de onde vem cada dado**
+  *Reunião 25/09/2026 · Resp.: Vinícius*
+  `docs/Guia-da-Plataforma-Origem-dos-Dados.pdf` (54 páginas), no formato do guia do APEX:
+  ecrã a ecrã — Gestão, ESG e a plataforma do cliente — com print anotado, quem vê, de onde vem
+  cada número e a conta por trás; caixas "A ter em conta" onde um ecrã difere dos outros.
+  Termina com a **revisão geral** (6 itens de dados e segurança, 12 regras inconsistentes, 8
+  fontes duplicadas, 11 funcionalidades a retirar ou ligar) e a proposta de simplificação em três
+  fases. É um documento vivo: `python scripts/gera-guia-plataforma.py`; os prints são tirados
+  com dados de exemplo e ficam em `docs/guia-plataforma/prints`.
+
+- [x] **Correções encontradas na revisão** *(no ar)*
+  · O calendário fiscal de **sociedades em Portugal** falhava sempre: os três pagamentos por
+    conta tinham o mesmo código e a base de dados recusava o calendário inteiro.
+  · **Relatórios trimestrais novos** não gravavam (o id não era um UUID).
+  · Apagar **"Horas incluídas por mês"** dava erro (vai a 0).
+  · **Contratos novos do Financeiro** passam a ligar-se à ficha do cliente (pela conta ou pelo
+    nome, sem acentos) — antes a avença não aparecia na página do cliente; o campo Cliente
+    sugere os nomes das fichas.
 
 ### Todas as páginas usam a largura toda — 30/09
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTheme } from '../../../context/ThemeContext'
 import { usePortal } from '../../dados'
 import { Cartao, Chip, Botao, useCampos, Vazio, Ic } from '../../ui'
-import { fmtEur, fmtData, hojeIso, uid } from '../../regras'
+import { fmtEur, fmtData, hojeIso } from '../../regras'
 import { relatoriosDe } from '../../seletores'
 import { EditorRelatorio, resultado, anteriorDe } from '../../partes/Relatorio'
 
@@ -26,7 +26,7 @@ export default function RelatoriosCliente({ cliente, modoCliente }) {
 
   function novo(ano, trimestre) {
     const ant = anteriorDe(s.relatorios, { clienteId: cliente.id, ano, trimestre })
-    setAberto({ id: uid(), clienteId: cliente.id, ano, trimestre, estado: 'rascunho', faturacao: '', despesas: '', iva: '', impostos: '', liquidez: ant?.liquidez ?? '', observacoes: '', recomendacoes: '' })
+    setAberto({ id: crypto.randomUUID(), clienteId: cliente.id, ano, trimestre, estado: 'rascunho', faturacao: '', despesas: '', iva: '', impostos: '', liquidez: ant?.liquidez ?? '', observacoes: '', recomendacoes: '' })
   }
 
   if (aberto) return <Cartao><EditorRelatorio inicial={aberto} soLeitura={modoCliente} aoFechar={() => setAberto(null)} /></Cartao>

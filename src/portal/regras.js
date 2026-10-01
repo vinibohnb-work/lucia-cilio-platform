@@ -134,7 +134,7 @@ export function gerarCalendario(c, ano) {
       trimestres.forEach(q => { const [y2, m2] = mesSeguinte(ano, q * 3, 1); push('SS', 'Declaração trimestral à Segurança Social', `T${q} ${ano}`, dia(y2, m2, 31)) })
       push('IRS', 'IRS — Modelo 3 (Anexo B)', `${ano}`, dia(ano + 1, 6, 30))
     } else {
-      [[7, 31], [9, 30], [12, 15]].forEach(([m, d], i) => push('PPC', `Pagamento por conta de IRC (${i + 1}.º)`, `${ano}`, dia(ano, m, d)))
+      [[7, 31], [9, 30], [12, 15]].forEach(([m, d], i) => push(`PPC${i + 1}`, `Pagamento por conta de IRC (${i + 1}.º)`, `${ano}`, dia(ano, m, d)))
       push('IRC', 'IRC — Modelo 22', `${ano}`, dia(ano + 1, 5, 31))
       push('IES', 'IES / Declaração anual', `${ano}`, dia(ano + 1, 7, 15))
     }
