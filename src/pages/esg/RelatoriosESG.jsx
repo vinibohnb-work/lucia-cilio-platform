@@ -128,7 +128,8 @@ export default function RelatoriosESG() {
   const kpiTable = [
     [L.kpiRows.co2, k.env.co2Total, kPrev?.env.co2Total, 1],
     [L.kpiRows.renew, k.env.elecRenewPct, kPrev?.env.elecRenewPct, 0],
-    [L.kpiRows.water, k.env.water, kPrev?.env.water, 0],
+    // A unidade é a gravada no diagnóstico (m³, litros ou €) — antes dizia sempre m³ (R-B10)
+    [L.kpiRows.water.replace('m³', k.env.waterUnit || 'm³'), k.env.water, kPrev?.env.water, 0],
     [L.kpiRows.waste, k.env.wasteRecycPct, kPrev?.env.wasteRecycPct, 0],
     [L.kpiRows.emp, k.social.employees, kPrev?.social.employees, 0],
     [L.kpiRows.women, k.social.womenAll, kPrev?.social.womenAll, 0],

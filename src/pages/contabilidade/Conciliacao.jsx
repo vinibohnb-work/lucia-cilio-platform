@@ -106,8 +106,12 @@ export default function Conciliacao() {
     const jaUsados = new Set(txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id))
     const livres = entries.filter(e => !jaUsados.has(e.id))
     const r = conciliar(pendentes, livres)
-    return { sugestoes: r.sugestoes, entriesSemPar: r.entriesSemPar }
-  }, [txs, entries])
+    // "Não constam do extrato": só os lançamentos dentro do período dos extratos
+    // importados — fora dele não há extrato para os encontrar (R-B11)
+    const periodos = importacoes.filter(i => i.period_start && i.period_end)
+    const noPeriodo = (d) => periodos.some(i => d >= i.period_start && d <= i.period_end)
+    return { sugestoes: r.sugestoes, entriesSemPar: r.entriesSemPar.filter(e => noPeriodo(e.entry_date)) }
+  }, [txs, entries, importacoes])
 
   const entryById = useMemo(() => Object.fromEntries(entries.map(e => [e.id, e])), [entries])
 

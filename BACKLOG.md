@@ -38,7 +38,10 @@
     "Total" de Reservas soma o ano com um mês.
   · **Calculadora de Preços** (R-B7): na sessão de revisão combinada a 01/10.
   · **Contabilidade → Clientes** (R-D7): retirar ou não.
-  · Ainda sem decisão pendente: R-A5 (triagem no servidor), R-B10 e R-B11 (acertos ESG e portal).
+  · Ainda sem decisão pendente: R-A5 (triagem no servidor); do R-B11, o prazo de pagamento nas
+    mensagens de WhatsApp (confirmar com a Lúcia o dia de cada imposto) e os campos que gravam a
+    cada tecla; do R-B10, os pontos de método (CO₂ total vs scopes, rotatividade, sinal do gap
+    salarial, "não se aplica" na materialidade, nomes das fases).
 
 - [ ] **Simplificação — Fase 2: uma ficha de cliente**
   *Revisão de 01/10 · Resp.: Vinícius*
@@ -51,18 +54,6 @@
   que ninguém usa sai em vez de ser corrigida).
 
 ### Ajustes da reunião de 01/10 (validação da jornada do cliente)
-
-- [ ] **Retirar "Créditos ou reembolsos" da visão do cliente**
-  *Reunião 01/10/2026 · Resp.: Vinícius*
-  Pedido: tirar o campo de valor a pagar em créditos/reembolsos da visão do cliente. Na vista
-  do cliente do portal os valores já não aparecem (28/09); o cartão continua no **Resumo da
-  página do cliente** na Gestão — confirmar se é esse que ela quer retirar (a revisão de 01/10
-  já apontava que "Valor a pagar" e "Créditos" usam regras diferentes, R-B11).
-
-- [ ] **Uma só indicação de "Documentos em falta" no Resumo**
-  *Reunião 01/10/2026 · Resp.: Vinícius*
-  Hoje aparece duas vezes no Resumo da página do cliente: o indicador do topo e o cartão com a
-  lista no fundo. Ficar com uma (o indicador, que abre a lista em Documentos).
 
 - [ ] **Aba de Marketing com a prévia do Instagram**
   *Reunião 01/10/2026 · Resp.: Vinícius*
@@ -576,6 +567,34 @@
 ---
 
 ## Concluídos
+
+### Dezasseis acertos rápidos — 01/10 *(na branch `simplificacao-fase1`, até à 038)*
+
+- [x] **Da reunião de 01/10** *(Resp.: Vinícius)*
+  · Saiu "Créditos ou reembolsos" do Resumo da página do cliente.
+  · "Documentos em falta" aparece uma só vez no Resumo: o indicador do topo, que abre a lista em
+    Documentos (saiu o cartão repetido do fundo).
+- [x] **Portal de clientes (R-B11)**
+  · A coluna "Atenção" da lista mostra "N obrigações em atraso" (antes dizia "Tudo em dia").
+  · "Pedir os documentos deste mês" usa sempre o mês e o ano correntes.
+  · Trocar o país nos Dados repõe a forma jurídica e o regime do novo país.
+  · "Conta ativa" só depois do primeiro acesso (as contas nascem com o e-mail confirmado); a
+    Visualização completa fica disponível também antes disso.
+  · Relatórios: trimestres anteriores à entrada do cliente deixam de aparecer "Por fazer".
+  · Remover um comprovativo desmarca "Comprovativo arquivado".
+  · "Últimos 30 dias" nas horas são 30 dias.
+  · CRM: as origens Diagnóstico e Consultoria existem na lista, e editar o lead já não as apaga.
+- [x] **Conciliação** — "Não constam do extrato" conta só os lançamentos dentro do período dos
+  extratos importados.
+- [x] **ESG (R-B10 e R-D10)**
+  · Maturidade de governança sem respostas de governança: "—" nos KPIs, como no Relatório e na
+    Apresentação.
+  · Sem valor fica "—" (acabaram "— t", "— kWh", "—% reciclado"); "anos" traduzido.
+  · A água no Relatório mostra a unidade gravada (m³, litros ou €).
+  · Percentagens do diagnóstico entre 0 e 100 (o gap salarial entre −100 e 100).
+  · O contacto e a conta de um caso ESG editam-se na tira de cima (✏️ Editar). Sem conta, o
+    caso deixa de estar visível ao cliente.
+  Verificado com dados de exemplo, um a um.
 
 ### Simplificação, fase 1 — 01/10 *(na branch `simplificacao-fase1`, até à 038)*
 

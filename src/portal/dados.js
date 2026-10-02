@@ -205,7 +205,7 @@ async function ler() {
     if (quem.admin) {
       try {
         const users = await listUsers()
-        contas = users.filter(u => u.role === 'user').map(u => ({ id: u.id, nome: u.display_name || u.email, email: u.email, ativo: !!(u.last_sign_in_at || u.email_confirmed_at), platform: u.platform }))
+        contas = users.filter(u => u.role === 'user').map(u => ({ id: u.id, nome: u.display_name || u.email, email: u.email, ativo: !!u.last_sign_in_at /* as contas nascem com o e-mail confirmado: só o acesso conta (R-B11) */, platform: u.platform }))
         equipa = users.filter(u => ['admin', 'comercial', 'marketing'].includes(u.role)).map(u => u.display_name || u.email.split('@')[0])
       } catch (e) { console.warn('[portal] contas', e) }
     }

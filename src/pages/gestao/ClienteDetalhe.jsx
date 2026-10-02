@@ -194,7 +194,8 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
   const isBoth = client.platform === 'both'
   const showAcc = !isEsg
   const showEsg = isEsg || isBoth
-  const activated = !!(client.last_sign_in_at || client.email_confirmed_at)
+  // Ativa = já entrou. As contas nascem com o e-mail confirmado, por isso esse não conta (R-B11)
+  const activated = !!client.last_sign_in_at
   const s = stats || {}
 
   return (
@@ -214,12 +215,11 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
             <div style={{ fontSize: '12px', color: t.subtle, marginTop: '3px' }}>{client.email}</div>
           </div>
         </div>
-        {activated && (
+        {/* Visualização completa sempre disponível — também antes do primeiro acesso */}
           <button onClick={viewFull} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             {L.view}
           </button>
-        )}
       </div>
 
       {/* Chips */}

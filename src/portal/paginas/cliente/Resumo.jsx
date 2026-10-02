@@ -4,7 +4,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import { usePortal, acoes } from '../../dados'
 import { Cartao, Kpi, Chip, Ic, Vazio, useCampos, Botao } from '../../ui'
 import { CHECKLIST, ESTADOS_OBRIG, estadoEfetivo, fmtData, fmtEur, hojeIso } from '../../regras'
-import { obrigacoesDe, abertas, proximaObrigacao, docsEmFalta, valorAPagar, creditos, entregues, ultimoRelatorio } from '../../seletores'
+import { obrigacoesDe, abertas, proximaObrigacao, docsEmFalta, valorAPagar, entregues, ultimoRelatorio } from '../../seletores'
 import { CompositorWhatsApp } from '../../partes/Comunicacao'
 
 // Resumo (documento, secção 2) com a disposição do mockup: quatro indicadores
@@ -25,8 +25,6 @@ export default function Resumo({ cliente, base, modoCliente }) {
   const prox = proximaObrigacao(s, cid)
   const falta = docsEmFalta(s, cid)
   const aPagar = valorAPagar(s, cid)
-  const cred = creditos(s, cid)
-  const somaCred = cred.reduce((x, o) => x + Number(o.valor.montante || 0), 0)
   const ult = ultimoRelatorio(s, cid)
   const lista = abertas(obrigacoesDe(s, cid)).slice(0, 5)
   const feitas = entregues(s, cid).slice(0, 4)
@@ -37,11 +35,12 @@ export default function Resumo({ cliente, base, modoCliente }) {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(176px, 1fr))', gap: '14px' }}>
         <Kpi icone={<Ic.agenda size={22} />} rotulo="Próxima obrigação" valor={prox ? <span title={prox.nome} style={{ fontSize: '14px' }}>{prox.nome}</span> : 'Nenhuma'}
           sub={prox ? <>{fmtData(prox.prazo)} · <EstadoO o={prox} /></> : null} />
+        {/* Um só sítio para os documentos em falta: o indicador abre a lista (01/10) */}
         <Kpi icone={<Ic.doc size={22} />} rotulo="Documentos em falta" valor={falta.length} tom={falta.length ? 'erro' : undefined}
-          sub={falta.length ? [...new Set(falta.map(d => d.tipo))].slice(0, 2).join(', ') : 'Tudo recebido'} />
+          sub={falta.length ? [...new Set(falta.map(d => d.tipo))].slice(0, 2).join(', ') + ' · ver →' : 'Tudo recebido'}
+          onClick={() => navigate(`${base}/documentos`)} />
         {/* Valores só para a equipa: o portal do cliente é informativo (25/09) */}
         {!modoCliente && <Kpi icone={<Ic.euro size={22} />} rotulo="Valor a pagar" valor={fmtEur(aPagar)} sub={aPagar ? 'obrigações ainda por pagar' : 'nada em aberto'} />}
-        {!modoCliente && <Kpi icone={<Ic.euro size={22} />} rotulo="Créditos ou reembolsos" valor={fmtEur(somaCred)} tom={somaCred ? 'ok' : undefined} sub={`${cred.length} este ano`} />}
         <Kpi icone={<Ic.relatorios size={22} />} rotulo="Último relatório" valor={ult ? `T${ult.trimestre} ${ult.ano}` : '—'} sub={ult ? `enviado a ${fmtData(ult.enviadoEm)}` : 'ainda nenhum'} />
       </div>
 
@@ -107,7 +106,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', alignItems: 'start' }}>
+      <div>
         <Cartao titulo="Últimas declarações entregues" icone={<Ic.doc />} area={modoCliente ? undefined : 'cliente'}>
           {feitas.length === 0 ? <Vazio>Ainda nenhuma.</Vazio> : feitas.map(o => (
             <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderTop: `1px solid ${t.rowBorder}`, flexWrap: 'wrap' }}>
@@ -117,16 +116,6 @@ export default function Resumo({ cliente, base, modoCliente }) {
               </div>
               {modoCliente ? null : o.valor?.montante ? <span style={{ fontSize: '13px', fontWeight: 700, color: o.valor.tipo === 'pagar' ? t.heading : t.dueOk.ink }}>{fmtEur(o.valor.montante)} <span style={{ fontSize: '11px', fontWeight: 500, color: t.subtle }}>{o.estado === 'pago' && o.valor.tipo === 'pagar' ? 'pago' : ROTULO_VALOR[o.valor.tipo]}</span></span> : <span style={{ fontSize: '12px', color: t.subtle }}>sem valor</span>}
               <Chip tom={ESTADOS_OBRIG[o.estado].tom}>{ESTADOS_OBRIG[o.estado].rotulo}</Chip>
-            </div>
-          ))}
-        </Cartao>
-        <Cartao titulo="Documentos em falta" icone={<Ic.doc />} area={modoCliente ? undefined : 'cliente'}
-          acao={<Botao variante="fantasma" onClick={() => navigate(`${base}/documentos`)}>{modoCliente ? 'Enviar →' : 'Ver →'}</Botao>}>
-          {falta.length === 0 ? <Vazio>Nada em falta. 🎉</Vazio> : falta.map(d => (
-            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderTop: `1px solid ${t.rowBorder}` }}>
-              <span style={{ flex: 1, fontSize: '13px', fontWeight: 600, color: t.heading }}>{d.tipo}</span>
-              <span style={{ fontSize: '12px', color: t.subtle }}>{String(d.mes).padStart(2, '0')}/{d.ano}</span>
-              <Chip tom="erro">Em falta</Chip>
             </div>
           ))}
         </Cartao>

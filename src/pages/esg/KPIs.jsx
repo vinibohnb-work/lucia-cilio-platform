@@ -28,6 +28,9 @@ export default function KPIs() {
   const { lang } = useLang()
   const loc = localeDe(lang)
   const fmt = (v, d = 0) => v == null ? '—' : Number(v).toLocaleString(loc, { minimumFractionDigits: d, maximumFractionDigits: d })
+  // Valor com unidade; sem valor fica só "—" (antes "— t", "— kWh" — R-B10)
+  const comU = (v, u, d = 0) => v == null ? '—' : `${fmt(v, d)} ${u}`
+  const pct = (v) => v == null ? '—' : `${fmt(v)}%`
   const { t, night } = useTheme()
   const isMobile = useIsMobile()
   const { id: cid, base } = useAlvoESG()
@@ -69,7 +72,7 @@ export default function KPIs() {
     women: 'Frauenanteil nach Position', all: 'Alle', lead: 'Führung', top: 'Top-Management', control: 'Kontrolle',
     payGap: 'Gender Pay Gap', accidents: 'Arbeitsunfälle', fatal: 'davon tödlich', turnover: 'Fluktuation',
     dismissals: 'Kündigungen', voluntary: 'freiwillig', training: 'Weiterbildung', hoursPerEmp: 'Std./MA', costPerEmp: '€/MA',
-    ownership: 'Eigentum & Kontrolle', owners: 'Eigentümer', years: 'Ø Jahre beteiligt', checklist: 'Governance-Checkliste',
+    ownership: 'Eigentum & Kontrolle', owners: 'Eigentümer', years: 'Ø Jahre beteiligt', yrsUnit: 'Jahre', checklist: 'Governance-Checkliste',
     yes: 'Ja', no: 'Nein', planned: 'Geplant', na: 'k. A.',
     g20: 'Alle Eigentümer im Management', g21: 'Letztverantwortliche/r im Management', g22: 'Abschlussprüfung',
     g23: 'Nachhaltigkeitsdaten im Reporting', g24: 'Umwelt-/Sozialfaktoren in Entscheidungen', g25: 'ESG-gebundene Vergütung',
@@ -89,7 +92,7 @@ export default function KPIs() {
     women: 'Share of women by position', all: 'All', lead: 'Leadership', top: 'Top management', control: 'Control',
     payGap: 'Gender pay gap', accidents: 'Work accidents', fatal: 'of which fatal', turnover: 'Turnover',
     dismissals: 'Terminations', voluntary: 'voluntary', training: 'Training', hoursPerEmp: 'h/emp.', costPerEmp: '€/emp.',
-    ownership: 'Ownership & Control', owners: 'Owners', years: 'Avg. years involved', checklist: 'Governance checklist',
+    ownership: 'Ownership & Control', owners: 'Owners', years: 'Avg. years involved', yrsUnit: 'years', checklist: 'Governance checklist',
     yes: 'Yes', no: 'No', planned: 'Planned', na: 'n/a',
     g20: 'All owners in management', g21: 'Ultimate controller in management', g22: 'Financial audit',
     g23: 'Sustainability data in reporting', g24: 'Environmental/social factors in decisions', g25: 'ESG-linked remuneration',
@@ -109,7 +112,7 @@ export default function KPIs() {
     women: 'Percentual de mulheres por posição', all: 'Todos', lead: 'Lideranças', top: 'Alta gestão', control: 'Controlo',
     payGap: 'Gap salarial de género', accidents: 'Acidentes de trabalho', fatal: 'dos quais fatais', turnover: 'Rotatividade',
     dismissals: 'Desligamentos', voluntary: 'voluntários', training: 'Formação', hoursPerEmp: 'h/colab.', costPerEmp: '€/colab.',
-    ownership: 'Propriedade & Controlo', owners: 'Proprietários', years: 'Anos médios de participação', checklist: 'Checklist de governança',
+    ownership: 'Propriedade & Controlo', owners: 'Proprietários', years: 'Anos médios de participação', yrsUnit: 'anos', checklist: 'Checklist de governança',
     yes: 'Sim', no: 'Não', planned: 'Planeado', na: 's/ resp.',
     g20: 'Todos os proprietários na gestão', g21: 'Controlador último na gestão', g22: 'Auditoria de contas',
     g23: 'Dados de sustentabilidade no reporte', g24: 'Fatores ambientais/sociais nas decisões', g25: 'Remuneração ligada a ESG',
@@ -252,10 +255,11 @@ export default function KPIs() {
 
       {/* KPIs de topo (com variação vs ano anterior) */}
       <div style={{ ...grid('190px'), marginBottom: '16px' }}>
-        {kpiBig(L.co2, `${fmt(k.env.co2Total, 1)} t`, `Scope 1·2·3`, E, delta(k.env.co2Total, kPrev?.env.co2Total, true))}
+        {kpiBig(L.co2, comU(k.env.co2Total, 't', 1), `Scope 1·2·3`, E, delta(k.env.co2Total, kPrev?.env.co2Total, true))}
         {kpiBig(L.employees, fmt(k.social.employees), 'FTE', S, delta(k.social.employees, kPrev?.social.employees))}
-        {kpiBig(L.renewElec, k.env.elecRenewPct == null ? '—' : `${fmt(k.env.elecRenewPct)}%`, `${fmt(k.env.elecTotal)} kWh`, E, delta(k.env.elecRenewPct, kPrev?.env.elecRenewPct))}
-        {kpiBig(L.govMaturity, `${k.gov.maturityPct}%`, L.pillarG, G, delta(k.gov.maturityPct, kPrev?.gov.maturityPct))}
+        {kpiBig(L.renewElec, pct(k.env.elecRenewPct), comU(k.env.elecTotal, 'kWh'), E, delta(k.env.elecRenewPct, kPrev?.env.elecRenewPct))}
+        {/* Sem respostas de governança não há maturidade (era 0%) — como no Relatório e na Apresentação (R-B10) */}
+        {kpiBig(L.govMaturity, k.completeness.G.done ? `${k.gov.maturityPct}%` : '—', L.pillarG, G, k.completeness.G.done && kPrev?.completeness.G.done ? delta(k.gov.maturityPct, kPrev.gov.maturityPct) : null)}
       </div>
 
       {/* Preenchimento por pilar */}
@@ -309,10 +313,10 @@ export default function KPIs() {
         <div style={card}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '12px' }}>{L.energy}</div>
           <div style={grid('120px', '11px')}>
-            {miniStat(L.elecTotal, `${fmt(k.env.elecTotal)}`, 'kWh')}
-            {miniStat(L.renewElec, k.env.elecRenewPct == null ? '—' : `${fmt(k.env.elecRenewPct)}%`, `${L.selfGen} ${k.env.elecSelfPct == null ? '—' : fmt(k.env.elecSelfPct) + '%'}`, E)}
-            {miniStat(L.water, `${fmt(k.env.water)}`, k.env.waterUnit)}
-            {miniStat(L.waste, `${fmt(k.env.wasteTotal, 1)} ${k.env.wasteUnit}`, `${fmt(k.env.wasteRecycPct)}% ${L.recycled}`)}
+            {miniStat(L.elecTotal, fmt(k.env.elecTotal), k.env.elecTotal == null ? '' : 'kWh')}
+            {miniStat(L.renewElec, pct(k.env.elecRenewPct), k.env.elecSelfPct == null ? '' : `${L.selfGen} ${pct(k.env.elecSelfPct)}`, E)}
+            {miniStat(L.water, fmt(k.env.water), k.env.water == null ? '' : k.env.waterUnit)}
+            {miniStat(L.waste, comU(k.env.wasteTotal, k.env.wasteUnit, 1), k.env.wasteRecycPct == null ? '' : `${pct(k.env.wasteRecycPct)} ${L.recycled}`)}
           </div>
         </div>
       </div>
@@ -382,12 +386,12 @@ export default function KPIs() {
         <div style={card}>
           <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '12px' }}>{L.ownership}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '12px' }}>
-            <Ring pct={k.gov.maturityPct} color={G} track={track} size={64} label={`${k.gov.maturityPct}%`} />
+            <Ring pct={k.completeness.G.done ? k.gov.maturityPct : 0} color={G} track={track} size={64} label={k.completeness.G.done ? `${k.gov.maturityPct}%` : '—'} />
             <div style={{ fontSize: '12px', color: t.textMuted, fontWeight: 600 }}>{L.govMaturity}</div>
           </div>
           <div style={grid('110px', '11px')}>
             {miniStat(L.owners, fmt(k.gov.owners), null, G)}
-            {miniStat(L.years, `${fmt(k.gov.yearsInvolved)}`, 'anos', G)}
+            {miniStat(L.years, fmt(k.gov.yearsInvolved), k.gov.yearsInvolved == null ? '' : L.yrsUnit, G)}
           </div>
         </div>
         {/* Checklist */}

@@ -67,6 +67,9 @@ export const SOURCES = [
   { key: 'indicacao',  pt: 'Indicação',   de: 'Empfehlung',  en: 'Referral' },
   { key: 'evento',     pt: 'Evento',      de: 'Veranstaltung', en: 'Event' },
   { key: 'manual',     pt: 'Manual',      de: 'Manuell',     en: 'Manual' },
+  // Origens gravadas automaticamente — sem elas, editar o lead apagava a origem (R-B11)
+  { key: 'diagnostico', pt: 'Diagnóstico', de: 'Diagnose',   en: 'Diagnosis' },
+  { key: 'consultoria', pt: 'Consultoria', de: 'Beratung',   en: 'Consultancy' },
 ]
 
 // Setores onde a Lúcia quer focar-se (*"eu vou tentar ficar muito na

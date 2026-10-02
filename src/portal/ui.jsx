@@ -122,11 +122,13 @@ export function Campo({ rotulo, children, largura }) {
   return <label style={{ display: 'block', minWidth: 0, gridColumn: largura }}><span style={s.rotulo}>{rotulo}</span>{children}</label>
 }
 
-export function Kpi({ icone, rotulo, valor, sub, tom }) {
+export function Kpi({ icone, rotulo, valor, sub, tom, onClick }) {
   const { t } = useTheme()
   const tons = useTons()
   return (
-    <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', padding: '14px 14px', display: 'flex', alignItems: 'center', gap: '11px', minWidth: 0 }}>
+    <div onClick={onClick} role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e => { if (e.key === 'Enter') onClick() }) : undefined}
+      style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', padding: '14px 14px', display: 'flex', alignItems: 'center', gap: '11px', minWidth: 0, cursor: onClick ? 'pointer' : 'default' }}>
       <span style={{ flex: 'none', width: '38px', height: '38px', borderRadius: '50%', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.accentText }}>{icone}</span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: '12.5px', color: t.textMuted, fontWeight: 600 }}>{rotulo}</div>

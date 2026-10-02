@@ -145,9 +145,12 @@ export default function Diagnostico() {
       )
     }
     if (spec.type === 'percent') {
+      // Percentagens entre 0 e 100 (o gap salarial vai de −100 a 100) — R-B10
+      const minimo = spec.min ?? 0
+      const limitar = (v) => v === '' || v === '-' ? v : String(Math.min(100, Math.max(minimo, Number(v))))
       return (
         <div style={{ position: 'relative', width: '130px' }}>
-          <input type="number" step="0.01" value={cur.value ?? ''} disabled={disabled} onChange={e => onValue(e.target.value)} placeholder="0" style={{ ...inputStyle, width: '100%', paddingRight: '28px', opacity: disabled ? 0.45 : 1 }} />
+          <input type="number" step="0.01" min={minimo} max={100} value={cur.value ?? ''} disabled={disabled} onChange={e => onValue(limitar(e.target.value))} placeholder="0" style={{ ...inputStyle, width: '100%', paddingRight: '28px', opacity: disabled ? 0.45 : 1 }} />
           <span style={{ position: 'absolute', right: '11px', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', color: t.subtle }}>%</span>
         </div>
       )

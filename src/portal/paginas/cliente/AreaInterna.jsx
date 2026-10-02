@@ -4,7 +4,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import { usePortal, acoes } from '../../dados'
 import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, usePerfil, pode, Ic } from '../../ui'
 import { isDueInPeriod } from '../../../pages/gestao/Financeiro'
-import { TIPOS_NOTA, ESCLARECER_COM, fmtData, fmtEur, hojeIso, somaMeses, rotuloServico, MESES_LONGOS } from '../../regras'
+import { TIPOS_NOTA, ESCLARECER_COM, fmtData, fmtEur, hojeIso, somaMeses, somaDias, rotuloServico, MESES_LONGOS } from '../../regras'
 
 // Área interna (documento, secção 9) — nunca visível ao cliente: notas,
 // dúvidas e assuntos pendentes, histórico de contactos, assuntos a esclarecer
@@ -29,7 +29,7 @@ export default function AreaInterna({ cliente }) {
   const mesAtual = hoje.slice(0, 7)
   const hs = s.horas.filter(h => h.clienteId === cliente.id).sort((a, b) => b.data.localeCompare(a.data))
   const noMes = hs.filter(h => h.data.startsWith(mesAtual)).reduce((x, h) => x + Number(h.horas), 0)
-  const ult30 = hs.filter(h => h.data >= somaMeses(hoje, -1)).reduce((x, h) => x + Number(h.horas), 0)
+  const ult30 = hs.filter(h => h.data > somaDias(hoje, -30)).reduce((x, h) => x + Number(h.horas), 0)   // 30 dias de facto (R-B11)
   const incl = Number(cliente.horasIncluidas || 0)
 
   // Controlo da avença: os últimos seis períodos, pagos ou não.

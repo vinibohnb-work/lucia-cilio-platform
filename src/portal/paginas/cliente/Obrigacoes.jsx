@@ -45,7 +45,7 @@ export default function Obrigacoes({ cliente, modoCliente }) {
     o.comprovativo ? (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: t.accentText }} title={`Arquivado a ${fmtData(o.comprovativo.data)}`}>
         <button onClick={() => abrirFicheiro(o.comprovativo.caminho)} disabled={!o.comprovativo.caminho} style={{ background: 'none', border: 'none', padding: 0, cursor: o.comprovativo.caminho ? 'pointer' : 'default', color: 'inherit', fontWeight: 600, fontSize: '12px', fontFamily: 'inherit' }}>📎 {o.comprovativo.nome}</button>
-        {!modoCliente && <button onClick={() => acoes.atualizarObrigacao(o.id, { comprovativo: null })} aria-label="Remover comprovativo" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', padding: 0 }}>✕</button>}
+        {!modoCliente && <button onClick={() => acoes.atualizarObrigacao(o.id, { comprovativo: null, checklist: { ...o.checklist, comprov_arquivado: false } })} aria-label="Remover comprovativo" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', padding: 0 }}>✕</button>}
       </span>
     ) : modoCliente ? <span style={{ color: t.subtle }}>—</span> : (
       <label style={{ fontSize: '12px', fontWeight: 700, color: t.textMuted, cursor: 'pointer', border: `1px dashed ${t.inputBorder}`, borderRadius: '8px', padding: '5px 9px', whiteSpace: 'nowrap' }}>
