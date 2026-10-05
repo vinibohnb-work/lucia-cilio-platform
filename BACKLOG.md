@@ -23,14 +23,6 @@
 > reunião. O desenvolvimento pausa agora e retoma no início do próximo ano; o objetivo é
 > deixar tudo **redondo até ao fecho do contrato, em novembro**.
 
-- [ ] **Aplicar a migração 038 e publicar a Fase 1 da simplificação**
-  *Resp.: Vinícius (com a Lúcia)*
-  O código está na branch `simplificacao-fase1` e **não vai para `main` antes da 038**: o modelo
-  de despesa recorrente grava a taxa de IVA numa coluna nova. A 038 só mexe em regras de acesso
-  e acrescenta essa coluna. Depois de a correr, ver o painel de verificação (regras antigas da
-  ESG = vazio; chaves por conta = 0) e fazer o merge.
-  ⚠️ **Depende de:** aplicar `supabase/migration_038.sql` no SQL Editor.
-
 - [ ] **Simplificação — o que ficou da Fase 1 à espera de decisão**
   *Revisão de 01/10 · Resp.: Vinícius (com a Lúcia)*
   · **Papéis da equipa** (R-A4): o que vê a comercial e o que vê o marketing.
@@ -567,6 +559,12 @@
 ---
 
 ## Concluídos
+
+### Migração 038 e publicação da Fase 1 — 05/10
+
+- [x] **Aplicar a migração 038 e publicar a Fase 1 da simplificação** *(Resp.: Vinícius)*
+  A 038 foi aplicada a 05/10 e a branch `simplificacao-fase1` (Fase 1 + dezasseis acertos) foi
+  junta a `main` e publicada.
 
 ### Dezasseis acertos rápidos — 01/10 *(na branch `simplificacao-fase1`, até à 038)*
 
