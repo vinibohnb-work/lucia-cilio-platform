@@ -12,9 +12,6 @@ const G = '#0a2f1a'
 const GOLD = '#c9a84c'
 const BG = '#f2f6f3'
 
-const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
-const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 export default function Empresa() {
   const { lang } = useLang()
@@ -37,7 +34,6 @@ export default function Empresa() {
     })()
   }, [eid])
 
-  const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
   const isExempt = form.vat_regime === 'exempt'
   const rates = VAT_RATES[form.country] || VAT_RATES.PT
 
@@ -93,7 +89,8 @@ export default function Empresa() {
       ...form,
       vat_default_rate: isExempt ? 0 : Number(form.vat_default_rate),
       ir_reserve_pct: Number(form.ir_reserve_pct),
-      fiscal_year_start_month: Number(form.fiscal_year_start_month),
+      // Moeda e início do ano fiscal saíram do ecrã (não eram usados em lado nenhum — R-D8)
+      fiscal_year_start_month: Number(form.fiscal_year_start_month) || 1,
       ss_regime: form.ss_regime || null,
     }
     const { error } = await saveCompanySettings(payload)
@@ -129,10 +126,6 @@ export default function Empresa() {
               <option value="DE">🇩🇪 Deutschland</option>
             </select>
           </div>
-          <div>
-            {label(L.currency)}
-            <input value={form.currency} onChange={e => update('currency', e.target.value)} style={inputStyle} />
-          </div>
         </div>
       </div>
 
@@ -164,12 +157,6 @@ export default function Empresa() {
               <option value="">{L.ssNone}</option>
               <option value="self">{L.ssSelf}</option>
               <option value="company">{L.ssCompany}</option>
-            </select>
-          </div>
-          <div>
-            {label(L.fyStart)}
-            <select value={form.fiscal_year_start_month} onChange={e => update('fiscal_year_start_month', e.target.value)} style={selectStyle}>
-              {months.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
             </select>
           </div>
         </div>

@@ -7,6 +7,8 @@ import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { devidoNoPeriodo, mesAtual } from '../../lib/periodicidade'
+import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -17,23 +19,8 @@ const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt',
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const daysInMonth = (y, m) => new Date(y, m, 0).getDate()
 
-function isDue(periodicity, monthNum) {
-  if (periodicity === 'monthly') return true
-  if (periodicity === 'quarterly') return [1,4,7,10].includes(monthNum)
-  if (periodicity === 'annual') return monthNum === 1
-  return false
-}
-
-const toYm = (period) => { const [y, m] = period.split('-').map(Number); return y * 12 + (m - 1) }
-function inRange(period, startMonth, endMonth) {
-  const ym = toYm(period)
-  if (startMonth && ym < toYm(startMonth)) return false
-  if (endMonth && ym > toYm(endMonth)) return false
-  return true
-}
-
-const CUR_MONTH = new Date().toISOString().slice(0, 7)
-const EMPTY = { description: '', category: '', amount: '', periodicity: 'monthly', due_day: '', destination: 'banco', start_month: CUR_MONTH, end_month: '', active: true }
+const CUR_MONTH = mesAtual()
+const EMPTY = { description: '', category: '', amount: '', vat_rate: '', periodicity: 'monthly', due_day: '', destination: 'banco', start_month: CUR_MONTH, end_month: '', active: true }
 
 export default function DespesasRecorrentes() {
   const { lang } = useLang()
@@ -44,7 +31,6 @@ export default function DespesasRecorrentes() {
   const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
-  const year = 2026
   const [templates, setTemplates] = useState([])
   const [confirmed, setConfirmed] = useState([]) // cash_entries recorrentes do período
   const [loading, setLoading] = useState(true)
@@ -53,19 +39,23 @@ export default function DespesasRecorrentes() {
   const [form, setForm] = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null) // null = criar; id = editar modelo
-  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)) // 'YYYY-MM'
+  const [period, setPeriod] = useState(CUR_MONTH) // 'YYYY-MM' — qualquer ano (antes estava fixo em 2026)
+  const [settings, setSettings] = useState(null)
   const [actuals, setActuals] = useState({}) // id -> valor a confirmar
 
   const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
   const monthNum = parseInt(period.slice(5, 7), 10)
+  const year = parseInt(period.slice(0, 4), 10)
 
   const load = useCallback(async () => {
     if (!eid) return
     setLoading(true)
-    const [{ data: tpls }, { data: ce }] = await Promise.all([
+    const [{ data: tpls }, { data: ce }, cs] = await Promise.all([
       supabase.from('recurring_expenses').select('*').eq('user_id', eid).order('created_at', { ascending: true }),
       supabase.from('cash_entries').select('id,amount,recurring_expense_id,period').eq('user_id', eid).not('recurring_expense_id', 'is', null).eq('period', period),
+      getCompanySettings(eid),
     ])
+    setSettings(cs)
     setTemplates(tpls || [])
     setConfirmed(ce || [])
     setLoading(false)
@@ -73,7 +63,7 @@ export default function DespesasRecorrentes() {
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
-    title: 'Wiederkehrende Ausgaben',
+    title: 'Wiederkehrende Ausgaben', edit: 'Bearbeiten', vat: 'USt', vatDefault: 'Standard',
     subtitle: 'Fixkosten definieren und pro Monat den tatsächlichen Betrag bestätigen.',
     new: '+ Neue Ausgabe', desc: 'Beschreibung', category: 'Kategorie', amount: 'Betrag (€)',
     period_: 'Häufigkeit', monthly: 'Monatlich', quarterly: 'Vierteljährlich', annual: 'Jährlich',
@@ -86,7 +76,7 @@ export default function DespesasRecorrentes() {
     totalPred: 'Geplant (offen)', totalConf: 'Bestätigt',
     startM: 'Beginn', endM: 'Ende', validity: 'Gültigkeit', noEnd: 'ohne Ende', endHint: 'leer = ohne Ende', since: 'ab',
   } : lang === 'en' ? {
-    title: 'Recurring Expenses',
+    title: 'Recurring Expenses', edit: 'Edit', vat: 'VAT', vatDefault: 'Default',
     subtitle: 'Define fixed costs and confirm the actual amount spent each month.',
     new: '+ New Expense', desc: 'Description', category: 'Category', amount: 'Amount (€)',
     period_: 'Frequency', monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Yearly',
@@ -99,7 +89,7 @@ export default function DespesasRecorrentes() {
     totalPred: 'Planned (open)', totalConf: 'Confirmed',
     startM: 'Start', endM: 'End', validity: 'Validity', noEnd: 'no end', endHint: 'empty = no end', since: 'since',
   } : {
-    title: 'Despesas Recorrentes',
+    title: 'Despesas Recorrentes', edit: 'Editar', vat: 'IVA', vatDefault: 'Da empresa',
     subtitle: 'Defina os custos fixos e confirme o valor real gasto em cada mês.',
     new: '+ Nova Despesa', desc: 'Descrição', category: 'Categoria', amount: 'Valor (€)',
     period_: 'Periodicidade', monthly: 'Mensal', quarterly: 'Trimestral', annual: 'Anual',
@@ -116,7 +106,13 @@ export default function DespesasRecorrentes() {
   const catLabel = (key) => getCategory(key)?.[lang]?.label || '—'
   const confirmedByTpl = Object.fromEntries(confirmed.map(c => [c.recurring_expense_id, c]))
 
-  const dueTemplates = templates.filter(t => t.active && isDue(t.periodicity, monthNum) && inRange(period, t.start_month, t.end_month))
+  // IVA: a taxa do modelo; sem taxa, a da empresa (0 se isenta). Antes as saídas
+  // confirmadas não levavam IVA e o IVA dedutível ficava por baixo (R-A3).
+  const isento = settings?.vat_regime === 'exempt'
+  const taxaEmpresa = settings ? (isento ? 0 : Number(settings.vat_default_rate) || 0) : 0
+  const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
+  const taxaDe = (t) => t.vat_rate != null && t.vat_rate !== '' ? Number(t.vat_rate) : taxaEmpresa
+  const dueTemplates = templates.filter(t => t.active && devidoNoPeriodo(t, period))
   const totalPredicted = dueTemplates.filter(t => !confirmedByTpl[t.id]).reduce((s,t)=>s+Number(t.amount),0)
   const totalConfirmed = dueTemplates.filter(t => confirmedByTpl[t.id]).reduce((s,t)=>s+Number(confirmedByTpl[t.id].amount),0)
 
@@ -127,6 +123,7 @@ export default function DespesasRecorrentes() {
       description: t.description || '',
       category: t.category || '',
       amount: t.amount != null ? String(t.amount) : '',
+      vat_rate: t.vat_rate != null ? String(t.vat_rate) : '',
       periodicity: t.periodicity || 'monthly',
       due_day: t.due_day ? String(t.due_day) : '',
       destination: t.destination || 'banco',
@@ -146,6 +143,7 @@ export default function DespesasRecorrentes() {
       description: form.description,
       category: form.category || null,
       amount: parseFloat(form.amount) || 0,
+      vat_rate: form.vat_rate === '' ? null : Number(form.vat_rate),
       periodicity: form.periodicity,
       due_day: form.due_day ? parseInt(form.due_day, 10) : null,
       destination: form.destination,
@@ -173,8 +171,10 @@ export default function DespesasRecorrentes() {
     setBusyId(t.id)
     const day = Math.min(t.due_day || 1, daysInMonth(year, monthNum))
     const entry_date = `${period}-${String(day).padStart(2, '0')}`
+    const taxa = taxaDe(t)
     const { error } = await supabase.from('cash_entries').insert({
       entry_date, description: t.description, type: 'saida', amount: val,
+      vat_rate: taxa, vat_amount: taxa > 0 ? Math.round(val * taxa / (100 + taxa) * 100) / 100 : 0,
       destination: t.destination, category: t.category || null,
       recurring_expense_id: t.id, period,
     })
@@ -209,7 +209,7 @@ export default function DespesasRecorrentes() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
           <h3 style={{ fontSize: '14px', fontWeight: 800, color: G, margin: 0 }}>{L.thisMonth}</h3>
           <select value={period} onChange={e => setPeriod(e.target.value)} style={{ ...selectStyle, width: 'auto', padding: '7px 12px' }}>
-            {months.map((m, i) => <option key={i} value={`${year}-${String(i+1).padStart(2,'0')}`}>{m} {year}</option>)}
+            {[year - 1, year, year + 1].flatMap(y => months.map((m, i) => <option key={`${y}-${i}`} value={`${y}-${String(i+1).padStart(2,'0')}`}>{m} {y}</option>))}
           </select>
         </div>
 
@@ -272,6 +272,7 @@ export default function DespesasRecorrentes() {
               [L.desc, '180px', <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={L.desc} style={inputStyle} />],
               [L.category, '160px', <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}><option value="">{L.selectCat}</option>{EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang].label}</option>)}</select>],
               [L.amount, '110px', <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />],
+              [L.vat, '110px', <select value={form.vat_rate} onChange={e=>setForm(f=>({...f,vat_rate:e.target.value}))} style={selectStyle}><option value="">{`${L.vatDefault} (${taxaEmpresa}%)`}</option>{vatOptions.map(r => <option key={r} value={r}>{r}%</option>)}</select>],
               [L.period_, '130px', <select value={form.periodicity} onChange={e=>setForm(f=>({...f,periodicity:e.target.value}))} style={selectStyle}><option value="monthly">{L.monthly}</option><option value="quarterly">{L.quarterly}</option><option value="annual">{L.annual}</option></select>],
               [L.dueDay, '90px', <input type="number" min="1" max="31" value={form.due_day} onChange={e=>setForm(f=>({...f,due_day:e.target.value}))} placeholder="—" style={inputStyle} />],
               [L.startM, '150px', <input type="month" value={form.start_month} onChange={e=>setForm(f=>({...f,start_month:e.target.value}))} style={inputStyle} />],

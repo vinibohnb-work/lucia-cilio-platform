@@ -56,7 +56,12 @@ export default function Dados({ cliente, modoCliente, equipa }) {
 
       <Cartao titulo="Perfil fiscal e serviço" icone={<Ic.agenda />} area="cliente">
         <div style={grelha}>
-          <Campo rotulo="País">{sel('pais', Object.entries(PAISES))}</Campo>
+          {/* Trocar o país repõe a forma jurídica e o regime do novo país — senão o
+              calendário era gerado com regras do país antigo (R-B11) */}
+          <Campo rotulo="País">
+            <select value={cliente.pais ?? ''} onChange={e => { const p = e.target.value; up({ pais: p, forma: (FORMAS[p] || [])[0] || '', regime: (REGIMES[p] || [])[0]?.[0] || '' }) }} style={{ ...c.input, cursor: 'pointer' }}>
+              {Object.entries(PAISES).map(([v, r]) => <option key={v} value={v}>{r}</option>)}
+            </select></Campo>
           <Campo rotulo="Forma jurídica">{sel('forma', (FORMAS[cliente.pais] || []).map(x => [x, x]))}</Campo>
           <Campo rotulo="Regime fiscal">{sel('regime', REGIMES[cliente.pais] || [])}</Campo>
           <Campo rotulo="Periodicidade do acompanhamento">{sel('periodicidade', PERIODICIDADES)}</Campo>

@@ -35,6 +35,7 @@ export default function Clientes() {
   const [filter, setFilter]   = useState('all') // 'all' | código de país
   const [form, setForm]       = useState(EMPTY)
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState(null)   // editar um cliente existente (R-D9)
 
   const countryOptions = useMemo(() => getCountryOptions(lang), [lang])
 
@@ -48,17 +49,17 @@ export default function Clientes() {
   useEffect(() => { load() }, [load])
 
   const L = lang === 'de' ? {
-    new: '+ Neuer Mandant', name: 'Name', country: 'Land', sector: 'Branche', service: 'Leistung', status: 'Status',
+    edit: 'Bearbeiten', new: '+ Neuer Mandant', name: 'Name', country: 'Land', sector: 'Branche', service: 'Leistung', status: 'Status',
     active: 'Aktiv', inactive: 'Inaktiv', esg: 'ESG', acc: 'Buchhaltung', both: 'ESG + Buchh.',
     all: 'Alle Länder', save: 'Speichern', loading: 'Wird geladen…', empty: 'Noch keine Mandanten. Fügen Sie den ersten hinzu.',
     total: 'Insgesamt', countries: 'Länder', sectorPh: 'z.B. Bau, Industrie…', selectCountry: '— Land wählen —',
   } : lang === 'en' ? {
-    new: '+ New Client', name: 'Name', country: 'Country', sector: 'Sector', service: 'Service', status: 'Status',
+    edit: 'Edit', new: '+ New Client', name: 'Name', country: 'Country', sector: 'Sector', service: 'Service', status: 'Status',
     active: 'Active', inactive: 'Inactive', esg: 'ESG', acc: 'Accounting', both: 'ESG + Acc.',
     all: 'All countries', save: 'Save', loading: 'Loading…', empty: 'No clients yet. Add the first one.',
     total: 'Total', countries: 'Countries', sectorPh: 'e.g. Construction, Industry…', selectCountry: '— Select country —',
   } : {
-    new: '+ Novo Cliente', name: 'Nome', country: 'País', sector: 'Setor', service: 'Serviço', status: 'Estado',
+    edit: 'Editar', new: '+ Novo Cliente', name: 'Nome', country: 'País', sector: 'Setor', service: 'Serviço', status: 'Estado',
     active: 'Ativo', inactive: 'Inativo', esg: 'ESG', acc: 'Contabilidade', both: 'ESG + Cont.',
     all: 'Todos os países', save: 'Guardar', loading: 'A carregar…', empty: 'Ainda não há clientes. Adicione o primeiro.',
     total: 'Total', countries: 'Países', sectorPh: 'ex: Construção, Indústria…', selectCountry: '— Selecionar país —',
@@ -76,10 +77,13 @@ export default function Clientes() {
     if (isViewing) return
     if (!form.name || !form.country) return
     setSaving(true)
-    const { error } = await supabase.from('clients').insert({ ...form, country: form.country.toUpperCase(), sector: form.sector || null })
+    const payload = { ...form, country: form.country.toUpperCase(), sector: form.sector || null }
+    const { error } = editingId
+      ? await supabase.from('clients').update(payload).eq('id', editingId)
+      : await supabase.from('clients').insert(payload)
     setSaving(false)
     if (error) { alert(error.message); return }
-    setForm(EMPTY); setShowForm(false); load()
+    setForm(EMPTY); setShowForm(false); setEditingId(null); load()
   }
   async function removeClient(id) {
     if (isViewing) return
@@ -90,7 +94,8 @@ export default function Clientes() {
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const GRID = '1fr 150px 150px 140px 110px 36px'
+  const GRID = '1fr 150px 150px 140px 110px 64px'
+  function editar(c) { setEditingId(c.id); setForm({ name: c.name || '', country: c.country || '', sector: c.sector || '', service: c.service || 'acc', status: c.status || 'active' }); setShowForm(true) }
 
   return (
     <div style={{ width: '100%' }}>
@@ -104,7 +109,7 @@ export default function Clientes() {
           <option value="all">{L.all}</option>
           {presentCountries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
         </select>
-        {!isViewing && <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+        {!isViewing && <button onClick={() => { setShowForm(v=>!v); setForm(EMPTY); setEditingId(null) }} style={{ padding: '9px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
           {L.new}
         </button>}
       </div>
@@ -160,7 +165,10 @@ export default function Clientes() {
               <div style={{ fontSize: '12px', color: t.text }}>{c.sector || '—'}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: svc.bg, color: svc.color }}>{L[c.service]}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color }}>{c.status==='active'?L.active:L.inactive}</span></div>
-              {!isViewing && <button onClick={() => removeClient(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>}
+              {!isViewing && <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={() => editar(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', padding: '2px', lineHeight: 1 }} title={L.edit}>✏️</button>
+                <button onClick={() => removeClient(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1 }} title="Remover">✕</button>
+              </div>}
             </div>
           )
         })}

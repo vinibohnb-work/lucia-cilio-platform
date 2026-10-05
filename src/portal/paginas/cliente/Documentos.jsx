@@ -98,7 +98,8 @@ export default function Documentos({ cliente, modoCliente }) {
           </div>
           {!modoCliente && (
             <Botao estilo={{ marginTop: '12px', width: '100%' }} onClick={() => {
-              const [y, m] = [ano, Number(hoje.slice(5, 7))]
+              // "Deste mês" é sempre o mês corrente, seja qual for o ano a ver (R-B11)
+              const [y, m] = [Number(hoje.slice(0, 4)), Number(hoje.slice(5, 7))]
               const n = acoes.pedirDocumentos(cliente.id, y, m)
               setAviso(n ? `${n} documento(s) de ${MESES_LONGOS[m - 1]} marcados como em falta.` : 'Os documentos deste mês já estão pedidos.'); setTimeout(() => setAviso(''), 3500)
             }}>Pedir os documentos deste mês</Botao>

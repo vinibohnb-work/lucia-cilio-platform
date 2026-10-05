@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { parseCSV, extrairMovimentos, conciliar, movimentoParaLancamento } from '../../lib/extratoBancario'
+import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 
 // Conciliação caixa/banco a partir do extrato.
 // Decisão da reunião de 13/08: ficheiro em vez de integração bancária.
@@ -30,6 +31,12 @@ export default function Conciliacao() {
   const [importacoes, setImportacoes] = useState([])   // extratos já arquivados
   const [previa, setPrevia] = useState(null)     // { movimentos, mapa, ficheiro, ... }
   const [erro, setErro] = useState('')
+  // Taxa de IVA para "Criar lançamento": por omissão a da empresa (0 se isenta)
+  const [settings, setSettings] = useState(null)
+  const [taxas, setTaxas] = useState({})   // tx.id -> taxa escolhida
+  useEffect(() => { if (eid) getCompanySettings(eid).then(setSettings) }, [eid])
+  const taxaEmpresa = settings ? (settings.vat_regime === 'exempt' ? 0 : Number(settings.vat_default_rate) || 0) : 0
+  const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
   const [aviso, setAviso] = useState('')
   const [aba, setAba] = useState('pendente')
 
@@ -99,8 +106,12 @@ export default function Conciliacao() {
     const jaUsados = new Set(txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id))
     const livres = entries.filter(e => !jaUsados.has(e.id))
     const r = conciliar(pendentes, livres)
-    return { sugestoes: r.sugestoes, entriesSemPar: r.entriesSemPar }
-  }, [txs, entries])
+    // "Não constam do extrato": só os lançamentos dentro do período dos extratos
+    // importados — fora dele não há extrato para os encontrar (R-B11)
+    const periodos = importacoes.filter(i => i.period_start && i.period_end)
+    const noPeriodo = (d) => periodos.some(i => d >= i.period_start && d <= i.period_end)
+    return { sugestoes: r.sugestoes, entriesSemPar: r.entriesSemPar.filter(e => noPeriodo(e.entry_date)) }
+  }, [txs, entries, importacoes])
 
   const entryById = useMemo(() => Object.fromEntries(entries.map(e => [e.id, e])), [entries])
 
@@ -196,7 +207,7 @@ export default function Conciliacao() {
   }
   async function criarLancamento(tx) {
     if (isViewing) return
-    const novo = movimentoParaLancamento({ data: tx.tx_date, descricao: tx.description, valor: Number(tx.amount), tipo: tx.type })
+    const novo = movimentoParaLancamento({ data: tx.tx_date, descricao: tx.description, valor: Number(tx.amount), tipo: tx.type }, Number(taxas[tx.id] ?? taxaEmpresa))
     const { data, error } = await supabase.from('cash_entries').insert({ ...novo, user_id: eid }).select('id,entry_date,description,type,amount,destination').single()
     if (error) { setErro(error.message); return }
     setEntries(prev => [...prev, data])
@@ -376,6 +387,11 @@ export default function Conciliacao() {
                         )}
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
                           {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
+                          <select value={taxas[tx.id] ?? taxaEmpresa} onChange={e => setTaxas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label="IVA"
+                            title={lang === 'de' ? 'USt für die neue Buchung' : lang === 'en' ? 'VAT for the new entry' : 'IVA do lançamento a criar'}
+                            style={{ ...btn, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                            {vatOptions.map(r => <option key={r} value={r}>{(lang === 'de' ? 'USt ' : lang === 'en' ? 'VAT ' : 'IVA ') + r + '%'}</option>)}
+                          </select>
                           <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btn, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
                           <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btn, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
                         </div>

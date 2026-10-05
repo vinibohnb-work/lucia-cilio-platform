@@ -97,13 +97,22 @@ export default function ConsultoriaDetalhe() {
     setTimeout(() => setEstado(''), 1800)
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // As alterações acumulam-se até gravar: antes, a segunda alteração em menos de
+  // 0,7 s cancelava a primeira, e sair da página logo a seguir perdia tudo (R-A6).
+  const pendente = useRef({})
   const alterar = (patch, imediato = false) => {
     setC(prev => ({ ...prev, ...patch }))
+    pendente.current = { ...pendente.current, ...patch }
     clearTimeout(timer.current)
-    if (imediato) guardar(patch)
-    else timer.current = setTimeout(() => guardar(patch), 700)
+    const gravar = () => { const p = pendente.current; pendente.current = {}; if (Object.keys(p).length) guardar(p) }
+    if (imediato) gravar()
+    else timer.current = setTimeout(gravar, 700)
   }
-  useEffect(() => () => clearTimeout(timer.current), [])
+  useEffect(() => () => {
+    clearTimeout(timer.current)
+    const p = pendente.current; pendente.current = {}
+    if (Object.keys(p).length) guardar(p)   // ao sair da página, grava o que ficou por gravar
+  }, [guardar])
 
   const responder = (key, valor) =>
     alterar({ respostas: { ...(c.respostas || {}), [key]: valor } })
@@ -133,7 +142,11 @@ export default function ConsultoriaDetalhe() {
   }
   const removeSwot = (q, i) => {
     const atual = [...(c.swot?.[q] || [])]; atual.splice(i, 1)
-    alterar({ swot: { ...(c.swot || {}), [q]: atual } }, true)
+    // A origem das estratégias TOWS aponta para "quadrante:posição": ao apagar um
+    // ponto, as referências a ele saem e as seguintes recuam uma posição (R-A6).
+    const remap = (ref) => { const [rq, ri] = ref.split(':'); const k = Number(ri); return rq !== q ? ref : k === i ? null : k > i ? `${rq}:${k - 1}` : ref }
+    const tows = Object.fromEntries(Object.entries(c.tows || {}).map(([cel, lista]) => [cel, (lista || []).map(e => ({ ...e, origem: (e.origem || []).map(remap).filter(Boolean) }))]))
+    alterar({ swot: { ...(c.swot || {}), [q]: atual }, tows }, true)
   }
 
   // ── TOWS ──

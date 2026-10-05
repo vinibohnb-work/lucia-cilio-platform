@@ -6,26 +6,13 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { listUsers } from '../../lib/adminApi'
+import { devidoNoPeriodo } from '../../lib/periodicidade'
 
 // Financeiro da Gestão: contratos/mensalidades dos clientes da Lúcia e
 // confirmação de recebimentos por mês (padrão igual às Despesas Recorrentes).
 
-const toYm = (p) => { const [y, m] = String(p).split('-').map(Number); return y * 12 + (m - 1) }
-
-// O contrato é devido no período? (âncora = start_month)
-export function isDueInPeriod(b, period) {
-  const ym = toYm(period)
-  const start = b.start_month ? toYm(b.start_month) : null
-  if (start != null && ym < start) return false
-  const monthNum = Number(period.slice(5, 7))
-  switch (b.periodicity) {
-    case 'monthly':   return true
-    case 'quarterly': return start != null ? (ym - start) % 3 === 0 : [1, 4, 7, 10].includes(monthNum)
-    case 'annual':    return start != null ? (ym - start) % 12 === 0 : monthNum === 1
-    case 'once':      return start != null && ym === start
-    default:          return false
-  }
-}
+// O contrato é devido no período? Regra comum a avenças e despesas recorrentes.
+export const isDueInPeriod = devidoNoPeriodo
 
 const EMPTY = { client_name: '', user_id: '', service: '', amount: '', periodicity: 'monthly', start_month: new Date().toISOString().slice(0, 7), notes: '' }
 

@@ -165,7 +165,7 @@ export const ESG_QUESTIONS = [
     ],
   },
   {
-    id: 13, pillar: 'S', type: 'percent',
+    id: 13, pillar: 'S', type: 'percent', min: -100,   // gap salarial: pode ser negativo
     de: 'Im Verhältnis zum durchschnittlichen Bruttostundenverdienst aller Männer: wieviel höher oder niedriger ist dieser Verdienst für alle Frauen in Ihrem Unternehmen?',
     pt: 'Em relação ao salário-hora bruto médio dos homens: quanto maior ou menor é o salário das mulheres na sua empresa? (gender pay gap; use valor negativo se menor)',
     en: 'Relative to the average gross hourly pay of all men: how much higher or lower is the pay for all women in your company? (gender pay gap; use a negative value if lower)',

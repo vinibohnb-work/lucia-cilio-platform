@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useAlvoESG } from '../../context/AlvoESGContext'
-import { FASES, rotuloFase, subFase, progressoESG } from '../../lib/esgPercurso'
+import { FASES, rotuloFase, subFase, progressoESG, anoDeReferencia } from '../../lib/esgPercurso'
 
 // Percurso ESG — a vista que faltava para a consultoria ESG se ler como
 // consultoria e não como cinco ecrãs soltos (reunião de 10/09).
@@ -24,7 +24,7 @@ export default function PercursoESG() {
 
   const [dados, setDados] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [ano] = useState(new Date().getFullYear())
+  const [ano, setAno] = useState(new Date().getFullYear())
 
   const L = lang === 'de' ? {
     eyebrow: 'ESG-Beratung', titulo: 'Der Weg',
@@ -60,16 +60,18 @@ export default function PercursoESG() {
     setLoading(true)
     const [mat, diag, proj, rep] = await Promise.all([
       supabase.from('esg_materiality').select('*').eq('consultoria_id', cid).maybeSingle(),
-      supabase.from('esg_diagnostics').select('*').eq('consultoria_id', cid).eq('reference_year', ano).maybeSingle(),
+      supabase.from('esg_diagnostics').select('*').eq('consultoria_id', cid),
       supabase.from('esg_projects').select('id,topic_key,status').eq('consultoria_id', cid),
-      supabase.from('esg_reports').select('*').eq('consultoria_id', cid).eq('reference_year', ano).maybeSingle(),
+      supabase.from('esg_reports').select('*').eq('consultoria_id', cid),
     ])
+    const a = anoDeReferencia(diag.data || [])
+    setAno(a)
     setDados({
-      materiality: mat.data, diagnostic: diag.data,
-      projects: proj.data || [], report: rep.data,
+      materiality: mat.data, diagnostic: (diag.data || []).find(d => d.reference_year === a) || null,
+      projects: proj.data || [], report: (rep.data || []).find(r => r.reference_year === a) || null,
     })
     setLoading(false)
-  }, [cid, ano])
+  }, [cid])
   useEffect(() => { load() }, [load])
 
   if (loading) return <EsqueletoPagina cartoes={3} linhas={5} />

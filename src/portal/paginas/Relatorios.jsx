@@ -40,6 +40,9 @@ export default function Relatorios() {
                   <td style={c.td}><strong style={{ color: t.heading }}>{cli.nome}</strong><div style={{ fontSize: '11px', color: t.subtle }}>{cli.software}</div></td>
                   {tris.map(([y, q], i) => {
                     const r = rs.find(x => x.ano === y && x.trimestre === q)
+                    // Trimestres que acabaram antes de o cliente entrar não ficam "por fazer" (R-B11)
+                    const fimTri = `${y}-${String(q * 3).padStart(2, '0')}-31`
+                    if (!r && cli.cliente_desde && fimTri < cli.cliente_desde) return <td key={i} style={c.td}><span style={{ color: t.subtle, fontSize: '12px' }}>—</span></td>
                     return <td key={i} style={c.td}>{r ? <Chip tom={r.estado === 'enviado' ? 'ok' : 'aviso'}>{r.estado === 'enviado' ? 'Enviado' : 'Rascunho'}</Chip> : i === 0 ? <span style={{ color: t.subtle, fontSize: '12px' }}>—</span> : <Chip tom="erro">Por fazer</Chip>}</td>
                   })}
                   <td style={{ ...c.td, fontWeight: 700, color: ultimo && resultado(ultimo) < 0 ? t.neg : t.heading }}>{ultimo ? `${fmtEur(resultado(ultimo))} · T${ultimo.trimestre}` : '—'}</td>

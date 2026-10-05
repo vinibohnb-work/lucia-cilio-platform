@@ -13,10 +13,6 @@ export const docsEmFalta = (s, cid) => s.documentos.filter(d => (!cid || d.clien
 export const valorAPagar = (s, cid) => obrigacoesDe(s, cid)
   .filter(o => o.valor?.tipo === 'pagar' && !['pago', 'nao_aplicavel', 'por_preparar'].includes(o.estado) && Number(o.valor.montante) > 0)
   .reduce((t, o) => t + Number(o.valor.montante), 0)
-export const creditos = (s, cid) => {
-  const ano = hojeIso().slice(0, 4)
-  return obrigacoesDe(s, cid).filter(o => ['credito', 'reembolso'].includes(o.valor?.tipo) && o.prazo.startsWith(ano))
-}
 export const entregues = (s, cid) => obrigacoesDe(s, cid).filter(o => ['entregue', 'pago'].includes(o.estado)).sort((a, b) => b.prazo.localeCompare(a.prazo))
 export const relatoriosDe = (s, cid) => s.relatorios.filter(r => r.clienteId === cid).sort((a, b) => (b.ano - a.ano) || (b.trimestre - a.trimestre))
 export const ultimoRelatorio = (s, cid) => relatoriosDe(s, cid).find(r => r.estado === 'enviado') || null

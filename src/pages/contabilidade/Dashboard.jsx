@@ -7,6 +7,7 @@ import CabecalhoPagina from '../../components/CabecalhoPagina'
 import { t as traduzir } from '../../i18n/translations'
 import { supabase } from '../../lib/supabase'
 import { getCategory } from '../../data/expenseCategories'
+import { devidoNoPeriodo, mesAtual } from '../../lib/periodicidade'
 import { getCompanySettings } from '../../lib/companySettings'
 import { businessOnly } from '../../lib/cashEntry'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
@@ -66,7 +67,7 @@ export default function Dashboard() {
   const [entries, setEntries] = useState([])
   const [catalog, setCatalog] = useState([])
   const [loading, setLoading] = useState(true)
-  const [year] = useState(2026)
+  const [year, setYear] = useState(new Date().getFullYear())
   const [period, setPeriod]   = useState('year')  // 'year' | 'quarter'
   const [quarter, setQuarter] = useState(Math.ceil((new Date().getMonth() + 1) / 3))
 
@@ -105,15 +106,12 @@ export default function Dashboard() {
   const periodLabel = isQuarter ? `T${quarter} ${year}` : `${year}`
 
   // ── Custos fixos recorrentes previstos por confirmar (por mês, respeitando vigência) ──
-  const toYm = (p) => { const [y, m] = p.split('-').map(Number); return y * 12 + (m - 1) }
-  const inRange = (p, s, e) => { const ym = toYm(p); if (s && ym < toYm(s)) return false; if (e && ym > toYm(e)) return false; return true }
-  const isDue = (per, m) => per === 'monthly' || (per === 'quarterly' && [1,4,7,10].includes(m)) || (per === 'annual' && m === 1)
   const confirmedByPeriod = {}
   entries.forEach(e => { if (e.recurring_expense_id && e.period) { (confirmedByPeriod[e.period] ||= new Set()).add(e.recurring_expense_id) } })
   const pendingForMonth = (monthNum) => {
     const periodStr = `${year}-${String(monthNum).padStart(2, '0')}`
     const done = confirmedByPeriod[periodStr]
-    return recurring.filter(r => isDue(r.periodicity, monthNum) && inRange(periodStr, r.start_month, r.end_month) && !(done && done.has(r.id)))
+    return recurring.filter(r => devidoNoPeriodo(r, periodStr) && !(done && done.has(r.id)))
   }
   const predictedForMonth = (monthNum) => pendingForMonth(monthNum).reduce((s, r) => s + Number(r.amount), 0)
 
@@ -145,8 +143,13 @@ export default function Dashboard() {
     else if (ct === 'fixed') fixedC += Number(e.amount)
     else otherC += Number(e.amount) // 'other' ou sem categoria → tratado como estrutural
   })
-  // Inclui os custos fixos previstos por confirmar (acumulados no período mostrado)
-  const fixedTotal = fixedC + otherC + periodPredicted
+  // Os custos fixos incluem as recorrentes por confirmar só até ao mês corrente —
+  // o que já devia ter sido pago. Os meses futuros ficam no gráfico e no aviso,
+  // mas não entram no resultado (antes, em janeiro, o resultado do ano já
+  // descontava a renda até dezembro — revisão de 01/10, R-B5).
+  const mesHoje = mesAtual()
+  const predictedAteHoje = monthIdx.reduce((s, i) => `${year}-${String(i + 1).padStart(2, '0')}` <= mesHoje ? s + monthly[i - monthIdx[0]].predicted : s, 0)
+  const fixedTotal = fixedC + otherC + predictedAteHoje
   const cmRatio = revenue > 0 ? (revenue - varC) / revenue : 0          // margem de contribuição
   const breakeven = cmRatio > 0 ? fixedTotal / cmRatio : 0
   const aboveBE = revenue >= breakeven && breakeven > 0
@@ -183,7 +186,7 @@ export default function Dashboard() {
     needRevenue: 'Noch Umsatz bis Break-even', loading: 'Wird geladen…',
     noData: 'Noch keine Daten. Fügen Sie Buchungen im Kassenbuch hinzu.',
     beHint: 'Mindestumsatz, um alle Kosten zu decken.',
-    yearNet: 'Jahresergebnis', surplus: 'Überschuss',
+    yearLbl: 'Jahr', yearNet: 'Jahresergebnis', afterReserve: 'Ergebnis nach Rücklage', surplus: 'Überschuss',
     byProduct: 'Umsatz nach Produkt/Leistung', share: 'Anteil',
     unassigned: 'Ohne Produkt zugeordnet', noProducts: 'Noch keine Einnahmen mit Produkt/Leistung verknüpft.',
     product: 'Produkt', service: 'Leistung',
@@ -207,7 +210,7 @@ export default function Dashboard() {
     needRevenue: 'Revenue needed to reach break-even', loading: 'Loading…',
     noData: 'No data yet. Add entries in the Cash Book.',
     beHint: 'Minimum revenue to cover all costs.',
-    yearNet: 'Year result', surplus: 'Surplus',
+    yearLbl: 'Year', yearNet: 'Year result', afterReserve: 'Result after reserve', surplus: 'Surplus',
     byProduct: 'Revenue by Product/Service', share: 'Share',
     unassigned: 'No product assigned', noProducts: 'No income linked to products/services yet.',
     quarterly: 'Quarter', annual: 'Year',
@@ -231,7 +234,7 @@ export default function Dashboard() {
     needRevenue: 'Falta de receita para o break-even', loading: 'A carregar…',
     noData: 'Ainda não há dados. Adicione lançamentos no Livro de Caixa.',
     beHint: 'Receita mínima para cobrir todos os custos.',
-    yearNet: 'Resultado do ano', surplus: 'Excedente',
+    yearLbl: 'Ano', yearNet: 'Resultado do ano', afterReserve: 'Resultado após reserva', surplus: 'Excedente',
     byProduct: 'Receita por Produto/Serviço', share: 'Peso',
     unassigned: 'Sem produto associado', noProducts: 'Ainda não há entradas associadas a produtos/serviços.',
     quarterly: 'Trimestral', annual: 'Anual',
@@ -290,6 +293,12 @@ export default function Dashboard() {
           <button style={segBtn(!isQuarter)} onClick={() => setPeriod('year')}>{L.annual}</button>
           <button style={segBtn(isQuarter)} onClick={() => setPeriod('quarter')}>{L.quarterly}</button>
         </div>
+        {/* Ano: o corrente por omissão, e os anos com lançamentos (antes estava fixo em 2026) */}
+        <select value={year} onChange={e => setYear(Number(e.target.value))} aria-label={L.yearLbl}
+          style={{ padding: '7px 10px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: G, fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+          {[...new Set([new Date().getFullYear(), ...entries.map(e => Number(e.entry_date?.slice(0, 4))).filter(Boolean)])].sort((a, b) => b - a)
+            .map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
         {isQuarter && (
           <div style={{ display: 'flex', gap: '6px' }}>
             {[1,2,3,4].map(q => (
@@ -375,7 +384,7 @@ export default function Dashboard() {
               {[
                 { label: L.irBase, value: irBase, color: G, bg: BG },
                 { label: `${L.irReserve} (${irPct}%)`, value: irReserve, color: t.dueSoon.ink, bg: t.dueSoon.bg, strong: true },
-                { label: netLabel, value: yearNet - irReserve, color: (yearNet - irReserve) >= 0 ? t.dueOk.ink : RED, bg: t.dueOk.bg },
+                { label: L.afterReserve, value: yearNet - irReserve, color: (yearNet - irReserve) >= 0 ? t.dueOk.ink : RED, bg: t.dueOk.bg },
               ].map(c => (
                 <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: `1px solid ${t.cardBorder}` }}>
                   <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
@@ -390,7 +399,8 @@ export default function Dashboard() {
       )}
 
       {/* ── Base Segurança Social (apenas trimestral, só Portugal) ── */}
-      {isQuarter && settings?.country !== 'DE' && (
+      {/* Só trabalhadores independentes (não sociedades) — R-B12 */}
+      {isQuarter && settings?.country !== 'DE' && settings?.ss_regime !== 'company' && (
         <div style={{ background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <FlagPT size={20} />

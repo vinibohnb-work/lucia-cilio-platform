@@ -119,6 +119,8 @@ export default function ListaClientes() {
               const falta = docsEmFalta(s, x.id).length
               const atrasadas = s.tarefas.filter(tf => tf.clienteId === x.id && tarefaAtrasada(tf)).length
               const msgs = naoLidas(s, x.id).length
+              // Obrigações em atraso também pedem atenção (antes dizia "Tudo em dia" — R-B11)
+              const obrAtraso = s.obrigacoes.filter(o => o.clienteId === x.id && estadoEfetivo(o) === 'em_atraso').length
               const ef = po ? estadoEfetivo(po) : null
               return (
                 <tr key={x.id} onClick={() => navigate(`/gestao/clientes/${x.id}`)} style={{ cursor: 'pointer' }}
@@ -139,10 +141,11 @@ export default function ListaClientes() {
                   </td>
                   <td style={c.td}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      {obrAtraso > 0 && <Chip tom="erro">{obrAtraso} obrigaç{obrAtraso > 1 ? 'ões' : 'ão'} em atraso</Chip>}
                       {falta > 0 && <Chip tom="erro">{falta} doc. em falta</Chip>}
                       {atrasadas > 0 && <Chip tom="erro">{atrasadas} tarefa{atrasadas > 1 ? 's' : ''} em atraso</Chip>}
                       {msgs > 0 && <Chip tom="azul">{msgs} mensage{msgs > 1 ? 'ns' : 'm'}</Chip>}
-                      {!falta && !atrasadas && !msgs && <span style={{ color: t.subtle, fontSize: '12px' }}>Tudo em dia</span>}
+                      {!obrAtraso && !falta && !atrasadas && !msgs && <span style={{ color: t.subtle, fontSize: '12px' }}>Tudo em dia</span>}
                     </div>
                   </td>
                   {!estreito && <td style={{ ...c.td, fontSize: '12.5px' }}>{x.responsavel}</td>}

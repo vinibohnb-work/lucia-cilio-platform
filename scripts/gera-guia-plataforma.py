@@ -27,11 +27,20 @@ from reportlab.lib.units import cm
 from reportlab.platypus import (BaseDocTemplate, Frame, Image, KeepTogether, NextPageTemplate, PageBreak,
                                 PageTemplate, Paragraph, Spacer, Table, TableStyle)
 
-VERSAO = "1.1"
+VERSAO = "1.2"
 DATA = date(2026, 10, 1)
 
 # (data, o que mudou na plataforma, o que mudou neste guia) — mais recente primeiro
 REGISTO = [
+    ("01/10/2026", "Simplificação, fase 1 (com a migração 038): o cliente só altera as obrigações que não são da equipa (R-A1); "
+     "regras antigas da ESG retiradas (R-A2); IVA nas despesas recorrentes e nos lançamentos criados do extrato (R-A3); a consultoria "
+     "deixa de perder edições, lê \"1.500\" e mantém a origem das estratégias ao apagar pontos da SWOT (R-A6); ano livre no Painel, "
+     "Livro de Caixa e Recorrentes, e filtro por ano e mês (R-B1, R-B2); uma régua para obrigações em aberto (R-B3); uma regra de "
+     "periodicidade (R-B4); custos fixos do Painel só até ao mês corrente e \"Resultado após reserva\" (R-B5); Familienversicherung pela "
+     "média real (R-B6); % de reserva só na Empresa, omissão 25% (R-B8); um ano de referência na ESG (R-B9); Segurança Social só para "
+     "independentes (R-B12); sai o gerador de calendário do cliente (R-C3); ficheiros sem uso (R-D1); Recorrentes no menu (R-D2); menu Lite (R-D3); "
+     "Moeda e Início do ano fiscal (R-D8); editar no Catálogo e nos Clientes (R-D9).",
+     "v1.2: textos e avisos dos ecrãs afetados e estado da revisão. Os prints de Empresa, Obrigações e Reservas ainda são os da v1.0."),
     ("01/10/2026", "A administradora volta a ter a Contabilidade, como demonstração: usa a própria conta (os dados ficam nela e nenhum cliente os vê), com o botão Gestão / Demonstração no menu e uma faixa a indicá-lo. A ESG do cliente continua só pela Visualização completa.", "v1.1: Quem vê o quê."),
     ("01/10/2026", "Correções encontradas durante a revisão: o calendário das sociedades PT (os três pagamentos por conta "
      "tinham o mesmo código e o calendário inteiro falhava); relatórios trimestrais novos não gravavam; apagar "
@@ -219,8 +228,8 @@ S.append(tabela(["Perfil", "O que vê", "Notas"], [
      "Não vê a avença, os pagamentos nem a Conta na plataforma. É o perfil pensado para a Letícia (decisão de 25/09)."],
     ["<b>Marketing</b> (equipa)", "O portal de clientes e a página de Marketing (em preparação).", "Ver R-A4: tem mais acesso do que a página diz."],
     ["<b>Cliente — Contabilidade</b>", "Início, Painel, Livro de Caixa, Conciliação, Catálogo, Obrigações Fiscais; Calculadora de Preços, "
-     "Planeamento Mensal, Clientes, Empresa, Consultoria. Na Alemanha também Reservas &amp; Impostos e Relatório EÜR.", "Despesas Recorrentes existe mas não está no menu (R-D2)."],
-    ["<b>Cliente — Contabilidade Lite</b>", "Painel, Livro de Caixa, Catálogo, Obrigações Fiscais.", "O menu mostra também Início e Conciliação, que o devolvem ao Painel (R-D3)."],
+     "Planeamento Mensal, Clientes, Empresa, Consultoria e Despesas Recorrentes. Na Alemanha também Reservas &amp; Impostos e Relatório EÜR.", "—"],
+    ["<b>Cliente — Contabilidade Lite</b>", "Início, Painel, Livro de Caixa, Despesas Recorrentes, Catálogo, Obrigações Fiscais.", "Sem Conciliação nem a secção Gestão."],
     ["<b>Cliente — ESG</b> ou <b>Ambas</b>", "As seis páginas da ESG em modo de leitura, se a Lúcia marcar o caso como visível. Com \"Ambas\", "
      "alterna entre Contabilidade e ESG.", "Vê o caso ESG mais recente ligado à sua conta."],
 ], [3.6 * cm, 8.2 * cm, USAVEL - 11.8 * cm]))
@@ -300,8 +309,7 @@ S += ecra(K, "Página do cliente — Obrigações fiscais", "Separador Obrigaç�
      "comprovativo, cliente informado, pago (ou entregue sem valor), arquivo."),
     (9, "Checklist", "Os nove passos marcados à mão; o contador \"x/9\" aparece por baixo do nome."),
 ], ["Para clientes com conta, um gatilho na base de dados mantém o estado simples do cliente (pendente/feito) em sincronia com os oito estados.",
-    "O cliente também pode mudar ou apagar estas obrigações na plataforma dele, e ao marcar \"pendente\" apaga o estado da equipa (R-A1).",
-    "Existe outro gerador de calendário, mais simples, do lado do cliente, com regras diferentes (R-C3)."], altura_max=8.2 * cm)
+    "O cliente vê estas obrigações na plataforma dele mas não as altera nem apaga (migração 038). Este é o único gerador de calendário."], altura_max=8.2 * cm)
 
 S += ecra(K, "Página do cliente — Documentos", "Separador Documentos",
           "Os documentos do cliente por ano e mês (ou trimestre), com quatro estados.", "g-documentos", [
@@ -363,7 +371,7 @@ S += ecra(K, "Página do cliente — Conta na plataforma", "Separador Conta na p
     (3, "Saldo", "Entradas − saídas de sempre, sem privados. (No Livro de Caixa o saldo inclui os privados — R-B5.)"),
     (4, "Obrigações pendentes", "Obrigações da conta com estado \"pendente\", incluindo as futuras."),
     (5, "Clientes", "Quantos clientes <b>do cliente</b> estão na lista dele (Contabilidade → Clientes)."),
-    (6, "Lucro / limite (mês)", "Só Alemanha: lucro mensal (do Planeamento, se existir; senão a média real do ano) ÷ limite da Familienversicherung. 🔴 acima, 🟡 a partir de 80%."),
+    (6, "Lucro / limite (mês)", "Só Alemanha: lucro mensal real (média do ano) ÷ limite da Familienversicherung — a mesma regra do Painel e de Reservas. 🔴 acima, 🟡 a partir de 80%."),
     (7, "Onboarding", "Seis passos lidos do que existe: conta, dados da empresa, contrato anexado, mensagem enviada, primeiro acesso, primeiros documentos."),
     (8, "Consultoria e Histórico", "Registos de reuniões, notas, recomendações e relatórios. <b>São visíveis ao cliente</b> na página Consultoria."),
 ], ["\"Conta ativa\" usa também o e-mail confirmado — e todas as contas nascem confirmadas, por isso aparecem sempre ativas (R-B11)."])
@@ -416,7 +424,7 @@ S += ecra(K, "Consultoria — ficha", "Consultorias → Abrir · /gestao/consult
     (4, "Relatório", "Gera o relatório com IA a partir do que está preenchido; o texto editado à mão sobrepõe-se ao da IA."),
 ], ["Números do plano (lib/consultoriaCalc): retirada privada = despesas − rendimentos (mín. 0), ×12 no ano; necessidade de capital = "
     "investimentos + constituição + reserva (reserva = custos do ano 1 ÷ 12 × meses); lucro por ano = receitas − custos; liquidez = saldo acumulado mês a mês.",
-    "Edições feitas em menos de 0,7 s umas a seguir às outras perdem-se, e números com ponto de milhares (\"1.500\") são mal lidos (R-A6)."])
+    "Grava sozinha 0,7 s depois da última alteração, juntando tudo o que mudou, e ao sair da página. Lê números como se escrevem (\"1.500\", \"1.500,50\")."])
 
 S += ecra(K, "Diagnósticos", "Menu Diagnósticos · /gestao/diagnosticos · administradora e comercial",
           "As respostas do formulário público /diagnostico. A triagem decide o que sobe ao CRM.", "g-diagnosticos", [
@@ -480,22 +488,20 @@ S.append(P("<b>Progresso geral</b> = média das cinco percentagens (uma fase à 
            "por começar ou em curso. <b>Tema material</b> = aplicável e com as duas notas iguais ou acima do limiar (3,5 por omissão)."))
 S.append(P("<b>Maturidade de governança</b> = (respostas \"Sim\" + metade das \"Planeado\") nas perguntas 20 a 28 ÷ 9. <b>Payback</b> = "
            "investimento ÷ poupança anual (só com os dois valores)."))
-S.append(atencao(["O ano usado muda de ecrã para ecrã: o Percurso usa sempre o ano corrente; o Diagnóstico, os KPIs, o Relatório e a "
-                  "Apresentação usam o ano mais recente com dados. Com o ano de referência anterior preenchido, o Percurso mostra "
-                  "fases por começar que a Apresentação mostra avançadas (R-B9).",
+S.append(atencao(["Todos os ecrãs usam o mesmo ano de referência: o mais recente com diagnóstico preenchido (sem nenhum, o ano corrente).",
                   "Se nenhum tema for material e o resto estiver pronto, o Percurso diz que está tudo fechado com 80% (R-B10)."]))
 
 K = "CONSULTORIA ESG"
 S += ecra(K, "Consultorias ESG", "Menu Consultorias ESG · /gestao/esg · só administradora",
           "Um caso por empresa. Abrir leva ao caso, num separador próprio, com o menu da ESG.", "e-lista", [
-    (1, "Fases", "Cinco barras, uma por fase (verde quando pronta). Usa o diagnóstico e o relatório do ano corrente ou, se não houver, do mais recente."),
+    (1, "Fases", "Cinco barras, uma por fase (verde quando pronta), no ano de referência de cada caso."),
     (2, "Próximo passo", "A fase seguinte e o progresso geral."),
     (3, "Conta", "O caso está ligado a uma conta de cliente."),
 ], altura_max=6 * cm)
 
 S += ecra(K, "Percurso", "Caso → Percurso · /gestao/esg/:id/percurso",
           "A página de entrada do caso: em que fase está e o que vem a seguir. Na tira de cima, o estado do caso e a visibilidade para o cliente.", "e-percurso", [
-    (1, "Progresso geral", "Média das cinco fases. O ano de referência é sempre o corrente."),
+    (1, "Progresso geral", "Média das cinco fases, no ano de referência do caso (o mais recente com diagnóstico; sem nenhum, o corrente)."),
     (2, "Próximo passo", "A primeira fase por começar ou em curso."),
     (3, "feitas/total", "Por fase, com a percentagem (regras na página anterior)."),
     (4, "Projetos", "\"a de b temas materiais com projeto\"."),
@@ -567,34 +573,31 @@ K = "PLATAFORMA DO CLIENTE · CONTABILIDADE"
 S += ecra(K, "Início", "Menu Início · /contabilidade/inicio · a página de entrada do cliente",
           "Três perguntas: o que a Lúcia me disse, o que vence a seguir, o que tenho a pagar.", "c-inicio", [
     (1, "Mensagens da Lúcia", "As cinco últimas mensagens enviadas pela equipa (Gestão → Mensagens). \"Marcar como lido\" avisa a equipa."),
-    (2, "Próxima obrigação fiscal", "A primeira obrigação pendente com prazo de hoje em diante (as vencidas não aparecem)."),
+    (2, "Próxima obrigação fiscal", "A obrigação pendente mais antiga — uma em atraso aparece aqui primeiro, a vermelho."),
     (3, "Próximo pagamento", "O contrato ativo da conta (Financeiro): o primeiro mês devido sem pagamento registado, até 24 meses à frente."),
     (4, "Documentos deste mês", "Atalho para enviar documentos (Empresa)."),
     (5, "Menu do cliente", "Contabilidade e Gestão; na Alemanha também Reservas e EÜR."),
-], ["As obrigações vencidas nunca aparecem aqui; o menu conta as dos próximos 14 dias incluindo vencidas, e a página de Obrigações todas — três réguas (R-B3).",
-    "O contrato é procurado pela conta; um contrato ligado só à ficha da Gestão não aparece (R-C8)."])
+], ["O contrato é procurado pela conta; um contrato ligado só à ficha da Gestão não aparece (R-C8)."])
 
 S += ecra(K, "Painel", "Menu Painel · /contabilidade/dashboard",
           "Como está o negócio: entradas, saídas, resultado, IVA, reserva e break-even. Anual ou por trimestre.", "c-painel", [
     (1, "Receita", "Soma das entradas do período, sem privados (bruto, com IVA)."),
-    (2, "Custos Fixos", "Saídas de categorias fixas e sem categoria + as despesas recorrentes previstas e ainda não confirmadas (na vista anual, os 12 meses)."),
+    (2, "Custos Fixos", "Saídas de categorias fixas e sem categoria + as despesas recorrentes devidas <b>até ao mês corrente</b> e ainda não confirmadas. Os meses futuros ficam no gráfico e no aviso \"!\", não no resultado."),
     (3, "Custos Variáveis", "Saídas de categorias variáveis (material, marketing…)."),
     (4, "Resultado do ano", "Receita − (fixos + variáveis)."),
     (5, "IVA", "Liquidado (IVA das entradas) − dedutível (IVA das saídas) = a entregar ou a recuperar."),
-    (6, "Reserva para IR", "Resultado (mín. 0) × % de reserva da Empresa (25% se não houver). O 3.º cartão é o resultado depois da reserva."),
+    (6, "Reserva para IR", "Resultado (mín. 0) × % de reserva da Empresa (25% se não houver). O 3.º cartão é o \"Resultado após reserva\"."),
     (7, "Aviso Familienversicherung", "Só Alemanha: lucro médio mensal real do ano ÷ limite (Reservas); aparece a partir de 80%."),
     (8, "Fluxo de caixa por mês", "Entradas e saídas brutas por mês; por cima, o previsto das recorrentes."),
     (9, "Break-even", "Margem de contribuição = (receita − variáveis) ÷ receita; ponto de equilíbrio = fixos ÷ margem."),
     (10, "Receita por produto", "Entradas agrupadas pelo produto do catálogo; o peso é a parte da receita."),
-], ["O ano está fixo em 2026 (R-B1).",
-    "O resultado mistura o real com o previsto dos 12 meses — em janeiro já desconta a renda até dezembro; Reservas e EÜR só usam o real (R-B5).",
-    "O 3.º cartão da reserva chama-se \"Resultado do ano\" mas mostra outro valor (R-B5).",
-    "O aviso da Familienversicherung usa só a média real; Reservas usa o Planeamento quando existe (R-B6)."], altura_max=10.8 * cm)
+], ["Ano: o corrente por omissão, com seletor dos anos com lançamentos.",
+    "A reserva é calculada sobre o resultado bruto (com o IVA por pagar) — falta decidir com a Lúcia (R-B5)."], altura_max=10.8 * cm)
 
 S += ecra(K, "Painel — clientes em Portugal", "Painel → Trimestral, só fora da Alemanha",
           "Na vista trimestral aparece a estimativa da Segurança Social.", "c-painel-pt", [
     (1, "Base Segurança Social", "Rendimento do trimestre = receita bruta; base de incidência = 70%; contribuição estimada = base × 21,4%."),
-], ["Aparece também a sociedades e sem definições, e aplica 70% a toda a receita, incluindo venda de bens (R-B12)."], altura_max=12 * cm)
+], ["Não aparece a sociedades (regime \"Sociedade\" na Empresa). Aplica 70% a toda a receita, incluindo venda de bens."], altura_max=12 * cm)
 
 S += ecra(K, "Livro de Caixa", "Menu Livro de Caixa · /contabilidade/caixa",
           "Todos os movimentos da empresa. É a fonte de quase todos os números do cliente.", "c-caixa", [
@@ -605,7 +608,7 @@ S += ecra(K, "Livro de Caixa", "Menu Livro de Caixa · /contabilidade/caixa",
     (5, "Em Caixa", "Saldo dos movimentos com destino Caixa."),
     (6, "No Banco", "Saldo dos movimentos com destino Banco."),
 ], ["Valor sempre bruto; o IVA de cada linha = valor × taxa ÷ (100 + taxa).",
-    "O filtro de mês ignora o ano: \"Jan 2026\" junta todos os janeiros; o ano está fixo em 2026 (R-B1, R-B2)."])
+    "Filtra-se por ano (o corrente por omissão, ou todos) e por mês dentro do ano."])
 
 S += ecra(K, "Conciliação", "Menu Conciliação · /contabilidade/conciliacao",
           "Importa o extrato bancário e cruza-o com o Livro de Caixa.", "c-conciliacao", [
@@ -616,17 +619,15 @@ S += ecra(K, "Conciliação", "Menu Conciliação · /contabilidade/conciliacao"
     (4, "Não constam do extrato", "Lançamentos de banco sem par no extrato."),
     (5, "Criar lançamento", "Cria a linha no Livro de Caixa a partir do extrato."),
 ], ["\"Não constam do extrato\" conta lançamentos de todas as datas, mesmo fora do período importado (R-B11).",
-    "\"Criar lançamento\" grava sem IVA e sem categoria (R-A3)."], altura_max=9.5 * cm)
+    "\"Criar lançamento\" pede a taxa de IVA (por omissão a da empresa); a categoria escolhe-se depois no Livro de Caixa."], altura_max=9.5 * cm)
 
-S += ecra(K, "Despesas Recorrentes", "/contabilidade/recorrentes · sem entrada no menu",
+S += ecra(K, "Despesas Recorrentes", "Menu Despesas Recorrentes · /contabilidade/recorrentes",
           "Os custos fixos do mês: define-se o modelo e confirma-se o valor real em cada mês.", "c-recorrentes", [
-    (1, "Confirmar este mês", "Os modelos devidos no mês (mensal sempre; trimestral em jan/abr/jul/out; anual em janeiro). Confirmar cria a saída no Livro de Caixa."),
+    (1, "Confirmar este mês", "Os modelos devidos no mês, com a regra do Financeiro: mensal sempre; trimestral de 3 em 3 meses e anual de 12 em 12, a contar do início. Confirmar cria a saída no Livro de Caixa, com o IVA do modelo (ou o da empresa)."),
     (2, "Previsto (por confirmar)", "Soma dos devidos ainda não confirmados — é o que o Painel soma aos custos fixos."),
     (3, "Confirmado", "Soma do que já foi confirmado no mês."),
     (4, "Modelos", "Descrição, categoria, valor, periodicidade, dia, início e fim."),
-], ["Só se chega aqui pelo \"!\" do Painel, que só aparece quando já há modelos — uma cliente nova não consegue criar o primeiro (R-D2).",
-    "A periodicidade ignora o mês de início (um seguro anual de maio aparece em janeiro); a avença usa o início (R-B4).",
-    "A saída confirmada não leva IVA (R-A3)."], altura_max=9.5 * cm)
+], ["Está no menu, a seguir ao Livro de Caixa (também no Lite)."], altura_max=9.5 * cm)
 
 S += ecra(K, "Calculadora de Preços — Evento", "Menu Calculadora de Preços · /contabilidade/precificacao · nada é gravado",
           "Quatro calculadoras: Evento/Catering, Serviço por hora, Produto/Revenda e Tratamento.", "c-precos", [
@@ -652,12 +653,12 @@ S += ecra(K, "Calculadora de Preços — Tratamento", "Calculadora de Preços �
 S += ecra(K, "Planeamento Mensal", "Menu Planeamento Mensal · /contabilidade/planeamento",
           "Os tratamentos ou serviços planeados por mês: receita, custos, lucro e reserva. Vem da folha de cálculo da Célia.", "c-planeamento", [
     (1, "Custo indireto por hora", "Custos fixos mensais ÷ horas produtivas."),
-    (2, "Reserva (%)", "A % da Empresa (só leitura; 20% se não houver)."),
+    (2, "Reserva (%)", "A % da Empresa (só leitura; 25% se não houver)."),
     (3, "Receita", "Preço líquido × quantidade por mês."),
     (4, "Lucro (EÜR)", "Receita − material × quantidade − (duração ÷ 60) × custo indireto/hora × quantidade."),
     (5, "TOTAL", "Somas das linhas. O lucro total alimenta o cheque da Familienversicherung (Reservas e Conta na plataforma)."),
 ], ["O preço do catálogo é \"líquido\" aqui e bruto no Livro de Caixa (R-B7).",
-    "Se as horas planeadas forem menos do que as produtivas, parte dos custos fixos não entra no lucro (R-B6).",
+    "Se as horas planeadas forem menos do que as produtivas, parte dos custos fixos não entra no lucro. É uma simulação: a Familienversicherung usa o lucro real.",
     "Clientes em Portugal também veem \"Lucro (EÜR)\"."], altura_max=9.5 * cm)
 
 S += ecra(K, "Clientes · Catálogo", "Menu Clientes e Catálogo",
@@ -666,39 +667,35 @@ S += ecra(K, "Clientes · Catálogo", "Menu Clientes e Catálogo",
     (2, "Total", "Número de clientes."),
     (3, "Países", "Número de países diferentes."),
 ], ["Esta lista não alimenta nenhum outro ecrã do cliente; foi também a lista antiga da Lúcia, agora congelada (R-D7).",
-    "O Catálogo não tem números: o preço é usado no Livro de Caixa (× quantidade) e no Planeamento. Clientes e Catálogo não permitem editar, só criar e apagar (R-D9)."],
+    "O Catálogo não tem números: o preço é usado no Livro de Caixa (× quantidade) e no Planeamento. Os dois já permitem editar (✏️)."],
    altura_max=6.5 * cm)
 
 S += ecra(K, "Obrigações Fiscais", "Menu Obrigações Fiscais · /contabilidade/obrigacoes",
           "Os prazos do cliente. Inclui os que a equipa gere na Gestão, se a conta estiver ligada à ficha.", "c-obrigacoes", [
-    (1, "N obrigações pendentes", "Todas as pendentes, de qualquer data."),
-    (2, "Gerar calendário", "Gerador do lado do cliente, pelos dados da Empresa. PT: IVA trimestral (dia 20), Segurança Social (dia 20 de jan/abr/jul/out) "
-     "e IRS (30/06). DE: UStVA (dia 10), Gewerbesteuer-Vorauszahlung (sempre) e Einkommensteuererklärung (31/07)."),
-    (3, "Pendente / Entregue", "Botão de estado. Para obrigações da equipa, o gatilho converte para os oito estados."),
-], ["Dois geradores com regras e códigos diferentes podem duplicar prazos (R-C3).",
-    "O calendário da Segurança Social PT está desfasado um trimestre (o T1 cai a 20 de janeiro) — R-B12.",
-    "A Gewerbesteuer é gerada também para Freiberufler (R-C3).",
-    "Marcar \"Pendente\" numa obrigação da equipa apaga o estado de trabalho (R-A1)."], altura_max=9 * cm)
+    (1, "N obrigações em atraso ou nos próximos 14 dias", "A mesma régua do menu e do sino. A lista mostra todas."),
+    (2, "Calendário", "Já não há gerador do lado do cliente: o calendário é gerado pela equipa no portal (Gestão → Obrigações fiscais) e aparece aqui. <i>(No print, o botão antigo \"Gerar calendário\".)</i>"),
+    (3, "Pendente / Entregue", "Só nas obrigações que o próprio cliente criou. As da equipa têm a etiqueta \"equipa\" e são só de leitura (migração 038)."),
+], ["Para clientes sem ficha ligada na Gestão não há calendário automático — ligar a conta à ficha em Dados do cliente."], altura_max=9 * cm)
 
 S += ecra(K, "Empresa", "Menu Empresa · /contabilidade/empresa",
           "Os dados que decidem as regras fiscais do cliente, e o envio de documentos por mês.", "c-empresa", [
     (1, "País", "PT ou DE: decide o menu (Reservas e EÜR), o IVA por omissão, o calendário e a Segurança Social no Painel."),
-    (2, "Moeda", "Não é usada em lado nenhum (tudo em €) — R-D8."),
+    (2, "Moeda", "Saiu do ecrã (não era usada; tudo em €). <i>No print ainda aparece.</i>"),
     (3, "Regime de IVA", "Normal ou isento: Livro de Caixa, Reservas, EÜR, Tratamento, calendário."),
-    (4, "Reserva de IR (%)", "Painel, Reservas (que também a edita), Planeamento, Calculadora."),
+    (4, "Reserva de IR (%)", "O único sítio onde se edita. Usada no Painel, Reservas, Planeamento e Calculadora (25% se vazia)."),
     (5, "Regime de Segurança Social", "Só o gerador de calendário PT o usa."),
-    (6, "Início do ano fiscal", "Não é usado em lado nenhum — R-D8."),
+    (6, "Início do ano fiscal", "Saiu do ecrã (não era usado). <i>No print ainda aparece.</i>"),
     (7, "Documentos", "Envia para a pasta do mês ({conta}/AAAA-MM). Depois de enviado, só a Lúcia remove. Aparece à equipa em Documentos → Enviados pelo cliente."),
 ], altura_max=11 * cm)
 
 S += ecra(K, "Reservas e Impostos (Alemanha)", "Menu Reservas & Impostos · /contabilidade/rucklagen · só clientes na Alemanha",
           "Quanto do dinheiro na conta já é do Finanzamt.", "c-reservas", [
     (1, "Lucro até hoje", "Entradas − saídas do ano corrente, sem privados (bruto)."),
-    (2, "Percentagem de reserva", "Entre 0 e 60; grava logo nos dados da Empresa."),
+    (2, "Percentagem de reserva", "A da Empresa, só leitura, com ligação para a alterar lá. <i>(No print, os botões antigos −/+.)</i>"),
     (3, "Reserva de imposto recomendada", "Lucro (mín. 0) × %."),
     (4, "Valor previsto a pagar (USt)", "IVA recebido − Vorsteuer, acumulado do ano (sem descontar UStVA já pagas)."),
     (5, "Previdência", "Kranken-, Renten- e outras, por mês (escritas à mão)."),
-    (6, "Familienversicherung", "Lucro mensal (Planeamento, se existir; senão média real) face ao limite (565 € por omissão)."),
+    (6, "Familienversicherung", "Lucro mensal real (média do ano) face ao limite (565 € por omissão); o do Planeamento aparece por baixo, como simulação."),
     (7, "Total (atual)", "Reservado para impostos (do ano) + previdência (de um mês)."),
 ], ["O lucro é bruto, por isso já inclui o IVA por pagar; a reserva aplica a % sobre ele e o total volta a somar o IVA — parte fica reservada a mais (R-B5).",
     "\"Total\" soma um acumulado do ano com um valor mensal; o anel da previdência está fixo em 75% (R-B5)."], altura_max=13.5 * cm)
@@ -828,6 +825,12 @@ S += achados("D · Funcionalidades a retirar ou ligar", "O que se pode tirar sem
     ("R-D11", "Lembrete que não lembra", "O \"lembrete automático\" das tarefas é só a etiqueta 🔔; nada é enviado.", "Baixa", "M", "Enviar o resumo diário por e-mail à equipa, ou mudar o nome para \"destacar\"."),
 ])
 
+S += [PageBreak(), P("REVISÃO GERAL", kicker), P("Estado da revisão", h1)]
+S.append(P("<b>Fase 1 feita a 01/10</b> (com a migração 038): R-A1, R-A2, R-A3, R-A6 · R-B1, R-B2, R-B3, R-B4, R-B6, R-B8, R-B9, R-B12 · "
+           "R-C3 · R-D1, R-D2, R-D3, R-D8, R-D9. Do R-B5 ficou feito: custos fixos só até ao mês corrente e o nome \"Resultado após reserva\"."))
+S.append(P("<b>À espera de decisão da Lúcia:</b> papéis da equipa (R-A4); reserva sobre o resultado com ou sem IVA e o \"Total\" de Reservas (resto do R-B5); "
+           "Calculadora de Preços (R-B7, sessão combinada a 01/10); retirar ou não Contabilidade → Clientes (R-D7). O Marketing (R-D6) já não sai: vai ter a prévia do Instagram (reunião de 01/10)."))
+S.append(P("<b>Ainda em aberto, sem decisão pendente:</b> R-A5, R-B10, R-B11 (pacotes de acertos da ESG e do portal), a Fase 2 (R-C1, R-C2, R-C4 a R-C8) e a Fase 3."))
 S += [PageBreak(), P("REVISÃO GERAL", kicker), P("Proposta de simplificação", h1)]
 S.append(P("Em três fases, da mais urgente para a mais estrutural. As duas primeiras cabem antes do fecho do contrato (novembro)."))
 S.append(P("Fase 1 · Acertos sem mudar o modelo (2 a 3 semanas)", h2))

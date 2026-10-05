@@ -52,7 +52,10 @@ const NAV = {
       { to: '/contabilidade/inicio',       Icon: IconInicio,   labelKey: 'nav_inicio' },
       { to: '/contabilidade/dashboard',    Icon: IconPainel,   labelKey: 'nav_dash' },
       { to: '/contabilidade/caixa',        Icon: IconCaixa,    labelKey: 'nav_caixa' },
-      { to: '/contabilidade/conciliacao',  Icon: IconRucklagen, labelKey: 'nav_conciliacao' },
+      // Antes só se chegava pelo "!" do Painel, que só aparecia com modelos já criados (R-D2)
+      { to: '/contabilidade/recorrentes',  Icon: IconRelatorios, labelKey: 'nav_recorrentes' },
+      // A Conciliação não existe no Lite — o menu mostrava-a e devolvia ao Painel (R-D3)
+      { to: '/contabilidade/conciliacao',  Icon: IconRucklagen, labelKey: 'nav_conciliacao', semLite: true },
       { to: '/contabilidade/catalogo',     Icon: IconCatalogo, labelKey: 'nav_catalogo' },
       { to: '/contabilidade/obrigacoes',   Icon: IconObrig,    labelKey: 'nav_obligations' },
     ]},
@@ -154,6 +157,7 @@ export default function Sidebar() {
       items: sec.items
         .filter(it => !it.roles || it.roles.includes(role))
         .filter(it => !(casoId && it.soCliente))
+        .filter(it => !(lite && it.semLite))
         .map(it => it.rota ? { ...it, to: `${esgBase}/${it.rota}` } : it),
     })).filter(sec => sec.items.length > 0)
 
