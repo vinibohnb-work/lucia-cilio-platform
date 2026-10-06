@@ -4,18 +4,17 @@ import { supabase } from '../lib/supabase'
 const AuthContext = createContext()
 
 async function fetchProfile(userId) {
-  if (!userId) return { role: null, platform: null, mustChangePassword: false, displayName: '' }
+  if (!userId) return { role: null, platform: null, mustChangePassword: false }
   const { data, error } = await supabase
     .from('profiles')
-    .select('role, platform, must_change_password, display_name')
+    .select('role, platform, must_change_password')
     .eq('id', userId)
     .single()
-  if (error) return { role: 'user', platform: 'accounting', mustChangePassword: false, displayName: '' } // fallback (ex: antes das migrações)
+  if (error) return { role: 'user', platform: 'accounting', mustChangePassword: false } // fallback (ex: antes das migrações)
   return {
     role: data?.role || 'user',
     platform: data?.platform || 'accounting',
     mustChangePassword: !!data?.must_change_password,
-    displayName: data?.display_name || '',
   }
 }
 
@@ -24,7 +23,6 @@ export function AuthProvider({ children }) {
   const [role, setRole]       = useState(null)
   const [platform, setPlatform] = useState(null)
   const [mustChangePassword, setMustChangePassword] = useState(false)
-  const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,10 +32,10 @@ export function AuthProvider({ children }) {
       if (!active) return
       setSession(sess)
       if (sess?.user) {
-        const { role: r, platform: p, mustChangePassword: m, displayName: n } = await fetchProfile(sess.user.id)
-        if (active) { setRole(r); setPlatform(p); setMustChangePassword(m); setDisplayName(n) }
+        const { role: r, platform: p, mustChangePassword: m } = await fetchProfile(sess.user.id)
+        if (active) { setRole(r); setPlatform(p); setMustChangePassword(m) }
       } else {
-        setRole(null); setPlatform(null); setMustChangePassword(false); setDisplayName('')
+        setRole(null); setPlatform(null); setMustChangePassword(false)
       }
       if (active) setLoading(false)
     }
@@ -56,7 +54,8 @@ export function AuthProvider({ children }) {
     user: session?.user ?? null,
     role,
     platform,
-    displayName,   // o nome do perfil, para a saudação
+    // O nome da pessoa vive nos metadados da conta (é o que Acessos grava), não em profiles.
+    displayName: session?.user?.user_metadata?.display_name || '',
     isAdmin: role === 'admin',
     // Palavra-passe temporária por trocar: força a passagem por /definir-senha
     mustChangePassword,
