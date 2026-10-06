@@ -194,3 +194,28 @@ falta" e **sem nenhuma obrigação**.
 | Relatório T3 2026 (rascunho) | `relatorios_trimestrais` | `cliente_id` da ficha |
 | Mensagem "TESTE — Bem-vinda!…" | `client_notices` | `user_id` da conta |
 | `TESTE-extrato-outubro.txt` (cliente), comprovativo removido | storage `client-docs/50234829…/` | sai com a conta |
+
+## Correções — 06/10
+
+Publicadas em `main` (`0d44073` + `6ebc100`) e verificadas em produção com uma ficha de teste
+nova (`TESTE Correções — apagar`, criada e eliminada pelo botão novo):
+
+| Erro | Correção | Verificado |
+|---|---|---|
+| Criar ficha não grava o calendário | o `id` vai no insert | ✅ 7 obrigações PT persistem após F5 |
+| F5 na ficha volta à lista | espera por `s.carregado` | ✅ ligação direta abre a ficha |
+| Relatório não fica "enviado" | estado vai no upsert | ✅ "Enviado · 06 out." após F5 |
+| "+" das horas regista 1 h | campo nasce vazio | ✅ 0 h depois de carregar em "+" |
+| Saudação sem nome / feminino | "Olá, {primeiro nome}" (metadados da conta) | ✅ "Olá, …" |
+| "enviaste" | impessoal | — (texto) |
+| Sem eliminar ficha | cartão "Eliminar ficha" (admin, escrever o nome) | ✅ botão desativado até o nome bater; ficha some da lista |
+| Eliminar conta apaga obrigações | API desliga `user_id` antes de apagar | — (não exercitado; código) |
+
+**Incidente durante a publicação (≈10 min):** a primeira versão lia `display_name` de
+`profiles`, que não tem essa coluna; a leitura do perfil falhava e o fallback dava a toda a
+gente o papel "user" — o admin caía na Contabilidade e perdia a Gestão. Corrigido em
+`6ebc100` (o nome vem dos metadados da conta). Se a Lúcia entrou nesse intervalo, bastou
+recarregar.
+
+**Em branch (`jornada-docs-cliente`, à espera da migração 039):** o cliente passa a ver no
+Início e em Dados da Empresa → Documentos os pedidos do mês com o estado e quantos faltam.

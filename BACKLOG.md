@@ -52,9 +52,11 @@
   "Enviar documentos →" leva a Dados da Empresa (v1) com uma caixa de ficheiro; o cliente não
   vê os 3 pedidos do mês nem o que falta. Mínimo: mostrar no Início e nessa secção os pedidos
   do mês e o estado de cada um; ideal: a página Documentos do portal em modo cliente.
-  ⚠️ **Depende de:** migração 039 — o cliente não tem hoje leitura em `clientes` (a sua
-  ficha) nem em `documentos_cliente` (só a equipa, 037). As restantes 7 correções já estão
-  publicadas (06/10, ver Concluídos).
+  **Feito na branch `jornada-docs-cliente`** (06/10): Início e a secção Documentos mostram os
+  pedidos do mês (tipo · estado) e "Faltam N documentos"; `supabase/migration_039.sql` dá ao
+  cliente leitura da própria ficha e dos pedidos dela.
+  ⚠️ **Depende de:** aplicar a 039 no SQL Editor (duas regras de leitura, sem mexer em dados)
+  e depois fazer o merge. As restantes 7 correções já estão publicadas (ver Concluídos).
 
 - [ ] **Dúvidas da etapa 1 para a Lúcia**
   *Teste 05/10/2026 · Resp.: Vinícius (com a Lúcia)*
@@ -595,6 +597,9 @@
   · "Eliminar ficha" em Dados do cliente, só admin, a escrever o nome para confirmar.
   · Eliminar uma conta desliga primeiro as obrigações da ficha (`user_id` a null) em vez de
     as apagar em cascata.
+  Verificadas em produção com uma ficha de teste, criada e eliminada pelo botão novo. Pelo
+  caminho, ≈10 min com o admin a cair em "user" (leitura de `profiles` com coluna
+  inexistente) — corrigido em `6ebc100`.
 
 ### Migração 038 e publicação da Fase 1 — 05/10
 
