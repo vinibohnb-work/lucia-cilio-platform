@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { supabase } from '../lib/supabase'
 import { localeDe } from '../lib/formato'
+import { usePedidosDocumentos, ESTADO_PEDIDO } from '../lib/pedidosDocumentos'
 
 // Envio de documentos pelo cliente — vive na área da Empresa e arruma tudo por
 // mês (decisão de 27/08: "é como a Lúcia os procura ao fechar as contas").
@@ -31,6 +32,7 @@ export default function EnvioDocumentos({ userId }) {
   const [aEnviar, setAEnviar] = useState(false)
   const [erro, setErro] = useState('')
   const [ok, setOk] = useState('')
+  const { pedidos } = usePedidosDocumentos(userId, Number(mes.slice(0, 4)), Number(mes.slice(5, 7)))
 
   const L = lang === 'de' ? {
     titulo: 'Belege senden', sub: 'Nach Monat abgelegt — so wie sie beim Abschluss gesucht werden.',
@@ -38,18 +40,21 @@ export default function EnvioDocumentos({ userId }) {
     vazio: 'Für diesen Monat noch nichts gesendet.', enviado: 'Gesendet ✓',
     erro: 'Senden fehlgeschlagen (Migration 032 nötig).', abrir: 'Öffnen',
     aviso: 'Einmal gesendet, bleibt die Datei — löschen kann nur Lúcia.',
+    pedidos: 'Für diesen Monat angefragt', pedidosNota: 'Nach dem Senden ordnet das Team die Datei zu und der Status ändert sich.',
   } : lang === 'en' ? {
     titulo: 'Send documents', sub: 'Filed by month — the way they are looked up at closing.',
     mes: 'Month', enviar: '⬆ Choose file', aEnviar: 'Sending…',
     vazio: 'Nothing sent for this month yet.', enviado: 'Sent ✓',
     erro: 'Could not send (migration 032 required).', abrir: 'Open',
     aviso: 'Once sent, the file stays — only Lúcia can remove it.',
+    pedidos: 'Requested for this month', pedidosNota: 'After you send a file, the team classifies it and the status updates.',
   } : {
     titulo: 'Enviar documentos', sub: 'Arrumados por mês — como são procurados no fecho das contas.',
     mes: 'Mês', enviar: '⬆ Escolher ficheiro', aEnviar: 'A enviar…',
     vazio: 'Ainda não foi enviado nada para este mês.', enviado: 'Enviado ✓',
     erro: 'Não foi possível enviar (é necessária a migração 032).', abrir: 'Abrir',
     aviso: 'Depois de enviado, o ficheiro fica — só a Lúcia o pode remover.',
+    pedidos: 'Pedido para este mês', pedidosNota: 'Depois de enviar, a equipa classifica o ficheiro e o estado atualiza-se.',
   }
 
   // Últimos 18 meses: chega para quem está a pôr as contas em dia sem
@@ -133,6 +138,20 @@ export default function EnvioDocumentos({ userId }) {
       </div>
 
       {erro && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '9px', padding: '10px 13px', fontSize: '12.5px', fontWeight: 600, marginBottom: '12px' }}>{erro}</div>}
+
+      {/* O que a equipa pediu para este mês e o estado de cada documento (039). */}
+      {pedidos.length > 0 && (
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '6px' }}>{L.pedidos}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {pedidos.map(p => {
+              const cor = p.estado === 'em_falta' ? t.dueSoon : t.dueOk
+              return <span key={p.id} style={{ fontSize: '11.5px', fontWeight: 700, padding: '3px 9px', borderRadius: '999px', background: cor.bg, color: cor.ink }}>{p.tipo} · {(ESTADO_PEDIDO[p.estado] || {})[lang] || p.estado}</span>
+            })}
+          </div>
+          <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '6px' }}>{L.pedidosNota}</div>
+        </div>
+      )}
 
       <div style={{ background: t.softCardBg, borderRadius: '11px', padding: '4px 14px' }}>
         {aCarregar && <div style={{ padding: '14px 0', fontSize: '12.5px', color: t.subtle }}>…</div>}

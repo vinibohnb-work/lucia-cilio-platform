@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 import { localeDe } from '../../lib/formato'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
 import { useAuth } from '../../context/AuthContext'
+import { usePedidosDocumentos, ESTADO_PEDIDO } from '../../lib/pedidosDocumentos'
 import { getCompanySettings } from '../../lib/companySettings'
 import { isDueInPeriod } from '../gestao/Financeiro'
 
@@ -36,6 +37,8 @@ export default function Inicio() {
   const [pagamentos, setPagamentos] = useState([])
   const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
+  const agora = new Date()
+  const { pedidos } = usePedidosDocumentos(eid, agora.getFullYear(), agora.getMonth() + 1)
 
   const L = lang === 'de' ? {
     eyebrow: 'Übersicht', ola: 'Willkommen zurück', semNome: 'Ihr Unternehmen',
@@ -48,6 +51,7 @@ export default function Inicio() {
     completaCta: 'Jetzt ergänzen →', lido: 'Gelesen', marcarLido: 'Als gelesen markieren',
     porMes: { monthly: 'pro Monat', quarterly: 'pro Quartal', annual: 'pro Jahr', once: 'einmalig' },
     verContrato: 'Vertrag ansehen →',
+    emFalta: (n) => n === 1 ? '1 Beleg fehlt noch.' : `${n} Belege fehlen noch.`, tudoEntregue: 'Alles eingereicht ✓',
   } : lang === 'en' ? {
     eyebrow: 'Overview', ola: 'Welcome back', semNome: 'Your company',
     avisos: 'Messages from Lúcia', semAvisos: 'No new messages.',
@@ -59,6 +63,7 @@ export default function Inicio() {
     completaCta: 'Complete now →', lido: 'Read', marcarLido: 'Mark as read',
     porMes: { monthly: 'per month', quarterly: 'per quarter', annual: 'per year', once: 'one-off' },
     verContrato: 'See contract →',
+    emFalta: (n) => n === 1 ? '1 document still missing.' : `${n} documents still missing.`, tudoEntregue: 'All sent ✓',
   } : {
     eyebrow: 'Resumo', ola: 'Olá', semNome: 'A sua empresa',   // neutro: a saudação leva o nome da pessoa (teste de 05/10)
     avisos: 'Mensagens da Lúcia', semAvisos: 'Não há mensagens novas.',
@@ -70,6 +75,7 @@ export default function Inicio() {
     completaCta: 'Completar agora →', lido: 'Lido', marcarLido: 'Marcar como lido',
     porMes: { monthly: 'por mês', quarterly: 'por trimestre', annual: 'por ano', once: 'pagamento único' },
     verContrato: 'Ver contrato →',
+    emFalta: (n) => n === 1 ? 'Falta 1 documento.' : `Faltam ${n} documentos.`, tudoEntregue: 'Tudo entregue ✓',
   }
 
   const load = useCallback(async () => {
@@ -135,6 +141,7 @@ export default function Inicio() {
   const rotulo = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '8px' }
   const tom = { info: { bg: t.chipBg, ink: t.chipText }, ok: t.dueOk, acao: t.dueSoon }
   const prox = proximoPeriodo()
+  const emFalta = pedidos.filter(p => p.estado === 'em_falta')
   // Primeiro nome da pessoa; sem ele, o nome da empresa. (Em "ver como", é a empresa vista.)
   const quem = (!isViewing && displayName.split(' ')[0]) || settings?.company_name || ''
 
@@ -216,11 +223,21 @@ export default function Inicio() {
         </div>
       </div>
 
-      {/* Documentos do mês */}
+      {/* Documentos do mês — com o que a equipa pediu e ainda falta (039) */}
       <div style={{ ...card, marginTop: '14px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '200px' }}>
           <div style={{ ...rotulo, marginBottom: '4px' }}>{L.docs}</div>
           <div style={{ fontSize: '12.5px', color: t.subtle }}>{new Date().toLocaleDateString(localeDe(lang), { month: 'long', year: 'numeric' })}</div>
+          {pedidos.length > 0 && (
+            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {pedidos.map(p => {
+                const falta = p.estado === 'em_falta'
+                const cor = falta ? t.dueSoon : t.dueOk
+                return <span key={p.id} style={{ fontSize: '11.5px', fontWeight: 700, padding: '3px 9px', borderRadius: '999px', background: cor.bg, color: cor.ink }}>{p.tipo} · {(ESTADO_PEDIDO[p.estado] || {})[lang] || p.estado}</span>
+              })}
+            </div>
+          )}
+          {pedidos.length > 0 && <div style={{ fontSize: '12px', color: emFalta.length ? t.dueSoon.ink : t.subtle, marginTop: '6px', fontWeight: emFalta.length ? 700 : 400 }}>{emFalta.length ? L.emFalta(emFalta.length) : L.tudoEntregue}</div>}
         </div>
         <button onClick={() => navigate('/contabilidade/empresa')}
           style={{ padding: '9px 15px', background: 'transparent', border: `1px solid ${t.cardBorder}`, borderRadius: '9px', fontWeight: 700, fontSize: '12px', color: t.accentText, cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.docsCta}</button>
