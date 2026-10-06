@@ -62,9 +62,11 @@
   · Saudação "Bem-vinda de volta" sem nome e sempre no feminino; "enviaste" vs "você".
   · Não há botão para eliminar uma ficha (nem para a Célia duplicada): "Eliminar ficha" em
     Dados do cliente, só admin, com confirmação pelo nome.
-  ⚠️ **Depende de:** aplicar a **migração 035** (colunas `contract_path`/`contract_name` em
-  `client_billing`) — não está em produção e dá erro 400 na aba Conta na plataforma, no
-  Financeiro (anexar contrato) e no Início do cliente.
+  · **Eliminar a conta de um cliente apaga o calendário fiscal da ficha** (06/10): as
+    obrigações da equipa levam o `user_id` da conta e a chave tem `on delete cascade`. Passar a
+    `set null` (migração) ou a API limpar o `user_id` antes de apagar; ver o mesmo para as
+    mensagens (`client_notices`).
+  ✔ 06/10: a migração 035 (`contract_path`/`contract_name`) foi aplicada em produção.
 
 - [ ] **Dúvidas da etapa 1 para a Lúcia**
   *Teste 05/10/2026 · Resp.: Vinícius (com a Lúcia)*

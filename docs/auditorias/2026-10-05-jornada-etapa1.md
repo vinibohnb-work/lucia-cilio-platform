@@ -169,7 +169,19 @@ Legenda: ✅ passou · ❌ falhou · ⚠️ confuso / dúvida de produto · 📝
   `clientes` — as tabelas da 037 têm `on delete cascade`. Consulta em
   `supabase/limpeza_teste_jornada_2026-10-05.sql` (lista primeiro, apaga depois).
 
-## Dados de teste criados (para apagar)
+**06/10:** a 035 foi aplicada e a conta de teste eliminada em Acessos. A ficha **ainda
+estava na lista** depois disso (o bloco B da consulta não chegou a apagar) — com "3 doc. em
+falta" e **sem nenhuma obrigação**.
+- ❌ **Eliminar a conta apagou as 16 obrigações da ficha.** As obrigações da equipa levam
+  `user_id` da conta (para o cliente as ver) e `fiscal_obligations.user_id` tem `on delete
+  cascade` das migrações antigas. Se a Lúcia eliminar a conta de um cliente (trocar de e-mail,
+  limpar um acesso), o calendário fiscal da ficha desaparece com ela. **Corrigir:** `on delete
+  set null` para as obrigações ligadas a uma ficha (ou a API pôr `user_id` a null antes de
+  apagar). Mesma pergunta para `client_notices` (mensagens) e para a pasta de ficheiros, que a
+  API apaga de propósito.
+- A ficha sai com o bloco B (delete por id).
+
+## Dados de teste criados (apagados a 06/10)
 
 | O quê | Onde | Identificador |
 |---|---|---|
