@@ -38,6 +38,9 @@ export default function PaginaCliente({ idFixo }) {
   const [tarefa, setTarefa] = useState(false)
   const [whats, setWhats] = useState(false)
 
+  // Ao abrir pelo endereço (ou F5) os dados ainda não chegaram: esperar, em vez
+  // de concluir que a ficha não existe e voltar à lista (teste de 05/10).
+  if (!s.carregado) return <div style={{ padding: '24px 0', fontSize: '13px', color: t.subtle }}>A carregar…</div>
   if (!cliente) return <Navigate to="/gestao/clientes" replace />
   const base = modoCliente ? '/v2/portal' : `/gestao/clientes/${id}`
   const porLer = naoLidas(s, id).length

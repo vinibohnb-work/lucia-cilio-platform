@@ -47,7 +47,7 @@ export default function EnvioDocumentos({ userId }) {
   } : {
     titulo: 'Enviar documentos', sub: 'Arrumados por mês — como são procurados no fecho das contas.',
     mes: 'Mês', enviar: '⬆ Escolher ficheiro', aEnviar: 'A enviar…',
-    vazio: 'Ainda não enviaste nada para este mês.', enviado: 'Enviado ✓',
+    vazio: 'Ainda não foi enviado nada para este mês.', enviado: 'Enviado ✓',
     erro: 'Não foi possível enviar (é necessária a migração 032).', abrir: 'Abrir',
     aviso: 'Depois de enviado, o ficheiro fica — só a Lúcia o pode remover.',
   }

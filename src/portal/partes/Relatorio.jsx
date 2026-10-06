@@ -3,7 +3,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
 import { Botao, Campo, useCampos, Chip } from '../ui'
-import { fmtEur, fmtData, PAISES } from '../regras'
+import { fmtEur, fmtData, hojeIso, PAISES } from '../regras'
 
 // Relatório trimestral (documento, secção 8). Os números são introduzidos à
 // mão porque a contabilidade pode estar no TOConline, Lexware, DATEV ou noutro
@@ -62,7 +62,7 @@ export function EditorRelatorio({ inicial, aoFechar, soLeitura }) {
   const cli = s.clientes.find(x => x.id === r.clienteId)
   const ant = anteriorDe(s.relatorios, r)
   const set = (k) => (e) => setR(p => ({ ...p, [k]: e.target.value }))
-  const guardar = () => acoes.guardarRelatorio({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])) })
+  const guardar = (extra = {}) => acoes.guardarRelatorio({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])), ...extra })
 
   return (
     <div>
@@ -103,7 +103,7 @@ export function EditorRelatorio({ inicial, aoFechar, soLeitura }) {
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
         {!soLeitura && <Botao variante="primario" onClick={() => { guardar(); aoFechar?.() }}>Guardar</Botao>}
         <Botao onClick={() => exportarPdf({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])) }, cli, ant)}>Exportar PDF</Botao>
-        {!soLeitura && r.estado !== 'enviado' && <Botao variante="ouro" onClick={() => { acoes.marcarRelatorioEnviado(guardar()); aoFechar?.() }} title="Depois de exportar o PDF e o enviar ao cliente">Guardar e marcar como enviado</Botao>}
+        {!soLeitura && r.estado !== 'enviado' && <Botao variante="ouro" onClick={() => { guardar({ estado: 'enviado', enviadoEm: hojeIso() }); aoFechar?.() }} title="Depois de exportar o PDF e o enviar ao cliente">Guardar e marcar como enviado</Botao>}
         {aoFechar && <Botao variante="fantasma" onClick={aoFechar}>Fechar</Botao>}
       </div>
     </div>

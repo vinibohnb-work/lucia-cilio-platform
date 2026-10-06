@@ -47,26 +47,14 @@
 
 ### Ajustes da reunião de 01/10 (validação da jornada do cliente)
 
-- [ ] **Correções da etapa 1 do teste da jornada (antes da Nicole testar)**
+- [ ] **Correções da etapa 1 — o que falta: os documentos pedidos, visíveis ao cliente**
   *Teste 05/10/2026 · Resp.: Vinícius*
-  · Criar ficha não grava o calendário: `paraCliente()` tira o `id`, a base atribui outro e
-    as 16 obrigações apontam para um id que não existe (`dados.js:73`). Enviar o `id`.
-  · Abrir a ficha pelo endereço (ou F5) volta à lista: `PaginaCliente.jsx:41` redireciona
-    antes de os dados carregarem. Esperar `s.carregado`.
-  · "Guardar e marcar como enviado" do relatório não grava o "enviado": o `update` corre
-    antes do `upsert` e atualiza 0 linhas sem erro (`Relatorio.jsx:106`).
-  · "+" das horas com campos vazios regista "Trabalho · 1 h".
-  · O cliente não vê o que a equipa lhe pediu: "Enviar documentos →" vai para Dados da
-    Empresa (v1) com uma caixa de ficheiro; mostrar no Início e nessa secção os pedidos do
-    mês e o que falta (mínimo), ou a página Documentos do portal em modo cliente.
-  · Saudação "Bem-vinda de volta" sem nome e sempre no feminino; "enviaste" vs "você".
-  · Não há botão para eliminar uma ficha (nem para a Célia duplicada): "Eliminar ficha" em
-    Dados do cliente, só admin, com confirmação pelo nome.
-  · **Eliminar a conta de um cliente apaga o calendário fiscal da ficha** (06/10): as
-    obrigações da equipa levam o `user_id` da conta e a chave tem `on delete cascade`. Passar a
-    `set null` (migração) ou a API limpar o `user_id` antes de apagar; ver o mesmo para as
-    mensagens (`client_notices`).
-  ✔ 06/10: a migração 035 (`contract_path`/`contract_name`) foi aplicada em produção.
+  "Enviar documentos →" leva a Dados da Empresa (v1) com uma caixa de ficheiro; o cliente não
+  vê os 3 pedidos do mês nem o que falta. Mínimo: mostrar no Início e nessa secção os pedidos
+  do mês e o estado de cada um; ideal: a página Documentos do portal em modo cliente.
+  ⚠️ **Depende de:** migração 039 — o cliente não tem hoje leitura em `clientes` (a sua
+  ficha) nem em `documentos_cliente` (só a equipa, 037). As restantes 7 correções já estão
+  publicadas (06/10, ver Concluídos).
 
 - [ ] **Dúvidas da etapa 1 para a Lúcia**
   *Teste 05/10/2026 · Resp.: Vinícius (com a Lúcia)*
@@ -594,6 +582,19 @@
 ---
 
 ## Concluídos
+
+### Correções da etapa 1 do teste da jornada — 06/10
+
+- [x] **Sete correções publicadas** *(Resp.: Vinícius)*
+  · Criar ficha grava o calendário (o `id` vai no insert).
+  · Abrir a ficha pelo endereço ou F5 espera pelos dados em vez de voltar à lista.
+  · "Guardar e marcar como enviado" grava o "enviado" no próprio upsert.
+  · "+" das horas nasce vazio: sem horas escritas não regista nada.
+  · Saudação "Olá, {primeiro nome}" (neutra, com o nome do perfil; sem ele, a empresa);
+    "Ainda não foi enviado nada" em vez de "enviaste".
+  · "Eliminar ficha" em Dados do cliente, só admin, a escrever o nome para confirmar.
+  · Eliminar uma conta desliga primeiro as obrigações da ficha (`user_id` a null) em vez de
+    as apagar em cascata.
 
 ### Migração 038 e publicação da Fase 1 — 05/10
 

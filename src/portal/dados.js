@@ -290,8 +290,19 @@ export const acoes = {
       horasIncluidas: 0, cliente_desde: hojeIso(), telefone: '', email: '', pessoa: '', userId: null, ...dados,
     }
     mudar(s => { s.clientes.push({ ...c, contratoId: null, avenca: null, avencaPeriodicidade: null, contrato: null }); s.clientes.sort((a, b) => a.nome.localeCompare(b.nome, 'pt')) })
-    fichasAGravar[id] = gravar(supabase.from('clientes').insert(paraCliente(c))).finally(() => { delete fichasAGravar[id] })
+    // O id vai no insert: é o que o calendário gerado a seguir referencia (teste de 05/10).
+    fichasAGravar[id] = gravar(supabase.from('clientes').insert({ id, ...paraCliente(c) })).finally(() => { delete fichasAGravar[id] })
     return id
+  },
+  // Apagar a ficha leva tudo o que lhe pertence (as tabelas da 037 têm on delete
+  // cascade): calendário da equipa, tarefas, pedidos de documentos, relatórios,
+  // notas, horas, registo de mensagens. A conta na plataforma, se existir, fica.
+  async apagarCliente(id) {
+    mudar(s => {
+      s.clientes = s.clientes.filter(c => c.id !== id)
+      for (const k of ['obrigacoes', 'tarefas', 'documentos', 'mensagens', 'relatorios', 'notas', 'horas', 'pagamentos']) s[k] = s[k].filter(x => x.clienteId !== id)
+    })
+    return gravar(supabase.from('clientes').delete().eq('id', id))
   },
   atualizarCliente(id, patch) {
     mudar(s => { Object.assign(s.clientes.find(c => c.id === id), patch) })
@@ -443,12 +454,10 @@ export const acoes = {
     gravar(supabase.from('relatorios_trimestrais').upsert(paraRelatorio(r)))
     return r.id
   },
-  // O cliente ainda não vê relatórios na plataforma: "enviado" quer dizer que a
-  // Lúcia exportou o PDF e o mandou. Fica a data, para o histórico e o Resumo.
-  marcarRelatorioEnviado(id) {
-    mudar(s => { const r = s.relatorios.find(x => x.id === id); r.estado = 'enviado'; r.enviadoEm = hojeIso() })
-    gravar(supabase.from('relatorios_trimestrais').update({ estado: 'enviado', enviado_em: hojeIso() }).eq('id', id))
-  },
+  // "Enviado" (o cliente ainda não vê relatórios na plataforma: quer dizer que a
+  // Lúcia exportou o PDF e o mandou) grava-se pelo guardarRelatorio, com
+  // estado e enviadoEm no próprio upsert — um update à parte corria antes de
+  // o upsert chegar à base e atualizava 0 linhas sem erro (teste de 05/10).
 
   criarNota(dados) {
     const n = { id: novoId(), data: hojeIso(), resolvido: false, com: null, autor: estado.eu, ...dados }

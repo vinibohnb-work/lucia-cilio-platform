@@ -151,6 +151,12 @@ export default async function handler(req, res) {
       // Os documentos primeiro, a conta depois. Por esta ordem porque, se o
       // Storage falhar, a conta ainda existe e a operação pode ser repetida —
       // ao contrário: ficariam ficheiros sem dono, invisíveis na interface.
+      // As obrigações geridas pela equipa (ligadas a uma ficha da Gestão) levam
+      // o user_id só para o cliente as ver; a chave tem on delete cascade, e sem
+      // isto eliminar a conta apagava o calendário fiscal da ficha (06/10).
+      const { error: eObr } = await admin.from('fiscal_obligations').update({ user_id: null }).eq('user_id', id).not('cliente_id', 'is', null)
+      if (eObr) return res.status(500).json({ error: `Não foi possível desligar as obrigações da ficha (${eObr.message}). A conta NÃO foi eliminada.` })
+
       let docsApagados = 0
       try {
         docsApagados = await apagarDocumentos(admin, id)

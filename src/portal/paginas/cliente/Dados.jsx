@@ -1,7 +1,9 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { acoes, usePortal } from '../../dados'
-import { Cartao, Campo, Chip, useCampos, usePerfil, pode, Ic } from '../../ui'
+import { Cartao, Campo, Chip, Botao, useCampos, usePerfil, pode, Ic } from '../../ui'
 import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
 
 // Dados do cliente — os campos do cabeçalho do documento (secção 1) e o perfil
@@ -14,6 +16,9 @@ export default function Dados({ cliente, modoCliente, equipa }) {
   const c = useCampos()
   const { papel } = usePerfil()
   const s = usePortal()
+  const navigate = useNavigate()
+  const [confirmar, setConfirmar] = useState('')
+  const [aApagar, setAApagar] = useState(false)
   const conta = s.contas.find(x => x.id === cliente.userId)
   const livres = s.contas.filter(x => x.id === cliente.userId || !s.clientes.some(k => k.userId === x.id))
   const up = (patch) => acoes.atualizarCliente(cliente.id, patch)
@@ -120,6 +125,25 @@ export default function Dados({ cliente, modoCliente, equipa }) {
         )}
         <div style={{ fontSize: '12px', color: t.subtle, marginTop: '10px' }}>Com conta, as mensagens daqui aparecem no Início do cliente e os documentos carregados por mês ficam na pasta dele. Sem conta, fica tudo registado aqui e a comunicação é por WhatsApp.</div>
       </Cartao>
+
+      {/* Eliminar a ficha: só a administradora, e só depois de escrever o nome.
+          Para fichas criadas por engano e duplicados (teste de 05/10). */}
+      {s.admin && (
+        <Cartao titulo="Eliminar ficha" icone={<Ic.cadeado size={17} />} area="interna">
+          <div style={{ fontSize: '13px', color: t.text, marginBottom: '10px' }}>
+            Apaga a ficha e tudo o que lhe pertence: calendário fiscal, tarefas, pedidos de documentos, relatórios, notas e horas. Não se desfaz.
+            {cliente.userId ? ' A conta na plataforma fica — apaga-se em Acessos, se for o caso.' : ''}
+          </div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input value={confirmar} onChange={e => setConfirmar(e.target.value)} placeholder={`Escreva "${cliente.nome}" para confirmar`} style={{ ...c.input, width: 'auto', minWidth: '280px' }} aria-label="Confirmar nome" />
+            <Botao variante="perigo" disabled={confirmar.trim() !== cliente.nome.trim() || aApagar} onClick={async () => {
+              setAApagar(true)
+              if (await acoes.apagarCliente(cliente.id)) navigate('/gestao/clientes')
+              else setAApagar(false)
+            }}>{aApagar ? 'A eliminar…' : 'Eliminar ficha'}</Botao>
+          </div>
+        </Cartao>
+      )}
     </div>
   )
 }

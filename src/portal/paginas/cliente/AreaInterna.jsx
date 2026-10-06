@@ -20,7 +20,7 @@ export default function AreaInterna({ cliente }) {
   const hoje = hojeIso()
   const [filtro, setFiltro] = useState('todas')
   const [nova, setNova] = useState({ tipo: 'nota', texto: '', com: ESCLARECER_COM[cliente.pais === 'DE' ? 1 : 0] })
-  const [horas, setHoras] = useState({ horas: '1', descricao: '' })
+  const [horas, setHoras] = useState({ horas: '', descricao: '' })   // vazio: um "+" sem nada escrito não regista "1 h" (teste de 05/10)
 
   const notas = s.notas.filter(n => n.clienteId === cliente.id).sort((a, b) => b.data.localeCompare(a.data))
   const visiveis = notas.filter(n => filtro === 'todas' || (filtro === 'pendentes' ? ['duvida', 'esclarecer'].includes(n.tipo) && !n.resolvido : n.tipo === filtro))
@@ -106,7 +106,7 @@ export default function AreaInterna({ cliente }) {
           <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr auto', gap: '6px' }}>
             <input type="number" step="0.25" min="0" value={horas.horas} onChange={e => setHoras(p => ({ ...p, horas: e.target.value }))} style={c.input} aria-label="Horas" />
             <input value={horas.descricao} onChange={e => setHoras(p => ({ ...p, descricao: e.target.value }))} placeholder="O que foi feito" style={c.input} />
-            <Botao onClick={() => { if (Number(horas.horas) > 0) { acoes.registarHoras({ clienteId: cliente.id, horas: Number(horas.horas), descricao: horas.descricao || 'Trabalho' }); setHoras({ horas: '1', descricao: '' }) } }}>+</Botao>
+            <Botao onClick={() => { if (Number(horas.horas) > 0) { acoes.registarHoras({ clienteId: cliente.id, horas: Number(horas.horas), descricao: horas.descricao || 'Trabalho' }); setHoras({ horas: '', descricao: '' }) } }} title="Registar horas">+</Botao>
           </div>
           {hs.slice(0, 4).map(h => <div key={h.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', padding: '6px 0', borderTop: `1px solid ${t.rowBorder}`, marginTop: '6px' }}><span style={{ color: t.subtle, width: '80px' }}>{fmtData(h.data)}</span><span style={{ flex: 1 }}>{h.descricao}</span><strong>{h.horas} h</strong></div>)}
         </Cartao>

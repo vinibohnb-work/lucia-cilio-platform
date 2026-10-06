@@ -7,6 +7,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { localeDe } from '../../lib/formato'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
+import { useAuth } from '../../context/AuthContext'
 import { getCompanySettings } from '../../lib/companySettings'
 import { isDueInPeriod } from '../gestao/Financeiro'
 
@@ -26,6 +27,8 @@ export default function Inicio() {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const eid = useEffectiveUserId()
+  const { user, displayName = '' } = useAuth()
+  const isViewing = !!user && eid !== user.id
 
   const [avisos, setAvisos] = useState([])
   const [obrigacao, setObrigacao] = useState(null)
@@ -57,7 +60,7 @@ export default function Inicio() {
     porMes: { monthly: 'per month', quarterly: 'per quarter', annual: 'per year', once: 'one-off' },
     verContrato: 'See contract →',
   } : {
-    eyebrow: 'Resumo', ola: 'Bem-vinda de volta', semNome: 'A tua empresa',
+    eyebrow: 'Resumo', ola: 'Olá', semNome: 'A sua empresa',   // neutro: a saudação leva o nome da pessoa (teste de 05/10)
     avisos: 'Mensagens da Lúcia', semAvisos: 'Não há mensagens novas.',
     proxObr: 'Próxima obrigação fiscal', semObr: 'Nada por agora.',
     proxPag: 'Próximo pagamento', semPag: 'Sem contrato ativo.',
@@ -132,13 +135,15 @@ export default function Inicio() {
   const rotulo = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '8px' }
   const tom = { info: { bg: t.chipBg, ink: t.chipText }, ok: t.dueOk, acao: t.dueSoon }
   const prox = proximoPeriodo()
+  // Primeiro nome da pessoa; sem ele, o nome da empresa. (Em "ver como", é a empresa vista.)
+  const quem = (!isViewing && displayName.split(' ')[0]) || settings?.company_name || ''
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ marginBottom: '20px' }}>
         <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
         <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>
-          {L.ola}{settings?.company_name ? `, ${settings.company_name}` : ''}
+          {L.ola}{quem ? `, ${quem}` : ''}
         </h1>
       </div>
 
