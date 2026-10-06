@@ -47,6 +47,34 @@
 
 ### Ajustes da reunião de 01/10 (validação da jornada do cliente)
 
+- [ ] **Correções da etapa 1 do teste da jornada (antes da Nicole testar)**
+  *Teste 05/10/2026 · Resp.: Vinícius*
+  · Criar ficha não grava o calendário: `paraCliente()` tira o `id`, a base atribui outro e
+    as 16 obrigações apontam para um id que não existe (`dados.js:73`). Enviar o `id`.
+  · Abrir a ficha pelo endereço (ou F5) volta à lista: `PaginaCliente.jsx:41` redireciona
+    antes de os dados carregarem. Esperar `s.carregado`.
+  · "Guardar e marcar como enviado" do relatório não grava o "enviado": o `update` corre
+    antes do `upsert` e atualiza 0 linhas sem erro (`Relatorio.jsx:106`).
+  · "+" das horas com campos vazios regista "Trabalho · 1 h".
+  · O cliente não vê o que a equipa lhe pediu: "Enviar documentos →" vai para Dados da
+    Empresa (v1) com uma caixa de ficheiro; mostrar no Início e nessa secção os pedidos do
+    mês e o que falta (mínimo), ou a página Documentos do portal em modo cliente.
+  · Saudação "Bem-vinda de volta" sem nome e sempre no feminino; "enviaste" vs "você".
+  · Não há botão para eliminar uma ficha (nem para a Célia duplicada): "Eliminar ficha" em
+    Dados do cliente, só admin, com confirmação pelo nome.
+  ⚠️ **Depende de:** aplicar a **migração 035** (colunas `contract_path`/`contract_name` em
+  `client_billing`) — não está em produção e dá erro 400 na aba Conta na plataforma, no
+  Financeiro (anexar contrato) e no Início do cliente.
+
+- [ ] **Dúvidas da etapa 1 para a Lúcia**
+  *Teste 05/10/2026 · Resp.: Vinícius (com a Lúcia)*
+  · Cliente novo: gerar o calendário só a partir de "cliente desde" (hoje Q1–Q3 nascem "em
+    atraso")?  · Plataforma por omissão de um cliente novo: Lite (só informativa, como
+    decidido a 25/09) ou completa?  · Onde o cliente muda a língua (um alemão vê PT)?
+  · O cliente precisa de ver os relatórios trimestrais na plataforma já, ou chega o PDF?
+  · O que da aba "Conta na plataforma" interessa à equipa (hoje mostra € 0 / € 565, onboarding
+    1 de 6, clientes 0)?  · Admin a entrar cai na Contabilidade de demonstração e não na Gestão.
+
 - [ ] **Aba de Marketing com a prévia do Instagram**
   *Reunião 01/10/2026 · Resp.: Vinícius*
   Prévia do feed, legenda, agenda de publicações e anotações partilhadas entre a Lúcia, a
@@ -375,6 +403,11 @@
   *Reunião 01/10/2026 · Resp.: Vinícius*
   1) teste interno com uma conta de teste própria, para encontrar erros; 2) com a conta da
   Nicole; 3) com uma cliente externa (Vânia). Ajustar o que aparecer em cada etapa.
+  ✔ **Etapa 1 feita a 05/10** em produção, com ficha e conta de teste →
+  `docs/auditorias/2026-10-05-jornada-etapa1.md` (20 passos, 7 erros, 10 dúvidas). Os erros
+  estão no item "Correções da etapa 1" abaixo; a etapa 2 (Nicole) só depois de os corrigir.
+  Ficaram por testar: "+ Nova Obrigação" do cliente e a verificação de permissões na base
+  (leitura direta à produção bloqueada nesta sessão — fazer em DEV ou com autorização).
 
 - [ ] **Erro de certificado SMTP no Outlook (envio de e-mails)**
   *Reunião 01/10/2026 · Resp.: Vinícius*
