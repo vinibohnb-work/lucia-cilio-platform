@@ -23,7 +23,7 @@
 > "Depois da entrega", no fim desta secção, e não conta para novembro.
 
 **Semana 1 (06–10/10) — fechar o que está a meio**
-- [ ] **1.** Aplicar a **migração 039** e fazer o merge de `jornada-docs-cliente` (o cliente vê
+- [x] **1.** Aplicar a **migração 039** e fazer o merge de `jornada-docs-cliente` (o cliente vê
   os documentos pedidos). ⏳ Vinícius corre a 039.
 - [ ] **2.** Testes que ficaram da etapa 1: "+ Nova Obrigação" do cliente e a **verificação de
   permissões** (o que a sessão do cliente lê na base) — em DEV, ou em produção com autorização.
@@ -135,17 +135,6 @@ Letícia desenhar o serviço).
   que ninguém usa sai em vez de ser corrigida).
 
 ### Ajustes da reunião de 01/10 (validação da jornada do cliente)
-
-- [ ] **Correções da etapa 1 — o que falta: os documentos pedidos, visíveis ao cliente**
-  *Teste 05/10/2026 · Resp.: Vinícius*
-  "Enviar documentos →" leva a Dados da Empresa (v1) com uma caixa de ficheiro; o cliente não
-  vê os 3 pedidos do mês nem o que falta. Mínimo: mostrar no Início e nessa secção os pedidos
-  do mês e o estado de cada um; ideal: a página Documentos do portal em modo cliente.
-  **Feito na branch `jornada-docs-cliente`** (06/10): Início e a secção Documentos mostram os
-  pedidos do mês (tipo · estado) e "Faltam N documentos"; `supabase/migration_039.sql` dá ao
-  cliente leitura da própria ficha e dos pedidos dela.
-  ⚠️ **Depende de:** aplicar a 039 no SQL Editor (duas regras de leitura, sem mexer em dados)
-  e depois fazer o merge. As restantes 7 correções já estão publicadas (ver Concluídos).
 
 - [ ] **Dúvidas da etapa 1 para a Lúcia**
   *Teste 05/10/2026 · Resp.: Vinícius (com a Lúcia)*
@@ -673,6 +662,12 @@ Letícia desenhar o serviço).
 ---
 
 ## Concluídos
+
+### Documentos pedidos visíveis ao cliente — 06/10
+
+- [x] **O cliente vê no Início e em Dados da Empresa → Documentos os pedidos do mês** (tipo ·
+  estado) e "Faltam N documentos". Migração 039 aplicada (leitura da própria ficha e dos
+  pedidos); branch `jornada-docs-cliente` junta a `main`.
 
 ### Correções da etapa 1 do teste da jornada — 06/10
 
