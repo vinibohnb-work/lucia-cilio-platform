@@ -15,6 +15,95 @@
 
 ---
 
+## Checklist de fecho — versão final para entrega (06/10 → 14/11)
+
+> Ordem de ataque, item a item, para fechar a versão de produção até ao fim do contrato
+> (14/11). Cada linha aponta para o item detalhado mais abaixo. **⏳** = precisa da Lúcia ou de
+> terceiros antes de avançar; o que não tem ⏳ faço eu. O que fica fora desta lista vai para
+> "Depois da entrega", no fim desta secção, e não conta para novembro.
+
+**Semana 1 (06–10/10) — fechar o que está a meio**
+- [ ] **1.** Aplicar a **migração 039** e fazer o merge de `jornada-docs-cliente` (o cliente vê
+  os documentos pedidos). ⏳ Vinícius corre a 039.
+- [ ] **2.** Testes que ficaram da etapa 1: "+ Nova Obrigação" do cliente e a **verificação de
+  permissões** (o que a sessão do cliente lê na base) — em DEV, ou em produção com autorização.
+- [ ] **3.** ⚡ Tirar o `.env.local` da pasta sincronizada com o OneDrive (5 minutos, segurança).
+- [ ] **4.** Apagar a **ficha duplicada da Célia** com o botão novo, depois de ver qual das duas
+  tem dados. ⏳ Confirmar com a Lúcia qual fica.
+- [ ] **5.** Conferir as **fichas dos clientes** com a consulta de duplicados (nomes, contratos
+  por ligar, responsável, forma, regime, periodicidade) e gerar os calendários que faltam —
+  hoje nenhum cliente tem calendário. ⏳ Com a Lúcia, 1 hora.
+
+**Semana 1–2 — uma sessão de decisões com a Lúcia** (tudo numa reunião, para desbloquear o resto)
+- [ ] **6.** Dúvidas da etapa 1: calendário só a partir de "cliente desde"; conta nova em
+  **Lite** ou completa; onde o cliente muda a **língua**; **relatórios** visíveis ao cliente já
+  ou só PDF; o que fica na aba "Conta na plataforma"; admin a cair na Gestão.
+- [ ] **7.** Pendentes da Fase 1: **papéis** da comercial e do marketing (R-A4); **reserva de
+  imposto** com ou sem IVA (R-B5); Contabilidade → **Clientes** sai ou fica (R-D7); **dia de
+  pagamento** de cada imposto para as mensagens de WhatsApp (R-B11).
+- [ ] **8.** **Calculadora de Preços** (R-B7): fechar as quatro regras.
+- [ ] **9.** Fase 2: que **páginas do lado do cliente** são mesmo usadas (o que ninguém usa sai).
+- [ ] **10.** Pedir o que depende dela: contacto da **I Love Design** + acesso ao Outlook (SMTP e
+  domínio); **CSVs bancários** reais; **Excel** do contabilista; **8 passos do mentor Luís** e as
+  perguntas a tirar da consultoria; regras do **limite de faturação em Portugal**; o **projeto DEV
+  antigo** pode ser eliminado?
+
+**Semanas 2–3 (13–24/10) — implementar as decisões**
+- [ ] **11.** As decisões dos pontos 6 a 8 (cada uma é pequena; a Calculadora é a maior).
+- [ ] **12.** **Fase 2 da simplificação — uma ficha de cliente**: contratos, consultorias e casos
+  ESG apontam para a ficha; fechar um lead ou criar uma conta cria-a; perfil fiscal só na ficha;
+  Contabilidade → Clientes sai da conta da Lúcia. É o item mais pesado da lista (≈1 semana).
+  Absorve "Um só cliente para Financeiro, Consultorias e ESG".
+- [ ] **13.** **Ligar o portal do cliente**: a vista do cliente passa a ser a do portal em modo
+  informativo (obrigações, documentos pedidos, mensagens, relatórios se o ponto 6 disser que
+  sim). Depende do 12 e das políticas de leitura (uma migração). Fecha a jornada do cliente.
+- [ ] **14.** **Aba de Marketing** com a prévia do Instagram, legenda, agenda e anotações.
+- [ ] **15.** Consultoria: tirar as perguntas indicadas e absorver os 8 passos do mentor.
+  ⏳ Depende do ponto 10.
+- [ ] **16.** Texto-modelo de **entrega das credenciais** (boas-vindas, endereço, troca da
+  palavra-passe) para a Lúcia copiar ao criar uma conta.
+
+**Semana 4 (27–31/10) — validação, etapa 2**
+- [ ] **17.** **Etapa 2 com a Nicole** (conta real dela), com o mesmo roteiro de 20 passos; corrigir
+  o que aparecer.
+- [ ] **18.** Passagem de **QA de interface** no que sobrou de 13/08: textos < 12 px, rótulos dos
+  campos, alvos de toque, matriz de materialidade no telemóvel, paginação do Livro de Caixa,
+  emojis → ícones. Uma varredura, não uma por item.
+- [ ] **19.** Validar a **importação de extratos** com os CSVs reais. ⏳ Ponto 10.
+
+**Semana 5 (03–07/11) — etapa 3, segurança e dados**
+- [ ] **20.** **Etapa 3 com a Vânia** (cliente externa); últimas correções.
+- [ ] **21.** **Projeto DEV antigo**: eliminar (ou limpar com o script) — dados reais não ficam nos
+  EUA. ⏳ Autorização da Lúcia.
+- [ ] **22.** **Anti-robôs** no `/diagnostico` (Turnstile) — antes de o ligar ao site.
+- [ ] **23.** Segurança mínima de entrega: **R4 exportação dos dados de um cliente** (1–2 dias) e
+  **MFA para admins** (R5a, 1–2 dias). O audit log (R5b) e o aceite dos termos ficam para o SaaS.
+  ⏳ Confirmar com a Lúcia se entram na entrega.
+- [ ] **24.** RGPD com a advogada: **pacote documental (R6)** e **DPA da Anthropic** — do lado da
+  plataforma, só a política de privacidade com URL público. ⏳ Lúcia + advogada.
+
+**Semana 6 (10–14/11) — documentação e entrega**
+- [ ] **25.** **Guia da plataforma** completo: integrações (SMTP, pasta, IA, WhatsApp, Vercel,
+  Supabase) e prints atualizados (Empresa, Obrigações, Reservas, portal do cliente).
+- [ ] **26.** **Domínio próprio** e **e-mail (SMTP)**: configurar na Vercel e nos DNS se o acesso
+  chegar a tempo; senão, fica documentado o que falta. ⏳ I Love Design.
+- [ ] **27.** Relatório fiscal **detalhado/resumido PT** se a Lúcia tiver trazido o formato;
+  senão, passa para depois. ⏳
+- [ ] **28.** **Sessão de entrega** com a Lúcia: percorrer o guia, as decisões tomadas, o que ficou
+  para depois e o modelo de suporte da pausa. Fechar o BACKLOG: tudo o que sobrar vai para
+  "Depois da entrega".
+
+**Depois da entrega (não contam para novembro)**
+App nativa (Capacitor) · integração de calendários / agendamento do diagnóstico · Instagram
+(API da Meta) e analytics Meta/Google · WhatsApp (integração) · IA nas transcrições · glossário,
+FAQ e ícones (i) · lançamento dividido, anotações e break-even no Planeamento, PDF dos
+gráficos, reserva pessoal e painel de reservas · exportação no Excel da Lúcia · mapa da jornada
+(documento) · perguntas do bloco 1 para negócio em curso · retirar `user_id` das tabelas ESG ·
+audit log e aceite dos termos (SaaS) · consultoria de organização administrativa (quando a
+Letícia desenhar o serviço).
+
+---
+
 ## Itens de desenvolvimento
 
 ### Antes da pausa (prioridade da reunião de 25/09)
