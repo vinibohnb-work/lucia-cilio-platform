@@ -72,8 +72,13 @@
   palavra-passe) para a Lúcia copiar ao criar uma conta.
 - [ ] **16-A.** *(08/10)* **Ocultar os dados ao iniciar uma consultoria** com o cliente ao lado
   (modo de apresentação na ficha/consultoria).
-- [ ] **16-B.** *(08/10)* **Identidade visual**: alinhar a plataforma ao logótipo e às fontes do
-  Instagram. ⏳ Material que a Letícia vai enviar.
+- [ ] **16-B.** *(08/10)* **Validação visual com a Lúcia — semana de 13 a 17/10.** O material da
+  Letícia chegou a 08/10 e já está aplicado: 6 alternativas de design no canvas (3 ecrãs cada) e a
+  plataforma inteira compilada num HTML único com a paleta e as fontes novas
+  (`docs/validacao/plataforma-identidade-visual-2026-10-08.html`, branch `identidade-visual`).
+  Na sessão: escolher a alternativa (ou mistura), decidir a fonte do corpo (Arial Nova não é
+  fonte web: licença ou Archivo), confirmar o modo noturno. Depois: merge da branch.
+  ⏳ Sessão com a Lúcia (e a Letícia).
 
 **Semana 4 (27–31/10) — validação, etapa 2**
 - [ ] **17.** **Etapa 2 com a Nicole** (conta real dela), com o mesmo roteiro de 20 passos; corrigir
@@ -178,9 +183,17 @@ Letícia desenhar o serviço).
   Ao abrir a consultoria com o cliente ao lado, não mostrar os dados internos/financeiros da
   ficha — um modo de apresentação.
 
-- [ ] **Alinhar a identidade visual da plataforma (logótipo, fontes do Instagram)**
-  *Reunião 08/10/2026 · Resp.: Vinícius*
-  ⚠️ **Depende de:** a Letícia enviar o material de identidade visual.
+- [ ] **Validação visual com a Lúcia (semana de 13 a 17/10) e aplicação da identidade**
+  *Reunião 08/10/2026 · material da Letícia 08/10 · Resp.: Vinícius (com a Lúcia e a Letícia)*
+  Feito a 08/10: tema claro e noturno com a paleta oficial (verde #0E3D33/#184F43, bege
+  #EAD8B7, creme #F8F1E4, dourado #C89B3C), títulos Archivo Black, corpo Arial Nova com
+  Archivo de recurso; 47 cores antigas no código substituídas. Para validar: canvas com 6
+  alternativas (A editorial creme, B clara, C verde profundo, D noturna, E revista, F dois
+  tons) e o HTML único da plataforma com dados fictícios (`docs/validacao/…`, branch
+  `identidade-visual`, `7025caa`). Decisões da sessão: alternativa escolhida, fonte do corpo
+  (licença web da Arial Nova ou Archivo), modo noturno sim/não. Depois da validação: merge
+  e, se a escolha for B/C/F, ajustar menu e cartões na revisão ecrã a ecrã (13-D).
+  ⏳ **Depende de:** sessão de validação com a Lúcia.
 
 ### Ajustes da reunião de 01/10 (validação da jornada do cliente)
 
