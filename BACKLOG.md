@@ -3,9 +3,9 @@
 > **Fontes:** reuniões do sistema interno Scalasys (tabela `meetings`) + itens levantados
 > durante o desenvolvimento
 > **Cliente:** Lúcia Cílio · Lúcia Cílio
-> **Última sincronização:** 01/10/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
+> **Última sincronização:** 08/10/2026 · Reuniões processadas: 16/07/2026, 23/07/2026,
 > 30/07/2026, 06/08/2026, 13/08/2026, 20/08/2026, 27/08/2026, 10/09/2026, 18/09/2026, 25/09/2026,
-> 01/10/2026
+> 01/10/2026, 08/10/2026
 > **Auditorias:** QA de interface 13/08/2026 → `docs/auditorias/2026-08-13-interface.md`
 > **·** Segurança/GDPR 21/08/2026 → `docs/auditorias/2026-08-21-seguranca-gdpr.md`
 > **Prazo do projeto:** início de maio → início de novembro de 2026 (6 meses)
@@ -57,11 +57,23 @@
 - [ ] **13.** **Ligar o portal do cliente**: a vista do cliente passa a ser a do portal em modo
   informativo (obrigações, documentos pedidos, mensagens, relatórios se o ponto 6 disser que
   sim). Depende do 12 e das políticas de leitura (uma migração). Fecha a jornada do cliente.
+- [ ] **13-A.** *(08/10)* **Página inicial do cliente mais enxuta**: próximas obrigações, documentos
+  em falta, último relatório, pendências e comunicação — **sem valores**. Entra no ponto 13.
+- [ ] **13-B.** *(08/10)* **Página inicial interna da equipa**: tarefas, pendências e relógio de
+  ponto (horas). Substitui o admin a cair na Contabilidade de demonstração (ponto 6).
+- [ ] **13-C.** *(08/10)* **Botão "ver como o cliente"** na ficha: alternar entre a visão interna e
+  a visão do cliente, sem trocar de sessão.
+- [ ] **13-D.** *(08/10)* **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem —
+  é a passagem final da simplificação, feita sobre 12 e 13, com as sugestões da Letícia.
 - [ ] **14.** **Aba de Marketing** com a prévia do Instagram, legenda, agenda e anotações.
 - [ ] **15.** Consultoria: tirar as perguntas indicadas e absorver os 8 passos do mentor.
   ⏳ Depende do ponto 10.
 - [ ] **16.** Texto-modelo de **entrega das credenciais** (boas-vindas, endereço, troca da
   palavra-passe) para a Lúcia copiar ao criar uma conta.
+- [ ] **16-A.** *(08/10)* **Ocultar os dados ao iniciar uma consultoria** com o cliente ao lado
+  (modo de apresentação na ficha/consultoria).
+- [ ] **16-B.** *(08/10)* **Identidade visual**: alinhar a plataforma ao logótipo e às fontes do
+  Instagram. ⏳ Material que a Letícia vai enviar.
 
 **Semana 4 (27–31/10) — validação, etapa 2**
 - [ ] **17.** **Etapa 2 com a Nicole** (conta real dela), com o mesmo roteiro de 20 passos; corrigir
@@ -133,6 +145,42 @@ Letícia desenhar o serviço).
   notas, mensagens, pagamentos e documentos (R-C5, R-C7, R-C8).
   ⚠️ **Depende de:** confirmar com a Lúcia que páginas do lado do cliente são usadas (uma página
   que ninguém usa sai em vez de ser corrigida).
+
+### Ajustes da reunião de 08/10 (simplificar antes de os clientes testarem)
+
+> *"Vinícius fará review geral das telas para simplificar."* — o próximo passo definido na
+> reunião (com a Letícia). Prazo combinado para fechar os ajustes: **3 de novembro**.
+
+- [ ] **Página inicial do cliente mais enxuta — sem valores nem documentos**
+  *Reunião 08/10/2026 · Resp.: Vinícius*
+  Fica: próximas obrigações, documentos em falta, último relatório, pendências e a
+  comunicação (copiável para WhatsApp). Saem os valores e, "por enquanto", os documentos.
+  ⚠️ A confirmar o alcance de "remover documentos": a lista do que falta fica (é um dos cinco
+  blocos); o que sai é o envio/listagem de ficheiros na página inicial.
+
+- [ ] **Página inicial interna da equipa: tarefas, pendências e relógio de ponto**
+  *Reunião 08/10/2026 · Resp.: Vinícius*
+  A página inicial passa a ter visão interna (equipa) e visão geral. O relógio de ponto liga-se
+  às horas por cliente que já existem nas Notas internas.
+
+- [ ] **Recriar a visão do cliente: botão para alternar entre visão interna e visão do cliente**
+  *Reunião 08/10/2026 · Resp.: Vinícius*
+  O portal já sabe renderizar o `modoCliente`; falta o interruptor na ficha para a equipa ver
+  exatamente o que o cliente vê, sem trocar de sessão (substitui o antigo "ver como").
+
+- [ ] **Revisão geral ecrã a ecrã para simplificar a plataforma**
+  *Reunião 08/10/2026 · Resp.: Vinícius*
+  Prioridade acima dos testes com clientes. Feita sobre a Fase 2 da simplificação, com as
+  anotações de design da Letícia (chegam por WhatsApp).
+
+- [ ] **Ocultar dados ao iniciar uma consultoria com o cliente**
+  *Reunião 08/10/2026 · Resp.: Vinícius*
+  Ao abrir a consultoria com o cliente ao lado, não mostrar os dados internos/financeiros da
+  ficha — um modo de apresentação.
+
+- [ ] **Alinhar a identidade visual da plataforma (logótipo, fontes do Instagram)**
+  *Reunião 08/10/2026 · Resp.: Vinícius*
+  ⚠️ **Depende de:** a Letícia enviar o material de identidade visual.
 
 ### Ajustes da reunião de 01/10 (validação da jornada do cliente)
 
@@ -537,6 +585,19 @@ Letícia desenhar o serviço).
 ---
 
 ## Diretrizes de produto (das reuniões — guiam a priorização)
+
+- **Reunião de 08/10** (com a Letícia): **simplificar os ecrãs antes de pôr clientes a
+  testar**. A página inicial terá **visão interna e visão geral**; a página do cliente fica
+  **mais enxuta**, **sem valores e sem documentos por enquanto**. A comunicação continua
+  **copiável para WhatsApp**. A **Letícia passou a administradora** (feito na reunião — revê a
+  decisão de 25/09 de a manter colaboradora sem financeiro; fecha o R-A4 por agora) e envia
+  sugestões de forma **assíncrona** pelo WhatsApp, sem reunião recorrente. O Vinícius **pode
+  absorver a gestão do site, e-mail e landing page** da Lúcia, unificando a identidade visual
+  — a Letícia vai falar com a Lúcia sobre transferir o contrato atual. Prazo para fechar os
+  ajustes: **3 de novembro**.
+  Riscos: progresso abaixo do esperado para o prazo; excesso de funcionalidades a poluir a
+  plataforma; e-mail/site por resolver pode atrasar o go-live; depende da Lúcia definir a
+  identidade visual e o contrato do site/e-mail.
 
 - **Reunião de 01/10:** fase de **validação** — testar a jornada do cliente e aplicar os
   ajustes. **Contabilidade e gestão interna ficam na mesma plataforma** por agora (versão Pro
