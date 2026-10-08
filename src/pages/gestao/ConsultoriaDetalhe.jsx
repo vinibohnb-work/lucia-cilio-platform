@@ -244,7 +244,7 @@ export default function ConsultoriaDetalhe() {
               style={{ flex: isMobile ? '1 1 45%' : '1 1 0', textAlign: 'left', padding: '11px 13px', borderRadius: '11px', cursor: 'pointer',
                 border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg, opacity: bl.porConstruir ? .65 : 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '5px' }}>
-                <span style={{ width: '19px', height: '19px', borderRadius: '50%', background: on ? t.accent : t.trackBg, color: on ? '#0a2f1a' : t.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800 }}>{bl.n}</span>
+                <span style={{ width: '19px', height: '19px', borderRadius: '50%', background: on ? t.accent : t.trackBg, color: on ? '#0E3D33' : t.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800 }}>{bl.n}</span>
                 <span style={{ fontSize: '12.5px', fontWeight: 700, color: on ? t.heading : t.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{txt(bl)}</span>
               </div>
               <div style={{ height: '4px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>

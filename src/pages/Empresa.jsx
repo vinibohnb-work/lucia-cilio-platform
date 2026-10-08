@@ -8,8 +8,8 @@ import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } 
 import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
 import EnvioDocumentos from '../components/EnvioDocumentos'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = '#0E3D33'
+const GOLD = '#C89B3C'
 const BG = '#f2f6f3'
 
 

@@ -20,8 +20,8 @@ const FOLLOWUP_DAYS = 7
 
 // Cores dos cabeçalhos das colunas (progressão de verdes + vinho p/ perdido)
 const STAGE_TONE = {
-  mapeado:   { bg: '#9ccbaa', ink: '#0a2f1a' },
-  abordagem: { bg: '#7dbb92', ink: '#0a2f1a' },
+  mapeado:   { bg: '#9ccbaa', ink: '#0E3D33' },
+  abordagem: { bg: '#7dbb92', ink: '#0E3D33' },
   conectado: { bg: '#5aa87a', ink: '#ffffff' },
   reuniao:   { bg: '#3d9163', ink: '#ffffff' },
   proposta:  { bg: '#1f7a4c', ink: '#ffffff' },

@@ -20,15 +20,15 @@ import { CAMPOS as CAMPOS_ENQ, opcaoDe } from '../data/enquadramento.js'
 
 // ── Paleta do modelo ────────────────────────────────────────────────────────
 const C = {
-  verde: '#0a2f1a', verdeMed: '#164e2b', verdeClaro: '#2f7d4f', verdeSuave: '#3d6b4c',
-  ouro: '#c9a84c', creme: '#f3ecdb', tinta: '#1d2b22', texto: '#2c3b31',
+  verde: '#0E3D33', verdeMed: '#184F43', verdeClaro: '#2f7d4f', verdeSuave: '#3d6b4c',
+  ouro: '#C89B3C', creme: '#f3ecdb', tinta: '#1d2b22', texto: '#2c3b31',
   suave: '#5b6b60', mudo: '#8b998f', mudo2: '#7c8c82', linha: '#dfe6e0',
   linhaLeve: '#eef2ee', linha2: '#e6ebe6', fundoSuave: '#f7f9f7', fundoVerde: '#f5f9f6',
   alertaFundo: '#fdf6ef', alertaFundo2: '#fdf7f4', alerta: '#b4552e', alertaLinha: '#f6eae5',
   laranja: '#d98f4e', vermelho: '#c25a3a', positivo: '#8fc9a2', negativo: '#e08a6a',
   verdeMudo: '#8ba394', azul: '#2f6b8a', azul2: '#4a86a5', azul3: '#7aa8bf', azul4: '#a9c6d4',
 }
-const SERIF = "'Cormorant Garamond',Georgia,serif"
+const SERIF = "'Archivo Black','Archivo','Arial Nova',sans-serif"
 const SANS = "'Instrument Sans',system-ui,sans-serif"
 
 export const esc = (s) => String(s ?? '')

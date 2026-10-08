@@ -233,7 +233,7 @@ export default function RucklagenSteuern() {
 
 
   // ── Cores do módulo (fixas, alinhadas ao mockup; suaves no modo claro) ──
-  const HEAD = night ? '#123a24' : '#0a2f1a'
+  const HEAD = night ? '#123a24' : '#0E3D33'
   const GOLD = t.accent
   const tone = {
     green:  { bg: night ? 'rgba(22,163,74,.12)'  : '#eaf5ee', ink: '#0a7a3e', soft: night ? 'rgba(22,163,74,.28)' : '#d5ebdc' },

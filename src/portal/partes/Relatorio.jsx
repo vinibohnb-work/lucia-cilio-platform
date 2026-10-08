@@ -32,13 +32,13 @@ export function exportarPdf(r, cli, ant) {
   }).join('')
   const html = `<!doctype html><html lang="pt"><head><meta charset="utf-8"><title>Relatório T${r.trimestre} ${r.ano} — ${esc(cli.nome)}</title><style>
     body{font-family:Georgia,serif;color:#1a2b20;max-width:760px;margin:40px auto;padding:0 24px;line-height:1.55}
-    .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #c9a84c;padding-bottom:12px;margin-bottom:24px}
+    .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #C89B3C;padding-bottom:12px;margin-bottom:24px}
     .marca{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b5a2a}
     h1{font-size:26px;margin:4px 0 0} .sub{color:#667;font-size:13px}
     table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0 22px}
     th{text-align:left;border-bottom:1px solid #999;padding:6px 8px;font-size:11px;text-transform:uppercase;color:#556}
     td{border-bottom:1px solid #e3ddd0;padding:7px 8px} tr.res td{font-weight:bold;background:#f6f1e6}
-    h2{font-size:16px;margin:22px 0 6px;color:#0a2f1a} p{font-size:13.5px;white-space:pre-wrap;margin:0}
+    h2{font-size:16px;margin:22px 0 6px;color:#0E3D33} p{font-size:13.5px;white-space:pre-wrap;margin:0}
     .pe{margin-top:34px;font-size:11px;color:#889;border-top:1px solid #e3ddd0;padding-top:10px}
   </style></head><body>
     <div class="top"><div><div class="marca">Lúcia Cílio · Office Consulting</div><h1>Resumo do ${r.trimestre}.º trimestre de ${r.ano}</h1><div class="sub">${esc(cli.nome)} · ${esc(PAISES[cli.pais])}</div></div></div>

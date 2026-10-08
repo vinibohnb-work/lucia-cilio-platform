@@ -9,8 +9,8 @@ import { useTheme } from '../../context/ThemeContext'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = '#0E3D33'
+const GOLD = '#C89B3C'
 const BG = '#f2f6f3'
 
 const STATUS_STYLE = {

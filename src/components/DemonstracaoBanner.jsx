@@ -22,7 +22,7 @@ export default function DemonstracaoBanner() {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', background: '#f3ead2', color: '#5c4a17', fontSize: '12.5px', borderBottom: '1px solid #e2d3a8' }}>
-      <span style={{ flex: 'none', fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.6px', padding: '2px 9px', borderRadius: '20px', background: '#c9a84c', color: '#0a2f1a' }}>{L.tag}</span>
+      <span style={{ flex: 'none', fontSize: '10.5px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.6px', padding: '2px 9px', borderRadius: '20px', background: '#C89B3C', color: '#0E3D33' }}>{L.tag}</span>
       <span>{L.txt}</span>
     </div>
   )

@@ -15,7 +15,7 @@ export function ThemeProvider({ children }) {
     document.documentElement.style.background = THEMES[theme].appBg
     document.documentElement.dataset.theme = theme   // as barras de scroll (CSS) seguem daqui
     const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', theme === 'night' ? '#04140b' : '#0a2f1a')
+    if (meta) meta.setAttribute('content', theme === 'night' ? '#04140b' : '#0E3D33')
   }, [theme])
 
   const value = {

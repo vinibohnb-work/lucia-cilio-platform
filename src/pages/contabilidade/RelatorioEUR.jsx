@@ -129,7 +129,7 @@ export default function RelatorioEUR() {
       .cards{display:flex;gap:14px;margin-bottom:24px}
       .card{flex:1;border:1px solid #ccc;padding:12px 14px}
       .card b{display:block;font-size:19px;margin-top:5px}
-      h2{font-size:15px;border-bottom:2px solid #c9a84c;padding-bottom:4px;margin-top:26px}
+      h2{font-size:15px;border-bottom:2px solid #C89B3C;padding-bottom:4px;margin-top:26px}
       table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
       td{border-bottom:1px solid #eee;padding:5px 8px;vertical-align:top}
       td.v{text-align:right;white-space:nowrap}

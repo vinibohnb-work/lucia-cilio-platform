@@ -16,8 +16,8 @@ import { useTheme } from '../../context/ThemeContext'
 import { FlagPT } from '../../components/Flag'
 import EstimateNote from '../../components/EstimateNote'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = '#0E3D33'
+const GOLD = '#C89B3C'
 const BG = '#f2f6f3'
 const GREEN = '#16a34a'
 const RED = '#e53e3e'
@@ -401,7 +401,7 @@ export default function Dashboard() {
       {/* ── Base Segurança Social (apenas trimestral, só Portugal) ── */}
       {/* Só trabalhadores independentes (não sociedades) — R-B12 */}
       {isQuarter && settings?.country !== 'DE' && settings?.ss_regime !== 'company' && (
-        <div style={{ background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
+        <div style={{ background: `linear-gradient(135deg, ${G} 0%, #184F43 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <FlagPT size={20} />
             <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0 }}>{L.ssTitle} · {periodLabel}</h3>

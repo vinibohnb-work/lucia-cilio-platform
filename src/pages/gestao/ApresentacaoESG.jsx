@@ -151,7 +151,7 @@ export default function ApresentacaoESG() {
               {anos.map(a => <option key={a} value={a} style={{ color: '#000' }}>{L.anoRef} {a}</option>)}
             </select>
           )}
-          <button onClick={() => window.print()} style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', background: '#c9a84c', color: '#0a2f1a', fontWeight: 800, fontSize: '12.5px', cursor: 'pointer' }}>{L.imprimir}</button>
+          <button onClick={() => window.print()} style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', background: '#C89B3C', color: '#0E3D33', fontWeight: 800, fontSize: '12.5px', cursor: 'pointer' }}>{L.imprimir}</button>
           <button onClick={() => window.close()} style={{ padding: '7px 12px', borderRadius: '8px', border: '1px solid rgba(201,168,76,.4)', background: 'transparent', color: '#e9dfc4', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.fechar}</button>
         </span>
       </div>

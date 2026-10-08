@@ -10,8 +10,8 @@ import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { devidoNoPeriodo, mesAtual } from '../../lib/periodicidade'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = '#0E3D33'
+const GOLD = '#C89B3C'
 const BG = '#f2f6f3'
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']

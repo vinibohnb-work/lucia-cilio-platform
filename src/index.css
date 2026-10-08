@@ -1,18 +1,18 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap');
 
 :root {
-  --green: #0a2f1a;
-  --green-mid: #164e2b;
-  --green-light: #e8f5ec;
-  --gold: #c9a84c;
-  --gold-light: #f5edd6;
-  --bg: #f2f6f3;
+  --green: #0E3D33;
+  --green-mid: #184F43;
+  --green-light: #E3EEE8;
+  --gold: #C89B3C;
+  --gold-light: #EAD8B7;
+  --bg: #F8F1E4;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { max-width: 100%; overflow-x: hidden; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #1a2e1a; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Arial Nova', 'Archivo', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #2b3a34; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 
 /* Scroll horizontal suave para tabelas largas no telemóvel */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

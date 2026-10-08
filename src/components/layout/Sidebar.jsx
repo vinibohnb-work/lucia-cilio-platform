@@ -43,8 +43,8 @@ const IconTarefas = () => <Icon><rect x="4" y="4" width="16" height="16" rx="2.5
 const IconMensagens = () => <Icon><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></Icon>
 const STAFF = ['admin', 'comercial', 'marketing']
 const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
-const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C89B3C" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C89B3C" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
 
 const NAV = {
   accounting: [
@@ -279,7 +279,7 @@ export default function Sidebar() {
               <button key={p} onClick={() => switchAdminView(p)} style={{
                 flex: 1, padding: '7px 4px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
                 background: viewPlatform === p ? t.accent : 'transparent',
-                color: viewPlatform === p ? '#0a2f1a' : t.sidebarSub,
+                color: viewPlatform === p ? '#0E3D33' : t.sidebarSub,
               }}>{lbl}</button>
             ))}
           </div>

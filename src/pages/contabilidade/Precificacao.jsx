@@ -15,8 +15,8 @@ import EstimateNote from '../../components/EstimateNote'
 const criarFmt = (lang) => (n) => isNaN(n) ? '0,00'
   : n.toLocaleString(localeDe(lang), { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = '#0E3D33'
+const GOLD = '#C89B3C'
 const BG = '#f2f6f3'
 
 const p   = (v)  => parseFloat(v) || 0

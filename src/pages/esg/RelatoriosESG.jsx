@@ -164,7 +164,7 @@ export default function RelatoriosESG() {
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>ESG ${year}</title><style>
       body{font-family:Georgia,serif;color:#1a2b20;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.55}
       h1{font-size:26px;margin-bottom:4px} .sub{color:#667;font-size:13px;margin-bottom:28px}
-      h2{font-size:17px;border-bottom:2px solid #c9a84c;padding-bottom:4px;margin-top:30px}
+      h2{font-size:17px;border-bottom:2px solid #C89B3C;padding-bottom:4px;margin-top:30px}
       table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0}
       th{ text-align:left;border-bottom:1px solid #999;padding:4px 8px;font-size:10.5px;text-transform:uppercase;color:#556}
       td{border-bottom:1px solid #ddd;padding:5px 8px} .txt{font-size:13px;white-space:pre-wrap}

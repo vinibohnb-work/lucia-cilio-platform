@@ -8,7 +8,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 
-const BRAND_G = '#0a2f1a'
+const BRAND_G = '#0E3D33'
 
 const SERVICE_STYLE = {
   esg:  { bg: '#e8f5ec', color: BRAND_G },
