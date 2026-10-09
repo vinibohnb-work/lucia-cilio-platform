@@ -57,11 +57,11 @@
 - [ ] **13.** **Ligar o portal do cliente**: a vista do cliente passa a ser a do portal em modo
   informativo (obrigações, documentos pedidos, mensagens, relatórios se o ponto 6 disser que
   sim). Depende do 12 e das políticas de leitura (uma migração). Fecha a jornada do cliente.
-- [ ] **13-A.** *(08/10)* **Página inicial do cliente mais enxuta**: próximas obrigações, documentos
+- [ ] **13-A.** *(08/10)* ⏳ **feito na branch `inicio-cliente`, falta a migração 040** — **Página inicial do cliente mais enxuta**: próximas obrigações, documentos
   em falta, último relatório, pendências e comunicação — **sem valores**. Entra no ponto 13.
 - [ ] **13-B.** *(08/10)* **Página inicial interna da equipa**: tarefas, pendências e relógio de
   ponto (horas). Substitui o admin a cair na Contabilidade de demonstração (ponto 6).
-- [ ] **13-C.** *(08/10)* **Botão "ver como o cliente"** na ficha: alternar entre a visão interna e
+- [x] **13-C.** *(08/10, feito 09/10)* **Botão "ver como o cliente"** na ficha: alternar entre a visão interna e
   a visão do cliente, sem trocar de sessão.
 - [ ] **13-D.** *(08/10)* **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem —
   é a passagem final da simplificação, feita sobre 12 e 13, com as sugestões da Letícia.
@@ -158,20 +158,20 @@ Letícia desenhar o serviço).
 
 - [ ] **Página inicial do cliente mais enxuta — sem valores nem documentos**
   *Reunião 08/10/2026 · Resp.: Vinícius*
-  Fica: próximas obrigações, documentos em falta, último relatório, pendências e a
-  comunicação (copiável para WhatsApp). Saem os valores e, "por enquanto", os documentos.
-  ⚠️ A confirmar o alcance de "remover documentos": a lista do que falta fica (é um dos cinco
-  blocos); o que sai é o envio/listagem de ficheiros na página inicial.
+  **Feito na branch `inicio-cliente` (09/10)**: mensagens da equipa, as 3 próximas
+  obrigações, documentos pedidos no mês, último relatório enviado e "Pendente da sua parte"
+  (documentos em falta, obrigações à espera de documentos, mensagens por ler). Saiu o cartão
+  "Próximo pagamento" com o valor da avença; o link do contrato ficou. Verificado com dados
+  fictícios, no computador e no telemóvel.
+  ⚠️ **Depende de:** aplicar `supabase/migration_040.sql` (o cliente lê os relatórios da sua
+  ficha marcados como enviados; os rascunhos continuam invisíveis) e depois o merge.
+  A confirmar com a Lúcia: "remover documentos" foi lido como tirar o envio de ficheiros da
+  página inicial — a lista do que falta ficou, porque é um dos cinco blocos pedidos.
 
 - [ ] **Página inicial interna da equipa: tarefas, pendências e relógio de ponto**
   *Reunião 08/10/2026 · Resp.: Vinícius*
   A página inicial passa a ter visão interna (equipa) e visão geral. O relógio de ponto liga-se
   às horas por cliente que já existem nas Notas internas.
-
-- [ ] **Recriar a visão do cliente: botão para alternar entre visão interna e visão do cliente**
-  *Reunião 08/10/2026 · Resp.: Vinícius*
-  O portal já sabe renderizar o `modoCliente`; falta o interruptor na ficha para a equipa ver
-  exatamente o que o cliente vê, sem trocar de sessão (substitui o antigo "ver como").
 
 - [ ] **Revisão geral ecrã a ecrã para simplificar a plataforma**
   *Reunião 08/10/2026 · Resp.: Vinícius*
@@ -736,6 +736,15 @@ Letícia desenhar o serviço).
 ---
 
 ## Concluídos
+
+### "Ver como o cliente" na ficha — 09/10
+
+- [x] **Recriar a visão do cliente: botão para alternar entre visão interna e visão do cliente**
+  *Reunião 08/10/2026 · Resp.: Vinícius*
+  ✔ Na ficha de um cliente com conta, a administradora carrega em "Ver como o cliente" e entra
+  na conta dele em só leitura, na página que ele vê ao entrar. A barra de cima passa a dizer
+  "Voltar à ficha" e regressa à ficha. Sem conta, o botão aparece desativado com a explicação.
+  Verificado com dados fictícios.
 
 ### Documentos pedidos visíveis ao cliente — 06/10
 
