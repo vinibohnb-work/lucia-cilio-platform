@@ -36,3 +36,27 @@ export function usePedidosDocumentos(userId, ano, mes) {
 
   return { pedidos, carregado, emFalta: pedidos.filter(p => p.estado === 'em_falta') }
 }
+
+// O último relatório trimestral que a equipa marcou como enviado. Lê-se com a
+// sessão do cliente — migração 040. Antes dela, ou sem ficha, devolve null.
+export function useUltimoRelatorio(userId) {
+  const [rel, setRel] = useState(null)
+  useEffect(() => {
+    let ativo = true
+    if (!userId) { setRel(null); return }
+    ;(async () => {
+      const { data: fichas } = await supabase.from('clientes').select('id').eq('user_id', userId).limit(1)
+      const fichaId = fichas?.[0]?.id
+      let r = null
+      if (fichaId) {
+        const { data } = await supabase.from('relatorios_trimestrais').select('ano, trimestre, enviado_em')
+          .eq('cliente_id', fichaId).eq('estado', 'enviado')
+          .order('ano', { ascending: false }).order('trimestre', { ascending: false }).limit(1)
+        r = data?.[0] || null
+      }
+      if (ativo) setRel(r)
+    })()
+    return () => { ativo = false }
+  }, [userId])
+  return rel
+}
