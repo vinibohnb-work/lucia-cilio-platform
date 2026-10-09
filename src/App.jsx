@@ -33,6 +33,7 @@ const ListaClientes       = lazy(() => import('./portal/paginas/ListaClientes'))
 const PaginaCliente       = lazy(() => import('./portal/paginas/PaginaCliente'))
 const AgendaPortal        = lazy(() => import('./portal/paginas/Agenda'))
 const TarefasPortal       = lazy(() => import('./portal/paginas/Tarefas'))
+const HorasPortal         = lazy(() => import('./portal/paginas/Horas'))
 const RelatoriosPortal    = lazy(() => import('./portal/paginas/Relatorios'))
 const MensagensPortal     = lazy(() => import('./portal/paginas/Mensagens'))
 const Crm                 = lazy(() => import('./pages/gestao/Crm'))
@@ -152,6 +153,7 @@ function AppLayout() {
               <Route path="/gestao/clientes/:id/:sep?" element={<PaginaCliente />} />
               <Route path="/gestao/agenda"            element={<AgendaPortal />} />
               <Route path="/gestao/tarefas"           element={<TarefasPortal />} />
+              <Route path="/gestao/horas"             element={<HorasPortal />} />
               <Route path="/gestao/relatorios"        element={<RelatoriosPortal />} />
               <Route path="/gestao/mensagens"         element={<MensagensPortal />} />
             </Route>

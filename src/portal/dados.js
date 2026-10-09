@@ -149,7 +149,7 @@ const paraRelatorio = (p) => ({
 })
 
 const deNota = (r) => ({ id: r.id, clienteId: r.cliente_id, tipo: r.tipo, texto: r.texto, com: r.com, autor: r.autor, resolvido: r.resolvido, data: r.data })
-const deHoras = (r) => ({ id: r.id, clienteId: r.cliente_id, data: r.data, horas: Number(r.horas), descricao: r.descricao, pessoa: r.pessoa })
+const deHoras = (r) => ({ id: r.id, clienteId: r.cliente_id, atividade: r.atividade || '', data: r.data, horas: Number(r.horas), descricao: r.descricao, pessoa: r.pessoa })
 
 // As mensagens são duas fontes numa só conversa: o que a equipa escreveu na
 // plataforma do cliente (client_notices — é o que ele vê no Início) e o registo
@@ -469,10 +469,16 @@ export const acoes = {
     mudar(s => { s.notas.find(x => x.id === id).resolvido = !n.resolvido })
     gravar(supabase.from('notas_cliente').update({ resolvido: !n.resolvido }).eq('id', id))
   },
+  // Horas da equipa: para um cliente (clienteId) ou para uma atividade
+  // (atividade: marketing, interno…) — migração 041.
   registarHoras(dados) {
-    const h = { id: novoId(), data: hojeIso(), pessoa: estado.eu, ...dados }
+    const h = { id: novoId(), data: hojeIso(), pessoa: estado.eu, clienteId: null, atividade: '', ...dados }
     mudar(s => { s.horas.push(h) })
-    gravar(supabase.from('horas_cliente').insert({ id: h.id, cliente_id: h.clienteId, data: h.data, horas: h.horas, descricao: h.descricao, pessoa: h.pessoa }))
+    gravar(supabase.from('horas_cliente').insert({ id: h.id, cliente_id: h.clienteId || null, atividade: h.clienteId ? null : h.atividade, data: h.data, horas: h.horas, descricao: h.descricao, pessoa: h.pessoa }))
+  },
+  apagarHoras(id) {
+    mudar(s => { s.horas = s.horas.filter(h => h.id !== id) })
+    gravar(supabase.from('horas_cliente').delete().eq('id', id))
   },
   // Pagamento da avença: grava no Financeiro (billing_payments), o mesmo sítio
   // onde a Lúcia já os marcava.
