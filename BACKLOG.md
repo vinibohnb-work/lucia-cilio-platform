@@ -61,6 +61,8 @@
   em falta, último relatório, pendências e comunicação — **sem valores**. Entra no ponto 13.
 - [ ] **13-B.** *(08/10)* **Página inicial interna da equipa**: tarefas, pendências e relógio de
   ponto (horas). Substitui o admin a cair na Contabilidade de demonstração (ponto 6).
+  ↳ O relógio de ponto já existe como página própria — **Gestão → Horas**, feita a 09/10 na
+  branch `horas-equipa` (falta a migração 041). A página inicial mostra só o resumo e o atalho.
 - [x] **13-C.** *(08/10, feito 09/10)* **Botão "ver como o cliente"** na ficha: alternar entre a visão interna e
   a visão do cliente, sem trocar de sessão.
 - [ ] **13-D.** *(08/10)* **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem —
@@ -172,6 +174,21 @@ Letícia desenhar o serviço).
   *Reunião 08/10/2026 · Resp.: Vinícius*
   A página inicial passa a ter visão interna (equipa) e visão geral. O relógio de ponto liga-se
   às horas por cliente que já existem nas Notas internas.
+
+- [ ] **Horas da equipa por cliente ou atividade (relógio de ponto)**
+  *Mensagem da Letícia 09/10/2026 · Resp.: Vinícius*
+  Pedido: indicar para que cliente ou atividade de marketing foi o trabalho, só a quantidade de
+  horas do dia (sem início e fim), com totais do dia, da semana, do mês e por cliente.
+  **Feito na branch `horas-equipa` (09/10)**: página **Gestão → Horas** com registo rápido
+  (dia, quem, cliente ou atividade, horas, nota opcional); atividades pré-definidas (Marketing ·
+  Instagram e conteúdos / Campanhas e anúncios / Reuniões e planeamento, Comercial ·
+  Diagnósticos e leads, Interno · Administrativo / Formação) e "Outra atividade…" escrita à mão;
+  totais de hoje, semana (seg–dom) e mês para "as minhas horas", outra pessoa ou a equipa toda;
+  o mês por cliente e atividade com as horas incluídas da ficha ao lado; lista de registos com
+  apagar. As horas registadas na ficha do cliente (Notas internas) entram nos mesmos totais.
+  Verificado com dados fictícios, no computador e no telemóvel.
+  ⚠️ **Depende de:** aplicar `supabase/migration_041.sql` (o registo pode ter uma atividade em
+  vez de um cliente) e depois o merge. A lista de atividades é para a Letícia confirmar.
 
 - [ ] **Revisão geral ecrã a ecrã para simplificar a plataforma**
   *Reunião 08/10/2026 · Resp.: Vinícius*
