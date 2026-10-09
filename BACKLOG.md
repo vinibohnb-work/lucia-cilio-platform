@@ -57,12 +57,12 @@
 - [ ] **13.** **Ligar o portal do cliente**: a vista do cliente passa a ser a do portal em modo
   informativo (obrigações, documentos pedidos, mensagens, relatórios se o ponto 6 disser que
   sim). Depende do 12 e das políticas de leitura (uma migração). Fecha a jornada do cliente.
-- [ ] **13-A.** *(08/10)* ⏳ **feito na branch `inicio-cliente`, falta a migração 040** — **Página inicial do cliente mais enxuta**: próximas obrigações, documentos
+- [x] **13-A.** *(08/10, publicado 10/10)* **Página inicial do cliente mais enxuta**: próximas obrigações, documentos
   em falta, último relatório, pendências e comunicação — **sem valores**. Entra no ponto 13.
 - [ ] **13-B.** *(08/10)* **Página inicial interna da equipa**: tarefas, pendências e relógio de
   ponto (horas). Substitui o admin a cair na Contabilidade de demonstração (ponto 6).
-  ↳ O relógio de ponto já existe como página própria — **Gestão → Horas**, feita a 09/10 na
-  branch `horas-equipa` (falta a migração 041). A página inicial mostra só o resumo e o atalho.
+  ↳ O relógio de ponto já existe como página própria — **Gestão → Horas** (publicada 10/10). A
+  página inicial mostra só o resumo de hoje e o atalho.
 - [x] **13-C.** *(08/10, feito 09/10)* **Botão "ver como o cliente"** na ficha: alternar entre a visão interna e
   a visão do cliente, sem trocar de sessão.
 - [ ] **13-D.** *(08/10)* **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem —
@@ -158,37 +158,10 @@ Letícia desenhar o serviço).
 > *"Vinícius fará review geral das telas para simplificar."* — o próximo passo definido na
 > reunião (com a Letícia). Prazo combinado para fechar os ajustes: **3 de novembro**.
 
-- [ ] **Página inicial do cliente mais enxuta — sem valores nem documentos**
-  *Reunião 08/10/2026 · Resp.: Vinícius*
-  **Feito na branch `inicio-cliente` (09/10)**: mensagens da equipa, as 3 próximas
-  obrigações, documentos pedidos no mês, último relatório enviado e "Pendente da sua parte"
-  (documentos em falta, obrigações à espera de documentos, mensagens por ler). Saiu o cartão
-  "Próximo pagamento" com o valor da avença; o link do contrato ficou. Verificado com dados
-  fictícios, no computador e no telemóvel.
-  ⚠️ **Depende de:** aplicar `supabase/migration_040.sql` (o cliente lê os relatórios da sua
-  ficha marcados como enviados; os rascunhos continuam invisíveis) e depois o merge.
-  A confirmar com a Lúcia: "remover documentos" foi lido como tirar o envio de ficheiros da
-  página inicial — a lista do que falta ficou, porque é um dos cinco blocos pedidos.
-
 - [ ] **Página inicial interna da equipa: tarefas, pendências e relógio de ponto**
   *Reunião 08/10/2026 · Resp.: Vinícius*
   A página inicial passa a ter visão interna (equipa) e visão geral. O relógio de ponto liga-se
   às horas por cliente que já existem nas Notas internas.
-
-- [ ] **Horas da equipa por cliente ou atividade (relógio de ponto)**
-  *Mensagem da Letícia 09/10/2026 · Resp.: Vinícius*
-  Pedido: indicar para que cliente ou atividade de marketing foi o trabalho, só a quantidade de
-  horas do dia (sem início e fim), com totais do dia, da semana, do mês e por cliente.
-  **Feito na branch `horas-equipa` (09/10)**: página **Gestão → Horas** com registo rápido
-  (dia, quem, cliente ou atividade, horas, nota opcional); atividades pré-definidas (Marketing ·
-  Instagram e conteúdos / Campanhas e anúncios / Reuniões e planeamento, Comercial ·
-  Diagnósticos e leads, Interno · Administrativo / Formação) e "Outra atividade…" escrita à mão;
-  totais de hoje, semana (seg–dom) e mês para "as minhas horas", outra pessoa ou a equipa toda;
-  o mês por cliente e atividade com as horas incluídas da ficha ao lado; lista de registos com
-  apagar. As horas registadas na ficha do cliente (Notas internas) entram nos mesmos totais.
-  Verificado com dados fictícios, no computador e no telemóvel.
-  ⚠️ **Depende de:** aplicar `supabase/migration_041.sql` (o registo pode ter uma atividade em
-  vez de um cliente) e depois o merge. A lista de atividades é para a Letícia confirmar.
 
 - [ ] **Revisão geral ecrã a ecrã para simplificar a plataforma**
   *Reunião 08/10/2026 · Resp.: Vinícius*
@@ -753,6 +726,22 @@ Letícia desenhar o serviço).
 ---
 
 ## Concluídos
+
+### Página inicial do cliente e Horas da equipa — publicadas 10/10 (migrações 040 e 041)
+
+- [x] **Página inicial do cliente mais enxuta — sem valores** *(reunião 08/10 · Resp.: Vinícius)*
+  ✔ Mensagens da equipa, as 3 próximas obrigações, documentos pedidos no mês, último relatório
+  enviado e "Pendente da sua parte" (documentos em falta, obrigações à espera de documentos,
+  mensagens por ler). Saiu o valor da avença; o link do contrato ficou. Migração 040: o cliente
+  lê os relatórios da sua ficha marcados como enviados.
+  ↳ A confirmar com a Lúcia: "remover documentos" foi lido como tirar o envio de ficheiros da
+  página inicial — a lista do que falta ficou.
+- [x] **Horas da equipa por cliente ou atividade (relógio de ponto)** *(mensagem da Letícia 09/10 ·
+  Resp.: Vinícius)*
+  ✔ Gestão → Horas: registo do dia por cliente ou atividade (sem horários), totais de hoje,
+  semana e mês por pessoa ou equipa, o mês por cliente/atividade com as horas incluídas da ficha,
+  lista de registos com apagar. Migração 041: um registo pode ter uma atividade em vez de cliente.
+  ↳ Para a Letícia confirmar: a lista de atividades e se cada colaboradora vê só as suas horas.
 
 ### Resumo da ficha do cliente sem "Documentos em falta" e "Valor a pagar" — 10/10
 
