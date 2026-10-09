@@ -10,12 +10,13 @@ export default function ViewAsBanner() {
   if (!isViewing) return null
 
   const L = lang === 'de'
-    ? { label: 'Ansicht als', readonly: 'nur Lesen', exit: 'Beenden' }
+    ? { label: 'Ansicht als', readonly: 'nur Lesen', exit: 'Beenden', back: 'Zurück zur Akte' }
     : lang === 'en'
-    ? { label: 'Viewing as', readonly: 'read-only', exit: 'Exit' }
-    : { label: 'A visualizar como', readonly: 'só leitura', exit: 'Sair' }
+    ? { label: 'Viewing as', readonly: 'read-only', exit: 'Exit', back: 'Back to the client record' }
+    : { label: 'A visualizar como', readonly: 'só leitura', exit: 'Sair', back: 'Voltar à ficha' }
 
-  function exit() { clearViewAs(); navigate('/gestao/clientes') }
+  // Entrou pela ficha do cliente ("Ver como o cliente"): volta a ela.
+  function exit() { const voltar = viewAs?.voltar; clearViewAs(); navigate(voltar || '/gestao/clientes') }
 
   return (
     <div style={{
@@ -27,7 +28,7 @@ export default function ViewAsBanner() {
         {L.label} <strong>{viewAs?.name}</strong>
       </span>
       <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: 'rgba(255,255,255,.22)', textTransform: 'uppercase', letterSpacing: '0.5px', flex: 'none' }}>{L.readonly}</span>
-      <button onClick={exit} style={{ marginLeft: 'auto', flex: 'none', padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,.4)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>✕ {L.exit}</button>
+      <button onClick={exit} style={{ marginLeft: 'auto', flex: 'none', padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,.4)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>{viewAs?.voltar ? `← ${L.back}` : `✕ ${L.exit}`}</button>
     </div>
   )
 }

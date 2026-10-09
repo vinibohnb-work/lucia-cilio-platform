@@ -1,6 +1,7 @@
 import { useState, lazy, Suspense } from 'react'
 import { useParams, useNavigate, NavLink, Navigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
+import { useViewAs } from '../../context/ViewAsContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal } from '../dados'
 import { usePerfil, Chip, Botao, Janela, Ic, Cartao } from '../ui'
@@ -30,6 +31,7 @@ export default function PaginaCliente({ idFixo }) {
   const { papel } = usePerfil()
   const params = useParams()
   const navigate = useNavigate()
+  const { setViewAs } = useViewAs()
   const modoCliente = papel === 'cliente'
   const id = idFixo || params.id
   const sep = params.sep || 'resumo'
@@ -57,6 +59,15 @@ export default function PaginaCliente({ idFixo }) {
   if (!separadores.some(([k]) => k === sep)) return <Navigate to={base} replace />
 
   const est = ESTADOS_CLIENTE[cliente.estado]
+
+  // "Ver como o cliente" (08/10): entra na conta dele em só leitura, na página
+  // que ele vê ao entrar, e a barra de cima traz de volta a esta ficha.
+  function verComoCliente() {
+    const conta = s.contas.find(x => x.id === cliente.userId)
+    const platform = conta?.platform || 'accounting'
+    setViewAs({ id: cliente.userId, name: cliente.nome, platform, voltar: `/gestao/clientes/${cliente.id}` })
+    navigate(platform === 'esg' ? '/esg/percurso' : '/contabilidade/inicio')
+  }
 
   return (
     <div>
@@ -99,6 +110,8 @@ export default function PaginaCliente({ idFixo }) {
             </>
           ) : (
             <>
+              {papel === 'admin' && <Botao onClick={verComoCliente} disabled={!cliente.userId}
+                title={cliente.userId ? 'Abre a plataforma exatamente como o cliente a vê (só leitura)' : 'Este cliente ainda não tem conta na plataforma'}><Ic.olho size={15} />Ver como o cliente</Botao>}
               <Botao variante="whats" onClick={() => setWhats(true)}><Ic.whats />WhatsApp</Botao>
               <Botao onClick={() => navigate(`${base}/mensagens`)}><Ic.mail />Mensagem</Botao>
               <Botao variante="ouro" onClick={() => setTarefa(true)}><Ic.mais />Adicionar tarefa</Botao>
