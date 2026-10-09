@@ -30,7 +30,8 @@ export default function Resumo({ cliente, base, modoCliente }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(176px, 1fr))', gap: '14px' }}>
+      {/* As mesmas colunas da grelha de baixo, para os blocos alinharem (10/10). */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : modoCliente ? '1fr 1fr' : '1.35fr 1fr', gap: '16px' }}>
         <Kpi icone={<Ic.agenda size={22} />} rotulo="Próxima obrigação" valor={prox ? <span title={prox.nome} style={{ fontSize: '14px' }}>{prox.nome}</span> : 'Nenhuma'}
           sub={prox ? <>{fmtData(prox.prazo)} · <EstadoO o={prox} /></> : null} />
         {/* "Documentos em falta" e "Valor a pagar" saíram daqui (10/10): os documentos têm o
