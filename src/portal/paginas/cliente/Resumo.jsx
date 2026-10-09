@@ -4,7 +4,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import { usePortal, acoes } from '../../dados'
 import { Cartao, Kpi, Chip, Ic, Vazio, useCampos, Botao } from '../../ui'
 import { CHECKLIST, ESTADOS_OBRIG, estadoEfetivo, fmtData, fmtEur, hojeIso } from '../../regras'
-import { obrigacoesDe, abertas, proximaObrigacao, docsEmFalta, valorAPagar, entregues, ultimoRelatorio } from '../../seletores'
+import { obrigacoesDe, abertas, proximaObrigacao, entregues, ultimoRelatorio } from '../../seletores'
 import { CompositorWhatsApp } from '../../partes/Comunicacao'
 
 // Resumo (documento, secção 2) com a disposição do mockup: quatro indicadores
@@ -23,8 +23,6 @@ export default function Resumo({ cliente, base, modoCliente }) {
   const cid = cliente.id
 
   const prox = proximaObrigacao(s, cid)
-  const falta = docsEmFalta(s, cid)
-  const aPagar = valorAPagar(s, cid)
   const ult = ultimoRelatorio(s, cid)
   const lista = abertas(obrigacoesDe(s, cid)).slice(0, 5)
   const feitas = entregues(s, cid).slice(0, 4)
@@ -35,12 +33,8 @@ export default function Resumo({ cliente, base, modoCliente }) {
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(176px, 1fr))', gap: '14px' }}>
         <Kpi icone={<Ic.agenda size={22} />} rotulo="Próxima obrigação" valor={prox ? <span title={prox.nome} style={{ fontSize: '14px' }}>{prox.nome}</span> : 'Nenhuma'}
           sub={prox ? <>{fmtData(prox.prazo)} · <EstadoO o={prox} /></> : null} />
-        {/* Um só sítio para os documentos em falta: o indicador abre a lista (01/10) */}
-        <Kpi icone={<Ic.doc size={22} />} rotulo="Documentos em falta" valor={falta.length} tom={falta.length ? 'erro' : undefined}
-          sub={falta.length ? [...new Set(falta.map(d => d.tipo))].slice(0, 2).join(', ') + ' · ver →' : 'Tudo recebido'}
-          onClick={() => navigate(`${base}/documentos`)} />
-        {/* Valores só para a equipa: o portal do cliente é informativo (25/09) */}
-        {!modoCliente && <Kpi icone={<Ic.euro size={22} />} rotulo="Valor a pagar" valor={fmtEur(aPagar)} sub={aPagar ? 'obrigações ainda por pagar' : 'nada em aberto'} />}
+        {/* "Documentos em falta" e "Valor a pagar" saíram daqui (10/10): os documentos têm o
+            separador próprio e a coluna Atenção da lista; os valores, as Obrigações. */}
         <Kpi icone={<Ic.relatorios size={22} />} rotulo="Último relatório" valor={ult ? `T${ult.trimestre} ${ult.ano}` : '—'} sub={ult ? `enviado a ${fmtData(ult.enviadoEm)}` : 'ainda nenhum'} />
       </div>
 

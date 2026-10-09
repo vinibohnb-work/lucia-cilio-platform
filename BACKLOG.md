@@ -754,6 +754,14 @@ Letícia desenhar o serviço).
 
 ## Concluídos
 
+### Resumo da ficha do cliente sem "Documentos em falta" e "Valor a pagar" — 10/10
+
+- [x] **Retirar os blocos "Documentos em falta" e "Valor a pagar" do Resumo da ficha** *(pedido do
+  Vinícius, 10/10 · Resp.: Vinícius)*
+  ✔ Saem da ficha, na visão da equipa e na do cliente. Ficam "Próxima obrigação" e "Último
+  relatório". Os documentos continuam no separador Documentos e na coluna Atenção da lista;
+  os valores, nas Obrigações.
+
 ### "Ver como o cliente" na ficha — 09/10
 
 - [x] **Recriar a visão do cliente: botão para alternar entre visão interna e visão do cliente**
