@@ -96,6 +96,16 @@ export const TIPOS_NOTA = {
 }
 export const ESCLARECER_COM = ['Contabilista', 'Steuerberater', 'Advogado']
 
+// Atividades da equipa que não são de um cliente (horas — pedido da Letícia, 09/10).
+export const ATIVIDADES = [
+  'Marketing · Instagram e conteúdos',
+  'Marketing · Campanhas e anúncios',
+  'Marketing · Reuniões e planeamento',
+  'Comercial · Diagnósticos e leads',
+  'Interno · Administrativo',
+  'Interno · Formação',
+]
+
 // ── Datas ──────────────────────────────────────────────────────────────────
 const pad = (n) => String(n).padStart(2, '0')
 export const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`

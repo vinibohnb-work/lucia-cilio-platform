@@ -40,6 +40,7 @@ const IconMarketing = () => <Icon><path d="M4 10v4h3l6 3.5v-11L7 10H4z"/><path d
 const IconProjetos = () => <Icon><path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.2h6.5a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></Icon>
 const IconRelatorios = () => <Icon><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M13.5 3.5V8H18M8.5 13h7M8.5 16.5h7" strokeWidth="1.4"/></Icon>
 const IconTarefas = () => <Icon><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></Icon>
+const IconHoras = () => <Icon><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></Icon>
 const IconMensagens = () => <Icon><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></Icon>
 const STAFF = ['admin', 'comercial', 'marketing']
 const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
@@ -92,6 +93,7 @@ const NAV = {
       { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
       { to: '/gestao/agenda',     Icon: IconObrig,      labelKey: 'nav_agenda',          roles: STAFF },
       { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },
+      { to: '/gestao/horas',      Icon: IconHoras,      labelKey: 'nav_horas',           roles: STAFF },
       { to: '/gestao/relatorios', Icon: IconKpi,        labelKey: 'nav_relatorios_trim', roles: STAFF },
       { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
     ]},
