@@ -90,6 +90,7 @@ const NAV = {
   // marcador de lugar); continua a ser a área do papel "marketing".
   management: [
     { key: 'section_carteira', items: [
+      { to: '/gestao/inicio',     Icon: IconInicio,     labelKey: 'nav_inicio_equipa',   roles: STAFF },
       { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
       { to: '/gestao/agenda',     Icon: IconObrig,      labelKey: 'nav_agenda',          roles: STAFF },
       { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },

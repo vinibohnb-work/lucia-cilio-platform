@@ -33,6 +33,7 @@ const ListaClientes       = lazy(() => import('./portal/paginas/ListaClientes'))
 const PaginaCliente       = lazy(() => import('./portal/paginas/PaginaCliente'))
 const AgendaPortal        = lazy(() => import('./portal/paginas/Agenda'))
 const TarefasPortal       = lazy(() => import('./portal/paginas/Tarefas'))
+const InicioEquipa        = lazy(() => import('./portal/paginas/InicioEquipa'))
 const HorasPortal         = lazy(() => import('./portal/paginas/Horas'))
 const RelatoriosPortal    = lazy(() => import('./portal/paginas/Relatorios'))
 const MensagensPortal     = lazy(() => import('./portal/paginas/Mensagens'))
@@ -88,7 +89,9 @@ function AppLayout() {
   const { t } = useTheme()
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const ml = isMobile ? '0' : '238px'
+  // Menu recolhido = modo apresentação da consultoria: sem menu nem sino, só a página.
+  const semMenu = collapsed && !isMobile
+  const ml = isMobile || semMenu ? '0' : '238px'
 
   const { isViewing } = useViewAs()
   // FAB "Nova Entrada" apenas no Dashboard e no Livro de Caixa (e não em "Ver como")
@@ -96,8 +99,8 @@ function AppLayout() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: t.appBg, fontFamily: t.fontBody }}>
-      <Sidebar />
-      <FiscalBell />
+      {!semMenu && <Sidebar />}
+      {!semMenu && <FiscalBell />}
       {/* Backdrop do drawer no mobile */}
       {isMobile && mobileOpen && (
         <div
@@ -149,6 +152,7 @@ function AppLayout() {
             {/* Plataforma Gestão (apenas admin, por agora) */}
             {/* Portal de gestão de clientes (a antiga v2, oficial desde 29/09) — a equipa toda */}
             <Route element={<RoleRoute requireRole={['admin', 'comercial', 'marketing']}><Portal /></RoleRoute>}>
+              <Route path="/gestao/inicio"            element={<InicioEquipa />} />
               <Route path="/gestao/clientes"          element={<ListaClientes />} />
               <Route path="/gestao/clientes/:id/:sep?" element={<PaginaCliente />} />
               <Route path="/gestao/agenda"            element={<AgendaPortal />} />

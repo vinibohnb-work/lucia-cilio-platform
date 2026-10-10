@@ -6,6 +6,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { listUsers, createUser, updateUser, deleteUser, resetPassword } from '../../lib/adminApi'
 import { generatePassword } from '../../lib/passwordPolicy'
 import { supabase } from '../../lib/supabase'
+import BoasVindas from '../../components/BoasVindas'
 
 const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting', password: '', country: '', service: '' }
 
@@ -28,6 +29,7 @@ export default function AdminHome() {
   const [loading, setLoading] = useState(true)
   const [err, setErr]       = useState('')
   const [notice, setNotice] = useState('')
+  const [boasVindas, setBoasVindas] = useState(null)   // mensagem pronta a enviar ao cliente (ponto 16)
   const [saving, setSaving] = useState(false)
   const [form, setForm]     = useState(EMPTY)
   const [editingId, setEditingId] = useState(null)
@@ -105,7 +107,7 @@ export default function AdminHome() {
   }, [])
   useEffect(() => { load() }, [load])
 
-  function openCreate() { setForm({ ...EMPTY, password: generatePassword() }); setEditingId('new'); setErr(''); setNotice('') }
+  function openCreate() { setForm({ ...EMPTY, password: generatePassword() }); setEditingId('new'); setErr(''); setNotice(''); setBoasVindas(null) }
   async function openEdit(u) {
     setForm({ email: u.email, display_name: u.display_name, role: u.role, platform: u.platform || 'accounting', password: '', country: '', service: '' })
     setEditingId(u.id); setErr(''); setNotice('')
@@ -121,6 +123,7 @@ export default function AdminHome() {
         const criado = await createUser({ email: form.email, display_name: form.display_name, role: form.role, platform: form.platform, password: form.password })
         await guardarPerfilEmpresa(criado?.id)
         setNotice(L.createdPw(form.email, form.password))
+        setBoasVindas({ nome: form.display_name, email: form.email, pw: form.password, novo: true, lingua: form.country === 'DE' ? 'de' : 'pt' })
       }
       else {
         await updateUser({ id: editingId, email: form.email, display_name: form.display_name, role: form.role, platform: form.platform })
@@ -152,7 +155,12 @@ export default function AdminHome() {
   async function resend(u) {
     setBusyId(u.id); setErr(''); setNotice('')
     const pw = generatePassword()
-    try { await resetPassword(u.id, pw); setNotice(L.resetPw(u.email, pw)); await load() } catch (e) { setErr(e.message) }
+    try {
+      await resetPassword(u.id, pw); setNotice(L.resetPw(u.email, pw))
+      const { data: cs } = await supabase.from('company_settings').select('country').eq('user_id', u.id).maybeSingle()
+      setBoasVindas({ nome: u.display_name, email: u.email, pw, novo: false, lingua: cs?.country === 'DE' ? 'de' : 'pt' })
+      await load()
+    } catch (e) { setErr(e.message) }
     setBusyId(null)
   }
   const [copied, setCopied] = useState(false)
@@ -190,6 +198,7 @@ export default function AdminHome() {
 
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12px', fontWeight: 600, marginBottom: '14px' }}>{err}</div>}
       {notice && <div style={{ background: t.dueOk.bg, color: t.dueOk.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px', fontFamily: 'ui-monospace, monospace' }}>🔑 {notice}</div>}
+      {notice && boasVindas && <BoasVindas key={boasVindas.email + boasVindas.pw} dados={boasVindas} aoFechar={() => setBoasVindas(null)} />}
 
       {/* Form */}
       {editingId && (

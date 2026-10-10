@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
+import { useSidebar } from '../../context/SidebarContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
@@ -13,6 +14,11 @@ import { criarLeadDeContacto } from '../../lib/leadsCrm'
 // Ficha da consultoria — usada AO VIVO, muitas vezes presencial e com o cliente
 // a ver o ecrã. Daí: guardar automático (nada de botão), campos que crescem com
 // o texto e o TOWS a mostrar de onde vem cada estratégia.
+// Modo apresentação (reunião de 08/10): com o cliente ao lado, esconde o que é
+// interno — notas internas, CRM, tipo e estado da consultoria, a volta à lista
+// (que mostra os outros clientes) — e recolhe o menu lateral.
+
+const CHAVE_APRESENTACAO = 'lc-consultoria-apresentacao'
 
 export default function ConsultoriaDetalhe() {
   const { id } = useParams()
@@ -29,9 +35,26 @@ export default function ConsultoriaDetalhe() {
   const [novaEstrategia, setNovaEstrategia] = useState({})   // { celulaKey: { texto, origem:[] } }
   const timer = useRef(null)
   const [aCriarLead, setACriarLead] = useState(false)   // ponte para o CRM
+  const sidebar = useSidebar()
+  const [apresentacao, setApresentacaoEstado] = useState(() => {
+    try { return sessionStorage.getItem(CHAVE_APRESENTACAO) === '1' } catch { return false }
+  })
+  function setApresentacao(on) {
+    setApresentacaoEstado(on)
+    try { if (on) sessionStorage.setItem(CHAVE_APRESENTACAO, '1'); else sessionStorage.removeItem(CHAVE_APRESENTACAO) } catch { /* ignore */ }
+    sidebar?.setCollapsed?.(on)
+    sidebar?.setMobileOpen?.(false)
+  }
+  // Ao voltar à página já em apresentação (recarregar), o menu continua recolhido.
+  // Ao sair da página (por qualquer caminho) o menu volta.
+  useEffect(() => {
+    if (apresentacao) sidebar?.setCollapsed?.(true)
+    return () => sidebar?.setCollapsed?.(false)
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const L = lang === 'de' ? {
     voltar: '← Beratungen', relatorio: 'Bericht →', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
+    apresentar: 'Präsentationsmodus', sairApresentar: 'Präsentation beenden', emApresentacao: 'Präsentationsmodus — interne Notizen und CRM sind ausgeblendet.',
     addCrm: 'Zum CRM', noCrm: 'Im CRM ✓', verNoCrm: 'Im CRM ansehen →', crmErro: 'Lead konnte nicht angelegt werden.',
     bloco: 'Block', porConstruir: 'Dieser Block kommt in der nächsten Phase.',
     swotVazio: 'Fügen Sie Punkte in die vier Quadranten ein.',
@@ -45,6 +68,7 @@ export default function ConsultoriaDetalhe() {
     naoEncontrada: 'Beratung nicht gefunden.',
   } : lang === 'en' ? {
     voltar: '← Consultancies', relatorio: 'Report →', guardado: 'Saved ✓', aGuardar: 'Saving…',
+    apresentar: 'Presentation mode', sairApresentar: 'End presentation', emApresentacao: 'Presentation mode — internal notes and CRM are hidden.',
     addCrm: '+ Add to CRM', noCrm: 'In CRM ✓', verNoCrm: 'See in CRM →', crmErro: 'Could not create the lead.',
     bloco: 'Block', porConstruir: 'This block arrives in the next phase.',
     swotVazio: 'Add items to the four quadrants.',
@@ -58,6 +82,7 @@ export default function ConsultoriaDetalhe() {
     naoEncontrada: 'Consultancy not found.',
   } : {
     voltar: '← Consultorias', relatorio: 'Relatório →', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
+    apresentar: 'Modo apresentação', sairApresentar: 'Sair da apresentação', emApresentacao: 'Modo apresentação — as notas internas e o CRM estão escondidos.',
     addCrm: '+ Juntar ao CRM', noCrm: 'No CRM ✓', verNoCrm: 'Ver no CRM →', crmErro: 'Não foi possível criar o lead.',
     bloco: 'Bloco', porConstruir: 'Este bloco chega na próxima fase.',
     swotVazio: 'Acrescenta pontos aos quatro quadrantes.',
@@ -194,7 +219,14 @@ export default function ConsultoriaDetalhe() {
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
       {/* Cabeçalho */}
-      <button onClick={() => navigate('/gestao/consultorias')} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
+      {apresentacao ? (
+        <div role="status" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', padding: '9px 14px', marginBottom: '14px', borderRadius: '11px', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, fontSize: '12.5px', color: t.textMuted }}>
+          <span style={{ flex: 1, minWidth: '200px' }}>{L.emApresentacao}</span>
+          <button onClick={() => setApresentacao(false)} style={{ padding: '7px 13px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.accentText, fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>{L.sairApresentar}</button>
+        </div>
+      ) : (
+        <button onClick={() => navigate('/gestao/consultorias')} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
+      )}
 
       <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
 
@@ -209,6 +241,7 @@ export default function ConsultoriaDetalhe() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap' }}>
             {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
             {erro && <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.neg }}>{erro}</span>}
+            {!apresentacao && <>
             <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.chipBg, color: t.chipText, whiteSpace: 'nowrap' }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
             {c.crm_lead_id ? (
               <button onClick={() => navigate('/gestao/crm')} title={L.verNoCrm}
@@ -222,6 +255,9 @@ export default function ConsultoriaDetalhe() {
             <select value={c.status} onChange={e => alterar({ status: e.target.value }, true)} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', fontSize: '12px', padding: '6px 9px' }}>
               <option value="ativa">{L.ativa}</option><option value="concluida">{L.concluida}</option><option value="pausada">{L.pausada}</option>
             </select>
+            <button onClick={() => setApresentacao(true)} title={L.emApresentacao}
+              style={{ padding: '6px 13px', borderRadius: '9px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.apresentar}</button>
+            </>}
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: '10px' }}>
@@ -337,12 +373,12 @@ export default function ConsultoriaDetalhe() {
         </div>
       ))}
 
-      {/* Notas internas + recursos */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.4fr 1fr', gap: '14px', marginTop: '4px' }}>
-        <div style={{ ...card, padding: '18px 20px' }}>
+      {/* Notas internas + recursos (as notas internas não aparecem em apresentação) */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile || apresentacao ? '1fr' : '1.4fr 1fr', gap: '14px', marginTop: '4px' }}>
+        {!apresentacao && <div style={{ ...card, padding: '18px 20px' }}>
           <div style={lblStyle}>{L.notas}</div>
           <textarea value={c.notas || ''} onChange={e => alterar({ notas: e.target.value })} rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
-        </div>
+        </div>}
         <div style={{ ...card, padding: '18px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '9px' }}>
             <span style={lblStyle}>{L.recursos}</span>

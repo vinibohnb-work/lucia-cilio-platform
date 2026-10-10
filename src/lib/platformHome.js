@@ -1,7 +1,8 @@
 // Destino inicial de cada utilizador após login, conforme role e plataforma.
 // Login unificado: o utilizador nunca escolhe — vai direto para a sua plataforma.
 export function homePathFor(role, platform) {
-  if (role === 'admin') return '/gestao/clientes'
+  // A equipa entra no Início da Gestão: tarefas, pendências e horas do dia (08/10).
+  if (role === 'admin') return '/gestao/inicio'
   // Papéis de equipa: entram direto na sua única área
   if (role === 'comercial') return '/gestao/crm'
   if (role === 'marketing') return '/gestao/marketing'

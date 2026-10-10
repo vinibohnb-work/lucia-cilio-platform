@@ -59,7 +59,7 @@
   sim). Depende do 12 e das políticas de leitura (uma migração). Fecha a jornada do cliente.
 - [x] **13-A.** *(08/10, publicado 10/10)* **Página inicial do cliente mais enxuta**: próximas obrigações, documentos
   em falta, último relatório, pendências e comunicação — **sem valores**. Entra no ponto 13.
-- [ ] **13-B.** *(08/10)* **Página inicial interna da equipa**: tarefas, pendências e relógio de
+- [x] **13-B.** *(08/10, feito 10/10)* **Página inicial interna da equipa**: tarefas, pendências e relógio de
   ponto (horas). Substitui o admin a cair na Contabilidade de demonstração (ponto 6).
   ↳ O relógio de ponto já existe como página própria — **Gestão → Horas** (publicada 10/10). A
   página inicial mostra só o resumo de hoje e o atalho.
@@ -70,9 +70,9 @@
 - [ ] **14.** **Aba de Marketing** com a prévia do Instagram, legenda, agenda e anotações.
 - [ ] **15.** Consultoria: tirar as perguntas indicadas e absorver os 8 passos do mentor.
   ⏳ Depende do ponto 10.
-- [ ] **16.** Texto-modelo de **entrega das credenciais** (boas-vindas, endereço, troca da
+- [x] **16.** *(feito 10/10)* Texto-modelo de **entrega das credenciais** (boas-vindas, endereço, troca da
   palavra-passe) para a Lúcia copiar ao criar uma conta.
-- [ ] **16-A.** *(08/10)* **Ocultar os dados ao iniciar uma consultoria** com o cliente ao lado
+- [x] **16-A.** *(08/10, feito 10/10)* **Ocultar os dados ao iniciar uma consultoria** com o cliente ao lado
   (modo de apresentação na ficha/consultoria).
 - [ ] **16-B.** *(08/10)* **Validação visual com a Lúcia — semana de 13 a 17/10.** O material da
   Letícia chegou a 08/10 e já está aplicado: 6 alternativas de design no canvas (3 ecrãs cada) e a
@@ -158,20 +158,10 @@ Letícia desenhar o serviço).
 > *"Vinícius fará review geral das telas para simplificar."* — o próximo passo definido na
 > reunião (com a Letícia). Prazo combinado para fechar os ajustes: **3 de novembro**.
 
-- [ ] **Página inicial interna da equipa: tarefas, pendências e relógio de ponto**
-  *Reunião 08/10/2026 · Resp.: Vinícius*
-  A página inicial passa a ter visão interna (equipa) e visão geral. O relógio de ponto liga-se
-  às horas por cliente que já existem nas Notas internas.
-
 - [ ] **Revisão geral ecrã a ecrã para simplificar a plataforma**
   *Reunião 08/10/2026 · Resp.: Vinícius*
   Prioridade acima dos testes com clientes. Feita sobre a Fase 2 da simplificação, com as
   anotações de design da Letícia (chegam por WhatsApp).
-
-- [ ] **Ocultar dados ao iniciar uma consultoria com o cliente**
-  *Reunião 08/10/2026 · Resp.: Vinícius*
-  Ao abrir a consultoria com o cliente ao lado, não mostrar os dados internos/financeiros da
-  ficha — um modo de apresentação.
 
 - [ ] **Validação visual com a Lúcia (semana de 13 a 17/10) e aplicação da identidade**
   *Reunião 08/10/2026 · material da Letícia 08/10 · Resp.: Vinícius (com a Lúcia e a Letícia)*
@@ -424,13 +414,6 @@ Letícia desenhar o serviço).
 ### CRM e prospeção
 
 ### Onboarding e primeiro acesso
-
-- [ ] **Rever a comunicação de entrega das credenciais**
-  *Levantado no desenvolvimento · Resp.: Vinícius*
-  Com o fim do convite por email, deixou de haver mensagem automática: a Lúcia entrega a
-  palavra-passe temporária por WhatsApp/email à mão. Avaliar se vale um texto-modelo (com as
-  boas-vindas, o endereço da plataforma e o aviso de que terá de a trocar) que ela copie, ou
-  um email próprio enviado pela plataforma.
 
 ### Usabilidade e compreensão
 
@@ -726,6 +709,23 @@ Letícia desenhar o serviço).
 ---
 
 ## Concluídos
+
+### Início da equipa, modo apresentação e mensagem de boas-vindas — 10/10
+
+- [x] **Página inicial interna da equipa** *(reunião 08/10 · Resp.: Vinícius)*
+  ✔ Gestão → Início, onde a equipa passa a entrar depois do login: tarefas para hoje (as minhas
+  ou da equipa), obrigações em atraso e nos próximos 7 dias, documentos em falta por cliente,
+  relatórios do trimestre por fazer, mensagens dos clientes por ler e as horas de hoje, cada
+  indicador com atalho. O admin deixa de cair na Contabilidade de demonstração.
+- [x] **Ocultar dados ao iniciar uma consultoria com o cliente** *(reunião 08/10 · Resp.: Vinícius)*
+  ✔ Botão "Modo apresentação" na consultoria: esconde as notas internas, o CRM, o tipo e o estado
+  da consultoria, a volta à lista e o menu lateral (que mostra os outros clientes). Uma barra
+  discreta em cima volta ao normal. Mantém-se ao recarregar a página.
+- [x] **Rever a comunicação de entrega das credenciais** *(ponto 16 · Resp.: Vinícius)*
+  ✔ Ao criar uma conta ou redefinir a palavra-passe, aparece a mensagem de boas-vindas pronta
+  (endereço, e-mail, palavra-passe temporária, aviso de troca no primeiro acesso), em português,
+  alemão ou inglês — alemão por omissão para clientes da Alemanha — com "Copiar", "Abrir no
+  WhatsApp" e "Abrir num e-mail".
 
 ### Página inicial do cliente e Horas da equipa — publicadas 10/10 (migrações 040 e 041)
 
