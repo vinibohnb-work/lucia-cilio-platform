@@ -67,7 +67,7 @@
   a visão do cliente, sem trocar de sessão.
 - [ ] **13-D.** *(08/10)* **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem —
   é a passagem final da simplificação, feita sobre 12 e 13, com as sugestões da Letícia.
-- [ ] **14.** ⏳ *(feito 10/10 na branch `marketing`, falta a migração 043)* **Aba de Marketing** com a prévia do Instagram, legenda, agenda e anotações.
+- [x] **14.** *(publicado 10/10)* **Aba de Marketing** com a prévia do Instagram, legenda, agenda e anotações.
 - [ ] **15.** Consultoria: tirar as perguntas indicadas e absorver os 8 passos do mentor.
   ⏳ Depende do ponto 10.
 - [x] **16.** *(feito 10/10)* Texto-modelo de **entrega das credenciais** (boas-vindas, endereço, troca da
@@ -94,7 +94,7 @@
 - [ ] **20.** **Etapa 3 com a Vânia** (cliente externa); últimas correções.
 - [ ] **21.** **Projeto DEV antigo**: eliminar (ou limpar com o script) — dados reais não ficam nos
   EUA. ⏳ Autorização da Lúcia.
-- [ ] **22.** ⏳ *(feito 10/10 na branch `anti-robos`, falta a migração 042)* **Anti-robôs** no `/diagnostico` (Turnstile) — antes de o ligar ao site.
+- [x] **22.** *(publicado 10/10)* **Anti-robôs** no `/diagnostico` (Turnstile) — antes de o ligar ao site.
 - [ ] **23.** Segurança mínima de entrega: **R4 exportação dos dados de um cliente** (1–2 dias) e
   **MFA para admins** (R5a, 1–2 dias). O audit log (R5b) e o aceite dos termos ficam para o SaaS.
   ⏳ Confirmar com a Lúcia se entram na entrega.
@@ -185,20 +185,6 @@ Letícia desenhar o serviço).
   · O cliente precisa de ver os relatórios trimestrais na plataforma já, ou chega o PDF?
   · O que da aba "Conta na plataforma" interessa à equipa (hoje mostra € 0 / € 565, onboarding
     1 de 6, clientes 0)?  · Admin a entrar cai na Contabilidade de demonstração e não na Gestão.
-
-- [ ] **Aba de Marketing com a prévia do Instagram**
-  *Reunião 01/10/2026 · Resp.: Vinícius*
-  Prévia do feed, legenda, agenda de publicações e anotações partilhadas entre a Lúcia, a
-  Letícia e a Nicole. Substitui a página de espera de Marketing (a revisão de 01/10 propunha
-  retirá-la — R-D6 — mas passa a ter conteúdo). A integração de métricas Meta/Google continua
-  um item à parte (Gestão interna).
-  **Feito na branch `marketing` (10/10)**: Gestão → Marketing com quatro vistas — Feed (a grelha
-  do perfil como vai ficar), Calendário do mês, Lista por data e Anotações da equipa. Cada
-  publicação: data e hora, formato (post, carrossel, reel, story), estado (ideia → rascunho →
-  aprovado → agendado → publicado), imagem, legenda com contagem para o limite do Instagram e
-  "copiar legenda", hashtags e notas. Verificado com dados fictícios.
-  ⚠️ **Depende de:** aplicar `supabase/migration_043.sql` (tabelas marketing_posts e
-  marketing_notas, só para a equipa) e depois o merge. A Letícia afina o que faltar.
 
 - [ ] **Rever a Calculadora de Preços com a Lúcia**
   *Reunião 01/10/2026 · Resp.: Vinícius (com a Lúcia)*
@@ -328,23 +314,6 @@ Letícia desenhar o serviço).
   do Supabase: se estiver suspenso, ou se retoma para correr o script, ou se **elimina o
   projeto inteiro** — que resolve o mesmo de forma mais definitiva.
   ⚠️ **Depende também de:** autorização da Lúcia (é destrutivo sobre dados reais).
-
-- [ ] **Proteção anti-robôs no formulário público**
-  *14/09/2026 · Resp.: Vinícius*
-  Com a migração 032 aplicada, o `/diagnostico` está **a gravar a sério**. Hoje só tem uma
-  armadilha simples (um campo escondido que os humanos não preenchem): chega para robôs
-  comuns, não chega para quem insista. Enquanto o endereço não for divulgado o risco é baixo;
-  **antes de ser ligado ao site da Lúcia** convém decidir entre um Cloudflare Turnstile (sem
-  puzzles para o utilizador) ou um limite por IP numa função serverless.
-  ↳ Qualquer enchente entra na tabela `diagnostico_submissoes`, não no CRM — o filtro protege
-  o CRM, mas a lista de diagnósticos ficaria poluída.
-  **Feito na branch `anti-robos` (10/10)**: o envio passa por `/api/diagnostico` (servidor):
-  armadilha, tempo mínimo de 3 s, limite de 5 envios por IP por hora e teto de 60 por hora,
-  triagem refeita no servidor, só uma impressão do IP guardada. Cloudflare Turnstile pronto a
-  ligar: basta pôr `VITE_TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY` no Vercel. 11 testes locais
-  da lógica a passar.
-  ⚠️ **Depende de:** aplicar `supabase/migration_042.sql` (tira a escrita anónima e acrescenta
-  `ip_hash`) e fazer o merge logo a seguir — entre os dois o formulário antigo deixa de gravar.
 
 - [ ] **Aceite dos termos de uso**
   *Reunião 10/09/2026 · Resp.: Vinícius + advogada*
@@ -723,6 +692,17 @@ Letícia desenhar o serviço).
 ---
 
 ## Concluídos
+
+### Aba de Marketing e anti-robôs no diagnóstico — publicados 10/10 (migrações 042 e 043)
+
+- [x] **Aba de Marketing com a prévia do Instagram** *(reunião 01/10 · Resp.: Vinícius)*
+  ✔ Gestão → Marketing: Feed (grelha do perfil), Calendário, Lista e Anotações da equipa. Cada
+  publicação com data/hora, formato, estado, imagem, legenda (contagem para os 2200 caracteres e
+  "copiar legenda"), hashtags e notas. Migração 043. A Letícia afina o que faltar.
+- [x] **Proteção anti-robôs no formulário público** *(14/09 · Resp.: Vinícius)*
+  ✔ O /diagnostico grava só pelo servidor (/api/diagnostico): armadilha, tempo mínimo, 5 por IP
+  por hora, teto de 60 por hora, triagem no servidor, só a impressão do IP. Migração 042 tirou a
+  escrita anónima. Turnstile pronto a ligar com `VITE_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`.
 
 ### Reservas & Impostos sem a caixa solta no topo — 10/10
 
