@@ -52,8 +52,7 @@ export default function ListaClientes() {
 
   return (
     <div>
-      <Titulo eyebrow="Gestão" titulo="Clientes" sub="Clique no nome para abrir a página individual do cliente — obrigações, tarefas, documentos, relatórios e mensagens num só sítio."
-        acoes={<Botao variante="primario" onClick={() => setNovo({ ...VAZIO })}><Ic.mais size={16} />Novo cliente</Botao>} />
+      <Titulo titulo="Clientes" />
 
       {novo && (
         <Cartao titulo="Novo cliente" estilo={{ marginBottom: '16px', border: `1.5px solid ${t.accent}` }}>
@@ -97,13 +96,13 @@ export default function ListaClientes() {
         </Cartao>
       )}
 
-      {/* Filtros: por nome, país, serviço, estado e responsável */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : estreito ? '1fr 1fr 1fr' : '2fr repeat(4, 1fr)', gap: '10px', marginBottom: '14px' }}>
-        <input value={f.nome} onChange={e => setF(p => ({ ...p, nome: e.target.value }))} placeholder="Procurar por nome, pessoa ou setor…" style={{ ...c.input, gridColumn: isMobile ? '1 / -1' : undefined }} />
+      {/* Filtros (nome, país, serviço, estado) e "Novo cliente" na mesma linha (10/10) */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : estreito ? '1fr 1fr 1fr' : '2fr repeat(3, 1fr) auto', gap: '10px', marginBottom: '14px', alignItems: 'center' }}>
+        <input value={f.nome} onChange={e => setF(p => ({ ...p, nome: e.target.value }))} placeholder="Procurar por nome, pessoa ou setor…" aria-label="Procurar cliente" style={{ ...c.input, gridColumn: isMobile ? '1 / -1' : undefined }} />
         {sel('pais', Object.entries(PAISES), 'Todos os países')}
         {sel('servico', SERVICOS, 'Todos os serviços')}
         {sel('estado', Object.entries(ESTADOS_CLIENTE).map(([k, v]) => [k, v.rotulo]), 'Todos os estados')}
-        {sel('responsavel', s.equipa.map(x => [x, x]), 'Toda a equipa')}
+        <Botao variante="primario" onClick={() => setNovo({ ...VAZIO })}><Ic.mais size={16} />Novo cliente</Botao>
       </div>
 
       <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', overflowX: 'auto' }}>
