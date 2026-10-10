@@ -89,12 +89,22 @@ const NAV = {
   // a equipa passa o dia. O Marketing sai do menu da administradora (era um
   // marcador de lugar); continua a ser a área do papel "marketing".
   management: [
-    { key: 'section_carteira', items: [
+    // 10/10: Início solto no topo; depois a Gestão (o dia a dia da equipa), os
+    // Clientes e os Serviços.
+    { key: 'section_topo', items: [
       { to: '/gestao/inicio',     Icon: IconInicio,     labelKey: 'nav_inicio_equipa',   roles: STAFF },
-      { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
+    ]},
+    { key: 'section_gestao', items: [
       { to: '/gestao/agenda',     Icon: IconObrig,      labelKey: 'nav_agenda',          roles: STAFF },
       { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },
       { to: '/gestao/horas',      Icon: IconHoras,      labelKey: 'nav_horas',           roles: STAFF },
+      { to: '/gestao/crm',        Icon: IconKpi,        labelKey: 'nav_crm',             roles: ['admin', 'comercial'] },
+      { to: '/gestao/marketing',  Icon: IconMarketing,  labelKey: 'nav_marketing',       roles: ['marketing'] },
+      { to: '/gestao/financeiro', Icon: IconCaixa,      labelKey: 'nav_fin_gestao',      roles: ['admin'] },
+      { to: '/gestao/acessos',    Icon: IconAdmin,      labelKey: 'nav_acessos',         roles: ['admin'] },
+    ]},
+    { key: 'section_carteira', items: [
+      { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
       { to: '/gestao/relatorios', Icon: IconKpi,        labelKey: 'nav_relatorios_trim', roles: STAFF },
       { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
     ]},
@@ -102,12 +112,6 @@ const NAV = {
       { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
       { to: '/gestao/esg',          Icon: IconMaterial,   labelKey: 'nav_esg_consultorias', roles: ['admin'] },
       { to: '/gestao/diagnosticos', Icon: IconKpi,        labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
-    ]},
-    { key: 'section_gestao', items: [
-      { to: '/gestao/crm',        Icon: IconKpi,       labelKey: 'nav_crm',        roles: ['admin', 'comercial'] },
-      { to: '/gestao/marketing',  Icon: IconMarketing, labelKey: 'nav_marketing',  roles: ['marketing'] },
-      { to: '/gestao/financeiro', Icon: IconCaixa,     labelKey: 'nav_fin_gestao', roles: ['admin'] },
-      { to: '/gestao/acessos',    Icon: IconAdmin,     labelKey: 'nav_acessos',    roles: ['admin'] },
     ]},
   ],
 }
@@ -233,9 +237,10 @@ export default function Sidebar() {
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {sections.map((sec, si) => (
           <div key={sec.key} style={{ marginTop: si ? '14px' : 0 }}>
-            <div style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 5px', color: t.sectionLabel }}>
+            {/* Secções sem rótulo (o Início da equipa) ficam soltas no topo */}
+            {sectionLabel[sec.key] && <div style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 5px', color: t.sectionLabel }}>
               {sectionLabel[sec.key][lang] || sectionLabel[sec.key].pt}
-            </div>
+            </div>}
             {/* Num caso aberto, o nome da empresa fica por cima do menu — é dela que se está a falar */}
             {sec.key === 'section_esg' && casoNome && (
               <div style={{ margin: '0 12px 10px', padding: '9px 12px', borderRadius: '9px', background: 'rgba(201,168,76,.12)', border: '1px solid rgba(201,168,76,.28)', fontSize: '13px', fontWeight: 700, color: '#f3ecdb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
