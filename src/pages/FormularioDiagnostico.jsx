@@ -1,10 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
 import { useIsMobile } from '../hooks/useIsMobile'
-import { supabase } from '../lib/supabase'
 import { CAMPOS, rot } from '../data/enquadramento'
-import { triar } from '../lib/triagem'
 import Flag from '../components/Flag'
 
 // Formulário de diagnóstico — página PÚBLICA, sem conta e sem sessão.
@@ -28,6 +26,21 @@ export default function FormularioDiagnostico() {
   const [enviando, setEnviando] = useState(false)
   const [enviado, setEnviado] = useState(false)
   const [erro, setErro] = useState('')
+  // Anti-robôs (migração 042): o envio passa pelo servidor, que confere quanto
+  // tempo o formulário esteve aberto e, se houver chave, o Cloudflare Turnstile.
+  const [abertoEm] = useState(() => Date.now())
+  const [tokenTurnstile, setTokenTurnstile] = useState('')
+  const caixaTurnstile = useRef(null)
+  useEffect(() => {
+    const chave = import.meta.env.VITE_TURNSTILE_SITE_KEY
+    if (!chave || !caixaTurnstile.current) return
+    const desenhar = () => window.turnstile?.render(caixaTurnstile.current, { sitekey: chave, callback: setTokenTurnstile, 'expired-callback': () => setTokenTurnstile('') })
+    if (window.turnstile) { desenhar(); return }
+    const sc = document.createElement('script')
+    sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    sc.async = true; sc.onload = desenhar
+    document.head.appendChild(sc)
+  }, [])
 
   const L = lang === 'de' ? {
     eyebrow: 'Erstdiagnose', titulo: 'Erzählen Sie uns von Ihrer Situation',
@@ -67,18 +80,17 @@ export default function FormularioDiagnostico() {
     if (!contacto.email.trim() && !contacto.telefone.trim()) { setErro(L.faltaContacto); return }
 
     setEnviando(true); setErro('')
-    const veredito = triar(respostas)
-    const { error } = await supabase.from('diagnostico_submissoes').insert({
-      nome: contacto.nome.trim(),
-      email: contacto.email.trim() || null,
-      telefone: contacto.telefone.trim() || null,
-      empresa: contacto.empresa.trim() || null,
-      respostas,
-      qualificado: veredito.qualificado,
-      motivo: veredito.motivo,
-    })
+    // A triagem é feita no servidor; daqui só seguem as respostas.
+    let ok
+    try {
+      const r = await fetch('/api/diagnostico', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...contacto, respostas, armadilha, aberto_em: abertoEm, turnstile: tokenTurnstile }),
+      })
+      ok = r.ok
+    } catch { ok = false }
     setEnviando(false)
-    if (error) { setErro(L.erro); return }
+    if (!ok) { setErro(L.erro); return }
     setEnviado(true)
   }
 
@@ -184,6 +196,7 @@ export default function FormularioDiagnostico() {
               <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '13px', fontWeight: 600, marginBottom: '13px' }}>{erro}</div>
             )}
 
+            {import.meta.env.VITE_TURNSTILE_SITE_KEY && <div ref={caixaTurnstile} style={{ marginBottom: '12px' }} />}
             <button type="submit" disabled={enviando}
               style={{ width: '100%', padding: '15px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '11px', fontWeight: 800, fontSize: '15px', cursor: enviando ? 'wait' : 'pointer' }}>
               {enviando ? L.enviando : L.enviar}
