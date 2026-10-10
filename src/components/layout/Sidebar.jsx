@@ -104,7 +104,7 @@ const NAV = {
       { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },
       { to: '/gestao/horas',      Icon: IconHoras,      labelKey: 'nav_horas',           roles: STAFF },
       { to: '/gestao/crm',        Icon: IconKpi,        labelKey: 'nav_crm',             roles: ['admin', 'comercial'] },
-      { to: '/gestao/marketing',  Icon: IconMarketing,  labelKey: 'nav_marketing',       roles: ['marketing'] },
+      { to: '/gestao/marketing',  Icon: IconMarketing,  labelKey: 'nav_marketing',       roles: ['admin', 'marketing'] },
       { to: '/gestao/financeiro', Icon: IconCaixa,      labelKey: 'nav_fin_gestao',      roles: ['admin'] },
       { to: '/gestao/acessos',    Icon: IconAdmin,      labelKey: 'nav_acessos',         roles: ['admin'] },
     ]},
