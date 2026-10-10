@@ -89,10 +89,15 @@ const NAV = {
   // a equipa passa o dia. O Marketing sai do menu da administradora (era um
   // marcador de lugar); continua a ser a área do papel "marketing".
   management: [
-    // 10/10: Início solto no topo; depois a Gestão (o dia a dia da equipa), os
-    // Clientes e os Serviços.
+    // 10/10: Início solto no topo; depois os Clientes, a Gestão (o dia a dia da
+    // equipa) e os Serviços.
     { key: 'section_topo', items: [
       { to: '/gestao/inicio',     Icon: IconInicio,     labelKey: 'nav_inicio_equipa',   roles: STAFF },
+    ]},
+    { key: 'section_carteira', items: [
+      { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
+      { to: '/gestao/relatorios', Icon: IconKpi,        labelKey: 'nav_relatorios_trim', roles: STAFF },
+      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
     ]},
     { key: 'section_gestao', items: [
       { to: '/gestao/agenda',     Icon: IconObrig,      labelKey: 'nav_agenda',          roles: STAFF },
@@ -102,11 +107,6 @@ const NAV = {
       { to: '/gestao/marketing',  Icon: IconMarketing,  labelKey: 'nav_marketing',       roles: ['marketing'] },
       { to: '/gestao/financeiro', Icon: IconCaixa,      labelKey: 'nav_fin_gestao',      roles: ['admin'] },
       { to: '/gestao/acessos',    Icon: IconAdmin,      labelKey: 'nav_acessos',         roles: ['admin'] },
-    ]},
-    { key: 'section_carteira', items: [
-      { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
-      { to: '/gestao/relatorios', Icon: IconKpi,        labelKey: 'nav_relatorios_trim', roles: STAFF },
-      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
     ]},
     { key: 'section_servicos', items: [
       { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
