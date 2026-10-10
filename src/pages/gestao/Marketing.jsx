@@ -57,12 +57,10 @@ export default function Marketing() {
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div style={{ marginBottom: '20px' }}>
-        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '38px', lineHeight: 1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
+          <h1 className="so-leitores">{L.title}</h1>
           <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#fbf3d9', color: '#a9781a' }}>{L.soon}</span>
         </div>
-        <p style={{ fontSize: '13px', color: t.textMuted, margin: '8px 0 0' }}>{L.subtitle}</p>
       </div>
 
       <div style={{ ...card, padding: '22px 24px' }}>

@@ -150,9 +150,7 @@ export default function ProjetosESG() {
       {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
-          <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
-          <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
+          <h1 className="so-leitores">{L.title}</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {msg && <span style={{ fontSize: '12px', fontWeight: 700, color: msg === L.saved ? '#0a7a3e' : t.neg }}>{msg}</span>}

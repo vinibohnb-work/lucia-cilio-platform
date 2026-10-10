@@ -7,7 +7,6 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { getCompanySettings, saveCompanySettings } from '../../lib/companySettings'
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
-import { FlagDE } from '../../components/Flag'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 
@@ -267,13 +266,7 @@ export default function RucklagenSteuern() {
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
       {/* Cabeçalho */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '18px', flexWrap: 'wrap', marginBottom: '22px' }}>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-          <span style={{ marginTop: '4px' }}><FlagDE size={40} /></span>
-          <div>
-            <h1 style={{ margin: '0 0 6px', fontFamily: t.fontDisplay, fontWeight: 700, fontSize: isMobile ? '25px' : '32px', lineHeight: 1.1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
-            <p style={{ margin: 0, fontSize: '13.5px', color: t.textMuted, maxWidth: '440px', lineHeight: 1.5 }}>{L.subtitle}</p>
-          </div>
-        </div>
+        <h1 className="so-leitores">{L.title}</h1>
         <div style={{ background: tone.green.bg, borderRadius: '14px', padding: '15px 18px', maxWidth: '270px', display: 'flex', gap: '11px' }}>
           <span style={{ fontSize: '18px' }}>💡</span>
           <div>

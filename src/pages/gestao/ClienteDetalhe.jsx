@@ -210,7 +210,6 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
             {(client.display_name || client.email || 'LC').slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, color: t.accentText, marginBottom: '3px' }}>{L.eyebrow}</div>
             <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '24px' : '30px', lineHeight: 1.05, color: t.heading }}>{client.display_name || client.email.split('@')[0]}</h1>
             <div style={{ fontSize: '12px', color: t.subtle, marginTop: '3px' }}>{client.email}</div>
           </div>

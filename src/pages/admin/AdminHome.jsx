@@ -188,8 +188,7 @@ export default function AdminHome() {
       {/* Cabeçalho de página */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', gap: '12px', flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
-          <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '30px' : '38px', lineHeight: 1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
+          <h1 className="so-leitores">{L.title}</h1>
         </div>
         <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '10px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: 'none', background: t.btnBg, color: t.btnInk }}>
           <span style={{ color: t.accentText, fontSize: '16px', lineHeight: 1 }}>+</span>{L.new.replace('+ ', '')}

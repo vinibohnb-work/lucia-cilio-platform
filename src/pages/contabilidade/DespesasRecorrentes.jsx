@@ -202,7 +202,6 @@ export default function DespesasRecorrentes() {
   return (
     <div style={{ width: '100%' }}>
       <h2 style={{ fontSize: '20px', fontWeight: 900, color: G, margin: '0 0 4px' }}>{L.title}</h2>
-      <p style={{ fontSize: '13px', color: t.textMuted, margin: '0 0 20px' }}>{L.subtitle}</p>
 
       {/* ── Confirmar este mês ── */}
       <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '20px 22px', marginBottom: '18px' }}>

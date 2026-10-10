@@ -140,12 +140,8 @@ export default function Inicio() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
-        <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>
-          {L.ola}{quem ? `, ${quem}` : ''}
-        </h1>
-      </div>
+      {/* Sem título visível (10/10): só para leitores de ecrã */}
+      <h1 className="so-leitores">{L.ola}{quem ? `, ${quem}` : ''}</h1>
 
       {/* Falta o país: sem ele as regras fiscais saem erradas */}
       {!settings?.country && (

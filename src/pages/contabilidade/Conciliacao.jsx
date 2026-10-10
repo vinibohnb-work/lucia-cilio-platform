@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
-import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
@@ -19,7 +18,6 @@ import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 export default function Conciliacao() {
   const { lang } = useLang()
   const { t } = useTheme()
-  const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
   const inputRef = useRef(null)
@@ -234,10 +232,8 @@ export default function Conciliacao() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      <div style={{ marginBottom: '18px' }}>
-        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
-        <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
-        <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '560px', lineHeight: 1.5 }}>{L.subtitle}</p>
+      <div>
+        <h1 className="so-leitores">{L.title}</h1>
       </div>
 
       {erro && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{erro}</div>}

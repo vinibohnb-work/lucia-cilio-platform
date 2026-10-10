@@ -228,7 +228,6 @@ export default function ConsultoriaDetalhe() {
         <button onClick={() => navigate('/gestao/consultorias')} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: '12px' }}>{L.voltar}</button>
       )}
 
-      <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
 
       <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', flexWrap: 'wrap', marginBottom: '12px' }}>

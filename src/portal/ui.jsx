@@ -167,18 +167,14 @@ export function Grelha({ colunas = 2, min = '220px', gap = '14px', children, est
   return <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : (typeof colunas === 'string' ? colunas : `repeat(${colunas}, minmax(0, 1fr))`), gap, minWidth: 0, ...estilo }} data-min={min}>{children}</div>
 }
 
-export function Titulo({ eyebrow, titulo, sub, acoes }) {
-  const { t } = useTheme()
-  const isMobile = useIsMobile()
+// 10/10: sem eyebrow/título/subtítulo visíveis (ocupavam área útil); o <h1>
+// fica para leitores de ecrã e as ações continuam à direita.
+export function Titulo({ titulo, acoes }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '20px' }}>
-      <div style={{ minWidth: 0 }}>
-        {eyebrow && <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{eyebrow}</div>}
-        <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '36px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{titulo}</h1>
-        {sub && <p style={{ fontSize: '13px', color: t.textMuted, margin: '8px 0 0', maxWidth: '620px', lineHeight: 1.5 }}>{sub}</p>}
-      </div>
-      {acoes && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{acoes}</div>}
-    </div>
+    <>
+      <h1 className="so-leitores">{titulo}</h1>
+      {acoes && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>{acoes}</div>}
+    </>
   )
 }
 

@@ -48,7 +48,7 @@ export default function ClienteESG() {
 
   if (!caso) return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      <h1 style={{ margin: '0 0 18px', fontFamily: t.fontDisplay, fontWeight: 600, fontSize: '30px', color: t.heading }}>{L.titulo}</h1>
+      <h1 className="so-leitores">{L.titulo}</h1>
       <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', padding: '34px 28px', textAlign: 'center' }}>
         <div style={{ fontSize: '34px', marginBottom: '10px' }}>🌱</div>
         <div style={{ fontSize: '15px', fontWeight: 700, color: t.heading, marginBottom: '6px' }}>{L.semCaso}</div>

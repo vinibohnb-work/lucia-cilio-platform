@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import EsqueletoPagina from '../components/EsqueletoPagina'
 import { useLang } from '../context/LangContext'
 import { useTheme } from '../context/ThemeContext'
-import { useIsMobile } from '../hooks/useIsMobile'
 import { supabase } from '../lib/supabase'
 import { useEffectiveUserId } from '../context/ViewAsContext'
 import DocsBrowser from '../components/DocsBrowser'
@@ -18,7 +17,6 @@ const KIND_STYLE = {
 export default function Consultoria() {
   const { lang } = useLang()
   const { t } = useTheme()
-  const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
 
   const [notes, setNotes] = useState([])
@@ -58,10 +56,8 @@ export default function Consultoria() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      <div style={{ marginBottom: '22px' }}>
-        <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
-        <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '38px', lineHeight: 1, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
-        <p style={{ fontSize: '13px', color: t.textMuted, margin: '8px 0 0' }}>{L.subtitle}</p>
+      <div>
+        <h1 className="so-leitores">{L.title}</h1>
       </div>
 
       {notes.length === 0 && <div style={{ padding: '30px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.empty}</div>}

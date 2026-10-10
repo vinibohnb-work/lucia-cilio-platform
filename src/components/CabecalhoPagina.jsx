@@ -1,6 +1,4 @@
 import { useLang } from '../context/LangContext'
-import { useTheme } from '../context/ThemeContext'
-import { useIsMobile } from '../hooks/useIsMobile'
 
 // Cabeçalho padrão das páginas (eyebrow + título + subtítulo), o mesmo das
 // páginas mais recentes. Existe para os ecrãs que começavam direto nos
@@ -10,20 +8,17 @@ import { useIsMobile } from '../hooks/useIsMobile'
 //
 // Textos em { pt, de, en }; strings simples servem para as três línguas.
 
-export default function CabecalhoPagina({ eyebrow, titulo, sub, acoes }) {
+// 10/10: o eyebrow, o título e o subtítulo deixaram de se ver (ocupavam a área
+// útil sem acrescentar nada — o menu já diz onde se está). O <h1> fica, só para
+// leitores de ecrã; as ações, quando as há, continuam à direita.
+export default function CabecalhoPagina({ titulo, acoes }) {
   const { lang } = useLang()
-  const { t } = useTheme()
-  const isMobile = useIsMobile()
   const tr = (x) => (x && typeof x === 'object' ? (x[lang] || x.pt) : x)
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
-      <div style={{ minWidth: 0 }}>
-        {eyebrow && <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{tr(eyebrow)}</div>}
-        <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{tr(titulo)}</h1>
-        {sub && <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '600px', lineHeight: 1.5 }}>{tr(sub)}</p>}
-      </div>
-      {acoes && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{acoes}</div>}
-    </div>
+    <>
+      <h1 className="so-leitores">{tr(titulo)}</h1>
+      {acoes && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>{acoes}</div>}
+    </>
   )
 }
