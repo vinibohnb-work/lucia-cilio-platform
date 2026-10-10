@@ -264,17 +264,9 @@ export default function RucklagenSteuern() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      {/* Cabeçalho */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '18px', flexWrap: 'wrap', marginBottom: '22px' }}>
-        <h1 className="so-leitores">{L.title}</h1>
-        <div style={{ background: tone.green.bg, borderRadius: '14px', padding: '15px 18px', maxWidth: '270px', display: 'flex', gap: '11px' }}>
-          <span style={{ fontSize: '18px' }}>💡</span>
-          <div>
-            <div style={{ fontSize: '12.5px', fontWeight: 800, color: t.heading, lineHeight: 1.35 }}>{L.heroTitle}</div>
-            <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '4px', lineHeight: 1.4 }}>{L.heroText}</div>
-          </div>
-        </div>
-      </div>
+      {/* Sem cabeçalho visível (10/10); a caixa "Este dinheiro não está livre" saiu — o
+          resumo à direita já diz quanto está reservado. */}
+      <h1 className="so-leitores">{L.title}</h1>
 
       <EstimateNote />
 
