@@ -67,7 +67,7 @@
   a visão do cliente, sem trocar de sessão.
 - [ ] **13-D.** *(08/10)* **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem —
   é a passagem final da simplificação, feita sobre 12 e 13, com as sugestões da Letícia.
-- [ ] **14.** **Aba de Marketing** com a prévia do Instagram, legenda, agenda e anotações.
+- [ ] **14.** ⏳ *(feito 10/10 na branch `marketing`, falta a migração 043)* **Aba de Marketing** com a prévia do Instagram, legenda, agenda e anotações.
 - [ ] **15.** Consultoria: tirar as perguntas indicadas e absorver os 8 passos do mentor.
   ⏳ Depende do ponto 10.
 - [x] **16.** *(feito 10/10)* Texto-modelo de **entrega das credenciais** (boas-vindas, endereço, troca da
@@ -94,7 +94,7 @@
 - [ ] **20.** **Etapa 3 com a Vânia** (cliente externa); últimas correções.
 - [ ] **21.** **Projeto DEV antigo**: eliminar (ou limpar com o script) — dados reais não ficam nos
   EUA. ⏳ Autorização da Lúcia.
-- [ ] **22.** **Anti-robôs** no `/diagnostico` (Turnstile) — antes de o ligar ao site.
+- [ ] **22.** ⏳ *(feito 10/10 na branch `anti-robos`, falta a migração 042)* **Anti-robôs** no `/diagnostico` (Turnstile) — antes de o ligar ao site.
 - [ ] **23.** Segurança mínima de entrega: **R4 exportação dos dados de um cliente** (1–2 dias) e
   **MFA para admins** (R5a, 1–2 dias). O audit log (R5b) e o aceite dos termos ficam para o SaaS.
   ⏳ Confirmar com a Lúcia se entram na entrega.
@@ -192,6 +192,13 @@ Letícia desenhar o serviço).
   Letícia e a Nicole. Substitui a página de espera de Marketing (a revisão de 01/10 propunha
   retirá-la — R-D6 — mas passa a ter conteúdo). A integração de métricas Meta/Google continua
   um item à parte (Gestão interna).
+  **Feito na branch `marketing` (10/10)**: Gestão → Marketing com quatro vistas — Feed (a grelha
+  do perfil como vai ficar), Calendário do mês, Lista por data e Anotações da equipa. Cada
+  publicação: data e hora, formato (post, carrossel, reel, story), estado (ideia → rascunho →
+  aprovado → agendado → publicado), imagem, legenda com contagem para o limite do Instagram e
+  "copiar legenda", hashtags e notas. Verificado com dados fictícios.
+  ⚠️ **Depende de:** aplicar `supabase/migration_043.sql` (tabelas marketing_posts e
+  marketing_notas, só para a equipa) e depois o merge. A Letícia afina o que faltar.
 
 - [ ] **Rever a Calculadora de Preços com a Lúcia**
   *Reunião 01/10/2026 · Resp.: Vinícius (com a Lúcia)*
@@ -331,6 +338,13 @@ Letícia desenhar o serviço).
   puzzles para o utilizador) ou um limite por IP numa função serverless.
   ↳ Qualquer enchente entra na tabela `diagnostico_submissoes`, não no CRM — o filtro protege
   o CRM, mas a lista de diagnósticos ficaria poluída.
+  **Feito na branch `anti-robos` (10/10)**: o envio passa por `/api/diagnostico` (servidor):
+  armadilha, tempo mínimo de 3 s, limite de 5 envios por IP por hora e teto de 60 por hora,
+  triagem refeita no servidor, só uma impressão do IP guardada. Cloudflare Turnstile pronto a
+  ligar: basta pôr `VITE_TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY` no Vercel. 11 testes locais
+  da lógica a passar.
+  ⚠️ **Depende de:** aplicar `supabase/migration_042.sql` (tira a escrita anónima e acrescenta
+  `ip_hash`) e fazer o merge logo a seguir — entre os dois o formulário antigo deixa de gravar.
 
 - [ ] **Aceite dos termos de uso**
   *Reunião 10/09/2026 · Resp.: Vinícius + advogada*
@@ -709,6 +723,11 @@ Letícia desenhar o serviço).
 ---
 
 ## Concluídos
+
+### Reservas & Impostos sem a caixa solta no topo — 10/10
+
+- [x] Saiu a caixa "Este dinheiro não está livre" que tinha ficado sozinha no topo depois de
+  tirarmos os títulos; o resumo à direita já diz quanto está reservado.
 
 ### Ajustes de layout pedidos pelo Vinícius — 10/10
 
