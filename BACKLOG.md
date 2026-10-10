@@ -693,6 +693,13 @@ Letícia desenhar o serviço).
 
 ## Concluídos
 
+### Nova consultoria sem a lista dos outros clientes — 10/10
+
+- [x] **Ocultar os outros clientes ao iniciar uma consultoria** *(reunião 08/10 · Resp.: Vinícius)*
+  ✔ Em Consultorias e em Consultorias ESG, com o formulário de nova consultoria aberto, saem os
+  filtros e a lista dos outros clientes; voltam ao criar ou cancelar. Junta-se ao modo
+  apresentação dentro da consultoria (16-A).
+
 ### Aba de Marketing e anti-robôs no diagnóstico — publicados 10/10 (migrações 042 e 043)
 
 - [x] **Aba de Marketing com a prévia do Instagram** *(reunião 01/10 · Resp.: Vinícius)*

@@ -122,8 +122,10 @@ export default function Consultorias() {
         </div>
       )}
 
+      {/* Com o formulário de nova consultoria aberto (muitas vezes com o cliente ao
+          lado), a lista dos outros clientes não aparece — reunião de 08/10. */}
       {/* Filtro por estado */}
-      <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px' }}>
+      {!form && <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px' }}>
         {['ativa', 'concluida', 'pausada', 'todas'].map(f => (
           <button key={f} onClick={() => setFiltro(f)} style={{
             padding: '7px 14px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer',
@@ -131,10 +133,10 @@ export default function Consultorias() {
             background: filtro === f ? t.softCardBg : 'transparent', color: filtro === f ? t.accentText : t.textMuted,
           }}>{f === 'todas' ? L.todas : statusLabel[f]}</button>
         ))}
-      </div>
+      </div>}
 
-      {loading && <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>}
-      {!loading && visiveis.length === 0 && (
+      {!form && loading && <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>}
+      {!form && !loading && visiveis.length === 0 && (
         <div style={{ ...card, padding: '34px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: '34px', marginBottom: '10px' }}>🗂</div>
           <div style={{ fontSize: '14px', color: t.textMuted }}>{L.vazio}</div>
@@ -142,7 +144,7 @@ export default function Consultorias() {
       )}
 
       {/* A mesma lista das Consultorias ESG — uma linha por cliente, blocos à vista */}
-      {!loading && visiveis.length > 0 && (
+      {!form && !loading && visiveis.length > 0 && (
         <ListaCasos
           abrirRotulo={L.abrirLista}
           cabecalho={{ cliente: L.hCliente, estado: L.hEstado, fases: L.hBlocos, resumo: L.hProgresso }}
