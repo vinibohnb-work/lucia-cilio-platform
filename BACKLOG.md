@@ -710,6 +710,18 @@ Letícia desenhar o serviço).
 
 ## Concluídos
 
+### Ajustes de layout pedidos pelo Vinícius — 10/10
+
+- [x] **Menu da Gestão reorganizado** — Início solto no topo; depois Clientes (Clientes,
+  Relatórios, Mensagens), Gestão (Agenda, Tarefas, Horas, CRM, Financeiro, Acessos) e Serviços.
+- [x] **Sem eyebrow, título e subtítulo nas páginas** — ocupavam área útil; o `<h1>` fica só para
+  leitores de ecrã (classe `so-leitores`) e as ações continuam à direita. Mantêm-se os títulos
+  que são conteúdo (nome do cliente, documentos impressos, páginas públicas).
+- [x] **Lista de clientes** — "Novo cliente" na linha dos filtros; saiu o filtro da equipa; a coluna
+  Atenção mostra "—" em vez de "Tudo em dia".
+- [x] **Ficha do cliente** — os blocos "Próxima obrigação" e "Último relatório" com a largura das
+  colunas de baixo.
+
 ### Início da equipa, modo apresentação e mensagem de boas-vindas — 10/10
 
 - [x] **Página inicial interna da equipa** *(reunião 08/10 · Resp.: Vinícius)*
