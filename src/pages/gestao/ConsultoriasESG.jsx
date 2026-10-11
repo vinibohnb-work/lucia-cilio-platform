@@ -4,7 +4,6 @@ import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { listUsers } from '../../lib/adminApi'
 import { FASES, rotuloFase, progressoESG, anoDeReferencia } from '../../lib/esgPercurso'
 import ListaCasos from '../../components/gestao/ListaCasos'
 
@@ -22,7 +21,6 @@ export default function ConsultoriasESG() {
 
   const [lista, setLista] = useState([])
   const [progresso, setProgresso] = useState({})   // caso.id → progressoESG(...)
-  const [contas, setContas] = useState([])         // clientes com conta, para ligar
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
   const [form, setForm] = useState(null)
@@ -32,7 +30,6 @@ export default function ConsultoriasESG() {
   const L = lang === 'de' ? {
     eyebrow: 'Verwaltung', title: 'ESG-Beratungen', subtitle: 'Ein Fall pro Unternehmen — Sie füllen aus, der Kunde sieht Weg und Bericht.',
     nova: '+ Neue ESG-Beratung', nome: 'Ansprechpartner', empresa: 'Firma', email: 'E-Mail', telefone: 'Telefon', setor: 'Branche',
-    conta: 'Konto auf der Plattform', semConta: '— ohne Konto —',
     criar: 'Anlegen und beginnen', cancelar: 'Abbrechen', abrir: 'Öffnen →',
     ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert', todas: 'Alle',
     fase: 'Phase', proxima: 'Nächster Schritt', tudoPronto: 'Alle Phasen abgeschlossen',
@@ -42,7 +39,6 @@ export default function ConsultoriasESG() {
   } : lang === 'en' ? {
     eyebrow: 'Management', title: 'ESG consultancies', subtitle: 'One case per company — you fill it in, the client sees the journey and the report.',
     nova: '+ New ESG consultancy', nome: 'Contact person', empresa: 'Company', email: 'Email', telefone: 'Phone', setor: 'Sector',
-    conta: 'Platform account', semConta: '— no account —',
     criar: 'Create and start', cancelar: 'Cancel', abrir: 'Open →',
     ativa: 'Active', concluida: 'Completed', pausada: 'Paused', todas: 'All',
     fase: 'Phase', proxima: 'Next step', tudoPronto: 'Every phase complete',
@@ -52,7 +48,6 @@ export default function ConsultoriasESG() {
   } : {
     eyebrow: 'Gestão', title: 'Consultorias ESG', subtitle: 'Um caso por empresa — a Lúcia preenche, o cliente vê o percurso e o relatório.',
     nova: '+ Nova consultoria ESG', nome: 'Pessoa de contacto', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor',
-    conta: 'Conta na plataforma', semConta: '— sem conta —',
     criar: 'Criar e começar', cancelar: 'Cancelar', abrir: 'Abrir →',
     ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada', todas: 'Todas',
     fase: 'Fase', proxima: 'Próximo passo', tudoPronto: 'Todas as fases fechadas',
@@ -95,29 +90,16 @@ export default function ConsultoriasESG() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [load])
 
-  // Clientes com conta, para ligar um caso novo (só quando o form abre).
-  useEffect(() => {
-    if (!form || contas.length) return
-    listUsers().then(us => setContas(us.filter(u => u.role !== 'admin'))).catch(() => {})
-  }, [form, contas.length])
-
   async function criar() {
     if (!form?.nome.trim()) { setErr(L.semNome); return }
     setSaving(true); setErr('')
-    const conta = contas.find(u => u.id === form.user_id)
     const { data, error } = await supabase.from('esg_consultorias').insert({
-      nome: form.nome.trim(), empresa: form.empresa || null, email: form.email || conta?.email || null,
-      telefone: form.telefone || null, setor: form.setor || null, user_id: form.user_id || null,
+      nome: form.nome.trim(), empresa: form.empresa || null, email: form.email || null,
+      telefone: form.telefone || null, setor: form.setor || null, user_id: null,   // a conta liga-se depois, dentro do caso
     }).select('id').single()
     setSaving(false)
     if (error || !data) { setErr(L.erro); return }
     navigate(`/gestao/esg/${data.id}`)   // entra logo a trabalhar
-  }
-
-  // Ao escolher uma conta, o nome e o email preenchem-se sozinhos (se vazios).
-  function escolherConta(uid) {
-    const u = contas.find(x => x.id === uid)
-    setForm(f => ({ ...f, user_id: uid, nome: f.nome || u?.display_name || '', email: f.email || u?.email || '' }))
   }
 
   const visiveis = filtro === 'todas' ? lista : lista.filter(c => c.status === filtro)
@@ -139,14 +121,11 @@ export default function ConsultoriasESG() {
 
       {form && (
         <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1.3fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          {/* Sem o campo "conta" na criação (10/10): a lista mostrava os nomes e e-mails das
+              contas de outros clientes. A conta liga-se depois, em "Editar" dentro do caso. */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <div><div style={lblStyle}>{L.empresa}</div><input autoFocus value={form.empresa} onChange={e => setForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle} /></div>
             <div><div style={lblStyle}>{L.nome} *</div><input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} /></div>
-            <div><div style={lblStyle}>{L.conta}</div>
-              <select value={form.user_id} onChange={e => escolherConta(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                <option value="">{L.semConta}</option>
-                {contas.map(u => <option key={u.id} value={u.id}>{u.display_name || u.email}</option>)}
-              </select></div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
             <div><div style={lblStyle}>{L.email}</div><input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} /></div>

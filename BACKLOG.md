@@ -699,6 +699,8 @@ Letícia desenhar o serviço).
   ✔ Em Consultorias e em Consultorias ESG, com o formulário de nova consultoria aberto, saem os
   filtros e a lista dos outros clientes; voltam ao criar ou cancelar. Junta-se ao modo
   apresentação dentro da consultoria (16-A).
+  ✔ No novo caso ESG saiu também o campo "Conta na plataforma" (mostrava nomes e e-mails das
+  contas de outros clientes); a conta liga-se depois, em "Editar" dentro do caso.
 
 ### Aba de Marketing e anti-robôs no diagnóstico — publicados 10/10 (migrações 042 e 043)
 
