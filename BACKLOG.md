@@ -54,8 +54,7 @@
 - [ ] **9.** Fase 2: que **páginas do lado do cliente** são mesmo usadas (o que ninguém usa sai).
 - [ ] **10.** Pedir o que depende dela: contacto da **I Love Design** + acesso ao Outlook (SMTP e
   domínio); **CSVs bancários** reais; **Excel** do contabilista; **8 passos do mentor Luís** e as
-  perguntas a tirar da consultoria; regras do **limite de faturação em Portugal**; o **projeto DEV
-  antigo** pode ser eliminado?
+  perguntas a tirar da consultoria; regras do **limite de faturação em Portugal**.
 
 **Semanas 2–3 (13–24/10) — implementar as decisões**
 - [ ] **11.** As decisões dos pontos 6 a 8 (cada uma é pequena; a Calculadora é a maior).
@@ -101,8 +100,8 @@
 
 **Semana 5 (03–07/11) — etapa 3, segurança e dados**
 - [ ] **20.** **Etapa 3 com a Vânia** (cliente externa); últimas correções.
-- [ ] **21.** **Projeto DEV antigo**: eliminar (ou limpar com o script) — dados reais não ficam nos
-  EUA. ⏳ Autorização da Lúcia.
+- [x] **21.** *(feito 11/10)* **Projeto DEV antigo** eliminado (LCOffice, us-west-2) — já não há
+  dados nos EUA. O DEV novo (Frankfurt) só tem dados fictícios.
 - [x] **22.** *(publicado 10/10)* **Anti-robôs** no `/diagnostico` (Turnstile) — antes de o ligar ao site.
 - [x] **23.** *(feito 10/10)* Segurança mínima de entrega: **R4 exportação dos dados de um cliente** (1–2 dias) e
   **MFA para admins** (R5a, 1–2 dias). O audit log (R5b) e o aceite dos termos ficam para o SaaS.
