@@ -29,7 +29,13 @@
   permissões** (o que a sessão do cliente lê na base) — em DEV, ou em produção com autorização.
   ✔ 10/10: projeto **DEV novo** criado (Frankfurt, ref `jlgqvetehwpmywghpabz`, org antiga
   "LC Office") com o `DEV_SETUP` até à 039; a chave pública está em `.env.dev.local` (fora do
-  git). ⏳ Correr as migrações 040–043 no DEV e criar as contas de teste.
+  git). ✔ 11/10: **teste de permissões feito no DEV** → `docs/auditorias/2026-10-11-permissoes.md`.
+  Leitura bem isolada (cliente A nunca vê o B; anónimo não lê nada); 35 escritas testadas.
+  3 achados corrigidos na **migração 044** (já no DEV): "+ Nova Obrigação" do cliente ficava
+  bloqueada (não marcava como feita nem apagava), o cliente podia apontar uma obrigação para a
+  ficha de outro, e podia editar o texto dos avisos. ⏳ **Depende de:** aplicar a 044 na produção
+  e fazer merge da branch `permissoes-obrigacoes`. Para decidir: papéis comercial/marketing leem
+  todos os clientes (ver relatório, secção 3).
 - [ ] **3.** ⚡ Tirar o `.env.local` da pasta sincronizada com o OneDrive (5 minutos, segurança).
 - [ ] **4.** Apagar a **ficha duplicada da Célia** com o botão novo, depois de ver qual das duas
   tem dados. ⏳ Confirmar com a Lúcia qual fica.

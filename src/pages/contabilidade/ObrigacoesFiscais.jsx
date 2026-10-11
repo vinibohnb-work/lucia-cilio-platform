@@ -102,14 +102,15 @@ export default function ObrigacoesFiscais() {
     if (isViewing) return
     if (!form.obligation_type || !form.deadline || !form.country) return
     setSaving(true)
-    const { error } = await supabase.from('fiscal_obligations').insert({ ...form, country: form.country.toUpperCase(), client: form.client || null })
+    const { error } = await supabase.from('fiscal_obligations').insert({ ...form, country: form.country.toUpperCase(), client: form.client || null, source: 'cliente' })
     setSaving(false)
     if (error) { alert(error.message); return }
     setForm(EMPTY); setShowForm(false); load()
   }
   // Ligada a uma ficha da Gestão = gerida pela equipa da Lúcia: o cliente vê, não
-  // altera nem apaga (migração 038). O calendário é gerado pela equipa no portal.
-  const daEquipa = (o) => !!o.cliente_id
+  // altera nem apaga (migração 038). As que o próprio cliente cria ("+ Nova",
+  // source 'cliente') continuam dele, mesmo ligadas à ficha (migração 044).
+  const daEquipa = (o) => !!o.cliente_id && o.source !== 'cliente'
   async function toggleStatus(o) {
     if (isViewing || daEquipa(o)) return
     const next = o.status === 'done' ? 'pending' : 'done'
