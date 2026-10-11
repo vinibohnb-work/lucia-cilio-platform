@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { acoes, usePortal } from '../../dados'
+import { exportarCliente } from '../../../lib/adminApi'
 import { Cartao, Campo, Chip, Botao, useCampos, usePerfil, pode, Ic } from '../../ui'
 import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
 
@@ -19,6 +20,7 @@ export default function Dados({ cliente, modoCliente, equipa }) {
   const navigate = useNavigate()
   const [confirmar, setConfirmar] = useState('')
   const [aApagar, setAApagar] = useState(false)
+  const [exportar, setExportar] = useState('')   // '', 'a exportar', 'feito', ou a mensagem de erro
   const conta = s.contas.find(x => x.id === cliente.userId)
   const livres = s.contas.filter(x => x.id === cliente.userId || !s.clientes.some(k => k.userId === x.id))
   const up = (patch) => acoes.atualizarCliente(cliente.id, patch)
@@ -125,6 +127,24 @@ export default function Dados({ cliente, modoCliente, equipa }) {
         )}
         <div style={{ fontSize: '12px', color: t.subtle, marginTop: '10px' }}>Com conta, as mensagens daqui aparecem no Início do cliente e os documentos carregados por mês ficam na pasta dele. Sem conta, fica tudo registado aqui e a comunicação é por WhatsApp.</div>
       </Cartao>
+
+      {/* Exportação RGPD (art. 20 — portabilidade; auditoria de 21/08, R4) */}
+      {s.admin && (
+        <Cartao titulo="Dados do cliente (RGPD)" icone={<Ic.doc size={17} />} area="interna">
+          <div style={{ fontSize: '13px', color: t.text, marginBottom: '10px' }}>
+            Um ficheiro com tudo o que a plataforma guarda sobre este cliente — ficha, conta, contabilidade, obrigações, mensagens, relatórios, consultorias, ESG e a lista de ficheiros com ligações de download válidas 7 dias. É o que se entrega quando o cliente pede os seus dados.
+          </div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Botao disabled={exportar === 'a exportar'} onClick={async () => {
+              setExportar('a exportar')
+              try { await exportarCliente({ clienteId: cliente.id, userId: cliente.userId || null, nome: cliente.nome }); setExportar('feito') }
+              catch (e) { setExportar(e.message || 'Não foi possível exportar.') }
+            }}>{exportar === 'a exportar' ? 'A preparar…' : 'Exportar dados (JSON)'}</Botao>
+            {exportar === 'feito' && <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.dueOk.ink }}>Ficheiro descarregado ✓</span>}
+            {exportar && !['a exportar', 'feito'].includes(exportar) && <span role="alert" style={{ fontSize: '12.5px', fontWeight: 700, color: t.dueLate.ink }}>{exportar}</span>}
+          </div>
+        </Cartao>
+      )}
 
       {/* Eliminar a ficha: só a administradora, e só depois de escrever o nome.
           Para fichas criadas por engano e duplicados (teste de 05/10). */}

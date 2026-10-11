@@ -47,3 +47,18 @@ export async function deleteUser(id) {
   const res = await fetch(`${ENDPOINT}?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: await authHeaders() })
   return handle(res)
 }
+
+// Exportação RGPD (art. 20) de tudo o que existe sobre um cliente: devolve o
+// JSON e descarrega-o como ficheiro.
+export async function exportarCliente({ userId = null, clienteId = null, nome = 'cliente' }) {
+  const res = await fetch('/api/exportar-cliente', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ userId, clienteId }) })
+  const dados = await handle(res)
+  const limpo = String(nome).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'cliente'
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `dados-${limpo}-${new Date().toISOString().slice(0, 10)}.json`
+  document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000)
+  return dados
+}
