@@ -1,9 +1,10 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { isLite, liteAllows } from '../lib/platformHome'
+import VerificarMfa from './VerificarMfa'
 
 export default function ProtectedRoute({ children }) {
-  const { session, loading, mustChangePassword, role, platform } = useAuth()
+  const { session, loading, mustChangePassword, role, platform, precisaMfa } = useAuth()
   const { pathname } = useLocation()
 
   if (loading) {
@@ -19,6 +20,9 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!session) return <Navigate to="/login" replace />
+
+  // Verificação em dois passos ativa: o código vem antes de tudo o resto.
+  if (precisaMfa) return <VerificarMfa />
 
   // Palavra-passe temporária por trocar: só se sai daqui depois de a mudar.
   if (mustChangePassword && pathname !== '/definir-senha') {

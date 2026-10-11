@@ -7,6 +7,7 @@ import { listUsers, createUser, updateUser, deleteUser, resetPassword } from '..
 import { generatePassword } from '../../lib/passwordPolicy'
 import { supabase } from '../../lib/supabase'
 import BoasVindas from '../../components/BoasVindas'
+import SegurancaMfa from '../../components/SegurancaMfa'
 
 const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting', password: '', country: '', service: '' }
 
@@ -197,6 +198,8 @@ export default function AdminHome() {
 
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12px', fontWeight: 600, marginBottom: '14px' }}>{err}</div>}
       {notice && <div style={{ background: t.dueOk.bg, color: t.dueOk.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px', fontFamily: 'ui-monospace, monospace' }}>🔑 {notice}</div>}
+      {/* Verificação em dois passos da própria administradora (R5a) */}
+      <SegurancaMfa />
       {notice && boasVindas && <BoasVindas key={boasVindas.email + boasVindas.pw} dados={boasVindas} aoFechar={() => setBoasVindas(null)} />}
 
       {/* Form */}
