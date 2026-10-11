@@ -11,7 +11,7 @@ import { overheadPerHour, computePlanTotals } from '../../lib/planCalc'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 
-const EMPTY_ROW = { name: '', durationMin: '', price: '', qty: '', material: '' }
+const EMPTY_ROW = { name: '', durationMin: '', price: '', qty: '', material: '', notas: '' }
 
 export default function PlaneamentoMensal() {
   const { lang } = useLang()
@@ -32,6 +32,7 @@ export default function PlaneamentoMensal() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [notaAberta, setNotaAberta] = useState(null)   // índice da linha com a nota aberta
 
   const load = useCallback(async () => {
     if (!eid) return
@@ -65,6 +66,8 @@ export default function PlaneamentoMensal() {
     save: 'Speichern', saving: 'Wird gespeichert…', saved: 'Gespeichert ✓',
     saveErr: 'Speichern fehlgeschlagen (Migration 014 nötig).', loading: 'Wird geladen…',
     hint: 'Der Gemeinkostenanteil je Zeile = (Dauer ÷ 60) × Gemeinkosten pro Stunde × Anzahl.',
+    be: 'Break-even', beSub: (f) => `Umsatz, der Fixkosten und Material deckt (Fixkosten ${f})`, beFalta: (v) => `Es fehlen noch ${v}`, beSobra: (v) => `${v} über dem Break-even`, beSem: 'Noch kein Umsatz geplant.',
+    nota: 'Notiz', notaPh: 'Kontext zu dieser Zeile (Saison, Annahmen, Ideen…)',
   } : {
     eyebrow: 'Planeamento', title: 'Planeamento Mensal',
     subtitle: 'Planeie tratamentos/serviços por mês: receita, custos, lucro (EÜR) e reserva.',
@@ -77,6 +80,8 @@ export default function PlaneamentoMensal() {
     save: 'Guardar', saving: 'A guardar…', saved: 'Guardado ✓',
     saveErr: 'Falha ao guardar (é necessária a migração 014).', loading: 'A carregar…',
     hint: 'O custo indireto de cada linha = (duração ÷ 60) × custo indireto/hora × quantidade.',
+    be: 'Ponto de equilíbrio', beSub: (f) => `Faturação que cobre os custos fixos e o material (custos fixos ${f})`, beFalta: (v) => `Faltam ${v} para lá chegar`, beSobra: (v) => `${v} acima do ponto de equilíbrio`, beSem: 'Ainda sem faturação planeada.',
+    nota: 'Nota', notaPh: 'Contexto desta linha (época, pressupostos, ideias…)',
   }
   if (lang === 'en') L = {
     eyebrow: 'Planning', title: 'Monthly Plan',
@@ -90,10 +95,17 @@ export default function PlaneamentoMensal() {
     save: 'Save', saving: 'Saving…', saved: 'Saved ✓',
     saveErr: 'Save failed (migration 014 required).', loading: 'Loading…',
     hint: 'Each row indirect cost = (duration ÷ 60) × indirect cost/hour × quantity.',
+    be: 'Break-even', beSub: (f) => `Revenue that covers fixed costs and material (fixed costs ${f})`, beFalta: (v) => `${v} still to go`, beSobra: (v) => `${v} above break-even`, beSem: 'No revenue planned yet.',
+    nota: 'Note', notaPh: 'Context for this row (season, assumptions, ideas…)',
   }
 
   const oh = overheadPerHour(monthlyFixed, productiveHours)
   const totals = computePlanTotals(rows, oh, reservePct, reserveBasis)
+  // Ponto de equilíbrio (reunião de 20/08 — "quanto falta faturar para cobrir os
+  // custos"): custos fixos ÷ margem de contribuição (receita − material) ÷ receita.
+  const fixos = Number(String(monthlyFixed).replace(',', '.')) || 0
+  const margem = totals.revenue > 0 ? (totals.revenue - totals.materialTotal) / totals.revenue : 0
+  const breakEven = margem > 0 ? fixos / margem : null
 
   function updateRow(i, field, value) {
     setRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))
@@ -185,10 +197,16 @@ export default function PlaneamentoMensal() {
         </div>
         {rows.map((r, i) => {
           const c = totals.rows[i]
+          const temNota = !!(r.notas || '').trim()
           return (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: GRID, gap: '7px', padding: '9px 14px', borderBottom: `1px solid ${t.rowBorder || t.cardBorder}`, alignItems: 'center' }}>
+            <div key={i} style={{ borderBottom: `1px solid ${t.rowBorder || t.cardBorder}` }}>
+            <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '7px', padding: '9px 14px', alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: '6px' }}>
-                <input value={r.name} onChange={e => updateRow(i, 'name', e.target.value)} placeholder={L.service} style={{ ...inputStyle, flex: 1 }} />
+                <input value={r.name} onChange={e => updateRow(i, 'name', e.target.value)} placeholder={L.service} aria-label={L.service} style={{ ...inputStyle, flex: 1 }} />
+                <button type="button" onClick={() => setNotaAberta(notaAberta === i ? null : i)} title={L.nota} aria-label={L.nota} aria-expanded={notaAberta === i}
+                  style={{ flex: 'none', width: '30px', border: `1px solid ${temNota ? t.accent : t.inputBorder}`, borderRadius: '7px', background: temNota ? t.softCardBg : 'transparent', color: temNota ? t.accentText : t.subtle, cursor: 'pointer' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13 7 4 4" /></svg>
+                </button>
                 {catalog.length > 0 && (
                   <select value="" onChange={e => pickFromCatalog(i, e.target.value)} title={L.fromCatalog} style={{ ...inputStyle, width: '92px', flex: 'none', cursor: 'pointer', padding: '7px 6px', fontSize: '11.5px', color: t.textMuted }}>
                     <option value="">{L.fromCatalog}</option>
@@ -206,7 +224,20 @@ export default function PlaneamentoMensal() {
               <div style={{ ...numCell, color: c.profit >= 0 ? '#0a7a3e' : t.neg }}>€ {fmt(c.profit)}</div>
               <div style={{ ...numCell, color: '#a9781a' }}>€ {fmt(c.reserve)}</div>
               <div style={{ ...numCell, color: t.heading }}>€ {fmt(c.afterReserve)}</div>
-              {!isViewing ? <button onClick={() => removeRow(i)} title={L.remove} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: t.subtle, padding: '2px', lineHeight: 1 }}>✕</button> : <div />}
+              {!isViewing ? <button onClick={() => removeRow(i)} title={L.remove} aria-label={L.remove} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: t.subtle, padding: '2px', lineHeight: 1 }}>✕</button> : <div />}
+            </div>
+            {/* Nota da linha (reunião de 20/08): contexto junto dos números */}
+            {(notaAberta === i || (temNota && isViewing)) && (
+              <div style={{ padding: '0 14px 10px' }}>
+                <textarea value={r.notas || ''} onChange={e => updateRow(i, 'notas', e.target.value)} readOnly={isViewing} rows={2}
+                  placeholder={L.notaPh} aria-label={`${L.nota} — ${r.name || L.service}`} style={{ ...inputStyle, resize: 'vertical', fontSize: '13px' }} />
+              </div>
+            )}
+            {temNota && notaAberta !== i && !isViewing && (
+              <button type="button" onClick={() => setNotaAberta(i)} style={{ display: 'block', margin: '-4px 14px 9px', padding: 0, border: 'none', background: 'none', textAlign: 'left', fontSize: '12px', color: t.textMuted, cursor: 'pointer', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {L.nota}: {r.notas}
+              </button>
+            )}
             </div>
           )
         })}
@@ -223,6 +254,22 @@ export default function PlaneamentoMensal() {
           <div />
         </div>
       </div>
+      </div>
+
+      {/* Ponto de equilíbrio */}
+      <div style={{ ...card, padding: '14px 18px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 260px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 800, color: t.accentText, letterSpacing: '1.2px', textTransform: 'uppercase' }}>{L.be}</div>
+          <div style={{ fontSize: '12px', color: t.textMuted, marginTop: '3px' }}>{L.beSub(`€ ${fmt(fixos)}`)}</div>
+        </div>
+        {breakEven == null ? <div style={{ fontSize: '13px', color: t.subtle }}>{L.beSem}</div> : (
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: t.heading, fontVariantNumeric: 'tabular-nums' }}>€ {fmt(breakEven)}</div>
+            <div style={{ fontSize: '12.5px', fontWeight: 700, color: totals.revenue >= breakEven ? t.dueOk.ink : t.dueLate.ink }}>
+              {totals.revenue >= breakEven ? L.beSobra(`€ ${fmt(totals.revenue - breakEven)}`) : L.beFalta(`€ ${fmt(breakEven - totals.revenue)}`)}
+            </div>
+          </div>
+        )}
       </div>
 
       {!isViewing && <button onClick={addRow} style={{ marginTop: '12px', padding: '9px 16px', background: t.cardBg, border: `1px dashed ${t.cardBorder}`, borderRadius: '9px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer', color: t.textMuted }}>{L.addRow}</button>}

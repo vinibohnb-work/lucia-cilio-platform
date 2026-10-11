@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext'
 import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } from '../lib/companySettings'
 import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
 import EnvioDocumentos from '../components/EnvioDocumentos'
+import InfoTooltip from '../components/InfoTooltip'
 
 const G = '#0a2f1a'
 const GOLD = '#c9a84c'
@@ -45,6 +46,10 @@ export default function Empresa() {
     vatRegime: 'MwSt.-Regelung', normal: 'Normal', exempt: 'Befreit',
     vatRate: 'MwSt.-Satz (Standard)', irReserve: 'IR-Rücklage (%)',
     irHint: 'Empfehlung: 20–30 %', ssRegime: 'SV-Regelung', ssNone: '— keine —',
+    infoVatRegime: 'Normal: Sie stellen MwSt. in Rechnung und führen sie an das Finanzamt ab. Befreit: keine MwSt. auf Rechnungen (z. B. Kleinunternehmer nach § 19 UStG), solange die Umsatzgrenze nicht überschritten wird.',
+    infoVatRate: 'Der Satz, der bei neuen Buchungen vorgeschlagen wird. Er lässt sich bei jeder Buchung ändern.',
+    infoIr: 'Anteil des Gewinns, der für die Einkommensteuer des Jahres zurückgelegt wird. Eine Schätzung — bitte mit der Steuerberatung abstimmen.',
+    infoSs: 'Selbstständig: Sie zahlen die Sozialbeiträge selbst. Gesellschaft: die Firma zahlt sie — die persönlichen Berechnungen werden ausgeblendet.',
     ssSelf: 'Selbstständig', ssCompany: 'Gesellschaft',
     fyStart: 'Geschäftsjahresbeginn', save: 'Speichern', saving: 'Wird gespeichert…',
     saved: 'Gespeichert ✓', loading: 'Wird geladen…',
@@ -56,6 +61,10 @@ export default function Empresa() {
     vatRegime: 'VAT scheme', normal: 'Standard', exempt: 'Exempt',
     vatRate: 'VAT rate (default)', irReserve: 'Income tax reserve (%)',
     irHint: 'Suggested: 20–30%', ssRegime: 'Social security scheme', ssNone: '— none —',
+    infoVatRegime: 'Standard: you charge VAT on invoices and pay it to the tax office. Exempt: no VAT on invoices (small-business schemes such as art. 53 in Portugal or § 19 UStG in Germany), while under the turnover limit.',
+    infoVatRate: 'The rate suggested on new entries. It can be changed on each entry.',
+    infoIr: 'Share of profit set aside for the year\'s income tax. An estimate — please confirm with your accountant.',
+    infoSs: 'Self-employed: you pay social security yourself. Company: the company pays it — the personal calculations are hidden.',
     ssSelf: 'Self-employed', ssCompany: 'Company',
     fyStart: 'Fiscal year start', save: 'Save', saving: 'Saving…',
     saved: 'Saved ✓', loading: 'Loading…',
@@ -67,6 +76,10 @@ export default function Empresa() {
     vatRegime: 'Regime de IVA', normal: 'Normal', exempt: 'Isento',
     vatRate: 'Taxa de IVA (por defeito)', irReserve: 'Reserva de IR (%)',
     irHint: 'Sugestão: 20–30%', ssRegime: 'Regime de Segurança Social', ssNone: '— nenhum —',
+    infoVatRegime: 'Normal: cobra IVA nas faturas e entrega-o ao Estado. Isento: não cobra IVA (por exemplo o art. 53.º em Portugal ou o § 19 UStG na Alemanha), enquanto não passar o limite de faturação.',
+    infoVatRate: 'A taxa proposta nos lançamentos novos. Pode ser mudada em cada lançamento.',
+    infoIr: 'A parte do lucro guardada para o imposto sobre o rendimento do ano. É uma estimativa — confirme com o contabilista.',
+    infoSs: 'Trabalhador independente: paga as contribuições por conta própria. Sociedade: é a empresa que as paga — os cálculos pessoais ficam escondidos.',
     ssSelf: 'Trabalhador Independente', ssCompany: 'Sociedade',
     fyStart: 'Início do ano fiscal', save: 'Guardar', saving: 'A guardar…',
     saved: 'Guardado ✓', loading: 'A carregar…',
@@ -99,7 +112,8 @@ export default function Empresa() {
     setSaved(true)
   }
 
-  const label = (txt) => <div style={{ fontSize: '12px', fontWeight: 700, color: t.text, marginBottom: '6px' }}>{txt}</div>
+  // Termos fiscais com (i): explicação curta ao lado do rótulo (reunião de 06/08).
+  const label = (txt, info) => <div style={{ fontSize: '12px', fontWeight: 700, color: t.text, marginBottom: '6px', display: 'flex', alignItems: 'center' }}>{txt}{info && <InfoTooltip text={info} />}</div>
   const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, fontSize: '14px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box', color: '#1a2e1a' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
   const card = { background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, padding: '22px 24px' }
@@ -134,25 +148,25 @@ export default function Empresa() {
         <div style={{ fontSize: '11px', fontWeight: 800, color: GOLD, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '16px' }}>{L.section_tax}</div>
         <div style={grid2}>
           <div>
-            {label(L.vatRegime)}
+            {label(L.vatRegime, L.infoVatRegime)}
             <select value={form.vat_regime} onChange={e => update('vat_regime', e.target.value)} style={selectStyle}>
               <option value="normal">{L.normal}</option>
               <option value="exempt">{L.exempt}</option>
             </select>
           </div>
           <div>
-            {label(L.vatRate)}
+            {label(L.vatRate, L.infoVatRate)}
             <select value={form.vat_default_rate} onChange={e => update('vat_default_rate', e.target.value)} disabled={isExempt} style={{ ...selectStyle, opacity: isExempt ? 0.5 : 1 }}>
               {rates.map(r => <option key={r} value={r}>{r}%</option>)}
             </select>
           </div>
           <div>
-            {label(L.irReserve)}
+            {label(L.irReserve, L.infoIr)}
             <input type="number" min="0" max="100" step="1" value={form.ir_reserve_pct} onChange={e => update('ir_reserve_pct', e.target.value)} style={inputStyle} />
             <div style={{ fontSize: '11px', color: t.subtle, marginTop: '5px' }}>{L.irHint}</div>
           </div>
           <div>
-            {label(L.ssRegime)}
+            {label(L.ssRegime, L.infoSs)}
             <select value={form.ss_regime || ''} onChange={e => update('ss_regime', e.target.value)} style={selectStyle}>
               <option value="">{L.ssNone}</option>
               <option value="self">{L.ssSelf}</option>
