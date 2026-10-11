@@ -196,7 +196,7 @@ export default function ObrigacoesFiscais() {
       <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '720px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
           {[L.type, L.client, L.country, L.deadline, L.status, ''].map((h,i) => (
-            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+            <div key={i} style={{ fontSize: '11px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
 
@@ -212,15 +212,15 @@ export default function ObrigacoesFiscais() {
             <div key={o.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#1a2e1a', lineHeight: 1.4 }}>
                 {o.obligation_type}
-                {daEquipa(o) && <span title={L.equipaHint} style={{ marginLeft: '7px', fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#eaf5ee', color: '#0a7a3e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.equipa}</span>}
-                {!daEquipa(o) && o.source === 'auto' && <span style={{ marginLeft: '7px', fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#ede9fe', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.auto}</span>}
+                {daEquipa(o) && <span title={L.equipaHint} style={{ marginLeft: '7px', fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#eaf5ee', color: '#0a7a3e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.equipa}</span>}
+                {!daEquipa(o) && o.source === 'auto' && <span style={{ marginLeft: '7px', fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#ede9fe', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.auto}</span>}
               </div>
               <div style={{ fontSize: '12px', color: t.text, fontWeight: 500 }}>{o.client || '—'}</div>
               <div style={{ fontSize: '12px', color: t.text }}>{countryName(o.country, lang) || '—'}</div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: dateColor }}>{o.deadline.split('-').reverse().join('/')}</div>
                 {!isDone && (
-                  <div style={{ fontSize: '10px', color: days <= 14 ? '#e53e3e' : '#64748b', marginTop: '2px' }}>
+                  <div style={{ fontSize: '11px', color: days <= 14 ? '#e53e3e' : '#64748b', marginTop: '2px' }}>
                     {days > 0 ? `${days} ${L.days}` : days === 0 ? L.today : `${Math.abs(days)} ${L.days} ${L.overdue}`}
                   </div>
                 )}

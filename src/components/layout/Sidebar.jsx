@@ -199,7 +199,7 @@ export default function Sidebar() {
           <span style={{ position: 'absolute', left: 0, top: '7px', bottom: '7px', width: '3px', borderRadius: '3px', background: isActive ? t.accent : 'transparent' }} />
           <span style={{ color: isActive ? t.accent : 'currentColor', display: 'flex' }}><item.Icon /></span>
           {translate(lang, item.labelKey)}
-          {badge && <span style={{ marginLeft: 'auto', fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '20px', background: t.badgeBg, color: t.badgeInk }}>{badge}</span>}
+          {badge && <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, padding: '1px 7px', borderRadius: '20px', background: t.badgeBg, color: t.badgeInk }}>{badge}</span>}
         </>
       )}
     </NavLink>
@@ -229,7 +229,7 @@ export default function Sidebar() {
         <img src="/logo.png" alt="LC" style={{ width: '42px', height: '42px', flex: 'none', objectFit: 'contain' }} />
         <div>
           <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '19px', lineHeight: 1, color: '#f3ecdb' }}>Lúcia Cílio</div>
-          <div style={{ fontSize: '10px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.sidebarSub }}>Office Consulting</div>
+          <div style={{ fontSize: '11px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.sidebarSub }}>Office Consulting</div>
         </div>
       </div>
 

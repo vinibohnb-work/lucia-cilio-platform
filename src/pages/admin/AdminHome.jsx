@@ -258,7 +258,7 @@ export default function AdminHome() {
       {/* Tabela */}
       <div className="table-scroll">
       <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, overflow: 'hidden', minWidth: isMobile ? '860px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '13px 22px', background: t.headBg, gap: '12px', fontSize: '10.5px', letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 600, color: t.textMuted }}>
+        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '13px 22px', background: t.headBg, gap: '12px', fontSize: '11px', letterSpacing: '1.2px', textTransform: 'uppercase', fontWeight: 600, color: t.textMuted }}>
           {[L.email, L.name, L.platform, L.role, L.created, L.lastLogin, ''].map((h,i) => <div key={i}>{h}</div>)}
         </div>
         {loading && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.loading}</div>}
@@ -272,12 +272,12 @@ export default function AdminHome() {
           const isPending = !u.last_sign_in_at
           return (
             <div key={u.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 22px', borderTop: `1px solid ${t.rowBorder}`, alignItems: 'center', gap: '12px', fontSize: '13px' }}>
-              <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '10px', color: t.subtle, marginLeft: '6px' }}>({lang === 'de' ? 'ich' : lang === 'en' ? 'me' : 'eu'})</span>}</div>
+              <div style={{ fontWeight: 600, color: t.heading, overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{isSelf && <span style={{ fontSize: '11px', color: t.subtle, marginLeft: '6px' }}>({lang === 'de' ? 'ich' : lang === 'en' ? 'me' : 'eu'})</span>}</div>
               <div style={{ color: t.text }}>{u.display_name || '—'}</div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: platChip(u.platform).bg, color: platChip(u.platform).ink, whiteSpace: 'nowrap' }}>{platLabel(u.platform)}</span></div>
               <div><span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: rs.bg, color: rs.ink }}>{roleLabel(u.role)}</span></div>
               <div style={{ color: t.textMuted }}>{fmtDate(u.created_at)}</div>
-              <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : isPending ? <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span> : '—'}</div>
+              <div style={{ color: t.textMuted }}>{u.last_sign_in_at ? fmtDate(u.last_sign_in_at) : isPending ? <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#fef3c7', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.pendingTag}</span> : '—'}</div>
               <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                 {!isSelf && (
                   <button onClick={() => resend(u)} disabled={busyId === u.id} title={L.resend} aria-label={L.resend} style={{ flex: 'none', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.chipBg, border: `1px solid ${t.accent}`, borderRadius: '7px', cursor: busyId === u.id ? 'wait' : 'pointer', color: t.accentText, padding: 0 }}>

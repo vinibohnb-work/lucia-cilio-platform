@@ -13,7 +13,7 @@ export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
 
-  const th = { textAlign: 'left', fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', padding: '8px 12px', borderBottom: `1px solid ${t.cardBorder}`, whiteSpace: 'nowrap' }
+  const th = { textAlign: 'left', fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', padding: '8px 12px', borderBottom: `1px solid ${t.cardBorder}`, whiteSpace: 'nowrap' }
   const td = { padding: '12px', borderBottom: `1px solid ${t.rowBorder || t.cardBorder}`, verticalAlign: 'middle' }
 
   const Fases = ({ fases }) => (
@@ -23,7 +23,7 @@ export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
           <div style={{ height: '5px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
             <div style={{ width: `${f.pct}%`, height: '100%', background: f.apagada ? t.subtle : f.pronto ? t.dueOk.ink : t.accent }} />
           </div>
-          <div style={{ fontSize: '10.5px', fontWeight: f.atual ? 800 : 600, color: f.atual ? t.accentText : t.subtle, marginTop: '3px', textAlign: 'center' }}>{f.n}</div>
+          <div style={{ fontSize: '11px', fontWeight: f.atual ? 800 : 600, color: f.atual ? t.accentText : t.subtle, marginTop: '3px', textAlign: 'center' }}>{f.n}</div>
         </div>
       ))}
     </div>
@@ -49,7 +49,7 @@ export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
               <div style={{ fontSize: '14.5px', fontWeight: 800, color: t.heading }}>{l.titulo}</div>
               {l.sub && <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '2px' }}>{l.sub}</div>}
             </div>
-            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, flex: 'none' }}>{l.estado.rotulo}</span>
+            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, flex: 'none' }}>{l.estado.rotulo}</span>
           </div>
           <Fases fases={l.fases} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '8px', fontSize: '11.5px', color: t.textMuted }}>
@@ -83,12 +83,12 @@ export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
                 {l.sub && <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '2px' }}>{l.sub}</div>}
                 {l.chips?.length > 0 && (
                   <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '5px' }}>
-                    {l.chips.map(c => <span key={c} style={{ padding: '2px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: t.chipBg, color: t.chipText }}>{c}</span>)}
+                    {l.chips.map(c => <span key={c} style={{ padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.chipBg, color: t.chipText }}>{c}</span>)}
                   </div>
                 )}
               </td>
               <td style={td}>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, whiteSpace: 'nowrap' }}>{l.estado.rotulo}</span>
+                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, whiteSpace: 'nowrap' }}>{l.estado.rotulo}</span>
               </td>
               <td style={td}><Fases fases={l.fases} /></td>
               <td style={{ ...td, fontSize: '12px', color: t.textMuted }}>{l.resumo}</td>

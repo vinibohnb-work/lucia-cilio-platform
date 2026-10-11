@@ -41,7 +41,7 @@ export function Chat({ clienteId, como = 'equipa', altura = 420 }) {
           const minha = m.de === como
           return (
             <div key={m.id} style={{ alignSelf: minha ? 'flex-end' : 'flex-start', maxWidth: '78%' }}>
-              <div style={{ fontSize: '10.5px', color: t.subtle, marginBottom: '3px', textAlign: minha ? 'right' : 'left' }}>
+              <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '3px', textAlign: minha ? 'right' : 'left' }}>
                 {m.autor} · {fmtData(iso(new Date(m.data)))} {new Date(m.data).toTimeString().slice(0, 5)}{m.canal === 'whatsapp' ? ' · via WhatsApp' : m.canal === 'registo' ? ' · registo interno' : m.lidaPeloCliente ? ' · lida' : ''}
               </div>
               <div style={{ padding: '10px 13px', borderRadius: minha ? '14px 14px 4px 14px' : '14px 14px 14px 4px', background: m.canal === 'whatsapp' ? '#e3f4e8' : minha ? t.btnBg : t.softCardBg, color: m.canal === 'whatsapp' ? '#14532d' : minha ? t.btnInk : t.text, border: minha ? 'none' : `1px solid ${t.cardBorder}`, fontSize: '13px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>

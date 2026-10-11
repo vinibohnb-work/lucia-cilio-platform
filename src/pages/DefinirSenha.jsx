@@ -68,7 +68,7 @@ export default function DefinirSenha() {
   }
 
   const inputStyle = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: '10px', fontSize: '14px', background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.heading, outline: 'none' }
-  const label = (txt) => <label style={{ display: 'block', fontSize: '11px', letterSpacing: '.5px', fontWeight: 600, marginBottom: '7px', color: t.textMuted }}>{txt}</label>
+  const label = (txt, id) => <label htmlFor={id} style={{ display: 'block', fontSize: '12px', letterSpacing: '.5px', fontWeight: 600, marginBottom: '7px', color: t.textMuted }}>{txt}</label>
   const noSession = !authLoading && !session && waited
 
   return (
@@ -94,16 +94,16 @@ export default function DefinirSenha() {
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <div>
-              {label(L.pw)}
+              {label(L.pw, 'nova-pw')}
               <div style={{ position: 'relative' }}>
-                <input type={showPw ? 'text' : 'password'} value={pw} onChange={e => setPw(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={{ ...inputStyle, paddingRight: '64px' }} />
+                <input id="nova-pw" type={showPw ? 'text' : 'password'} value={pw} onChange={e => setPw(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={{ ...inputStyle, paddingRight: '64px' }} />
                 <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', minHeight: '38px', minWidth: '52px', padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: t.accentText }}>{showPw ? L.hide : L.show}</button>
               </div>
             </div>
 
             {/* Requisitos — visíveis desde o início e a validar em tempo real */}
             <div style={{ background: t.softCardBg, borderRadius: '10px', padding: '11px 13px' }}>
-              <div style={{ fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '7px' }}>{L.reqs}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '7px' }}>{L.reqs}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {rules.map(r => (
                   <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '11.5px', color: r.ok ? '#0a7a3e' : t.subtle }}>
@@ -114,7 +114,7 @@ export default function DefinirSenha() {
               </div>
             </div>
 
-            <div>{label(L.pw2)}<input type={showPw ? 'text' : 'password'} value={pw2} onChange={e => setPw2(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={inputStyle} /></div>
+            <div>{label(L.pw2, 'nova-pw2')}<input id="nova-pw2" type={showPw ? 'text' : 'password'} value={pw2} onChange={e => setPw2(e.target.value)} required autoComplete="new-password" placeholder="••••••••" style={inputStyle} /></div>
             {error && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '8px', padding: '10px 12px', fontSize: '12px', fontWeight: 600 }}>{error}</div>}
             <button type="submit" disabled={saving} style={{ marginTop: '4px', width: '100%', padding: '13px', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'wait' : 'pointer', background: t.btnBg, color: t.btnInk }}>{saving ? L.saving : L.save}</button>
           </form>

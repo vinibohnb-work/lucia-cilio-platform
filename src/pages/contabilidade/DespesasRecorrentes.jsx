@@ -294,7 +294,7 @@ export default function DespesasRecorrentes() {
       <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '860px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 100px 110px 70px 150px 110px', padding: '12px 20px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
           {[L.desc, L.category, L.amount, L.period_, L.dueDay, L.validity, ''].map((h,i) => (
-            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+            <div key={i} style={{ fontSize: '11px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
         {templates.length === 0 && <div style={{ padding: '28px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.none}</div>}

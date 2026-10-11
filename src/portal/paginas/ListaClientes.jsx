@@ -110,7 +110,7 @@ export default function ListaClientes() {
           <thead><tr>
             {(estreito ? ['Nome', 'País · setor', 'Serviço · estado', 'Próxima obrigação', 'Atenção']
               : medio ? ['Nome', 'País · setor', 'Serviço', 'Estado', 'Próxima obrigação', 'Atenção', 'Responsável']
-              : ['Nome', 'País', 'Setor', 'Serviço', 'Estado', 'Próxima obrigação', 'Atenção', 'Responsável']).map(h => <th key={h} style={{ ...c.th, textTransform: 'uppercase', letterSpacing: '.6px', fontSize: '10.5px' }}>{h}</th>)}
+              : ['Nome', 'País', 'Setor', 'Serviço', 'Estado', 'Próxima obrigação', 'Atenção', 'Responsável']).map(h => <th key={h} style={{ ...c.th, textTransform: 'uppercase', letterSpacing: '.6px', fontSize: '11px' }}>{h}</th>)}
           </tr></thead>
           <tbody>
             {visiveis.map(x => {

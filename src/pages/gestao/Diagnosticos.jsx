@@ -123,7 +123,7 @@ export default function Diagnosticos() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '15px', fontWeight: 800, color: t.heading }}>{s.nome}</span>
                   {s.empresa && <span style={{ fontSize: '12.5px', color: t.textMuted }}>{s.empresa}</span>}
-                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: tom.bg, color: tom.ink, whiteSpace: 'nowrap' }}>
+                  <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: tom.bg, color: tom.ink, whiteSpace: 'nowrap' }}>
                     {s.qualificado ? L.qualificado : L.abaixo}
                   </span>
                 </div>

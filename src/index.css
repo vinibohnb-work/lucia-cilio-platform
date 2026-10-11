@@ -50,6 +50,11 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 
 @media (pointer: coarse) {
   ::-webkit-scrollbar { width: 0; height: 0; }
+  /* Áreas de toque com pelo menos 44 px no telemóvel/tablet (WCAG 2.5.5).
+     Quem precisar mesmo de ficar pequeno usa a classe lc-compacto. */
+  button:not(.lc-compacto), select, [role='button']:not(.lc-compacto),
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']) { min-height: 44px; }
+  button:not(.lc-compacto), [role='button']:not(.lc-compacto) { min-width: 44px; }
 }
 
 /* Evita o zoom automático do iOS ao focar campos (precisa de >=16px) */

@@ -286,7 +286,7 @@ export default function Crm() {
 
   const inputStyle = { padding: '8px 10px', borderRadius: '8px', border: `1px solid ${t.inputBorder}`, fontSize: '12.5px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selStyle = { ...inputStyle, cursor: 'pointer' }
-  const fieldLbl = { fontSize: '10px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }
+  const fieldLbl = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
@@ -349,9 +349,9 @@ export default function Crm() {
               <div style={{ background: tone.bg, color: tone.ink, borderRadius: '10px', padding: '8px 10px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }} title={sub}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: '12px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
-                  <div style={{ fontSize: '9.5px', opacity: .8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
+                  <div style={{ fontSize: '11px', opacity: .8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</div>
                 </div>
-                <span style={{ flex: 'none', minWidth: '20px', height: '20px', padding: '0 5px', borderRadius: '20px', background: 'rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10.5px', fontWeight: 800 }}>{cards.length}</span>
+                <span style={{ flex: 'none', minWidth: '20px', height: '20px', padding: '0 5px', borderRadius: '20px', background: 'rgba(255,255,255,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>{cards.length}</span>
               </div>
 
               {/* Cartões */}
@@ -385,10 +385,10 @@ export default function Crm() {
 
                     {/* Etiquetas: temperatura · origem · pontuação */}
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
-                      {temp && <span style={{ fontSize: '9.5px', fontWeight: 800, padding: '2px 7px', borderRadius: '20px', background: temp.bg, color: temp.color }}>{temp.emoji} {label(temp)}</span>}
-                      {src && <span style={{ fontSize: '9.5px', fontWeight: 700, padding: '2px 7px', borderRadius: '20px', background: t.softCardBg, color: t.textMuted }}>{label(src)}</span>}
+                      {temp && <span style={{ fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '20px', background: temp.bg, color: temp.color }}>{temp.emoji} {label(temp)}</span>}
+                      {src && <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 7px', borderRadius: '20px', background: t.softCardBg, color: t.textMuted }}>{label(src)}</span>}
                       {s.total > 0 && (
-                        <span title={L.scoreHelp(s)} style={{ fontSize: '9.5px', fontWeight: 800, padding: '2px 7px', borderRadius: '20px', background: s.total >= 70 ? '#eaf5ee' : t.softCardBg, color: s.total >= 70 ? '#0a7a3e' : t.textMuted, cursor: 'help' }}>★ {s.total}</span>
+                        <span title={L.scoreHelp(s)} style={{ fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '20px', background: s.total >= 70 ? '#eaf5ee' : t.softCardBg, color: s.total >= 70 ? '#0a7a3e' : t.textMuted, cursor: 'help' }}>★ {s.total}</span>
                       )}
                     </div>
 
@@ -402,17 +402,17 @@ export default function Crm() {
                     {/* Follow-up: dias desde o último contacto + registar contacto */}
                     {stage !== 'fechado' && stage !== 'perdido' && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '7px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: overdue ? '#dc2626' : t.subtle }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: overdue ? '#dc2626' : t.subtle }}>
                           ⏱ {days == null ? L.never : L.daysAgo(days)}
                         </span>
-                        <button onClick={() => markContact(lead)} title={L.markContact} style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '20px', background: 'transparent', border: `1px dashed ${t.cardBorder}`, color: t.textMuted, cursor: 'pointer' }}>✓ {L.markContact}</button>
+                        <button onClick={() => markContact(lead)} title={L.markContact} style={{ fontSize: '11px', fontWeight: 700, padding: '2px 7px', borderRadius: '20px', background: 'transparent', border: `1px dashed ${t.cardBorder}`, color: t.textMuted, cursor: 'pointer' }}>✓ {L.markContact}</button>
                       </div>
                     )}
 
                     {stage === 'abordagem' && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: t.softCardBg, color: t.heading }}>📞 {lead.attempts || 0} {L.attempts.toLowerCase()}</span>
-                        <button onClick={() => addAttempt(lead)} style={{ fontSize: '10.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: 'transparent', border: `1px dashed ${t.cardBorder}`, color: t.textMuted, cursor: 'pointer' }}>{L.addAttempt}</button>
+                        <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: t.softCardBg, color: t.heading }}>📞 {lead.attempts || 0} {L.attempts.toLowerCase()}</span>
+                        <button onClick={() => addAttempt(lead)} style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: 'transparent', border: `1px dashed ${t.cardBorder}`, color: t.textMuted, cursor: 'pointer' }}>{L.addAttempt}</button>
                       </div>
                     )}
 
@@ -420,12 +420,12 @@ export default function Crm() {
                     {stage === 'fechado' && (isAdmin || lead.converted_billing_id) && (
                       <div style={{ marginTop: '7px' }}>
                         {lead.converted_billing_id ? (
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#0a7a3e' }}>{L.hasContract}</span>
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#0a7a3e' }}>{L.hasContract}</span>
                         ) : (
-                          <button onClick={() => toContract(lead)} style={{ width: '100%', fontSize: '10.5px', fontWeight: 800, padding: '5px', borderRadius: '8px', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>{L.toContract}</button>
+                          <button onClick={() => toContract(lead)} style={{ width: '100%', fontSize: '11px', fontWeight: 800, padding: '5px', borderRadius: '8px', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>{L.toContract}</button>
                         )}
                         {isAdmin && (
-                          <button onClick={() => criarAcesso(lead)} style={{ width: '100%', marginTop: '5px', minHeight: '30px', fontSize: '10.5px', fontWeight: 800, padding: '5px', borderRadius: '8px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.accentText, cursor: 'pointer' }}>{L.criarAcesso}</button>
+                          <button onClick={() => criarAcesso(lead)} style={{ width: '100%', marginTop: '5px', minHeight: '30px', fontSize: '11px', fontWeight: 800, padding: '5px', borderRadius: '8px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.accentText, cursor: 'pointer' }}>{L.criarAcesso}</button>
                         )}
                       </div>
                     )}

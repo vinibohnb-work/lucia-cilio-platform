@@ -138,7 +138,7 @@ export default function PlaneamentoMensal() {
   const inputStyle = { padding: '9px 10px', borderRadius: '7px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box' }
   const GRID = 'minmax(150px, 1fr) 62px 78px 56px 82px 90px 90px 92px 92px 92px 96px 28px'
   const TABLE_MIN = 1120
-  const headCell = { fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.6px', textTransform: 'uppercase' }
+  const headCell = { fontSize: '11px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.6px', textTransform: 'uppercase' }
   const numCell = { fontSize: '12px', fontWeight: 700, textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontVariantNumeric: 'tabular-nums' }
 
   if (loading) return <EsqueletoPagina />

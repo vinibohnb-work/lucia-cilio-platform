@@ -73,7 +73,7 @@ export default function Consultoria() {
         return (
           <div key={n.id} style={{ ...card, padding: '16px 20px', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap', marginBottom: n.body || n.link_url ? '9px' : 0 }}>
-              <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: ks.bg, color: ks.ink, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{kindLabel[n.kind]}</span>
+              <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: ks.bg, color: ks.ink, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{kindLabel[n.kind]}</span>
               <span style={{ fontSize: '14px', fontWeight: 700, color: t.heading }}>{n.title}</span>
               <span style={{ fontSize: '11px', color: t.subtle, marginLeft: 'auto' }}>{fmtDate(n.created_at)}</span>
             </div>

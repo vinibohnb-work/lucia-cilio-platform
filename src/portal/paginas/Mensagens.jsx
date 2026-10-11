@@ -34,11 +34,11 @@ export default function Mensagens() {
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'flex', gap: '6px' }}>
                     <strong style={{ fontSize: '13px', color: t.heading, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.nome}</strong>
-                    <span style={{ fontSize: '10.5px', color: t.subtle }}>{u ? fmtData(iso(new Date(u.data))).slice(0, 6) : ''}</span>
+                    <span style={{ fontSize: '11px', color: t.subtle }}>{u ? fmtData(iso(new Date(u.data))).slice(0, 6) : ''}</span>
                   </span>
                   <span style={{ display: 'block', fontSize: '12px', color: n ? t.heading : t.subtle, fontWeight: n ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u ? `${u.de === 'equipa' ? 'Tu: ' : ''}${u.texto || '📎 ' + u.anexo?.nome}` : 'Sem mensagens'}</span>
                 </span>
-                {n > 0 && <span style={{ flex: 'none', fontSize: '10.5px', fontWeight: 800, padding: '1px 7px', borderRadius: '20px', background: '#c0392b', color: '#fff' }}>{n}</span>}
+                {n > 0 && <span style={{ flex: 'none', fontSize: '11px', fontWeight: 800, padding: '1px 7px', borderRadius: '20px', background: '#c0392b', color: '#fff' }}>{n}</span>}
               </button>
             )
           })}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { IconFicheiro } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
@@ -211,7 +212,7 @@ export default function Financeiro() {
           { label: L.contracts, value: activeCount, color: t.heading },
         ].map(k => (
           <div key={k.label} style={{ ...card, padding: '15px 17px' }}>
-            <div style={{ fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '5px' }}>{k.label}</div>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '5px' }}>{k.label}</div>
             <div style={{ fontSize: '21px', fontWeight: 800, color: k.color, fontFamily: t.fontNum || t.fontDisplay }}>{k.value}</div>
           </div>
         ))}
@@ -285,22 +286,22 @@ export default function Financeiro() {
         {billing.map((b, i) => (
           <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderBottom: i < billing.length - 1 ? `1px solid ${t.rowBorder || t.cardBorder}` : 'none', flexWrap: 'wrap', opacity: b.active ? 1 : 0.55 }}>
             <div style={{ minWidth: '150px', flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: t.heading }}>{b.client_name}{b.user_id && <span title="Utilizador da plataforma" style={{ marginLeft: '6px', fontSize: '10px' }}>🔗</span>}</div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: t.heading }}>{b.client_name}{b.user_id && <span title="Utilizador da plataforma" style={{ marginLeft: '6px', fontSize: '11px' }}>🔗</span>}</div>
               <div style={{ fontSize: '11px', color: t.subtle }}>{b.service || '—'}{b.notes ? ` · ${b.notes}` : ''}</div>
             </div>
-            <span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.softCardBg, color: t.textMuted }}>{perLabel[b.periodicity]}</span>
+            <span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.softCardBg, color: t.textMuted }}>{perLabel[b.periodicity]}</span>
             <div style={{ fontSize: '13px', fontWeight: 800, color: t.heading, width: '96px', textAlign: 'right' }}>{fmt(b.amount)}</div>
             {b.contract_path ? (
               <button onClick={() => abrirContrato(b.contract_path)} title={b.contract_name || L.verContrato}
-                style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: `1px solid ${t.cardBorder}`, cursor: 'pointer', background: 'transparent', color: t.accentText, whiteSpace: 'nowrap' }}>📄 {L.contrato}</button>
+                style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: `1px solid ${t.cardBorder}`, cursor: 'pointer', background: 'transparent', color: t.accentText, whiteSpace: 'nowrap' }}><IconFicheiro tam={12} /> {L.contrato}</button>
             ) : (
-              <label title={L.anexar} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: `1px dashed ${t.cardBorder}`, cursor: busyId === b.id ? 'wait' : 'pointer', background: 'transparent', color: t.subtle, whiteSpace: 'nowrap' }}>
+              <label title={L.anexar} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: `1px dashed ${t.cardBorder}`, cursor: busyId === b.id ? 'wait' : 'pointer', background: 'transparent', color: t.subtle, whiteSpace: 'nowrap' }}>
                 {busyId === b.id ? '…' : L.anexar}
                 <input type="file" accept="application/pdf,image/*" disabled={busyId === b.id}
                   onChange={e => anexarContrato(b, e.target.files?.[0])} style={{ display: 'none' }} />
               </label>
             )}
-            <button onClick={() => toggleActive(b)} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: 'none', cursor: 'pointer', background: b.active ? '#d1fae5' : '#f1f5f9', color: b.active ? '#065f46' : '#64748b' }}>{L.active}</button>
+            <button onClick={() => toggleActive(b)} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', cursor: 'pointer', background: b.active ? '#d1fae5' : '#f1f5f9', color: b.active ? '#065f46' : '#64748b' }}>{L.active}</button>
             <button onClick={() => openEdit(b)} title={L.edit} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.subtle, fontSize: '13px', padding: '2px' }}>✎</button>
             <button onClick={() => removeContract(b)} title={L.del} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.subtle, fontSize: '13px', padding: '2px' }}>✕</button>
           </div>

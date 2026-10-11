@@ -131,7 +131,7 @@ export default function PaginaCliente({ idFixo }) {
             })}>
             {rot}
             {interno && <Ic.cadeado />}
-            {!!badge && <span style={{ fontSize: '10px', fontWeight: 800, padding: '1px 6px', borderRadius: '20px', background: '#c0392b', color: '#fff' }}>{badge}</span>}
+            {!!badge && <span style={{ fontSize: '11px', fontWeight: 800, padding: '1px 6px', borderRadius: '20px', background: '#c0392b', color: '#fff' }}>{badge}</span>}
           </NavLink>
         ))}
       </nav>

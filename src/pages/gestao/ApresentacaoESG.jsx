@@ -231,7 +231,7 @@ export default function ApresentacaoESG() {
                 const pb = payback(e.financial?.investment, e.financial?.saving)
                 return (
                   <div key={tp.key} style={{ display: 'flex', gap: '12px', padding: '13px 0', borderBottom: `1px solid ${t.rowBorder}` }}>
-                    <span style={{ flex: 'none', width: '30px', height: '30px', borderRadius: '8px', background: meta.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10.5px', fontWeight: 800 }}>{tp.abbr}</span>
+                    <span style={{ flex: 'none', width: '30px', height: '30px', borderRadius: '8px', background: meta.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>{tp.abbr}</span>
                     <div>
                       <div style={{ fontSize: '17px', fontWeight: 800, color: t.heading }}>{topicLabel(tp, lang)}</div>
                       {(e.goal?.target || pb != null) && (

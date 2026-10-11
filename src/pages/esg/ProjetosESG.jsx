@@ -138,7 +138,7 @@ export default function ProjetosESG() {
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' }
-  const labelStyle = { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
+  const labelStyle = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
   if (loading) return <EsqueletoPagina />
 
@@ -235,11 +235,11 @@ export default function ProjetosESG() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
                 <span style={{ fontSize: '14.5px', fontWeight: 800, color: t.heading }}>{p.name}</span>
                 {tp && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: meta.bg, color: meta.color }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: meta.bg, color: meta.color }}>
                     {topicLabel(tp, lang)}{materialKeys.has(tp.key) ? ' ⭐' : ''}
                   </span>
                 )}
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: st.bg, color: st.ink }}>{st.label}</span>
+                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.ink }}>{st.label}</span>
                 {p.start_month && <span style={{ fontSize: '11px', color: t.subtle }}>{L.start}: {p.start_month}</span>}
                 {!soLeitura && (
                   <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>

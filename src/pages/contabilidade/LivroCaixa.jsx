@@ -53,6 +53,8 @@ function exportCSV(entries, lang) {
 
 const EMPTY_FORM = { entry_date: new Date().toISOString().slice(0,10), doc: '', description: '', type: 'entrada', amount: '', quantity: '1', destination: 'caixa', category: '', catalog_item_id: '', vat_rate: '' }
 
+const POR_PAGINA = 100
+
 export default function LivroCaixa() {
   const { lang } = useLang()
   const loc = localeDe(lang)
@@ -74,6 +76,9 @@ export default function LivroCaixa() {
   const [filterMonth, setFilterMonth] = useState('all')
   const [filterYear, setFilterYear] = useState(new Date().getFullYear())
   const [erro, setErro] = useState('')
+  // Um ano inteiro pode ter centenas de linhas: mostra-se aos poucos (os totais contam todas).
+  const [limite, setLimite] = useState(POR_PAGINA)
+  useEffect(() => { setLimite(POR_PAGINA) }, [filterYear, filterMonth])
 
   const months = lang === 'de' ? MONTHS_DE : lang === 'en' ? MONTHS_EN : MONTHS_PT
 
@@ -231,6 +236,7 @@ export default function LivroCaixa() {
     einlage: 'Privateinlage', entnahme: 'Privatentnahme',
     privHint: 'Privater Vorgang: zählt für den Kassenbestand, aber nicht für Gewinn, MwSt. oder Rücklagen.',
     caixa: 'Kasse', banco: 'Bank', save: 'Speichern', all: 'Alle Monate', allYears: 'Alle Jahre', yearLbl: 'Jahr',
+    maisLinhas: (n) => `Weitere anzeigen (${n} übrig)`,
     noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
     catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
@@ -244,6 +250,7 @@ export default function LivroCaixa() {
     einlage: 'Private deposit (Privateinlage)', entnahme: 'Private withdrawal (Privatentnahme)',
     privHint: 'Private movement: counts toward the cash balance, but not toward profit, VAT or reserves.',
     caixa: 'Cash', banco: 'Bank', save: 'Save', all: 'All months', allYears: 'All years', yearLbl: 'Year',
+    maisLinhas: (n) => `Show more (${n} left)`,
     noEntries: 'No entries yet. Add one via "+ New Entry" at the top.',
     loading: 'Loading…', total: 'Total', category: 'Category', catalog: 'Product/Service',
     catalogNone: '— none —', catHint: 'Choose the expense category.', costType: 'Cost type',
@@ -257,6 +264,7 @@ export default function LivroCaixa() {
     einlage: 'Privateinlage (entrada privada)', entnahme: 'Privatentnahme (saída privada)',
     privHint: 'Movimento privado: conta para o saldo de caixa, mas não para o lucro, IVA nem reservas.',
     caixa: 'Caixa', banco: 'Banco', save: 'Guardar', all: 'Todos os meses', allYears: 'Todos os anos', yearLbl: 'Ano',
+    maisLinhas: (n) => `Mostrar mais (faltam ${n})`,
     noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
     loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
     catalogNone: '— nenhum —', catHint: 'Escolha a categoria da despesa.', costType: 'Tipo de custo',
@@ -314,10 +322,10 @@ export default function LivroCaixa() {
         ].map(c => (
           <div key={c.label} style={{ background: c.bg, borderRadius: '12px', padding: '16px 18px', border: `1px solid ${t.cardBorder}`, textAlign: 'center' }}>
             <div style={{ fontSize: '20px', fontWeight: 900, color: c.color }}>€ {fmt(c.value)}</div>
-            <div style={{ fontSize: '10px', color: t.textMuted, fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {c.sub ? '🔁 ' : ''}{c.label}
             </div>
-            {c.sub && <div style={{ fontSize: '9px', color: t.subtle, marginTop: '2px' }}>({c.sub})</div>}
+            {c.sub && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '2px' }}>({c.sub})</div>}
           </div>
         ))}
       </div>
@@ -401,18 +409,18 @@ export default function LivroCaixa() {
       <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '760px' : 'auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '11px 18px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
           {[L.date, L.doc, L.desc, L.type, L.amount, L.dest, L.running, ''].map((h,i) => (
-            <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
+            <div key={i} style={{ fontSize: '11px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
 
         {loading && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.loading}</div>}
         {!loading && withBalance.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.noEntries}</div>}
 
-        {!loading && withBalance.map((e, i) => {
+        {!loading && withBalance.slice(0, limite).map((e, i) => {
           const cat = e.category ? getCategory(e.category) : null
           const linked = e.catalog_item_id ? catalog.find(c => c.id === e.catalog_item_id) : null
           return (
-            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 18px', borderBottom: i < withBalance.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px', background: e.type === 'saida' ? t.softCardBg : 'transparent' }}>
+            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 18px', borderBottom: i < Math.min(limite, withBalance.length)-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px', background: e.type === 'saida' ? t.softCardBg : 'transparent' }}>
               <div style={{ fontSize: '12px', color: '#4a6355' }}>{e.entry_date.split('-').reverse().join('/')}</div>
               <div style={{ fontSize: '11px', color: t.subtle }}>{e.doc}</div>
               <div style={{ minWidth: 0 }}>
@@ -420,23 +428,23 @@ export default function LivroCaixa() {
                 {(cat || linked || e.vat_amount > 0 || Number(e.quantity) > 1) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
                     {Number(e.quantity) > 1 && (
-                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: '#f1f5f9', color: '#475569' }}>
+                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#f1f5f9', color: '#475569' }}>
                         × {Number(e.quantity) % 1 === 0 ? Number(e.quantity) : fmt(e.quantity)}
                       </span>
                     )}
                     {cat && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: COST_TYPE[cat.costType].bg, color: COST_TYPE[cat.costType].color }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: COST_TYPE[cat.costType].bg, color: COST_TYPE[cat.costType].color }}>
                         {cat[lang].label}
                         <InfoTooltip text={cat[lang].explain} badge={`${L.costType}: ${COST_TYPE[cat.costType][lang]}`} />
                       </span>
                     )}
                     {e.vat_amount > 0 && (
-                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 600, background: '#eff6ff', color: '#1d4ed8' }}>
+                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: '#eff6ff', color: '#1d4ed8' }}>
                         {L.vat} {e.vat_rate}% · € {fmt(e.vat_amount)}
                       </span>
                     )}
                     {linked && (
-                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: 600, background: '#ede9fe', color: '#5b21b6' }}>
+                      <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: '#ede9fe', color: '#5b21b6' }}>
                         🏷️ {linked.name}
                       </span>
                     )}
@@ -449,9 +457,9 @@ export default function LivroCaixa() {
                       fontSize: '11.5px', fontWeight: 700, color: t.textMuted }}>{L.remover}</button>
                 )}
               </div>
-              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: e.private ? '#ede9fe' : (e.type==='entrada'?'#d1fae5':'#fee2e2'), color: e.private ? '#5b21b6' : (e.type==='entrada'?'#065f46':'#991b1b') }}>{e.private ? '👤 ' : ''}{entryTypeLabel(e, lang)}</span></div>
+              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: e.private ? '#ede9fe' : (e.type==='entrada'?'#d1fae5':'#fee2e2'), color: e.private ? '#5b21b6' : (e.type==='entrada'?'#065f46':'#991b1b') }}>{e.private ? '👤 ' : ''}{entryTypeLabel(e, lang)}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 700, color: e.type==='entrada'?'#065f46':'#e53e3e', textAlign: 'right' }}>{e.type==='entrada'?'+':'−'} € {fmt(e.amount)}</div>
-              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, background: e.destination==='caixa'?'#f5edd6':'#eff6ff', color: e.destination==='caixa'?'#92400e':'#1d4ed8' }}>{e.destination==='caixa'?L.caixa:L.banco}</span></div>
+              <div><span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: e.destination==='caixa'?'#f5edd6':'#eff6ff', color: e.destination==='caixa'?'#92400e':'#1d4ed8' }}>{e.destination==='caixa'?L.caixa:L.banco}</span></div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: e.balance>=0?G:'#e53e3e', textAlign: 'right' }}>€ {fmt(e.balance)}</div>
               {!isViewing && !isMobile && (
                 <button onClick={() => removeEntry(e)} title={L.remover} aria-label={L.remover}
@@ -462,6 +470,12 @@ export default function LivroCaixa() {
             </div>
           )
         })}
+
+        {!loading && withBalance.length > limite && (
+          <button onClick={() => setLimite(l => l + POR_PAGINA)} style={{ display: 'block', width: '100%', minHeight: '44px', border: 'none', borderTop: `1px solid ${t.rowBorder}`, background: 'transparent', color: t.accentText, fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            {L.maisLinhas(withBalance.length - limite)}
+          </button>
+        )}
 
         {!loading && withBalance.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 18px', background: BG, borderTop: `2px solid ${G}`, gap: '8px', alignItems: 'center' }}>

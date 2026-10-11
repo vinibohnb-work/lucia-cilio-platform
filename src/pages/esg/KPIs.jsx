@@ -176,7 +176,7 @@ export default function KPIs() {
   )
   const miniStat = (label, value, sub, color = t.heading) => (
     <div style={{ background: t.softCardBg, borderRadius: '11px', padding: '13px 15px' }}>
-      <div style={{ fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }}>{label}</div>
+      <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }}>{label}</div>
       <div style={{ fontSize: '20px', fontWeight: 800, color, fontFamily: t.fontNum || t.fontDisplay }}>{value}</div>
       {sub && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '2px' }}>{sub}</div>}
     </div>
@@ -242,7 +242,7 @@ export default function KPIs() {
                   <span style={{ width: '16px', height: '16px', borderRadius: '4px', background: meta.color, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '7.5px', fontWeight: 800 }}>{topic.abbr}</span>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: meta.color }}>{topicLabel(topic, lang)}</span>
                   {hasGoal && e.goal.target && (
-                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: t.textMuted }}>🎯 {L.goalLbl}: {e.goal.target}{e.goal.deadline ? ` · ${e.goal.deadline}` : ''}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted }}>🎯 {L.goalLbl}: {e.goal.target}{e.goal.deadline ? ` · ${e.goal.deadline}` : ''}</span>
                   )}
                 </div>
               )

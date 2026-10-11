@@ -270,11 +270,11 @@ export default function Materialidade() {
                         {on && (
                           <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                             <div>
-                              <div style={{ fontSize: '9.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.stakeholder}</div>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.stakeholder}</div>
                               <ScoreRow value={e.stakeholder} color={meta.color} disabled={soLeitura} onPick={v => patch(tp.key, { stakeholder: v })} />
                             </div>
                             <div>
-                              <div style={{ fontSize: '9.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.company}</div>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.company}</div>
                               <ScoreRow value={e.company} color={meta.color} disabled={soLeitura} onPick={v => patch(tp.key, { company: v })} />
                             </div>
                           </div>
@@ -292,7 +292,7 @@ export default function Materialidade() {
         </div>
 
         {/* ── Matriz + temas materiais ── */}
-        <div style={{ position: isMobile ? 'static' : 'sticky', top: '20px' }}>
+        <div style={{ position: isMobile ? 'static' : 'sticky', top: '20px', order: isMobile ? -1 : 0 /* no telemóvel, a matriz vem antes da lista */ }}>
           <div style={{ ...card, padding: '16px 18px', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <span style={{ fontFamily: t.fontDisplay, fontSize: '17px', fontWeight: 600, color: t.heading }}>{L.matrix}</span>
@@ -311,7 +311,7 @@ export default function Materialidade() {
                   {TOPIC_PILLAR_META[p][lang] || TOPIC_PILLAR_META[p].pt}
                 </span>
               ))}
-              <span style={{ fontSize: '10.5px', color: t.subtle }}>{L.legendHint}</span>
+              <span style={{ fontSize: '11px', color: t.subtle }}>{L.legendHint}</span>
             </div>
           </div>
 
@@ -330,16 +330,16 @@ export default function Materialidade() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{ width: '18px', height: '18px', borderRadius: '5px', background: meta.color, color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 800, flex: 'none' }}>{topic.abbr}</span>
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.heading, flex: 1, minWidth: '110px' }}>{topicLabel(topic, lang)}</span>
-                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: t.subtle }}>{e.company}×{e.stakeholder}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: t.subtle }}>{e.company}×{e.stakeholder}</span>
                     {!soLeitura && (
                       <>
-                        <button onClick={() => openGoal(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasGoal ? meta.color : t.cardBorder}`, background: hasGoal ? meta.bg : 'transparent', color: hasGoal ? meta.color : t.textMuted }}>
+                        <button onClick={() => openGoal(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasGoal ? meta.color : t.cardBorder}`, background: hasGoal ? meta.bg : 'transparent', color: hasGoal ? meta.color : t.textMuted }}>
                           🎯 {hasGoal ? L.goalEdit : L.goal}
                         </button>
-                        <button onClick={() => openFin(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasFin ? '#0a7a3e' : t.cardBorder}`, background: hasFin ? '#eaf5ee' : 'transparent', color: hasFin ? '#0a7a3e' : t.textMuted }}>
+                        <button onClick={() => openFin(topic.key)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${hasFin ? '#0a7a3e' : t.cardBorder}`, background: hasFin ? '#eaf5ee' : 'transparent', color: hasFin ? '#0a7a3e' : t.textMuted }}>
                           💶 {L.fin}
                         </button>
-                        <button onClick={() => navigate(`${base}/projetos?topic=${topic.key}`)} title={L.toProject} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>
+                        <button onClick={() => navigate(`${base}/projetos?topic=${topic.key}`)} title={L.toProject} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>
                           🚀
                         </button>
                       </>
@@ -359,7 +359,7 @@ export default function Materialidade() {
                   {finOpen === topic.key && !soLeitura && (
                     <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '7px', background: t.softCardBg, borderRadius: '10px', padding: '10px' }}>
                       <div>
-                        <div style={{ fontSize: '9.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.finImpact}</div>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '3px' }}>{L.finImpact}</div>
                         <div style={{ display: 'flex', gap: '3px' }}>
                           {[1, 2, 3, 4, 5].map(v => (
                             <button key={v} onClick={() => setFinForm(f => ({ ...f, impact: v }))} style={{

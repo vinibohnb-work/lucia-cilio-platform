@@ -66,7 +66,7 @@ export function Area({ interna }) {
   const { t } = useTheme()
   return (
     <span title={interna ? 'Só a equipa da LC Office Consulting vê isto' : 'O cliente também vê isto'}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', borderRadius: '8px', fontSize: '10.5px', fontWeight: 700, background: interna ? t.segBg : t.dueOk.bg, color: interna ? t.textMuted : t.dueOk.ink, whiteSpace: 'nowrap' }}>
+      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, background: interna ? t.segBg : t.dueOk.bg, color: interna ? t.textMuted : t.dueOk.ink, whiteSpace: 'nowrap' }}>
       {interna ? <Ic.cadeado /> : <Ic.olho />}{interna ? 'Área interna' : 'Visível ao cliente'}
     </span>
   )
@@ -111,7 +111,7 @@ export function useCampos() {
   const { t } = useTheme()
   return {
     input: { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: 'inherit' },
-    rotulo: { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '5px', display: 'block' },
+    rotulo: { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '5px', display: 'block' },
     th: { textAlign: 'left', fontSize: '11px', fontWeight: 700, color: t.textMuted, padding: '9px 12px', background: t.headBg || t.softCardBg, whiteSpace: 'nowrap' },
     td: { padding: '11px 12px', borderTop: `1px solid ${t.rowBorder}`, fontSize: '13px', color: t.text, verticalAlign: 'middle' },
   }

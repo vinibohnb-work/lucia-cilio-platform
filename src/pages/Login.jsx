@@ -59,7 +59,7 @@ export default function Login() {
   }
 
   const inputStyle = { width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: '10px', fontSize: '14px', background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.heading, outline: 'none' }
-  const label = (txt) => <label style={{ display: 'block', fontSize: '11px', letterSpacing: '.5px', fontWeight: 600, marginBottom: '7px', color: t.textMuted }}>{txt}</label>
+  const label = (txt, id) => <label htmlFor={id} style={{ display: 'block', fontSize: '12px', letterSpacing: '.5px', fontWeight: 600, marginBottom: '7px', color: t.textMuted }}>{txt}</label>
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', fontFamily: t.fontBody, background: t.loginBg, position: 'relative' }}>
@@ -80,15 +80,15 @@ export default function Login() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px' }}>
           <img src="/logo.png" alt="LC" style={{ width: '68px', height: '68px', objectFit: 'contain', marginBottom: '14px' }} />
           <h1 style={{ margin: 0, fontWeight: 400, fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '26px', color: t.heading, lineHeight: 1 }}>Lúcia Cílio</h1>
-          <div style={{ fontSize: '10px', letterSpacing: '2.6px', textTransform: 'uppercase', marginTop: '5px', color: t.accentText }}>{L.subtitle}</div>
+          <div style={{ fontSize: '11px', letterSpacing: '2.6px', textTransform: 'uppercase', marginTop: '5px', color: t.accentText }}>{L.subtitle}</div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <div>{label(L.email)}<input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" placeholder="nome@email.com" style={inputStyle} /></div>
+          <div>{label(L.email, 'login-email')}<input id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" placeholder="nome@email.com" style={inputStyle} /></div>
           <div>
-            {label(L.password)}
+            {label(L.password, 'login-pw')}
             <div style={{ position: 'relative' }}>
-              <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" placeholder="••••••••" style={{ ...inputStyle, paddingRight: '64px' }} />
+              <input id="login-pw" type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" placeholder="••••••••" style={{ ...inputStyle, paddingRight: '64px' }} />
               <button type="button" onClick={() => setShowPw(s => !s)} style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', minHeight: '38px', minWidth: '52px', padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, color: t.accentText }}>{showPw ? L.hide : L.show}</button>
             </div>
           </div>

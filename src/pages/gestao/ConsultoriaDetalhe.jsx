@@ -207,7 +207,7 @@ export default function ConsultoriaDetalhe() {
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: t.fontBody }
-  const lblStyle = { fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
+  const lblStyle = { fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }
 
   if (loading) return <EsqueletoPagina />
   if (!c) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.naoEncontrada}</div>
@@ -241,7 +241,7 @@ export default function ConsultoriaDetalhe() {
             {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
             {erro && <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.neg }}>{erro}</span>}
             {!apresentacao && <>
-            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.chipBg, color: t.chipText, whiteSpace: 'nowrap' }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
+            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.chipBg, color: t.chipText, whiteSpace: 'nowrap' }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
             {c.crm_lead_id ? (
               <button onClick={() => navigate('/gestao/crm')} title={L.verNoCrm}
                 style={{ padding: '6px 13px', borderRadius: '9px', border: 'none', background: t.dueOk.bg, color: t.dueOk.ink, fontWeight: 700, fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.noCrm}</button>
@@ -279,7 +279,7 @@ export default function ConsultoriaDetalhe() {
               style={{ flex: isMobile ? '1 1 45%' : '1 1 0', textAlign: 'left', padding: '11px 13px', borderRadius: '11px', cursor: 'pointer',
                 border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg, opacity: bl.porConstruir ? .65 : 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '5px' }}>
-                <span style={{ width: '19px', height: '19px', borderRadius: '50%', background: on ? t.accent : t.trackBg, color: on ? '#0a2f1a' : t.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800 }}>{bl.n}</span>
+                <span style={{ width: '19px', height: '19px', borderRadius: '50%', background: on ? t.accent : t.trackBg, color: on ? '#0a2f1a' : t.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>{bl.n}</span>
                 <span style={{ fontSize: '12.5px', fontWeight: 700, color: on ? t.heading : t.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{txt(bl)}</span>
               </div>
               <div style={{ height: '4px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
@@ -332,7 +332,7 @@ export default function ConsultoriaDetalhe() {
                     const quad = SWOT_QUADRANTES.find(x => x.key === a.quadrante)
                     return (
                       <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', fontSize: '11.5px', color: t.text, marginBottom: '5px', lineHeight: 1.45 }}>
-                        <span style={{ flex: 'none', fontSize: '9px', fontWeight: 800, padding: '1px 7px', borderRadius: '20px', background: quad?.bg, color: quad?.cor, marginTop: '1px' }}>{txt(quad)}</span>
+                        <span style={{ flex: 'none', fontSize: '11px', fontWeight: 800, padding: '1px 7px', borderRadius: '20px', background: quad?.bg, color: quad?.cor, marginTop: '1px' }}>{txt(quad)}</span>
                         <span>{txt(a)}</span>
                       </div>
                     )
@@ -407,8 +407,8 @@ function QuadranteSwot({ q, itens, t, txt, onAdd, onRemove, inputStyle }) {
     <div style={{ background: t.softCardBg, borderRadius: '12px', padding: '13px 15px', borderTop: `3px solid ${q.cor}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '9px' }}>
         <span style={{ fontSize: '13px', fontWeight: 800, color: q.cor }}>{txt(q)}</span>
-        <span style={{ fontSize: '10px', color: t.subtle }}>{q.eixo} {q.sinal}</span>
-        <span style={{ marginLeft: 'auto', fontSize: '10.5px', fontWeight: 700, color: t.subtle }}>{itens.length}</span>
+        <span style={{ fontSize: '11px', color: t.subtle }}>{q.eixo} {q.sinal}</span>
+        <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: t.subtle }}>{itens.length}</span>
       </div>
       {itens.map((it, i) => (
         <div key={i} style={{ display: 'flex', gap: '7px', alignItems: 'flex-start', fontSize: '12px', color: t.text, padding: '5px 0', borderTop: i ? `1px solid ${t.rowBorder || t.cardBorder}` : 'none', lineHeight: 1.4 }}>
@@ -440,7 +440,7 @@ function CelulaTows({ cel, c, t, txt, L, swotItens, nova, onTexto, onToggleOrige
   return (
     <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: '12px', padding: '13px 15px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: t.chipBg, color: t.chipText }}>{cel.sigla}</span>
+        <span style={{ fontSize: '11px', fontWeight: 800, padding: '2px 8px', borderRadius: '20px', background: t.chipBg, color: t.chipText }}>{cel.sigla}</span>
         <span style={{ fontSize: '13px', fontWeight: 800, color: t.heading }}>{txt(cel)}</span>
       </div>
       <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '10px', lineHeight: 1.4 }}>{txt(cel, 'de')}</div>
@@ -473,7 +473,7 @@ function CelulaTows({ cel, c, t, txt, L, swotItens, nova, onTexto, onToggleOrige
               const on = (nova.origem || []).includes(f.ref)
               return (
                 <button key={f.ref} onClick={() => onToggleOrigem(f.ref)} title={f.texto}
-                  style={{ fontSize: '10px', padding: '3px 9px', borderRadius: '20px', cursor: 'pointer', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '20px', cursor: 'pointer', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     border: `1px solid ${on ? f.q.cor : t.cardBorder}`, background: on ? f.q.bg : 'transparent', color: on ? f.q.cor : t.textMuted, fontWeight: on ? 700 : 500 }}>
                   {on ? '✓ ' : ''}{f.texto}
                 </button>

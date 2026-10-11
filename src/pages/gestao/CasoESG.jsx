@@ -92,10 +92,10 @@ export default function CasoESG() {
           <a href={`/apresentacao/esg/${id}`} target="_blank" rel="noopener"
             style={{ padding: '5px 12px', borderRadius: '8px', background: t.btnBg, color: t.btnInk, fontSize: '11.5px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>{L.apresentar} ↗</a>
           <select value={caso.status} onChange={e => alterar({ status: e.target.value })}
-            style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, border: 'none', background: tone.bg, color: tone.ink, cursor: 'pointer', outline: 'none' }}>
+            style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', background: tone.bg, color: tone.ink, cursor: 'pointer', outline: 'none' }}>
             {['ativa', 'concluida', 'pausada'].map(s => <option key={s} value={s}>{L[s]}</option>)}
           </select>
-          <span title={caso.user_id ? L.conta : L.semConta} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: t.softCardBg, color: caso.user_id ? t.accentText : t.subtle, whiteSpace: 'nowrap' }}>
+          <span title={caso.user_id ? L.conta : L.semConta} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.softCardBg, color: caso.user_id ? t.accentText : t.subtle, whiteSpace: 'nowrap' }}>
             {caso.user_id ? '🔗 ' + L.conta : L.semConta}
           </span>
           {caso.user_id && (

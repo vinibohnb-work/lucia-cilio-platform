@@ -113,7 +113,7 @@ export function Capital({ numeros, alterar }) {
         <span style={{ fontSize: '11.5px', color: t.textMuted }}>{L.meses}</span>
         <input value={cap.reserva ?? ''} onChange={e => set('reserva', e.target.value)} placeholder={String(Math.round(c.reservaSugerida))} style={{ ...inputStyle, width: '110px', marginLeft: 'auto' }} />
         {custosAno1 > 0 && (cap.reserva === '' || cap.reserva === undefined) && (
-          <span style={{ fontSize: '10.5px', color: t.subtle }}>{L.sug}: {eur(c.reservaSugerida, lang)}</span>
+          <span style={{ fontSize: '11px', color: t.subtle }}>{L.sug}: {eur(c.reservaSugerida, lang)}</span>
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: t.chipBg, borderRadius: '11px', padding: '13px 16px', marginTop: '12px' }}>
@@ -190,8 +190,8 @@ export function Projecao({ numeros, alterar }) {
     <div key={campo} style={{ background: t.softCardBg, borderRadius: '11px', padding: '12px 14px', marginBottom: '10px' }}>
       <div style={{ fontSize: '12px', fontWeight: 800, color: cor, marginBottom: '9px' }}>{titulo}</div>
       <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: '6px', marginBottom: '5px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase' }}>{L.desc}</span>
-        {[1, 2, 3].map(a => <span key={a} style={{ fontSize: '10px', fontWeight: 700, color: t.textMuted, textAlign: 'right' }}>{L.ano} {a}</span>)}
+        <span style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase' }}>{L.desc}</span>
+        {[1, 2, 3].map(a => <span key={a} style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textAlign: 'right' }}>{L.ano} {a}</span>)}
         <span />
       </div>
       {rows(campo).map((l, i) => (
@@ -264,7 +264,7 @@ export function Liquidez({ numeros, alterar }) {
         <div style={{ minWidth: '780px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: `84px repeat(12, 1fr)`, gap: '4px', marginBottom: '5px' }}>
             <span />
-            {MESES.map(m => <span key={m} style={{ fontSize: '10px', fontWeight: 700, color: t.textMuted, textAlign: 'center' }}>{m}</span>)}
+            {MESES.map(m => <span key={m} style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textAlign: 'center' }}>{m}</span>)}
           </div>
           {[['entradas', L.ent, t.dueOk.ink], ['saidas', L.sai, t.neg]].map(([campo, rot, cor]) => (
             <div key={campo} style={{ display: 'grid', gridTemplateColumns: `84px repeat(12, 1fr)`, gap: '4px', marginBottom: '5px', alignItems: 'center' }}>

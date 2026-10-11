@@ -454,7 +454,7 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
             {monthly.map((m, i) => (
-              <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: '10px', color: t.subtle, fontWeight: 600 }}>{m.label}</div>
+              <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: '11px', color: t.subtle, fontWeight: 600 }}>{m.label}</div>
             ))}
           </div>
         </div>
@@ -520,7 +520,7 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px', gap: '10px' }}>
                   <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a2e1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {r.name}
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: r.kind === 'product' ? '#5b21b6' : G, marginLeft: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: r.kind === 'product' ? '#5b21b6' : G, marginLeft: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {r.kind === 'product' ? L.product : L.service}
                     </span>
                   </span>

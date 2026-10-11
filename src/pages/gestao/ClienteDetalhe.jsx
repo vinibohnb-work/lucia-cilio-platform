@@ -177,7 +177,7 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
   const inputStyle = { padding: '9px 11px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, fontSize: '13px', background: t.inputBg, color: t.heading, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const miniStat = (label, value, color) => (
     <div style={{ background: t.softCardBg, borderRadius: '11px', padding: '11px 13px' }}>
-      <div style={{ fontSize: '10px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }}>{label}</div>
+      <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }}>{label}</div>
       <div style={{ fontSize: '18px', fontWeight: 800, color: color || t.heading, fontFamily: t.fontNum || t.fontDisplay }}>{value}</div>
     </div>
   )
@@ -252,9 +252,9 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
           return (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: tone.bg, borderRadius: '10px', padding: '9px 12px', marginTop: '12px' }}>
               <span style={{ fontSize: '12px' }}>{tone.dot}</span>
-              <span style={{ fontSize: '10px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px' }}>{L.limitLabel}</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px' }}>{L.limitLabel}</span>
               <span style={{ fontSize: '13px', fontWeight: 800, color: tone.ink }}>{fmt(s.famv.monthlyProfit)} / {fmt(s.famv.limit)} · {pct}%</span>
-              <span style={{ fontSize: '10px', fontWeight: 600, color: t.subtle }}>({s.famv.fromPlan ? L.fromPlan : L.fromReal})</span>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: t.subtle }}>({s.famv.fromPlan ? L.fromPlan : L.fromReal})</span>
             </div>
           )
         })()}
@@ -327,7 +327,7 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
         return (
           <div key={n.id} style={{ ...card, padding: '16px 20px', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap', marginBottom: n.body || n.link_url ? '9px' : 0 }}>
-              <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: ks.bg, color: ks.ink, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{kindLabel[n.kind]}</span>
+              <span style={{ padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: ks.bg, color: ks.ink, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{kindLabel[n.kind]}</span>
               <span style={{ fontSize: '14px', fontWeight: 700, color: t.heading }}>{n.title}</span>
               <span style={{ fontSize: '11px', color: t.subtle, marginLeft: 'auto' }}>{fmtDate(n.created_at)}</span>
               <button onClick={() => removeNote(n.id)} title={L.del} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: t.subtle, padding: '2px', lineHeight: 1 }}>✕</button>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { IconImprimir, IconFicheiro, IconBrilho } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
@@ -38,8 +39,8 @@ export default function ConsultoriaRelatorio() {
   const L = lang === 'de' ? {
     voltar: '← Zur Beratung', eyebrow: 'Beratung', title: 'Bericht',
     subtitle: 'Der KI-Entwurf beschreibt, was ausgefüllt wurde. Ihr Text hat immer Vorrang.',
-    gerar: '✨ Mit KI erstellen', regerar: '✨ Neu erstellen', gerando: 'Wird erstellt… das dauert etwas',
-    print: '🖨 Drucken / PDF', vazio: 'Noch kein Bericht. Erstellen Sie den ersten Entwurf.',
+    gerar: 'Mit KI erstellen', regerar: 'Neu erstellen', gerando: 'Wird erstellt… das dauert etwas',
+    print: 'Drucken / PDF', vazio: 'Noch kein Bericht. Erstellen Sie den ersten Entwurf.',
     lacunas: 'Was noch fehlt', geradoEm: 'Erstellt am', editado: 'von Ihnen bearbeitet',
     reporEditado: 'Meinen Text verwerfen', preenchido: 'ausgefüllt',
     loading: 'Wird geladen…', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
@@ -48,8 +49,8 @@ export default function ConsultoriaRelatorio() {
   } : lang === 'en' ? {
     voltar: '← Back to consultancy', eyebrow: 'Consultancy', title: 'Report',
     subtitle: 'The AI draft describes what was filled in. Your text always wins.',
-    gerar: '✨ Generate with AI', regerar: '✨ Regenerate', gerando: 'Generating… this takes a moment',
-    print: '🖨 Print / PDF', vazio: 'No report yet. Generate the first draft.',
+    gerar: 'Generate with AI', regerar: 'Regenerate', gerando: 'Generating… this takes a moment',
+    print: 'Print / PDF', vazio: 'No report yet. Generate the first draft.',
     lacunas: 'What is still missing', geradoEm: 'Generated on', editado: 'edited by you',
     reporEditado: 'Discard my text', preenchido: 'filled in',
     loading: 'Loading…', guardado: 'Saved ✓', aGuardar: 'Saving…',
@@ -58,8 +59,8 @@ export default function ConsultoriaRelatorio() {
   } : {
     voltar: '← Voltar à consultoria', eyebrow: 'Consultoria', title: 'Relatório',
     subtitle: 'O rascunho da IA descreve o que foi preenchido. O teu texto ganha sempre.',
-    gerar: '✨ Gerar com IA', regerar: '✨ Gerar de novo', gerando: 'A gerar… demora um pouco',
-    print: '🖨 Imprimir / PDF', vazio: 'Ainda não há relatório. Gera o primeiro rascunho.',
+    gerar: 'Gerar com IA', regerar: 'Gerar de novo', gerando: 'A gerar… demora um pouco',
+    print: 'Imprimir / PDF', vazio: 'Ainda não há relatório. Gera o primeiro rascunho.',
     lacunas: 'O que ainda falta', geradoEm: 'Gerado em', editado: 'editado por ti',
     reporEditado: 'Descartar o meu texto', preenchido: 'preenchido',
     loading: 'A carregar…', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
@@ -145,7 +146,7 @@ export default function ConsultoriaRelatorio() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <div>
-          <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
+          <div style={{ fontSize: '11px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
           <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '520px', lineHeight: 1.5 }}>
             {c.nome}{c.empresa ? ` · ${c.empresa}` : ''} — {prog.pct}% {L.preenchido}
@@ -154,12 +155,12 @@ export default function ConsultoriaRelatorio() {
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
           {temRelatorio && (
-            <button onClick={imprimir} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.print}</button>
+            <button onClick={imprimir} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}><IconImprimir /> {L.print}</button>
           )}
           <button onClick={gerar} disabled={gerando || prog.feitas === 0}
             title={prog.feitas === 0 ? L.semDados : ''}
             style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: gerando || prog.feitas === 0 ? 'default' : 'pointer', opacity: gerando || prog.feitas === 0 ? .55 : 1 }}>
-            {gerando ? L.gerando : temRelatorio ? L.regerar : L.gerar}
+            {!gerando && <IconBrilho />} {gerando ? L.gerando : temRelatorio ? L.regerar : L.gerar}
           </button>
         </div>
       </div>
@@ -170,14 +171,14 @@ export default function ConsultoriaRelatorio() {
 
       {gerando && (
         <div style={{ ...card, padding: '30px 24px', textAlign: 'center', marginBottom: '14px' }}>
-          <div style={{ fontSize: '26px', marginBottom: '8px' }}>✨</div>
+          <div style={{ fontSize: '26px', marginBottom: '8px', color: t.accentText }}><IconBrilho tam={26} /></div>
           <div style={{ fontSize: '13px', color: t.textMuted }}>{L.gerando}</div>
         </div>
       )}
 
       {!gerando && !temRelatorio && (
         <div style={{ ...card, padding: '34px 28px', textAlign: 'center' }}>
-          <div style={{ fontSize: '34px', marginBottom: '10px' }}>📄</div>
+          <div style={{ fontSize: '34px', marginBottom: '10px', color: t.textMuted }}><IconFicheiro tam={34} /></div>
           <div style={{ fontSize: '14px', color: t.textMuted }}>{prog.feitas === 0 ? L.semDados : L.vazio}</div>
         </div>
       )}
@@ -202,9 +203,9 @@ export default function ConsultoriaRelatorio() {
               <h3 style={{ margin: 0, fontFamily: t.fontDisplay, fontSize: '17px', fontWeight: 600, color: t.heading }}>{titulo(s)}</h3>
               {foiEditada && (
                 <>
-                  <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: t.chipBg, color: t.chipText }}>{L.editado}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: t.chipBg, color: t.chipText }}>{L.editado}</span>
                   {gerado[s.key] && (
-                    <button onClick={() => reporSeccao(s.key)} style={{ background: 'none', border: 'none', color: t.subtle, fontSize: '10.5px', fontWeight: 600, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>{L.reporEditado}</button>
+                    <button onClick={() => reporSeccao(s.key)} style={{ background: 'none', border: 'none', color: t.subtle, fontSize: '11px', fontWeight: 600, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>{L.reporEditado}</button>
                   )}
                 </>
               )}
@@ -216,7 +217,7 @@ export default function ConsultoriaRelatorio() {
       })}
 
       {rel.gerado_em && (
-        <div style={{ fontSize: '10.5px', color: t.subtle, textAlign: 'right', marginTop: '10px' }}>
+        <div style={{ fontSize: '11px', color: t.subtle, textAlign: 'right', marginTop: '10px' }}>
           {L.geradoEm} {new Date(rel.gerado_em).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT')}
           {rel.modelo ? ` · ${rel.modelo}` : ''}
         </div>

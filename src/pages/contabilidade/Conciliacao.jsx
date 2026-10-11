@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { IconFicheiro, IconRaio } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -41,7 +42,7 @@ export default function Conciliacao() {
   const L = lang === 'de' ? {
     eyebrow: 'Buchhaltung', title: 'Abstimmung Kasse/Bank',
     subtitle: 'Kontoauszug importieren (CSV oder Excel) und mit dem Kassenbuch abgleichen.',
-    escolher: '📄 Datei wählen', aLer: 'Wird gelesen…', importar: 'Importieren', cancelar: 'Abbrechen',
+    escolher: 'Datei wählen', aLer: 'Wird gelesen…', importar: 'Importieren', cancelar: 'Abbrechen',
     detetado: 'Erkanntes Format', linhas: 'Zeilen', novos: 'neu', repetidos: 'bereits importiert',
     pendente: 'Offen', conciliado: 'Abgestimmt', ignorado: 'Ignoriert', semExtrato: 'Nicht im Auszug',
     sugestao: 'Vorschlag', conciliar: 'Abstimmen', criar: 'Buchung anlegen', ignorar: 'Ignorieren',
@@ -55,7 +56,7 @@ export default function Conciliacao() {
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
     subtitle: 'Import a bank statement (CSV or Excel) and match it against the cash book.',
-    escolher: '📄 Choose file', aLer: 'Reading…', importar: 'Import', cancelar: 'Cancel',
+    escolher: 'Choose file', aLer: 'Reading…', importar: 'Import', cancelar: 'Cancel',
     detetado: 'Detected format', linhas: 'rows', novos: 'new', repetidos: 'already imported',
     pendente: 'Pending', conciliado: 'Matched', ignorado: 'Ignored', semExtrato: 'Not in statement',
     sugestao: 'Suggestion', conciliar: 'Match', criar: 'Create entry', ignorar: 'Ignore',
@@ -69,7 +70,7 @@ export default function Conciliacao() {
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
     subtitle: 'Importa o extrato bancário (CSV ou Excel) e cruza-o com o Livro de Caixa.',
-    escolher: '📄 Escolher ficheiro', aLer: 'A ler…', importar: 'Importar', cancelar: 'Cancelar',
+    escolher: 'Escolher ficheiro', aLer: 'A ler…', importar: 'Importar', cancelar: 'Cancelar',
     detetado: 'Formato detetado', linhas: 'linhas', novos: 'novos', repetidos: 'já importados',
     pendente: 'Por conciliar', conciliado: 'Conciliados', ignorado: 'Ignorados', semExtrato: 'Não constam do extrato',
     sugestao: 'Sugestão', conciliar: 'Conciliar', criar: 'Criar lançamento', ignorar: 'Ignorar',
@@ -245,7 +246,7 @@ export default function Conciliacao() {
           <input ref={inputRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={e => lerFicheiro(e.target.files?.[0])} style={{ display: 'none' }} />
           <button onClick={() => inputRef.current?.click()} disabled={aLer || isViewing}
             style={{ ...btn, padding: '10px 20px', fontSize: '13px', background: t.btnBg, color: t.btnInk, opacity: aLer || isViewing ? .55 : 1 }}>
-            {aLer ? L.aLer : L.escolher}
+            {!aLer && <IconFicheiro />} {aLer ? L.aLer : L.escolher}
           </button>
           <span style={{ fontSize: '11.5px', color: t.subtle }}>CSV · Excel</span>
         </div>
@@ -320,7 +321,7 @@ export default function Conciliacao() {
             {aba === 'pendente' && nAutomaticos > 0 && (
               <button onClick={conciliarAutomaticos} disabled={isViewing}
                 style={{ ...btn, marginLeft: 'auto', flex: 'none', whiteSpace: 'nowrap', padding: '8px 15px', fontSize: '12px', background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>
-                ⚡ {L.conciliar} {nAutomaticos}
+                <IconRaio /> {L.conciliar} {nAutomaticos}
               </button>
             )}
           </div>
@@ -374,8 +375,8 @@ export default function Conciliacao() {
                       <div style={{ marginTop: '9px', paddingTop: '9px', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
                         {sug && (
                           <div style={{ background: s.ambiguo ? t.dueSoon.bg : t.softCardBg, borderRadius: '9px', padding: '9px 11px', marginBottom: '8px' }}>
-                            <div style={{ fontSize: '10px', fontWeight: 800, color: s.ambiguo ? t.dueSoon.ink : t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }}>
-                              {L.sugestao} · {s.score}% {L.confianca}{s.automatico ? ' ⚡' : ''}
+                            <div style={{ fontSize: '11px', fontWeight: 800, color: s.ambiguo ? t.dueSoon.ink : t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '4px' }}>
+                              {L.sugestao} · {s.score}% {L.confianca}{s.automatico && <> <IconRaio tam={12} /></>}
                             </div>
                             <div style={{ fontSize: '12.5px', color: t.text }}>{dataFmt(sug.entry_date)} · {sug.description} · {fmt(sug.amount)}</div>
                             {s.ambiguo && <div style={{ fontSize: '11px', color: t.dueSoon.ink, marginTop: '4px', fontWeight: 600 }}>⚠ {L.ambiguo}</div>}

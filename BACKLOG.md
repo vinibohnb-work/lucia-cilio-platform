@@ -85,7 +85,7 @@
 **Semana 4 (27–31/10) — validação, etapa 2**
 - [ ] **17.** **Etapa 2 com a Nicole** (conta real dela), com o mesmo roteiro de 20 passos; corrigir
   o que aparecer.
-- [ ] **18.** Passagem de **QA de interface** no que sobrou de 13/08: textos < 12 px, rótulos dos
+- [x] **18.** *(feito 10/10)* Passagem de **QA de interface** no que sobrou de 13/08: textos < 12 px, rótulos dos
   campos, alvos de toque, matriz de materialidade no telemóvel, paginação do Livro de Caixa,
   emojis → ícones. Uma varredura, não uma por item.
 - [ ] **19.** Validar a **importação de extratos** com os CSVs reais. ⏳ Ponto 10.
@@ -95,9 +95,10 @@
 - [ ] **21.** **Projeto DEV antigo**: eliminar (ou limpar com o script) — dados reais não ficam nos
   EUA. ⏳ Autorização da Lúcia.
 - [x] **22.** *(publicado 10/10)* **Anti-robôs** no `/diagnostico` (Turnstile) — antes de o ligar ao site.
-- [ ] **23.** Segurança mínima de entrega: **R4 exportação dos dados de um cliente** (1–2 dias) e
+- [x] **23.** *(feito 10/10)* Segurança mínima de entrega: **R4 exportação dos dados de um cliente** (1–2 dias) e
   **MFA para admins** (R5a, 1–2 dias). O audit log (R5b) e o aceite dos termos ficam para o SaaS.
-  ⏳ Confirmar com a Lúcia se entram na entrega.
+  A verificação em dois passos ficou opcional; tornar obrigatória para admins depende da decisão
+  da Lúcia.
 - [ ] **24.** RGPD com a advogada: **pacote documental (R6)** e **DPA da Anthropic** — do lado da
   plataforma, só a política de privacidade com URL público. ⏳ Lúcia + advogada.
 
@@ -115,7 +116,7 @@
 **Depois da entrega (não contam para novembro)**
 App nativa (Capacitor) · integração de calendários / agendamento do diagnóstico · Instagram
 (API da Meta) e analytics Meta/Google · WhatsApp (integração) · IA nas transcrições · glossário,
-FAQ e ícones (i) · lançamento dividido, anotações e break-even no Planeamento, PDF dos
+FAQ · lançamento dividido, PDF dos
 gráficos, reserva pessoal e painel de reservas · exportação no Excel da Lúcia · mapa da jornada
 (documento) · perguntas do bloco 1 para negócio em curso · retirar `user_id` das tabelas ESG ·
 audit log e aceite dos termos (SaaS) · consultoria de organização administrativa (quando a
@@ -320,16 +321,6 @@ Letícia desenhar o serviço).
   Quando a plataforma for vendida como SaaS, o cliente tem de aceitar os termos — com registo
   de quem aceitou, quando e que versão. Anda a par do R6 (pacote documental).
 
-- [ ] **R4 · Exportação completa dos dados de um cliente (art. 20 — portabilidade)**
-  *Auditoria 21/08/2026 · Resp.: Vinícius*
-  Endpoint admin que junta as 15 tabelas + lista de documentos num ZIP/JSON. Hoje só o Livro
-  de Caixa sai em CSV. 1–2 dias.
-
-- [ ] **R5a · MFA/2FA (TOTP) com o Supabase Auth**
-  *Auditoria 21/08/2026 · Resp.: Vinícius*
-  Suportado nativamente; falta a interface de inscrição/verificação e a política (obrigatório
-  para admins, opcional para clientes). 1–2 dias.
-
 - [ ] **R5b · Audit log — quem acedeu ou alterou o quê**
   *Auditoria 21/08/2026 · Resp.: Vinícius*
   Tabela `audit_log` com triggers nas tabelas sensíveis (quem, quando, o quê, valor
@@ -359,36 +350,7 @@ Letícia desenhar o serviço).
 
 ### QA de interface — achados de 13/08
 
-> Da auditoria automática + inspeção das 48 capturas (16 ecrãs × 3 tamanhos), em produção com
-> a conta de demonstração. Relatório completo: `docs/auditorias/2026-08-13-interface.md`.
-> Severidade: 🟠 atrapalha · 🟡 incomoda · 🔵 oportunidade. Zero bloqueadores.
-
-- [ ] **🟠 Subir os textos abaixo de 12px** — 36 elementos só no Painel. Progresso na 2ª
-  revisão de design (25/08): brand da sidebar 9→10px, rótulos de secção 10→11px, números dos
-  blocos 9→11px, "Nasce de" 9.5→11px, labels de formulário 10.5→11px. Resta a varredura
-  completa (legendas de gráficos, eixos da materialidade, microtextos dos cartões). Regra
-  acordada: ≥12px para texto informativo; 11px só para maiúsculas espaçadas (eyebrows).
-  *QA 13/08/2026 · Revisão design 25/08 · Resp.: Vinícius*
-
-- [ ] **🔵 Trocar emojis por ícones SVG nos botões de ação** — 📄/🖨/⚡/✨ na Conciliação,
-  EÜR e Relatório de consultoria destoam dos SVGs da navegação. Usar o mesmo set da sidebar.
-  Classificado "quando der" na revisão de design de 25/08 (T7, baixa).
-  *Revisão design 25/08/2026 · Resp.: Vinícius*
-
-- [ ] **🟠 Associar rótulos aos campos de formulário** — 36 ocorrências, incluindo o login.
-  Sem `label for`/`aria-label`, o leitor de ecrã não liga rótulo a campo e tocar no texto não
-  foca o campo.
-  *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟡 Matriz de materialidade no fim da página no telemóvel** — é preciso passar pelos 16
-  temas (~9.000 px) para a ver. No computador está fixa à direita. É o resultado da página.
-  *QA 13/08/2026 · Resp.: Vinícius*
-- [ ] **🟡 Alvos de toque abaixo de 44×44 px** — os piores foram corrigidos a 27/08 (o
-  "Mostrar" da palavra-passe passou de 42×17 para 52×38 no login e na definição de senha; os
-  botões de linha dos Acessos para 34×34). Falta a varredura das restantes ocorrências.
-  *QA 13/08/2026 · Parcial 27/08 · Resp.: Vinícius*
-- [ ] **🔵 Livro de Caixa sem paginação** — com os 30 lançamentos da conta demo a página tem
-  ~8.000 px no telemóvel. Com um ano real de dados, será várias vezes isso.
-  *QA 13/08/2026 · Resp.: Vinícius*
+*(secção vazia — ver Concluídos; relatório: `docs/auditorias/2026-08-13-interface.md`)*
 
 ### Internacionalização
 
@@ -399,11 +361,6 @@ Letícia desenhar o serviço).
 ### Onboarding e primeiro acesso
 
 ### Usabilidade e compreensão
-
-- [ ] **Adicionar ícone informativo (i) nos termos técnicos, como regime de IVA**
-  *Reunião 06/08/2026 · Resp.: Vinícius*
-  Já existe um `InfoTooltip` no projeto (usado no Livro de Caixa) — estender aos termos
-  fiscais em Empresa, Dashboard e Rücklagen.
 
 - [ ] **Criar glossário/base de conhecimento e eventual FAQ na plataforma**
   *Reunião 06/08/2026 · Resp.: Vinícius*
@@ -431,15 +388,6 @@ Letícia desenhar o serviço).
   A ferramenta anterior da Lúcia permite dividir um lançamento (ex.: 590 € = 315 € + 275 €,
   cada parte com a sua taxa). Não foi pedido expressamente, mas está no fluxo dela — confirmar
   se precisa antes de construir.
-
-- [ ] **Campos de anotações amplas no Planeamento e nas Previsões**
-  *Reunião 20/08/2026 · Resp.: Vinícius*
-  Notas internas abaixo de cada item, para ela registar contexto junto dos números.
-
-- [ ] **Indicador de break-even também no Planeamento Mensal**
-  *Reunião 20/08/2026 · Resp.: Vinícius*
-  Quanto falta faturar para cobrir os custos — no rodapé dos totais. A análise de break-even
-  **já existe no Painel** (revisão de 29/09); falta mostrá-la aqui, onde ela planeia.
 
 - [ ] **Exportação em PDF e rótulos de valores nos gráficos do painel**
   *Reunião 20/08/2026 · Resp.: Vinícius*
@@ -692,6 +640,33 @@ Letícia desenhar o serviço).
 ---
 
 ## Concluídos
+
+### Pequenos pedidos, segurança de entrega e QA de interface — 10/10
+
+- [x] **Ícone (i) nos termos fiscais** *(reunião 06/08)* ✔ Em Empresa: regime de IVA, taxa,
+  reserva de IR e regime de Segurança Social. O `InfoTooltip` passou a abrir também com o
+  teclado e com o toque.
+- [x] **Notas por linha e ponto de equilíbrio no Planeamento Mensal** *(reunião 20/08)* ✔ Lápis em
+  cada linha abre uma nota (fica no próprio plano, sem migração). Cartão por baixo da tabela:
+  quanto é preciso faturar para cobrir os custos fixos, com a margem do mês, e quanto falta.
+- [x] **R4 · Exportação dos dados de um cliente (portabilidade, art. 20)** *(auditoria 21/08)*
+  ✔ Na ficha do cliente → Dados, "Exportar dados (JSON)" (só admin): todas as tabelas da conta e
+  da ficha, pedidos/leads pelo e-mail, e a lista de ficheiros com ligações de download por 7
+  dias. Endpoint `/api/exportar-cliente`; testado localmente (10/10).
+- [x] **R5a · Verificação em dois passos (TOTP)** *(auditoria 21/08)* ✔ Em Acessos, cartão
+  "Verificação em dois passos (a sua conta)": ativar com QR, confirmar com código, desativar.
+  Com a verificação ativa, depois da palavra-passe aparece o ecrã do código. **Ainda não é
+  obrigatória** — decisão da Lúcia (risco de alguém ficar sem acesso se perder o telemóvel).
+- [x] **QA de interface (sobras de 13/08)** ✔ Textos de 9–10,5 px subiram para 11 px em 43
+  ecrãs (ficaram de fora só a assinatura da marca e a sigla dentro do quadrado da matriz) ·
+  emojis 📄/🖨/⚡/✨ trocados por ícones SVG (Relatório de consultoria, Relatórios ESG, EÜR,
+  Conciliação, Documentos do portal, Financeiro) · rótulos ligados aos campos no login e na
+  definição de senha (o `Campo` do portal já era `<label>`) · alvos de toque ≥ 44 px em
+  ecrãs táteis (regra global; exceção com a classe `lc-compacto`) · matriz de materialidade
+  antes da lista no telemóvel · Livro de Caixa mostra 100 linhas de cada vez ("Mostrar mais";
+  os totais contam todas).
+  ⚠️ A branch `identidade-visual` mexe em estilos — ao juntar depois da sessão com a Lúcia,
+  contar com conflitos nos tamanhos de letra.
 
 ### Nova consultoria sem a lista dos outros clientes — 10/10
 

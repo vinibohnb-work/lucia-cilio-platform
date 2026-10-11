@@ -77,7 +77,7 @@ export default function BlocoEnquadramento({ enquadramento = {}, notasCliente = 
                 </select>
               )}
               {rot({ pt: cp.ajudaPt, de: cp.ajudaDe, en: cp.ajudaEn }, lang) && (
-                <div style={{ fontSize: '10.5px', color: t.subtle, marginTop: '3px', lineHeight: 1.4 }}>
+                <div style={{ fontSize: '11px', color: t.subtle, marginTop: '3px', lineHeight: 1.4 }}>
                   {rot({ pt: cp.ajudaPt, de: cp.ajudaDe, en: cp.ajudaEn }, lang)}
                 </div>
               )}
@@ -95,7 +95,7 @@ export default function BlocoEnquadramento({ enquadramento = {}, notasCliente = 
         <div style={lblStyle}>{L.notasCliente}</div>
         <textarea value={notasCliente || ''} onChange={e => alterar({ notas_cliente: e.target.value })} rows={2}
           style={{ ...inputStyle, resize: 'vertical' }} />
-        <div style={{ fontSize: '10.5px', color: t.subtle, marginTop: '3px' }}>{L.notasAjuda}</div>
+        <div style={{ fontSize: '11px', color: t.subtle, marginTop: '3px' }}>{L.notasAjuda}</div>
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { IconImprimir } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
@@ -36,7 +37,7 @@ export default function RelatoriosESG() {
     eyebrow: 'ESG-Bericht', title: 'Nachhaltigkeitsbericht',
     subtitle: 'Struktur mit Live-Daten der Plattform vorausgefüllt — der Text jeder Sektion ist frei editierbar.',
     refYear: 'Bezugsjahr', save: 'Speichern', saving: 'Wird gespeichert…', saved: 'Gespeichert ✓',
-    saveErr: 'Speichern fehlgeschlagen (Migration 024 nötig).', loading: 'Wird geladen…', print: '🖨 Drucken / PDF',
+    saveErr: 'Speichern fehlgeschlagen (Migration 024 nötig).', loading: 'Wird geladen…', print: 'Drucken / PDF',
     s1: '1. Doppelte Wesentlichkeit', s2: '2. Diagnose', s3: '3. Projekte & Maßnahmen', s4: '4. KPIs & Ergebnisse',
     textPh: 'Eigener Text für diese Sektion…', dataLbl: 'Live-Daten der Plattform',
     noData: 'Keine Daten vorhanden.', vs: 'ggü.', invest: 'Investition', saving2: 'Einsparung/Jahr', payback: 'Payback', yrs: 'Jahre',
@@ -47,7 +48,7 @@ export default function RelatoriosESG() {
     eyebrow: 'ESG Report', title: 'Sustainability Report',
     subtitle: 'Structure pre-filled with live platform data — the text of each section is fully editable.',
     refYear: 'Reference year', save: 'Save', saving: 'Saving…', saved: 'Saved ✓',
-    saveErr: 'Save failed (migration 024 required).', loading: 'Loading…', print: '🖨 Print / PDF',
+    saveErr: 'Save failed (migration 024 required).', loading: 'Loading…', print: 'Print / PDF',
     s1: '1. Double Materiality', s2: '2. Assessment', s3: '3. Projects & Actions', s4: '4. KPIs & Results',
     textPh: 'Your own text for this section…', dataLbl: 'Live platform data',
     noData: 'No data yet.', vs: 'vs', invest: 'Investment', saving2: 'Saving/year', payback: 'Payback', yrs: 'years',
@@ -58,7 +59,7 @@ export default function RelatoriosESG() {
     eyebrow: 'Relatório ESG', title: 'Relatório de Sustentabilidade',
     subtitle: 'Estrutura pré-preenchida com os dados ao vivo da plataforma — o texto de cada secção é editável.',
     refYear: 'Ano de referência', save: 'Guardar', saving: 'A guardar…', saved: 'Guardado ✓',
-    saveErr: 'Falha ao guardar (é necessária a migração 024).', loading: 'A carregar…', print: '🖨 Imprimir / PDF',
+    saveErr: 'Falha ao guardar (é necessária a migração 024).', loading: 'A carregar…', print: 'Imprimir / PDF',
     s1: '1. Dupla Materialidade', s2: '2. Diagnóstico', s3: '3. Projetos & Ações', s4: '4. KPIs & Resultados',
     textPh: 'O teu texto para esta secção…', dataLbl: 'Dados ao vivo da plataforma',
     noData: 'Ainda sem dados.', vs: 'vs', invest: 'Investimento', saving2: 'Poupança/ano', payback: 'Payback', yrs: 'anos',
@@ -138,7 +139,7 @@ export default function RelatoriosESG() {
   ]
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
-  const th = { textAlign: 'left', fontSize: '10.5px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', padding: '6px 10px', borderBottom: `1px solid ${t.cardBorder}` }
+  const th = { textAlign: 'left', fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', padding: '6px 10px', borderBottom: `1px solid ${t.cardBorder}` }
   const td = { fontSize: '12.5px', color: t.text, padding: '7px 10px', borderBottom: `1px solid ${t.rowBorder || t.cardBorder}` }
 
   // ── Impressão: gera um documento limpo numa nova janela ──
@@ -185,7 +186,7 @@ export default function RelatoriosESG() {
       <textarea value={sections[id] || ''} disabled={soLeitura} onChange={e => setSections(p => ({ ...p, [id]: e.target.value }))}
         placeholder={L.textPh} rows={3}
         style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', fontFamily: t.fontBody, resize: 'vertical', outline: 'none', marginBottom: '12px' }} />
-      <div style={{ fontSize: '10px', fontWeight: 700, color: t.subtle, textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: '6px' }}>{L.dataLbl}</div>
+      <div style={{ fontSize: '11px', fontWeight: 700, color: t.subtle, textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: '6px' }}>{L.dataLbl}</div>
       {children}
     </div>
   )
@@ -203,7 +204,7 @@ export default function RelatoriosESG() {
           <select value={year} onChange={e => pickYear(Number(e.target.value))} style={{ padding: '8px 11px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontSize: '13px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
             {(years.length ? years : [year]).map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button onClick={printReport} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.print}</button>
+          <button onClick={printReport} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}><IconImprimir /> {L.print}</button>
           {!soLeitura && <button onClick={save} disabled={saving} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: saving ? 'wait' : 'pointer' }}>{saving ? L.saving : L.save}</button>}
         </div>
       </div>
@@ -237,7 +238,7 @@ export default function RelatoriosESG() {
             const c = k.completeness[p]
             return (
               <div key={p} style={{ fontSize: '12.5px', color: t.text }}>
-                <span style={{ display: 'inline-flex', width: '18px', height: '18px', borderRadius: '5px', background: color, color: '#fff', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 800, marginRight: '6px', verticalAlign: 'middle' }}>{p}</span>
+                <span style={{ display: 'inline-flex', width: '18px', height: '18px', borderRadius: '5px', background: color, color: '#fff', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800, marginRight: '6px', verticalAlign: 'middle' }}>{p}</span>
                 <strong>{c.done}/{c.total}</strong>
               </div>
             )

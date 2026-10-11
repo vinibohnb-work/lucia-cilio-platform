@@ -101,7 +101,7 @@ export default function AvisosCliente({ userId }) {
           const cor = cores[a.tom] || cores.info
           return (
             <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '9px 0', borderBottom: `1px solid ${t.cardBorder}` }}>
-              <span style={{ flex: 'none', padding: '2px 9px', borderRadius: '20px', fontSize: '10px', fontWeight: 800, background: cor.bg, color: cor.ink, whiteSpace: 'nowrap' }}>
+              <span style={{ flex: 'none', padding: '2px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: cor.bg, color: cor.ink, whiteSpace: 'nowrap' }}>
                 {a.tom === 'ok' ? L.tomOk : a.tom === 'acao' ? L.tomAcao : L.tomInfo}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>

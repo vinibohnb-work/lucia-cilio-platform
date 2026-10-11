@@ -140,8 +140,8 @@ export default function Marketing() {
                     {p.imagem_path && urls[p.imagem_path]
                       ? <img src={urls[p.imagem_path]} alt={p.titulo || 'Publicação'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       : <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', fontSize: '11.5px', fontWeight: 700, color: t.textMuted, textAlign: 'center' }}>{p.titulo || p.legenda?.slice(0, 60) || 'Sem imagem'}</span>}
-                    <span style={{ position: 'absolute', left: '5px', bottom: '5px', fontSize: '10px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: 'rgba(14,61,51,.82)', color: '#fff' }}>{fmtData(p.data).slice(0, 5)}{p.estado !== 'publicado' ? ` · ${ESTADOS[p.estado].rotulo}` : ''}</span>
-                    {p.formato !== 'post' && <span style={{ position: 'absolute', right: '5px', top: '5px', fontSize: '10px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,255,255,.9)', color: '#0E3D33' }}>{FORMATOS.find(([k]) => k === p.formato)?.[1]}</span>}
+                    <span style={{ position: 'absolute', left: '5px', bottom: '5px', fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: 'rgba(14,61,51,.82)', color: '#fff' }}>{fmtData(p.data).slice(0, 5)}{p.estado !== 'publicado' ? ` · ${ESTADOS[p.estado].rotulo}` : ''}</span>
+                    {p.formato !== 'post' && <span style={{ position: 'absolute', right: '5px', top: '5px', fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,255,255,.9)', color: '#0E3D33' }}>{FORMATOS.find(([k]) => k === p.formato)?.[1]}</span>}
                   </button>
                 ))}
               </div>

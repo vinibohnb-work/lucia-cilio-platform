@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { IconFicheiro } from '../../../components/Icones'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { usePortal, acoes, abrirFicheiro, listarPasta } from '../../dados'
@@ -76,7 +77,7 @@ export default function Documentos({ cliente, modoCliente }) {
               {daConta.length === 0 && <div style={{ fontSize: '12.5px', color: t.subtle }}>Nada por classificar na pasta deste mês.</div>}
               {daConta.map(x => (
                 <div key={x.caminho} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderTop: `1px solid ${t.rowBorder}`, fontSize: '12.5px' }}>
-                  <button onClick={() => abrirFicheiro(x.caminho)} style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 600, fontFamily: 'inherit', fontSize: '12.5px' }}>📄 {x.nome}</button>
+                  <button onClick={() => abrirFicheiro(x.caminho)} style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 600, fontFamily: 'inherit', fontSize: '12.5px' }}><IconFicheiro tam={13} /> {x.nome}</button>
                   <span style={{ color: t.subtle }}>{fmtData(x.data)}</span>
                   <select value="" onChange={e => { if (e.target.value) acoes.criarDocumento({ clienteId: cliente.id, ano, mes: envio.mes, tipo: e.target.value, nome: x.nome, caminho: x.caminho, enviadoPor: 'cliente', data: x.data || hoje }) }}
                     style={{ ...c.input, width: 'auto', padding: '4px 6px', fontSize: '11.5px', cursor: 'pointer' }} aria-label="Classificar">
@@ -123,7 +124,7 @@ export default function Documentos({ cliente, modoCliente }) {
               {doAno.filter(d => grupoDe(d) === g).sort((a, b) => b.mes - a.mes || a.tipo.localeCompare(b.tipo)).map(d => (
                 <tr key={d.id}>
                   <td style={{ ...c.td, width: isMobile ? 'auto' : '220px' }}><strong style={{ color: t.heading }}>{d.tipo}</strong>{agrupar === 'trimestre' && <div style={{ fontSize: '11px', color: t.subtle }}>{MESES_LONGOS[d.mes - 1]}</div>}</td>
-                  <td style={c.td}>{d.nome ? (d.caminho ? <button onClick={() => abrirFicheiro(d.caminho)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '12.5px', color: t.accentText, fontWeight: 600, fontFamily: 'inherit', textAlign: 'left' }}>📄 {d.nome}</button> : <span style={{ fontSize: '12.5px' }}>📄 {d.nome}</span>) : <span style={{ color: t.subtle, fontSize: '12.5px' }}>ainda não enviado</span>}
+                  <td style={c.td}>{d.nome ? (d.caminho ? <button onClick={() => abrirFicheiro(d.caminho)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '12.5px', color: t.accentText, fontWeight: 600, fontFamily: 'inherit', textAlign: 'left' }}><IconFicheiro tam={13} /> {d.nome}</button> : <span style={{ fontSize: '12.5px' }}><IconFicheiro tam={13} /> {d.nome}</span>) : <span style={{ color: t.subtle, fontSize: '12.5px' }}>ainda não enviado</span>}
                     {d.data && <div style={{ fontSize: '11px', color: t.subtle }}>{d.enviadoPor === 'cliente' ? 'enviado pelo cliente' : 'carregado pela equipa'}</div>}</td>
                   <td style={{ ...c.td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                     {modoCliente || d.estado === 'em_falta' ? (

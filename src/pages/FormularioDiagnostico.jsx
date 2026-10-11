@@ -129,7 +129,7 @@ export default function FormularioDiagnostico() {
         ) : (
           <form onSubmit={enviar}>
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10.5px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, color: t.accentText, marginBottom: '7px' }}>{L.eyebrow}</div>
+              <div style={{ fontSize: '11px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, color: t.accentText, marginBottom: '7px' }}>{L.eyebrow}</div>
               <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.titulo}</h1>
               <p style={{ fontSize: '13px', color: t.textMuted, margin: '10px 0 0', lineHeight: 1.55 }}>{L.intro}</p>
             </div>

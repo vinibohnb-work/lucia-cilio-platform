@@ -141,7 +141,7 @@ export default function PercursoESG() {
             <div style={{ flex: 1, minWidth: '190px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '14.5px', fontWeight: 800, color: t.heading }}>{rotuloFase(f, lang)}</span>
-                <span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 700, background: cor.bg, color: cor.ink, whiteSpace: 'nowrap' }}>{rotuloEstado}</span>
+                <span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: cor.bg, color: cor.ink, whiteSpace: 'nowrap' }}>{rotuloEstado}</span>
               </div>
               <div style={{ fontSize: '12px', color: t.textMuted, marginTop: '2px' }}>{subFase(f, lang)}</div>
               {detalhe && <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '3px' }}>{detalhe}</div>}

@@ -192,7 +192,7 @@ export default function Diagnostico() {
                     const fcur = a.fields?.[f.key] || {}
                     return (
                       <div key={f.key}>
-                        {showSub && <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: activePillarObj.color, margin: '6px 0 4px' }}>{(lang === 'de' ? f.subDe : lang === 'en' ? f.subEn : null) || f.sub}</div>}
+                        {showSub && <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: activePillarObj.color, margin: '6px 0 4px' }}>{(lang === 'de' ? f.subDe : lang === 'en' ? f.subEn : null) || f.sub}</div>}
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '12.5px', color: t.text }}>{f[lang] || f.pt}</span>
                           {valueInput({ spec: f, cur: fcur, disabled,
@@ -215,7 +215,7 @@ export default function Diagnostico() {
               <span style={{ fontSize: '11px', color: t.subtle, alignSelf: 'center' }}>{L.cantAnswer}:</span>
               {[['unavailable', L.naUnavailable], ['unclear', L.naUnclear]].map(([v, lbl]) => (
                 <button key={v} onClick={() => toggleNa(q.id, v)} style={{
-                  padding: '4px 10px', borderRadius: '20px', fontSize: '10.5px', fontWeight: 600, cursor: 'pointer',
+                  padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
                   border: `1px solid ${na === v ? t.neg : t.inputBorder}`,
                   background: na === v ? (t.dueLate?.bg || '#fee2e2') : 'transparent',
                   color: na === v ? (t.dueLate?.ink || '#991b1b') : t.textMuted,

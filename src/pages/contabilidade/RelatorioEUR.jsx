@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { IconImprimir } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -38,7 +39,7 @@ export default function RelatorioEUR() {
     secReceitas: 'Betriebseinnahmen', secDespesas: 'Betriebsausgaben',
     zeile: 'Zeile', pos: 'Position', betrag: 'Betrag',
     zahldatum: 'Zahldatum', konto: 'Konto', beleg: 'Belegnummer', texto: 'Buchungstext',
-    print: '🖨 Drucken / PDF', loading: 'Wird geladen…',
+    print: 'Drucken / PDF', loading: 'Wird geladen…',
     vazio: 'Keine Buchungen in diesem Jahr.',
     regimeNormal: 'Regelbesteuerung — Nettowerte; vereinnahmte USt als Einnahme, gezahlte Vorsteuer als Ausgabe.',
     regimeKlein: 'Kleinunternehmer — Bruttowerte, ohne USt-Trennung.',
@@ -52,7 +53,7 @@ export default function RelatorioEUR() {
     secReceitas: 'Betriebseinnahmen (income)', secDespesas: 'Betriebsausgaben (expenses)',
     zeile: 'Line', pos: 'Position', betrag: 'Amount',
     zahldatum: 'Payment date', konto: 'Account', beleg: 'Document no.', texto: 'Description',
-    print: '🖨 Print / PDF', loading: 'Loading…',
+    print: 'Print / PDF', loading: 'Loading…',
     vazio: 'No entries in this year.',
     regimeNormal: 'Standard VAT regime — net values; VAT collected counts as income, input VAT as expense.',
     regimeKlein: 'Small business (Kleinunternehmer) — gross values, no VAT split.',
@@ -66,7 +67,7 @@ export default function RelatorioEUR() {
     secReceitas: 'Betriebseinnahmen (receitas)', secDespesas: 'Betriebsausgaben (despesas)',
     zeile: 'Linha', pos: 'Posição', betrag: 'Valor',
     zahldatum: 'Data de pagamento', konto: 'Conta', beleg: 'N.º de documento', texto: 'Descrição',
-    print: '🖨 Imprimir / PDF', loading: 'A carregar…',
+    print: 'Imprimir / PDF', loading: 'A carregar…',
     vazio: 'Sem lançamentos neste ano.',
     regimeNormal: 'Regime normal — valores líquidos; o IVA recebido conta como receita e o IVA pago como despesa.',
     regimeKlein: 'Kleinunternehmer (isento) — valores brutos, sem separação de IVA.',
@@ -180,14 +181,14 @@ export default function RelatorioEUR() {
           <span style={{ flex: 'none', width: '36px', fontSize: '12px', color: t.textMuted, fontVariantNumeric: 'tabular-nums' }}>{l.zeile ?? ''}</span>
           <span style={{ flex: 1, fontSize: '13px', color: t.heading, lineHeight: 1.4 }}>
             {expandida ? '▾ ' : '▸ '}{nomeDe(l)}
-            <span style={{ fontSize: '10.5px', color: t.subtle }}> · {l.entries.length} {L.lancamentos}</span>
+            <span style={{ fontSize: '11px', color: t.subtle }}> · {l.entries.length} {L.lancamentos}</span>
           </span>
           {l.position && <span style={{ flex: 'none', fontSize: '12px', color: t.textMuted, fontVariantNumeric: 'tabular-nums' }}>{l.position}</span>}
           <span style={{ flex: 'none', fontSize: '13.5px', fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: t.heading }}>{fmt(l.total)}</span>
         </div>
         {expandida && (
           <div style={{ background: t.softCardBg, borderRadius: '9px', padding: '9px 12px', marginBottom: '10px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '86px 1fr 1fr 90px', gap: '8px', fontSize: '10px', fontWeight: 700, color: t.subtle, textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: '5px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '86px 1fr 1fr 90px', gap: '8px', fontSize: '11px', fontWeight: 700, color: t.subtle, textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: '5px' }}>
               <span>{L.zahldatum}</span><span>{L.konto}</span><span>{L.texto}</span><span style={{ textAlign: 'right' }}>{L.betrag}</span>
             </div>
             {l.entries.map((e, i) => (
@@ -235,7 +236,7 @@ export default function RelatorioEUR() {
             style={{ padding: '9px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '13px', fontWeight: 700, cursor: 'pointer', outline: 'none' }}>
             {[anoAtual + 1, anoAtual, anoAtual - 1, anoAtual - 2].map(a => <option key={a} value={a}>{a}</option>)}
           </select>
-          {temDados && <button onClick={imprimir} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.print}</button>}
+          {temDados && <button onClick={imprimir} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}><IconImprimir /> {L.print}</button>}
         </div>
       </div>
 

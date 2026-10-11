@@ -27,7 +27,7 @@ export default function ViewAsBanner() {
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {L.label} <strong>{viewAs?.name}</strong>
       </span>
-      <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: 'rgba(255,255,255,.22)', textTransform: 'uppercase', letterSpacing: '0.5px', flex: 'none' }}>{L.readonly}</span>
+      <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: 'rgba(255,255,255,.22)', textTransform: 'uppercase', letterSpacing: '0.5px', flex: 'none' }}>{L.readonly}</span>
       <button onClick={exit} style={{ marginLeft: 'auto', flex: 'none', padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,.4)', background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>{viewAs?.voltar ? `← ${L.back}` : `✕ ${L.exit}`}</button>
     </div>
   )

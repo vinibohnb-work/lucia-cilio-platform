@@ -155,7 +155,7 @@ function EventoCalculator({ lang, irDefault }) {
               <div key={label}>
                 <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
                 <input type="number" min="0" step="0.5" value={val} onChange={e => set(e.target.value)} style={inputSm} />
-                {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
+                {hint && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
               </div>
             ))}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: t.text, fontWeight: 600, paddingBottom: '2px' }}>
@@ -273,7 +273,7 @@ function ServicoCalculator({ lang, irDefault }) {
             <div key={label}>
               <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
               <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
-              {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
+              {hint && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
             </div>
           ))}
         </div>
@@ -285,7 +285,7 @@ function ServicoCalculator({ lang, irDefault }) {
             <span style={{ fontSize: '12px', fontWeight: 700, color: GOLD }}>{L.matTotal}: € {fmt(materialsTotal)}</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 110px 28px', gap: '8px', marginBottom: '5px' }}>
-            {[L.matName, L.matQty, L.matUnit, ''].map((h, i) => <div key={i} style={{ fontSize: '10px', color: t.textMuted, fontWeight: 700 }}>{h}</div>)}
+            {[L.matName, L.matQty, L.matUnit, ''].map((h, i) => <div key={i} style={{ fontSize: '11px', color: t.textMuted, fontWeight: 700 }}>{h}</div>)}
           </div>
           {materialItems.map((m, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 110px 28px', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
@@ -394,7 +394,7 @@ function ProdutoCalculator({ lang, irDefault }) {
             <div key={label}>
               <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
               <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
-              {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
+              {hint && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
             </div>
           ))}
         </div>
@@ -505,7 +505,7 @@ function TratamentoCalculator({ lang, irDefault, settings }) {
             <div key={label}>
               <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '5px' }}>{label}</div>
               <input type="number" min="0" step={step} value={val} onChange={e => set(e.target.value)} style={inputSm} />
-              {hint && <div style={{ fontSize: '10px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
+              {hint && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '3px' }}>{hint}</div>}
             </div>
           ))}
           <div>
@@ -545,7 +545,7 @@ function TratamentoCalculator({ lang, irDefault, settings }) {
           <span style={{ fontSize: '13px', color: '#fff', fontWeight: 700 }}>{L.priceGross}</span>
           <span style={{ fontSize: '26px', fontWeight: 900, color: GOLD }}>€ {fmt(r.priceGross)}</span>
         </div>
-        <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,.5)', marginTop: '6px', textAlign: 'right' }}>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.5)', marginTop: '6px', textAlign: 'right' }}>
           {vatRegime === 'normal' ? L.regelNote : L.kleinNote}
         </div>
       </div>
