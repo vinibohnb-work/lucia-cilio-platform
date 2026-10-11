@@ -25,7 +25,7 @@
 **Semana 1 (06–10/10) — fechar o que está a meio**
 - [x] **1.** Aplicar a **migração 039** e fazer o merge de `jornada-docs-cliente` (o cliente vê
   os documentos pedidos). ⏳ Vinícius corre a 039.
-- [ ] **2.** Testes que ficaram da etapa 1: "+ Nova Obrigação" do cliente e a **verificação de
+- [x] **2.** *(feito 11/10)* Testes que ficaram da etapa 1: "+ Nova Obrigação" do cliente e a **verificação de
   permissões** (o que a sessão do cliente lê na base) — em DEV, ou em produção com autorização.
   ✔ 10/10: projeto **DEV novo** criado (Frankfurt, ref `jlgqvetehwpmywghpabz`, org antiga
   "LC Office") com o `DEV_SETUP` até à 039; a chave pública está em `.env.dev.local` (fora do
@@ -33,8 +33,8 @@
   Leitura bem isolada (cliente A nunca vê o B; anónimo não lê nada); 35 escritas testadas.
   3 achados corrigidos na **migração 044** (já no DEV): "+ Nova Obrigação" do cliente ficava
   bloqueada (não marcava como feita nem apagava), o cliente podia apontar uma obrigação para a
-  ficha de outro, e podia editar o texto dos avisos. ⏳ **Depende de:** aplicar a 044 na produção
-  e fazer merge da branch `permissoes-obrigacoes`. Para decidir: papéis comercial/marketing leem
+  ficha de outro, e podia editar o texto dos avisos. ✔ 044 aplicada na produção e publicada
+  (11/10). Para decidir: papéis comercial/marketing leem
   todos os clientes (ver relatório, secção 3).
 - [ ] **3.** ⚡ Tirar o `.env.local` da pasta sincronizada com o OneDrive (5 minutos, segurança).
 - [ ] **4.** Apagar a **ficha duplicada da Célia** com o botão novo, depois de ver qual das duas
