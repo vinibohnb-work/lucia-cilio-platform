@@ -27,6 +27,9 @@
   os documentos pedidos). ⏳ Vinícius corre a 039.
 - [ ] **2.** Testes que ficaram da etapa 1: "+ Nova Obrigação" do cliente e a **verificação de
   permissões** (o que a sessão do cliente lê na base) — em DEV, ou em produção com autorização.
+  ✔ 10/10: projeto **DEV novo** criado (Frankfurt, ref `jlgqvetehwpmywghpabz`, org antiga
+  "LC Office") com o `DEV_SETUP` até à 039; a chave pública está em `.env.dev.local` (fora do
+  git). ⏳ Correr as migrações 040–043 no DEV e criar as contas de teste.
 - [ ] **3.** ⚡ Tirar o `.env.local` da pasta sincronizada com o OneDrive (5 minutos, segurança).
 - [ ] **4.** Apagar a **ficha duplicada da Célia** com o botão novo, depois de ver qual das duas
   tem dados. ⏳ Confirmar com a Lúcia qual fica.
