@@ -300,8 +300,6 @@
 
 ---
 
----
-
 ## Concluídos
 
 ### Teste de permissões, ambiente DEV e projeto antigo — 11/10 (migração 044)
