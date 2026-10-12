@@ -21,13 +21,10 @@
 
 ## Checklist de fecho — versão final para entrega (até 14/11)
 
-> Ordem de ataque. O que não tem ⏳ faço eu. Já feitos (ver Concluídos): 1, 2, 13-A, 13-B,
+> Ordem de ataque. O que não tem ⏳ faço eu. Já feitos (ver Concluídos): 1, 2, 3, 13-A, 13-B,
 > 13-C, 14, 16, 16-A, 18, 21, 22, 23.
 
 **Agora — fechar o que está a meio**
-- [ ] **3.** ⚡ Tirar o `.env.local` (tem a chave `service_role`) da pasta sincronizada com o
-  OneDrive: mover o projeto para fora do sincronizador ou excluir o ficheiro. 5 minutos.
-  *Auditoria 21/08 · Resp.: Vinícius*
 - [ ] **4.** Apagar a **ficha duplicada da Célia** com o botão novo, depois de ver qual das duas
   tem lançamentos e obrigações. ⏳ Confirmar com a Lúcia qual fica. *Reunião 01/10*
 - [ ] **5.** Conferir as **fichas dos clientes**, ficha a ficha: nomes duplicados, contratos do
@@ -301,6 +298,14 @@
 ---
 
 ## Concluídos
+
+### Projeto fora do OneDrive — 12/10
+
+- [x] **3. `.env.local` fora da pasta sincronizada** *(auditoria 21/08)* ✔ O projeto passou para
+  `C:\Dev\scalasys. CLIENTES\LC OFFICE - Lúcia Cílio`, fora do OneDrive, com os outros projetos de
+  clientes. A chave `service_role` deixa de ir para a nuvem da Microsoft. Falta só esvaziar a
+  Reciclagem do OneDrive (onedrive.live.com) para apagar a cópia antiga. Rodar a chave no
+  Supabase fica opcional.
 
 ### Teste de permissões, ambiente DEV e projeto antigo — 11/10 (migração 044)
 
