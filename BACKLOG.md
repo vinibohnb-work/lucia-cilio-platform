@@ -302,7 +302,7 @@
 ### Projeto fora do OneDrive — 12/10
 
 - [x] **3. `.env.local` fora da pasta sincronizada** *(auditoria 21/08)* ✔ O projeto passou para
-  `C:\Dev\scalasys. CLIENTES\LC OFFICE - Lúcia Cílio`, fora do OneDrive, com os outros projetos de
+  `C:\Dev\scalasys\1. CLIENTES\LC OFFICE - Lúcia Cílio`, fora do OneDrive, com os outros projetos de
   clientes. A chave `service_role` deixa de ir para a nuvem da Microsoft. Falta só esvaziar a
   Reciclagem do OneDrive (onedrive.live.com) para apagar a cópia antiga. Rodar a chave no
   Supabase fica opcional.
