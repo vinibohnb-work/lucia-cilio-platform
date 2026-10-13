@@ -33,39 +33,40 @@ export default function ConsultoriaRelatorio() {
   const [loading, setLoading] = useState(true)
   const [gerando, setGerando] = useState(false)
   const [erro, setErro] = useState('')
-  const [estado, setEstado] = useState('')
+  const [estado, setEstado] = useState('')     // '', 'a_guardar', 'guardado', 'erro'
   const timer = useRef(null)
+  const pendente = useRef(null)                 // relatório por gravar (a última versão)
 
   const L = lang === 'de' ? {
-    voltar: '← Zur Beratung', eyebrow: 'Beratung', title: 'Bericht',
-    subtitle: 'Der KI-Entwurf beschreibt, was ausgefüllt wurde. Ihr Text hat immer Vorrang.',
+    voltar: '← Zur Beratung', title: 'Bericht',
     gerar: 'Mit KI erstellen', regerar: 'Neu erstellen', gerando: 'Wird erstellt… das dauert etwas',
     print: 'Drucken / PDF', vazio: 'Noch kein Bericht. Erstellen Sie den ersten Entwurf.',
     lacunas: 'Was noch fehlt', geradoEm: 'Erstellt am', editado: 'von Ihnen bearbeitet',
     reporEditado: 'Meinen Text verwerfen', preenchido: 'ausgefüllt',
-    loading: 'Wird geladen…', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
+    loading: 'Wird geladen…', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…', erroSave: 'Nicht gespeichert — bitte erneut versuchen.',
     naoEncontrada: 'Beratung nicht gefunden.', semPopup: 'Der Browser hat das Fenster blockiert.', semDados: 'Füllen Sie zuerst die Beratung aus.',
-    aviso: 'Die KI beschreibt nur — sie beurteilt das Geschäft nicht. Prüfen Sie den Text vor dem Versand.',
+    aviso: 'Die KI beschreibt, sie bewertet nicht. Ihr Text hat immer Vorrang. Vor dem Versand prüfen.',
+    naGeracao: 'bei der Erstellung am',
   } : lang === 'en' ? {
-    voltar: '← Back to consultancy', eyebrow: 'Consultancy', title: 'Report',
-    subtitle: 'The AI draft describes what was filled in. Your text always wins.',
+    voltar: '← Back to consultancy', title: 'Report',
     gerar: 'Generate with AI', regerar: 'Regenerate', gerando: 'Generating… this takes a moment',
     print: 'Print / PDF', vazio: 'No report yet. Generate the first draft.',
     lacunas: 'What is still missing', geradoEm: 'Generated on', editado: 'edited by you',
     reporEditado: 'Discard my text', preenchido: 'filled in',
-    loading: 'Loading…', guardado: 'Saved ✓', aGuardar: 'Saving…',
+    loading: 'Loading…', guardado: 'Saved ✓', aGuardar: 'Saving…', erroSave: 'Not saved — please try again.',
     naoEncontrada: 'Consultancy not found.', semPopup: 'The browser blocked the window.', semDados: 'Fill in the consultancy first.',
-    aviso: 'The AI only describes — it does not judge the business. Review the text before sending.',
+    aviso: 'The AI describes, it does not assess. Your text always wins. Review before sending.',
+    naGeracao: 'when generated on',
   } : {
-    voltar: '← Voltar à consultoria', eyebrow: 'Consultoria', title: 'Relatório',
-    subtitle: 'O rascunho da IA descreve o que foi preenchido. O teu texto ganha sempre.',
+    voltar: '← Voltar à consultoria', title: 'Relatório',
     gerar: 'Gerar com IA', regerar: 'Gerar de novo', gerando: 'A gerar… demora um pouco',
     print: 'Imprimir / PDF', vazio: 'Ainda não há relatório. Gera o primeiro rascunho.',
     lacunas: 'O que ainda falta', geradoEm: 'Gerado em', editado: 'editado por ti',
     reporEditado: 'Descartar o meu texto', preenchido: 'preenchido',
-    loading: 'A carregar…', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
+    loading: 'A carregar…', guardado: 'Guardado ✓', aGuardar: 'A guardar…', erroSave: 'Não ficou guardado — tenta de novo.',
     naoEncontrada: 'Consultoria não encontrada.', semPopup: 'O browser bloqueou a janela.', semDados: 'Preenche primeiro a consultoria.',
-    aviso: 'A IA apenas descreve — não julga o negócio. Revê o texto antes de o enviares.',
+    aviso: 'A IA descreve, não avalia. O teu texto ganha sempre. Revê antes de enviar.',
+    naGeracao: 'na geração de',
   }
 
   const titulo = (s) => s[lang] || s.pt
@@ -77,7 +78,35 @@ export default function ConsultoriaRelatorio() {
       setC(data || null); setLoading(false)
     })()
   }, [id])
-  useEffect(() => () => clearTimeout(timer.current), [])
+
+  // E5 (13-D, 13/10): grava e confirma. Antes dizia "Guardado ✓" mesmo quando a
+  // gravação falhava, e ao sair da página o temporizador era apagado sem gravar
+  // — perdia-se a última frase (a mesma falha que o R-A6 corrigiu na ficha).
+  const gravar = useCallback(async (relatorio) => {
+    setEstado('a_guardar')
+    const { error } = await supabase.from('consultorias')
+      .update({ relatorio, updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) { setEstado('erro'); return false }
+    setEstado(e => (e === 'a_guardar' ? 'guardado' : e))
+    setTimeout(() => setEstado(e => (e === 'guardado' ? '' : e)), 1800)
+    return true
+  }, [id])
+  // Grava já o que ficou por gravar — ao sair do campo, da página ou do separador
+  const gravarPendente = useCallback(() => {
+    clearTimeout(timer.current)
+    const p = pendente.current; pendente.current = null
+    if (p) gravar(p)
+  }, [gravar])
+  useEffect(() => {
+    const aoEsconder = () => { if (document.visibilityState === 'hidden') gravarPendente() }
+    window.addEventListener('beforeunload', gravarPendente)
+    document.addEventListener('visibilitychange', aoEsconder)
+    return () => {
+      window.removeEventListener('beforeunload', gravarPendente)
+      document.removeEventListener('visibilitychange', aoEsconder)
+      gravarPendente()   // ao sair da página dentro da app
+    }
+  }, [gravarPendente])
 
   const rel = c?.relatorio || {}
   const gerado = Object.fromEntries((rel.seccoes || []).map(s => [s.key, s.texto]))
@@ -110,19 +139,18 @@ export default function ConsultoriaRelatorio() {
   function editar(key, valor) {
     const novo = { ...rel, editado: { ...editado, [key]: valor } }
     setC(prev => ({ ...prev, relatorio: novo }))
+    pendente.current = novo
     clearTimeout(timer.current)
-    setEstado(L.aGuardar)
-    timer.current = setTimeout(async () => {
-      await supabase.from('consultorias').update({ relatorio: novo, updated_at: new Date().toISOString() }).eq('id', id)
-      setEstado(L.guardado); setTimeout(() => setEstado(''), 1800)
-    }, 700)
+    setEstado('a_guardar')
+    timer.current = setTimeout(gravarPendente, 700)
   }
 
   async function reporSeccao(key) {
     const e = { ...editado }; delete e[key]
     const novo = { ...rel, editado: e }
     setC(prev => ({ ...prev, relatorio: novo }))
-    await supabase.from('consultorias').update({ relatorio: novo, updated_at: new Date().toISOString() }).eq('id', id)
+    clearTimeout(timer.current); pendente.current = null   // o novo já leva o resto das edições
+    await gravar(novo)
   }
 
   // Impressão: o documento segue o modelo de design aprovado (11 páginas A4).
@@ -146,14 +174,14 @@ export default function ConsultoriaRelatorio() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <div>
-          <div style={{ fontSize: '11px', letterSpacing: '2.6px', textTransform: 'uppercase', fontWeight: 600, marginBottom: '7px', color: t.accentText }}>{L.eyebrow}</div>
-          <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '27px' : '34px', lineHeight: 1.05, letterSpacing: '-.5px', color: t.heading }}>{L.title}</h1>
+          {/* 13-D (13/10): sem o sobretítulo decorativo; o título diz de quem é */}
+          <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '24px' : '30px', lineHeight: 1.1, letterSpacing: '-.5px', color: t.heading }}>{L.title} · {c.nome}</h1>
           <p style={{ fontSize: '12.5px', color: t.textMuted, margin: '8px 0 0', maxWidth: '520px', lineHeight: 1.5 }}>
             {c.nome}{c.empresa ? ` · ${c.empresa}` : ''} — {prog.pct}% {L.preenchido}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
+          {estado && <span role={estado === 'erro' ? 'alert' : 'status'} style={{ fontSize: '11.5px', fontWeight: 700, color: estado === 'guardado' ? t.dueOk.ink : estado === 'erro' ? t.neg : t.subtle }}>{estado === 'guardado' ? L.guardado : estado === 'erro' ? L.erroSave : L.aGuardar}</span>}
           {temRelatorio && (
             <button onClick={imprimir} style={{ padding: '9px 15px', borderRadius: '10px', border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}><IconImprimir /> {L.print}</button>
           )}
@@ -165,7 +193,7 @@ export default function ConsultoriaRelatorio() {
         </div>
       </div>
 
-      <p style={{ fontSize: '11.5px', color: t.subtle, margin: '0 0 16px', lineHeight: 1.5 }}>ⓘ {L.subtitle} {L.aviso}</p>
+      <p style={{ fontSize: '11.5px', color: t.subtle, margin: '0 0 16px', lineHeight: 1.5 }}>ⓘ {L.aviso}</p>
 
       {erro && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{erro}</div>}
 
@@ -186,7 +214,10 @@ export default function ConsultoriaRelatorio() {
       {/* Lacunas — o que a IA deu por faltar */}
       {!!(rel.lacunas || []).length && (
         <div style={{ background: t.dueSoon.bg, borderRadius: '12px', padding: '14px 17px', marginBottom: '14px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 800, color: t.dueSoon.ink, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '7px' }}>{L.lacunas}</div>
+          {/* Calculado na geração: a data avisa que pode já estar desatualizado */}
+          <div style={{ fontSize: '11px', fontWeight: 800, color: t.dueSoon.ink, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '7px' }}>
+            {L.lacunas}{rel.gerado_em && <span style={{ fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}> · {L.naGeracao} {new Date(rel.gerado_em).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { day: '2-digit', month: '2-digit' })}</span>}
+          </div>
           {rel.lacunas.map((x, i) => (
             <div key={i} style={{ fontSize: '12.5px', color: t.dueSoon.ink, lineHeight: 1.5, marginBottom: '3px' }}>• {x}</div>
           ))}
@@ -210,7 +241,7 @@ export default function ConsultoriaRelatorio() {
                 </>
               )}
             </div>
-            <textarea value={txt} onChange={e => editar(s.key, e.target.value)} rows={Math.max(4, Math.ceil(txt.length / 90))}
+            <textarea value={txt} onChange={e => editar(s.key, e.target.value)} onBlur={gravarPendente} aria-label={titulo(s)} rows={Math.max(4, Math.ceil(txt.length / 90))}
               style={{ width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: '10px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.text, fontSize: '13.5px', lineHeight: 1.6, outline: 'none', resize: 'vertical', fontFamily: t.fontBody }} />
           </div>
         )
@@ -218,8 +249,8 @@ export default function ConsultoriaRelatorio() {
 
       {rel.gerado_em && (
         <div style={{ fontSize: '11px', color: t.subtle, textAlign: 'right', marginTop: '10px' }}>
+          {/* 13-D (13/10): sem o nome técnico do modelo */}
           {L.geradoEm} {new Date(rel.gerado_em).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT')}
-          {rel.modelo ? ` · ${rel.modelo}` : ''}
         </div>
       )}
     </div>

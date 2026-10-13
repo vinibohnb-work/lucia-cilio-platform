@@ -83,7 +83,9 @@ export default function ChecklistOnboarding({ userId, cliente }) {
     { key: 'conta', ok: true, rot: L.p_conta, sub: L.p_conta_s },
     { key: 'empresa', ok: estado.empresa, rot: L.p_empresa, sub: L.p_empresa_s, ir: () => navigate('/gestao/acessos') },
     { key: 'contrato', ok: estado.contrato, rot: L.p_contrato, sub: L.p_contrato_s, ir: () => navigate('/gestao/financeiro') },
-    // A caixa de mensagens está logo por baixo, por isso este passo não leva atalho.
+    // Sem atalho: as mensagens vivem no separador Mensagens da ficha do cliente.
+    // (Dizia "a caixa está logo por baixo", mas embutido na ficha os avisos não
+    // aparecem por baixo — o texto enganava; 13-D, 13/10.)
     { key: 'msg', ok: estado.avisos, rot: L.p_msg, sub: L.p_msg_s },
     { key: 'acesso', ok: jaEntrou, rot: L.p_acesso, sub: L.p_acesso_s },
     { key: 'docs', ok: estado.docs, rot: L.p_docs, sub: L.p_docs_s },

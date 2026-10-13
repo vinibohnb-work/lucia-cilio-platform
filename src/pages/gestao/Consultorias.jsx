@@ -9,8 +9,18 @@ import ListaCasos from '../../components/gestao/ListaCasos'
 
 // Lista de consultorias. A Lúcia trabalha aqui como administradora e regista o
 // contacto sem criar conta ao cliente (decisão da reunião de 13/08).
+// 13-D (13/10): cria-se só com Nome, Empresa e Tipo — o e-mail, o telefone e o
+// setor estão no cabeçalho da ficha, que abre logo a seguir.
 
-const EMPTY = { nome: '', empresa: '', email: '', telefone: '', setor: '', tipo: 'implementacao' }
+const EMPTY = { nome: '', empresa: '', tipo: 'implementacao' }
+
+// O bloco atual é calculado (o primeiro por acabar), como a fase na ESG — antes
+// ficava gravado o último bloco em que se clicou, mesmo só para espreitar.
+const blocoAtual = (c) => (BLOCOS.find(b => progressoBloco(b.n, c).pct < 100) || BLOCOS[BLOCOS.length - 1]).n
+
+const IconPasta = () => (
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="17" height="12.5" rx="2" /><path d="M9 7V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2M3.5 12.5h17" /></svg>
+)
 
 export default function Consultorias() {
   const { lang } = useLang()
@@ -26,33 +36,33 @@ export default function Consultorias() {
   const [filtro, setFiltro] = useState('ativa')
 
   const L = lang === 'de' ? {
-    eyebrow: 'Verwaltung', title: 'Beratungen', subtitle: 'Begleitete Beratungen — Kontakt wird ohne Konto erfasst.',
-    nova: '+ Neue Beratung', nome: 'Name', empresa: 'Firma', email: 'E-Mail', telefone: 'Telefon', setor: 'Branche',
+    title: 'Beratungen',
+    nova: '+ Neue Beratung', nome: 'Name', empresa: 'Firma',
     tipo: 'Art', tGratuita: 'Kostenlos', tImplementacao: 'Geschäftsaufbau',
-    criar: 'Anlegen und beginnen', cancelar: 'Abbrechen', abrir: 'Öffnen →',
+    criar: 'Anlegen und beginnen', cancelar: 'Abbrechen',
     ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert', todas: 'Alle',
-    bloco: 'Block', vazio: 'Noch keine Beratung. Legen Sie die erste an.',
-    loading: 'Wird geladen…', erro: 'Fehler (Migration 029 nötig).',
+    respostas: 'Antworten', vazio: 'Noch keine Beratung. Legen Sie die erste an.',
+    loading: 'Wird geladen…', erro: 'Laden nicht möglich. Bitte erneut versuchen.', erroCriar: 'Anlegen nicht möglich. Bitte erneut versuchen.',
     semNome: 'Name ist erforderlich.',
     abrirLista: 'Öffnen', hCliente: 'Kunde', hEstado: 'Status', hBlocos: 'Blöcke', hProgresso: 'Fortschritt',
   } : lang === 'en' ? {
-    eyebrow: 'Management', title: 'Consultancies', subtitle: 'Guided consultancies — the contact is recorded without an account.',
-    nova: '+ New consultancy', nome: 'Name', empresa: 'Company', email: 'Email', telefone: 'Phone', setor: 'Sector',
+    title: 'Consultancies',
+    nova: '+ New consultancy', nome: 'Name', empresa: 'Company',
     tipo: 'Type', tGratuita: 'Free', tImplementacao: 'Business setup',
-    criar: 'Create and start', cancelar: 'Cancel', abrir: 'Open →',
+    criar: 'Create and start', cancelar: 'Cancel',
     ativa: 'Active', concluida: 'Completed', pausada: 'Paused', todas: 'All',
-    bloco: 'Block', vazio: 'No consultancies yet. Create the first one.',
-    loading: 'Loading…', erro: 'Error (migration 029 required).',
+    respostas: 'answers', vazio: 'No consultancies yet. Create the first one.',
+    loading: 'Loading…', erro: 'Could not load. Please try again.', erroCriar: 'Could not create. Please try again.',
     semNome: 'Name is required.',
     abrirLista: 'Open', hCliente: 'Client', hEstado: 'Status', hBlocos: 'Blocks', hProgresso: 'Progress',
   } : {
-    eyebrow: 'Gestão', title: 'Consultorias', subtitle: 'Consultorias acompanhadas — o contacto fica registado sem precisar de conta.',
-    nova: '+ Nova consultoria', nome: 'Nome', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor',
+    title: 'Consultorias',
+    nova: '+ Nova consultoria', nome: 'Nome', empresa: 'Empresa',
     tipo: 'Tipo', tGratuita: 'Gratuita', tImplementacao: 'Implementação de negócio',
-    criar: 'Criar e começar', cancelar: 'Cancelar', abrir: 'Abrir →',
+    criar: 'Criar e começar', cancelar: 'Cancelar',
     ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada', todas: 'Todas',
-    bloco: 'Bloco', vazio: 'Ainda não há consultorias. Cria a primeira.',
-    loading: 'A carregar…', erro: 'Erro (é necessária a migração 029).',
+    respostas: 'respostas', vazio: 'Ainda não há consultorias. Cria a primeira.',
+    loading: 'A carregar…', erro: 'Não foi possível carregar. Tenta de novo.', erroCriar: 'Não foi possível criar. Tenta de novo.',
     semNome: 'O nome é obrigatório.',
     abrirLista: 'Abrir', hCliente: 'Cliente', hEstado: 'Estado', hBlocos: 'Blocos', hProgresso: 'Progresso',
   }
@@ -73,11 +83,10 @@ export default function Consultorias() {
     if (!form?.nome.trim()) { setErr(L.semNome); return }
     setSaving(true); setErr('')
     const { data, error } = await supabase.from('consultorias').insert({
-      nome: form.nome.trim(), empresa: form.empresa || null, email: form.email || null,
-      telefone: form.telefone || null, setor: form.setor || null, tipo: form.tipo,
+      nome: form.nome.trim(), empresa: form.empresa || null, tipo: form.tipo,
     }).select('id').single()
     setSaving(false)
-    if (error || !data) { setErr(L.erro); return }
+    if (error || !data) { setErr(L.erroCriar); return }
     navigate(`/gestao/consultorias/${data.id}`)   // entra logo a trabalhar
   }
 
@@ -101,7 +110,7 @@ export default function Consultorias() {
       {/* Criar — só o essencial, para arrancar em segundos numa sessão ao vivo */}
       {form && (
         <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1.3fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1.3fr 1fr', gap: '12px', marginBottom: '14px' }}>
             <div><div style={lblStyle}>{L.nome} *</div><input autoFocus value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} /></div>
             <div><div style={lblStyle}>{L.empresa}</div><input value={form.empresa} onChange={e => setForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle} /></div>
             <div><div style={lblStyle}>{L.tipo}</div>
@@ -109,11 +118,6 @@ export default function Consultorias() {
                 <option value="implementacao">{L.tImplementacao}</option>
                 <option value="gratuita">{L.tGratuita}</option>
               </select></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
-            <div><div style={lblStyle}>{L.email}</div><input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} /></div>
-            <div><div style={lblStyle}>{L.telefone}</div><input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} style={inputStyle} /></div>
-            <div><div style={lblStyle}>{L.setor}</div><input value={form.setor} onChange={e => setForm(f => ({ ...f, setor: e.target.value }))} style={inputStyle} /></div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={criar} disabled={saving || !form.nome.trim()} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 700, fontSize: '13px', cursor: form.nome.trim() ? 'pointer' : 'default', opacity: form.nome.trim() ? 1 : .5 }}>{saving ? '…' : L.criar}</button>
@@ -138,7 +142,7 @@ export default function Consultorias() {
       {!form && loading && <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>}
       {!form && !loading && visiveis.length === 0 && (
         <div style={{ ...card, padding: '34px 28px', textAlign: 'center' }}>
-          <div style={{ fontSize: '34px', marginBottom: '10px' }}>🗂</div>
+          <div style={{ marginBottom: '10px', color: t.subtle }}><IconPasta /></div>
           <div style={{ fontSize: '14px', color: t.textMuted }}>{L.vazio}</div>
         </div>
       )}
@@ -147,18 +151,22 @@ export default function Consultorias() {
       {!form && !loading && visiveis.length > 0 && (
         <ListaCasos
           abrirRotulo={L.abrirLista}
-          cabecalho={{ cliente: L.hCliente, estado: L.hEstado, fases: L.hBlocos, resumo: L.hProgresso }}
+          // 13-D (13/10): a coluna Estado só aparece em "Todas" — com um filtro de
+          // estado, todas as linhas diziam o mesmo.
+          cabecalho={{ cliente: L.hCliente, estado: filtro === 'todas' ? L.hEstado : null, fases: L.hBlocos, resumo: L.hProgresso }}
           linhas={visiveis.map(c => {
             const prog = progressoTotal(c)
             const tone = statusTone[c.status] || statusTone.ativa
+            const atual = blocoAtual(c)
             return {
               id: c.id,
               titulo: c.nome,
               sub: [c.empresa, c.setor].filter(Boolean).join(' · '),
-              estado: { rotulo: statusLabel[c.status], bg: tone.bg, ink: tone.ink },
+              estado: filtro === 'todas' ? { rotulo: statusLabel[c.status], bg: tone.bg, ink: tone.ink } : null,
               chips: [tipoLabel(c.tipo)],
-              fases: BLOCOS.map(b => { const p = progressoBloco(b.n, c); return { n: b.n, titulo: b[lang] || b.pt, pct: p.pct, atual: c.bloco === b.n, pronto: p.pct >= 100, apagada: b.porConstruir } }),
-              resumo: <><strong style={{ color: t.heading }}>{L.bloco} {c.bloco}</strong> · {prog.feitas}/{prog.total}</>,
+              fases: BLOCOS.map(b => { const p = progressoBloco(b.n, c); return { n: b.n, titulo: b[lang] || b.pt, pct: p.pct, atual: atual === b.n, pronto: p.pct >= 100 } }),
+              // Sem "Bloco N": a barra do bloco atual já está destacada ao lado
+              resumo: <><strong style={{ color: t.heading }}>{prog.feitas}/{prog.total}</strong> {L.respostas}</>,
               onAbrir: () => navigate(`/gestao/consultorias/${c.id}`),
             }
           })}

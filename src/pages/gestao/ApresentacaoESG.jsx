@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { flushSync } from 'react-dom'
 import { useParams } from 'react-router-dom'
 import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -8,6 +9,7 @@ import { localeDe } from '../../lib/formato'
 import { FASES, rotuloFase, subFase, progressoESG } from '../../lib/esgPercurso'
 import { computeKpis } from '../../lib/esgKpis'
 import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../data/esgTopics'
+import { THEMES } from '../../theme'
 
 // Modo apresentação de um caso ESG (reunião de 18/09: "visualização do ESG por
 // cliente, pronta para apresentar"). É o que a Lúcia mostra ao cliente numa
@@ -17,10 +19,30 @@ import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../dat
 // Só entram as secções que têm conteúdo (reunião de 25/09: nada de secções
 // vazias). Tudo é lido do caso — esta página não grava nada.
 
+// Ícones em vez dos emojis 🎯 e 💶 (13-D, 13/10): o emoji muda em cada sistema
+const IconAlvo = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" style={{ verticalAlign: '-0.15em', marginRight: '5px' }}><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1" fill="currentColor" /></svg>
+)
+const IconEuro = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" style={{ verticalAlign: '-0.15em', marginRight: '5px' }}><path d="M17 6.5A7 7 0 1 0 17 17.5M4 10.5h9M4 13.5h8" /></svg>
+)
+
 export default function ApresentacaoESG() {
   const { id } = useParams()
   const { lang } = useLang()
-  const { t } = useTheme()
+  const tema = useTheme()
+  // 13-D (13/10): ao imprimir usa sempre o tema claro. Antes, no modo noturno, o
+  // @media print punha o fundo branco mas os cartões ficavam com as cores escuras.
+  const [aImprimir, setAImprimir] = useState(false)
+  useEffect(() => {
+    const antes = () => flushSync(() => setAImprimir(true))
+    const depois = () => setAImprimir(false)
+    window.addEventListener('beforeprint', antes)
+    window.addEventListener('afterprint', depois)
+    return () => { window.removeEventListener('beforeprint', antes); window.removeEventListener('afterprint', depois) }
+  }, [])
+  const t = aImprimir ? THEMES.light : tema.t
+  const imprimir = () => { flushSync(() => setAImprimir(true)); window.print() }
   const isMobile = useIsMobile()
   const loc = localeDe(lang)
 
@@ -135,24 +157,24 @@ export default function ApresentacaoESG() {
       <style>{`
         @media print {
           .nao-imprimir { display: none !important; }
-          body { background: #fff !important; }
+          html, body { background: #fff !important; }
           .apres-secao { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
           @page { size: A4; margin: 12mm; }
         }
       `}</style>
 
       {/* Barra de ações — não aparece na impressão */}
-      <div className="nao-imprimir" style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '10px 20px', background: t.sidebarBg, color: '#e9dfc4' }}>
+      <div className="nao-imprimir" style={{ position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '10px 20px', background: t.sidebarBg, color: t.navActiveText }}>
         <span style={{ fontSize: '12.5px', fontWeight: 700 }}>{caso.empresa || caso.nome}</span>
         <span style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {anos.length > 1 && (
             <select value={ano} onChange={e => setAno(Number(e.target.value))} aria-label={L.anoRef}
-              style={{ padding: '6px 9px', borderRadius: '8px', border: '1px solid rgba(201,168,76,.4)', background: 'transparent', color: '#e9dfc4', fontSize: '12.5px', fontWeight: 700 }}>
-              {anos.map(a => <option key={a} value={a} style={{ color: '#000' }}>{L.anoRef} {a}</option>)}
+              style={{ padding: '6px 9px', borderRadius: '8px', border: `1px solid ${t.sidebarBorder}`, background: 'transparent', color: t.navActiveText, fontSize: '12.5px', fontWeight: 700 }}>
+              {anos.map(a => <option key={a} value={a} style={{ color: t.heading, background: t.cardBg }}>{L.anoRef} {a}</option>)}
             </select>
           )}
-          <button onClick={() => window.print()} style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', background: '#c9a84c', color: '#0a2f1a', fontWeight: 800, fontSize: '12.5px', cursor: 'pointer' }}>{L.imprimir}</button>
-          <button onClick={() => window.close()} style={{ padding: '7px 12px', borderRadius: '8px', border: '1px solid rgba(201,168,76,.4)', background: 'transparent', color: '#e9dfc4', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.fechar}</button>
+          <button onClick={imprimir} style={{ padding: '7px 14px', borderRadius: '8px', border: 'none', background: t.accent, color: t.sidebarBg, fontWeight: 800, fontSize: '12.5px', cursor: 'pointer' }}>{L.imprimir}</button>
+          <button onClick={() => window.close()} style={{ padding: '7px 12px', borderRadius: '8px', border: `1px solid ${t.sidebarBorder}`, background: 'transparent', color: t.navActiveText, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.fechar}</button>
         </span>
       </div>
 
@@ -180,7 +202,8 @@ export default function ApresentacaoESG() {
               {FASES.map(f => {
                 const e = prog[f.key]; const tom = tomFase[e.estado] || tomFase.vazio
                 return (
-                  <div key={f.key} style={{ borderRadius: '14px', padding: '16px', background: e.estado === 'pronto' ? t.dueOk.bg : t.softCardBg, border: `1px solid ${f.key === prog.proxima ? t.accent : t.cardBorder}` }}>
+                  // O estado aparecia três vezes (fundo, barra, etiqueta); ficam a barra e a etiqueta
+                  <div key={f.key} style={{ borderRadius: '14px', padding: '16px', background: t.softCardBg, border: `1px solid ${f.key === prog.proxima ? t.accent : t.cardBorder}` }}>
                     <div style={{ fontSize: '13px', fontWeight: 800, color: t.accentText }}>{f.n}</div>
                     <div style={{ fontSize: '17px', fontWeight: 800, color: t.heading, marginTop: '2px' }}>{rotuloFase(f, lang)}</div>
                     <div style={{ fontSize: '12.5px', color: t.textMuted, marginTop: '3px', minHeight: '34px' }}>{subFase(f, lang)}</div>
@@ -220,8 +243,9 @@ export default function ApresentacaoESG() {
               {pontos.map(({ tp, x, y, mat }) => (
                 <g key={tp.key}>
                   <title>{topicLabel(tp, lang)}</title>
-                  <circle cx={x} cy={y} r={mat ? 13 : 10} fill={TOPIC_PILLAR_META[tp.pillar].color} opacity={mat ? 1 : 0.6} stroke={mat ? t.accent : 'none'} strokeWidth="2.5" />
-                  <text x={x} y={y + 3.5} textAnchor="middle" fontSize="9" fontWeight="800" fill="#fff">{tp.abbr}</text>
+                  {/* Siglas a 11 px (eram 9 px, ilegíveis num ecrã partilhado) — círculos maiores para caberem */}
+                  <circle cx={x} cy={y} r={mat ? 15 : 13} fill={TOPIC_PILLAR_META[tp.pillar].color} opacity={mat ? 1 : 0.6} stroke={mat ? t.accent : 'none'} strokeWidth="2.5" />
+                  <text x={x} y={y + 4} textAnchor="middle" fontSize="11" fontWeight="800" fill="#fff">{tp.abbr}</text>
                 </g>
               ))}
             </svg>
@@ -236,9 +260,9 @@ export default function ApresentacaoESG() {
                       <div style={{ fontSize: '17px', fontWeight: 800, color: t.heading }}>{topicLabel(tp, lang)}</div>
                       {(e.goal?.target || pb != null) && (
                         <div style={{ fontSize: '14px', color: t.textMuted, marginTop: '3px' }}>
-                          {e.goal?.target && <span>🎯 {L.meta}: <strong style={{ color: t.heading }}>{e.goal.baseline ? `${e.goal.baseline} → ` : ''}{e.goal.target}</strong>{e.goal.deadline ? ` · ${e.goal.deadline}` : ''}</span>}
+                          {e.goal?.target && <span><IconAlvo />{L.meta}: <strong style={{ color: t.heading }}>{e.goal.baseline ? `${e.goal.baseline} → ` : ''}{e.goal.target}</strong>{e.goal.deadline ? ` · ${e.goal.deadline}` : ''}</span>}
                           {e.goal?.target && pb != null && ' · '}
-                          {pb != null && <span>💶 {L.payback}: <strong style={{ color: t.dueOk.ink }}>{fmt(pb, 1)} {L.anos}</strong></span>}
+                          {pb != null && <span><IconEuro />{L.payback}: <strong style={{ color: t.dueOk.ink }}>{fmt(pb, 1)} {L.anos}</strong></span>}
                         </div>
                       )}
                     </div>
@@ -276,7 +300,7 @@ export default function ApresentacaoESG() {
                 <div key={p.id} style={{ borderRadius: '14px', padding: '18px', background: t.softCardBg, borderLeft: `4px solid ${meta?.color || t.accent}` }}>
                   <div style={{ fontSize: '18px', fontWeight: 800, color: t.heading }}>{p.name}</div>
                   <div style={{ fontSize: '13px', color: t.textMuted, marginTop: '3px' }}>{[tp && topicLabel(tp, lang), L.estados[p.status]].filter(Boolean).join(' · ')}</div>
-                  {p.expected_impact && <div style={{ fontSize: '14.5px', color: t.text, marginTop: '8px' }}>🎯 {p.expected_impact}</div>}
+                  {p.expected_impact && <div style={{ fontSize: '14.5px', color: t.text, marginTop: '8px' }}><IconAlvo />{p.expected_impact}</div>}
                   {(p.investment != null || p.annual_saving != null) && (
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '10px', fontSize: '14px' }}>
                       {p.investment != null && <span style={{ color: t.textMuted }}>{L.invest}: <strong style={{ color: t.heading }}>{eur(p.investment)}</strong></span>}
@@ -284,8 +308,12 @@ export default function ApresentacaoESG() {
                       {pb != null && <span style={{ color: t.dueOk.ink, fontWeight: 800 }}>{L.payback}: {fmt(pb, 1)} {L.anos}</span>}
                     </div>
                   )}
-                  <div style={{ height: '7px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden', marginTop: '12px' }}>
-                    <div style={{ width: `${p.progress || 0}%`, height: '100%', background: meta?.color || t.accent }} />
+                  {/* Com o número ao lado (13-D, 13/10): a barra sozinha não dizia quanto falta */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+                    <div style={{ flex: 1, height: '7px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
+                      <div style={{ width: `${p.progress || 0}%`, height: '100%', background: meta?.color || t.accent }} />
+                    </div>
+                    <span style={{ flex: 'none', fontSize: '13px', fontWeight: 800, color: t.heading }}>{Math.round(Number(p.progress) || 0)}%</span>
                   </div>
                 </div>
               )

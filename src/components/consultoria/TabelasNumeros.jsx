@@ -57,7 +57,10 @@ function Semaforo({ ok, titulo, detalhe }) {
   const tone = ok ? t.dueOk : t.dueLate
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: tone.bg, borderRadius: '11px', padding: '12px 15px', marginTop: '12px' }}>
-      <span style={{ fontSize: '15px', lineHeight: 1.2 }}>{ok ? '🟢' : '🔴'}</span>
+      {/* Ícone em vez dos emojis 🟢🔴 (13-D, 13/10): o emoji muda de aspeto em cada sistema */}
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tone.ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: 'none', marginTop: '1px' }}>
+        <circle cx="12" cy="12" r="9" />{ok ? <path d="m8 12.5 2.8 2.8L16.5 9.5" /> : <path d="M9 9l6 6M15 9l-6 6" />}
+      </svg>
       <div>
         <div style={{ fontSize: '12.5px', fontWeight: 700, color: tone.ink }}>{titulo}</div>
         {detalhe && <div style={{ fontSize: '11.5px', color: tone.ink, opacity: .85, marginTop: '2px' }}>{detalhe}</div>}

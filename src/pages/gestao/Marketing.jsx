@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useAuth } from '../../context/AuthContext'
+import { useLang } from '../../context/LangContext'
+import InfoTooltip from '../../components/InfoTooltip'
 import { supabase } from '../../lib/supabase'
 import { Cartao, Botao, Chip, Janela, Vazio, Pilulas, Ic, useCampos, Campo } from '../../portal/ui'
 
@@ -38,6 +40,18 @@ export default function Marketing() {
   const isMobile = useIsMobile()
   const { user } = useAuth()
   const c = useCampos()
+  const { lang } = useLang()
+  // Textos novos de 13/10 já nas três línguas (o resto do ecrã ainda é só pt)
+  const L = lang === 'de' ? {
+    notaFeed: 'Die neuesten oben, wie im Profil. Stories erscheinen nicht im Raster.',
+    apagarNota: 'Diese Notiz löschen?',
+  } : lang === 'en' ? {
+    notaFeed: 'Newest at the top, as on the profile. Stories stay out of the grid.',
+    apagarNota: 'Delete this note?',
+  } : {
+    notaFeed: 'As mais recentes em cima, como no perfil. Os stories ficam fora da grelha.',
+    apagarNota: 'Apagar esta anotação?',
+  }
   const eu = user?.user_metadata?.display_name || user?.email?.split('@')[0] || ''
 
   const [posts, setPosts] = useState([])
@@ -102,7 +116,9 @@ export default function Marketing() {
     setNotas(prev => prev.map(x => x.id === n.id ? { ...x, feita: !x.feita } : x))
     await supabase.from('marketing_notas').update({ feita: !n.feita }).eq('id', n.id)
   }
+  // Apagava de imediato e sem desfazer, ao contrário das publicações (13-D, 13/10)
   async function apagarNota(n) {
+    if (!window.confirm(L.apagarNota)) return
     setNotas(prev => prev.filter(x => x.id !== n.id))
     await supabase.from('marketing_notas').delete().eq('id', n.id)
   }
@@ -110,7 +126,6 @@ export default function Marketing() {
   // ── Derivados ──
   const comData = posts.filter(p => p.data)
   const proximos = comData.filter(p => p.data >= hoje() && p.estado !== 'publicado').sort((a, b) => (a.data + (a.hora || '')).localeCompare(b.data + (b.hora || '')))
-  const contagem = Object.fromEntries(Object.keys(ESTADOS).map(k => [k, posts.filter(p => p.estado === k).length]))
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
@@ -119,9 +134,7 @@ export default function Marketing() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <Pilulas opcoes={[['feed', 'Feed'], ['calendario', 'Calendário'], ['lista', 'Lista'], ['notas', `Anotações${notas.filter(n => !n.feita).length ? ` (${notas.filter(n => !n.feita).length})` : ''}`]]} valor={vista} aoMudar={setVista} />
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: '12px', color: t.subtle }}>
-          {Object.entries(ESTADOS).filter(([k]) => contagem[k]).map(([k, v]) => `${contagem[k]} ${v.rotulo.toLowerCase()}${contagem[k] > 1 ? 's' : ''}`).join(' · ') || 'Ainda sem publicações'}
-        </span>
+        {/* A linha "3 ideias · 2 rascunhos…" saiu (13-D, 13/10): os estados já estão em chips na Lista e nas Próximas */}
         <Botao variante="primario" onClick={() => setEditar({ ...VAZIO, data: hoje() })}><Ic.mais size={16} />Nova publicação</Botao>
       </div>
 
@@ -131,7 +144,7 @@ export default function Marketing() {
       {/* ── Feed: como fica a grelha do perfil ── */}
       {carregado && vista === 'feed' && (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: '16px', alignItems: 'start' }}>
-          <Cartao titulo="Prévia do feed" icone={<Ic.olho />}>
+          <Cartao titulo="Prévia do feed" icone={<Ic.olho />} acao={<InfoTooltip text={L.notaFeed} />}>
             {comData.length === 0 ? <Vazio>Sem publicações com data. Crie a primeira em "Nova publicação".</Vazio> : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '3px', maxWidth: '520px', margin: '0 auto' }}>
                 {[...comData].filter(p => p.formato !== 'story').sort((a, b) => (b.data + (b.hora || '')).localeCompare(a.data + (a.hora || ''))).map(p => (
@@ -140,13 +153,13 @@ export default function Marketing() {
                     {p.imagem_path && urls[p.imagem_path]
                       ? <img src={urls[p.imagem_path]} alt={p.titulo || 'Publicação'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       : <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', fontSize: '11.5px', fontWeight: 700, color: t.textMuted, textAlign: 'center' }}>{p.titulo || p.legenda?.slice(0, 60) || 'Sem imagem'}</span>}
-                    <span style={{ position: 'absolute', left: '5px', bottom: '5px', fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: 'rgba(14,61,51,.82)', color: '#fff' }}>{fmtData(p.data).slice(0, 5)}{p.estado !== 'publicado' ? ` · ${ESTADOS[p.estado].rotulo}` : ''}</span>
-                    {p.formato !== 'post' && <span style={{ position: 'absolute', right: '5px', top: '5px', fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: 'rgba(255,255,255,.9)', color: '#0E3D33' }}>{FORMATOS.find(([k]) => k === p.formato)?.[1]}</span>}
+                    <span style={{ position: 'absolute', left: '5px', bottom: '5px', fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: t.highlightBg, color: t.highlightValue, opacity: .9 }}>{fmtData(p.data).slice(0, 5)}{p.estado !== 'publicado' ? ` · ${ESTADOS[p.estado].rotulo}` : ''}</span>
+                    {p.formato !== 'post' && <span style={{ position: 'absolute', right: '5px', top: '5px', fontSize: '11px', fontWeight: 800, padding: '2px 7px', borderRadius: '999px', background: t.cardBg, color: t.heading }}>{FORMATOS.find(([k]) => k === p.formato)?.[1]}</span>}
                   </button>
                 ))}
               </div>
             )}
-            <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '10px', textAlign: 'center' }}>As mais recentes em cima, como no perfil. Os stories ficam fora da grelha.</div>
+            {/* A nota "as mais recentes em cima…" passou a (i) no título (13-D, 13/10) */}
           </Cartao>
           <Cartao titulo="Próximas publicações" icone={<Ic.agenda />}>
             {proximos.length === 0 ? <Vazio>Nada agendado.</Vazio> : proximos.slice(0, 8).map((p, i) => (

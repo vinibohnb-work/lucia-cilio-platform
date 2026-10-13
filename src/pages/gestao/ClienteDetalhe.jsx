@@ -1,18 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
-import { useParams, useNavigate } from 'react-router-dom'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useViewAs } from '../../context/ViewAsContext'
 import { supabase } from '../../lib/supabase'
 import { listUsers } from '../../lib/adminApi'
 import { FASES, rotuloFase, progressoESG, anoDeReferencia } from '../../lib/esgPercurso'
 import { famvCheck } from '../../lib/planCalc'
 import DocsBrowser from '../../components/DocsBrowser'
-import AvisosCliente from '../../components/AvisosCliente'
 import ChecklistOnboarding from '../../components/ChecklistOnboarding'
 
 const KIND_STYLE = {
@@ -27,17 +24,21 @@ const EMPTY = { kind: 'meeting', title: '', body: '', link_url: '' }
 // avisos, pasta de documentos) e o histórico de consultoria. Desde 29/09 vive
 // dentro da página do cliente do portal, no separador "Conta na plataforma"
 // (embutido), e já não tem rota própria.
-export default function ClienteDetalhe({ userId, embutido = false }) {
-  const params = useParams()
-  const id = userId || params.id
+//
+// 13-D, 13/10: saíram o botão "Visualização completa" (repetia "Ver como o
+// cliente" do cabeçalho da ficha), os indicadores "Obrigações pendentes" (repetia
+// o separador Obrigações e contava pelo campo antigo, podia não bater) e
+// "Clientes", e as partes para quando não estava embutida (voltar, iniciais,
+// título), que eram código morto. Os avisos continuam escondidos: vivem em
+// Mensagens. A prop `embutido` fica aceite por compatibilidade.
+export default function ClienteDetalhe({ userId }) {
+  const id = userId
   const { lang } = useLang()
   const loc = localeDe(lang)
   const fmt = (n) => `€ ${(Number(n) || 0).toLocaleString(loc, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   const { user } = useAuth()
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const navigate = useNavigate()
-  const { setViewAs } = useViewAs()
 
   const [client, setClient] = useState(null)
   const [stats, setStats] = useState(null)
@@ -49,44 +50,38 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
   const [err, setErr] = useState('')
 
   const L = lang === 'de' ? {
-    back: '← Aktive Mandanten', eyebrow: 'Mandantenakte',
     platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG', active: 'aktiv', pending: 'ausstehend',
-    summary: 'Übersicht', revenue: 'Umsatz (Jahr)', balance: 'Saldo', obligations: 'Offene Fristen',
-    clientsN: 'Mandanten', esgProgress: 'ESG-Phase', refYear: 'ESG-Fortschritt', esgPronto: 'Abgeschlossen', esgSem: 'kein Fall',
+    summary: 'Übersicht', revenue: 'Umsatz (Jahr)', balance: 'Saldo',
+    esgProgress: 'ESG-Phase', refYear: 'ESG-Fortschritt', esgPronto: 'Abgeschlossen', esgSem: 'kein Fall',
     limitLabel: 'Gewinn / Grenze (Monat)', fromPlan: 'aus Monatsplanung', fromReal: 'Ø real',
-    onboarding: 'Onboarding', avisos: 'Nachrichten an die Kundin/den Kunden', docs: 'Dokumente', history: 'Beratung & Verlauf', new: '+ Neuer Eintrag',
+    onboarding: 'Onboarding', docs: 'Dokumente', history: 'Beratung & Verlauf', new: '+ Neuer Eintrag',
     kind: 'Typ', note: 'Notiz', meeting: 'Besprechung', recommendation: 'Empfehlung', report: 'Bericht',
     titleL: 'Titel', body: 'Inhalt', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Speichern', del: 'Löschen', open: 'Öffnen ↗', loading: 'Wird geladen…',
     emptyNotes: 'Noch keine Einträge für diesen Mandanten.', notFound: 'Mandant nicht gefunden.',
     confirmDel: 'Eintrag wirklich löschen?', saveErr: 'Speichern fehlgeschlagen (Migration 017/018 nötig).',
-    view: 'Vollständige Ansicht',
   } : lang === 'en' ? {
-    back: '← Active Clients', eyebrow: 'Client File',
     platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG', active: 'active', pending: 'pending',
-    summary: 'Overview', revenue: 'Revenue (year)', balance: 'Balance', obligations: 'Pending deadlines',
-    clientsN: 'Clients', esgProgress: 'ESG phase', refYear: 'ESG progress', esgPronto: 'Complete', esgSem: 'no case',
+    summary: 'Overview', revenue: 'Revenue (year)', balance: 'Balance',
+    esgProgress: 'ESG phase', refYear: 'ESG progress', esgPronto: 'Complete', esgSem: 'no case',
     limitLabel: 'Profit / limit (month)', fromPlan: 'from Monthly Plan', fromReal: 'real avg.',
-    onboarding: 'Onboarding', avisos: 'Messages to the client', docs: 'Documents', history: 'Consulting & History', new: '+ New entry',
+    onboarding: 'Onboarding', docs: 'Documents', history: 'Consulting & History', new: '+ New entry',
     kind: 'Type', note: 'Note', meeting: 'Meeting', recommendation: 'Recommendation', report: 'Report',
     titleL: 'Title', body: 'Content', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Save', del: 'Delete', open: 'Open ↗', loading: 'Loading…',
     emptyNotes: 'No entries for this client yet.', notFound: 'Client not found.',
     confirmDel: 'Delete this entry?', saveErr: 'Save failed (migration 017/018 required).',
-    view: 'Full view',
   } : {
-    back: '← Clientes Ativos', eyebrow: 'Ficha do Cliente',
     platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG', active: 'ativo', pending: 'pendente',
-    summary: 'Resumo', revenue: 'Receita (ano)', balance: 'Saldo', obligations: 'Obrigações pendentes',
-    clientsN: 'Clientes', esgProgress: 'Fase ESG', refYear: 'Progresso ESG', esgPronto: 'Concluída', esgSem: 'sem caso',
+    summary: 'Resumo', revenue: 'Receita (ano)', balance: 'Saldo',
+    esgProgress: 'Fase ESG', refYear: 'Progresso ESG', esgPronto: 'Concluída', esgSem: 'sem caso',
     limitLabel: 'Lucro / limite (mês)', fromPlan: 'do Planeamento Mensal', fromReal: 'média real',
-    onboarding: 'Onboarding', avisos: 'Mensagens para o cliente', docs: 'Documentos', history: 'Consultoria & Histórico', new: '+ Novo registo',
+    onboarding: 'Onboarding', docs: 'Documentos', history: 'Consultoria & Histórico', new: '+ Novo registo',
     kind: 'Tipo', note: 'Nota', meeting: 'Reunião', recommendation: 'Recomendação', report: 'Relatório',
     titleL: 'Título', body: 'Conteúdo', link: 'Ligação (opcional)', linkPh: 'https://…',
     save: 'Guardar', del: 'Eliminar', open: 'Abrir ↗', loading: 'A carregar…',
     emptyNotes: 'Ainda não há registos para este cliente.', notFound: 'Cliente não encontrado.',
     confirmDel: 'Eliminar este registo?', saveErr: 'Falha ao guardar (é necessária a migração 017/018).',
-    view: 'Visualização completa',
   }
   const kindLabel = { note: L.note, meeting: L.meeting, recommendation: L.recommendation, report: L.report }
 
@@ -97,12 +92,10 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
       const u = users.find(x => x.id === id) || null
       setClient(u)
       if (u) {
-        const [{ data: ce }, { data: fo }, { data: esg }, { data: cl }, { data: cs }, { data: cn }] = await Promise.all([
+        const [{ data: ce }, { data: esg }, { data: cs }, { data: cn }] = await Promise.all([
           supabase.from('cash_entries').select('type,amount,private,entry_date').eq('user_id', id),
-          supabase.from('fiscal_obligations').select('status').eq('user_id', id),
           // ESG como consultoria (18/09): o que interessa é o caso e a fase em que está
           supabase.from('esg_consultorias').select('id').eq('user_id', id).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
-          supabase.from('clients').select('id').eq('user_id', id),
           supabase.from('company_settings').select('country,de_famv_limit').eq('user_id', id).maybeSingle(),
           supabase.from('consulting_notes').select('*').eq('user_id', id).order('created_at', { ascending: false }),
         ])
@@ -137,8 +130,6 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
         }
         setStats({
           revenue, saldo,
-          pending: (fo || []).filter(o => o.status === 'pending').length,
-          clients: (cl || []).length,
           esgCaso: esg?.id || null, esgProg,
           famv,
         })
@@ -166,11 +157,6 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
     const { error } = await supabase.from('consulting_notes').delete().eq('id', nid)
     if (error) { setErr(L.saveErr); load() }
   }
-  function viewFull() {
-    if (!client) return
-    setViewAs({ id: client.id, name: client.display_name || client.email, platform: client.platform || 'accounting' })
-    navigate(client.platform === 'esg' ? '/esg/percurso' : '/contabilidade/dashboard')
-  }
 
   const fmtDate = (d) => new Date(d).toLocaleDateString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT')
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
@@ -183,12 +169,7 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
   )
 
   if (loading) return <EsqueletoPagina />
-  if (!client) return (
-    <div style={{ padding: '40px' }}>
-      <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '13px', padding: 0, marginBottom: '12px' }}>{L.back}</button>
-      <div style={{ color: t.subtle, fontSize: '14px' }}>{L.notFound}</div>
-    </div>
-  )
+  if (!client) return <div style={{ padding: '24px 0', color: t.subtle, fontSize: '14px' }}>{L.notFound}</div>
 
   const isEsg = client.platform === 'esg'
   const isBoth = client.platform === 'both'
@@ -200,31 +181,10 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      {!embutido && <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '13px', padding: 0, marginBottom: '14px' }}>{L.back}</button>}
-
-      {/* Cabeçalho */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', flexWrap: 'wrap', marginBottom: embutido ? '12px' : '20px' }}>
-        {/* Embutido, o nome já está no cabeçalho da página do cliente */}
-        <div style={{ display: embutido ? 'none' : 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '52px', height: '52px', flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '17px', fontWeight: 700, fontFamily: t.fontDisplay, background: t.avatarBg, color: t.avatarInk, border: t.avatarBorder }}>
-            {(client.display_name || client.email || 'LC').slice(0, 2).toUpperCase()}
-          </div>
-          <div>
-            <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '24px' : '30px', lineHeight: 1.05, color: t.heading }}>{client.display_name || client.email.split('@')[0]}</h1>
-            <div style={{ fontSize: '12px', color: t.subtle, marginTop: '3px' }}>{client.email}</div>
-          </div>
-        </div>
-        {/* Visualização completa sempre disponível — também antes do primeiro acesso */}
-          <button onClick={viewFull} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '10px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-            {L.view}
-          </button>
-      </div>
-
       {/* Chips */}
       <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '16px' }}>
-        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: isEsg ? '#e8f0fb' : isBoth ? '#ede9fe' : '#eaf5ee', color: isEsg ? '#1e60c8' : isBoth ? '#5b21b6' : '#0a7a3e' }}>{isEsg ? L.platEsg : isBoth ? L.platBoth : L.platAcc}</span>
-        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: activated ? '#d1fae5' : '#fef3c7', color: activated ? '#065f46' : '#92400e' }}>{activated ? `● ${L.active}` : `○ ${L.pending}`}</span>
+        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: isEsg ? t.toneBlue.bg : isBoth ? t.toneOrange.bg : t.dueOk.bg, color: isEsg ? t.toneBlue.ink : isBoth ? t.toneOrange.ink : t.dueOk.ink }}>{isEsg ? L.platEsg : isBoth ? L.platBoth : L.platAcc}</span>
+        <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: activated ? t.dueOk.bg : t.dueSoon.bg, color: activated ? t.dueOk.ink : t.dueSoon.ink }}>{activated ? L.active : L.pending}</span>
       </div>
 
       {/* Resumo */}
@@ -235,8 +195,6 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
             <>
               {miniStat(L.revenue, fmt(s.revenue), '#0a7a3e')}
               {miniStat(L.balance, fmt(s.saldo), (s.saldo || 0) >= 0 ? t.heading : t.neg)}
-              {miniStat(L.obligations, s.pending || 0, (s.pending || 0) > 0 ? '#b45309' : t.heading)}
-              {miniStat(L.clientsN, s.clients || 0)}
             </>
           )}
           {showEsg && (
@@ -266,12 +224,7 @@ export default function ClienteDetalhe({ userId, embutido = false }) {
         <ChecklistOnboarding userId={id} cliente={client} />
       </div>
 
-      {/* Avisos — o que o cliente vê no Início dele (10/09). Embutido no portal,
-          vivem no separador Mensagens, na mesma conversa. */}
-      {!embutido && <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 800, color: t.accentText, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '13px' }}>{L.avisos}</div>
-        <AvisosCliente userId={id} />
-      </div>}
+      {/* Avisos: vivem no separador Mensagens da ficha, na mesma conversa */}
 
       {/* Documentos (repositório tipo Drive) */}
       <div style={{ ...card, padding: '18px 20px', marginBottom: '18px' }}>

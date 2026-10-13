@@ -63,13 +63,18 @@ export function EditorRelatorio({ inicial, aoFechar, soLeitura }) {
   const ant = anteriorDe(s.relatorios, r)
   const set = (k) => (e) => setR(p => ({ ...p, [k]: e.target.value }))
   const guardar = (extra = {}) => acoes.guardarRelatorio({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])), ...extra })
+  // "Fechar" com alterações por guardar pede confirmação: antes fechava sem
+  // gravar nem avisar e perdiam-se os números escritos (E6, 13/10).
+  const alterado = !soLeitura && (CAMPOS.some(([k]) => num(r[k]) !== num(inicial[k]))
+    || ['observacoes', 'recomendacoes'].some(k => (r[k] || '') !== (inicial[k] || '')))
+  const fechar = () => { if (!alterado || window.confirm('Há alterações por guardar. Fechar e perder o que escreveu?')) aoFechar() }
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
         <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: t.heading }}>{r.trimestre}.º trimestre de {r.ano}</h3>
         <Chip tom={r.estado === 'enviado' ? 'ok' : 'aviso'}>{r.estado === 'enviado' ? `Enviado a ${fmtData(r.enviadoEm)}` : 'Rascunho'}</Chip>
-        {!soLeitura && <span style={{ fontSize: '12px', color: t.subtle }}>Contabilidade em {cli?.software || '—'} — valores introduzidos à mão.</span>}
+        {/* Sem a nota "valores introduzidos à mão": o rodapé do PDF já o diz (13-D, 13/10). */}
       </div>
 
       <div style={{ overflowX: 'auto', marginBottom: '14px' }}>
@@ -102,9 +107,9 @@ export function EditorRelatorio({ inicial, aoFechar, soLeitura }) {
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
         {!soLeitura && <Botao variante="primario" onClick={() => { guardar(); aoFechar?.() }}>Guardar</Botao>}
-        <Botao onClick={() => exportarPdf({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])) }, cli, ant)}>Exportar PDF</Botao>
-        {!soLeitura && r.estado !== 'enviado' && <Botao variante="ouro" onClick={() => { guardar({ estado: 'enviado', enviadoEm: hojeIso() }); aoFechar?.() }} title="Depois de exportar o PDF e o enviar ao cliente">Guardar e marcar como enviado</Botao>}
-        {aoFechar && <Botao variante="fantasma" onClick={aoFechar}>Fechar</Botao>}
+        <Botao title="Abre o PDF com o que está escrito; não grava" onClick={() => exportarPdf({ ...r, ...Object.fromEntries(CAMPOS.map(([k]) => [k, num(r[k])])) }, cli, ant)}>Exportar PDF</Botao>
+        {!soLeitura && r.estado !== 'enviado' && <Botao variante="ouro" onClick={() => { guardar({ estado: 'enviado', enviadoEm: hojeIso() }); aoFechar?.() }} title="Grava e publica o relatório na área do cliente (desde a migração 040)">Marcar como enviado (fica visível ao cliente)</Botao>}
+        {aoFechar && <Botao variante="fantasma" onClick={fechar}>Fechar</Botao>}
       </div>
     </div>
   )

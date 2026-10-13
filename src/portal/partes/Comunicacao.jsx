@@ -55,7 +55,7 @@ export function Chat({ clienteId, como = 'equipa', altura = 420 }) {
       </div>
       <div style={{ borderTop: `1px solid ${t.rowBorder}`, paddingTop: '10px' }}>
         {semConta && como === 'equipa' && <div style={{ fontSize: '12px', color: t.subtle, marginBottom: '7px' }}>Este cliente não tem conta na plataforma: o que escrever fica registado aqui. Para lhe chegar, use o WhatsApp.</div>}
-        {anexo && <div style={{ marginBottom: '7px' }}><Chip tom="ouro">📎 {anexo.name} <button onClick={() => setAnexo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}>✕</button></Chip></div>}
+        {anexo && <div style={{ marginBottom: '7px' }}><Chip tom="ouro"><Ic.clip size={12} />{anexo.name} <button aria-label="Tirar o anexo" onClick={() => setAnexo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}>✕</button></Chip></div>}
         <textarea value={texto} onChange={e => setTexto(e.target.value)} rows={2} placeholder={semConta ? 'Registar uma nota de contacto…' : 'Escrever uma mensagem — aparece no Início do cliente…'}
           onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) enviar() }} style={{ ...c.input, resize: 'vertical' }} />
         <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
@@ -63,7 +63,7 @@ export function Chat({ clienteId, como = 'equipa', altura = 420 }) {
             <Ic.clip />Anexar
             <input type="file" style={{ display: 'none' }} onChange={e => { setAnexo(e.target.files?.[0] || null); e.target.value = '' }} />
           </label>
-          <Botao variante="verde" estilo={{ marginLeft: 'auto' }} onClick={enviar} disabled={aEnviar || (!texto.trim() && !anexo)}><Ic.enviar />{aEnviar ? 'A enviar…' : semConta ? 'Registar' : 'Enviar'}</Botao>
+          <Botao variante="verde" estilo={{ marginLeft: 'auto' }} title="Atalho: Ctrl+Enter" onClick={enviar} disabled={aEnviar || (!texto.trim() && !anexo)}><Ic.enviar />{aEnviar ? 'A enviar…' : semConta ? 'Registar' : 'Enviar'}</Botao>
         </div>
       </div>
     </div>

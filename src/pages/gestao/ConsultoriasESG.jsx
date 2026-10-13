@@ -11,7 +11,13 @@ import ListaCasos from '../../components/gestao/ListaCasos'
 // a Consultoria — abre-se um caso por cliente, com ou sem conta na plataforma,
 // e é ela que preenche. A fase de cada caso é calculada, não marcada à mão.
 
-const EMPTY = { nome: '', empresa: '', email: '', telefone: '', setor: '', user_id: '' }
+// 13-D (13/10): cria-se só com Empresa e Pessoa de contacto, como nas
+// Consultorias — o e-mail, o telefone e o setor editam-se em "Editar" no caso.
+const EMPTY = { nome: '', empresa: '' }
+
+const IconFolha = () => (
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z" /><path d="M5 19 13 11" /></svg>
+)
 
 export default function ConsultoriasESG() {
   const { lang } = useLang()
@@ -28,31 +34,31 @@ export default function ConsultoriasESG() {
   const [filtro, setFiltro] = useState('ativa')
 
   const L = lang === 'de' ? {
-    eyebrow: 'Verwaltung', title: 'ESG-Beratungen', subtitle: 'Ein Fall pro Unternehmen — Sie füllen aus, der Kunde sieht Weg und Bericht.',
-    nova: '+ Neue ESG-Beratung', nome: 'Ansprechpartner', empresa: 'Firma', email: 'E-Mail', telefone: 'Telefon', setor: 'Branche',
-    criar: 'Anlegen und beginnen', cancelar: 'Abbrechen', abrir: 'Öffnen →',
+    title: 'ESG-Beratungen',
+    nova: '+ Neue ESG-Beratung', nome: 'Ansprechpartner', empresa: 'Firma',
+    criar: 'Anlegen und beginnen', cancelar: 'Abbrechen',
     ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert', todas: 'Alle',
-    fase: 'Phase', proxima: 'Nächster Schritt', tudoPronto: 'Alle Phasen abgeschlossen',
+    tudoPronto: 'Alle Phasen abgeschlossen',
     vazio: 'Noch keine ESG-Beratung. Legen Sie die erste an.',
-    loading: 'Wird geladen…', erro: 'Fehler (Migration 036 nötig).', semNome: 'Der Ansprechpartner ist erforderlich.',
+    loading: 'Wird geladen…', erro: 'Laden nicht möglich. Bitte erneut versuchen.', erroCriar: 'Anlegen nicht möglich. Bitte erneut versuchen.', semNome: 'Der Ansprechpartner ist erforderlich.',
     abrirLista: 'Öffnen', hCliente: 'Unternehmen', hEstado: 'Status', hFases: 'Phasen', hProximo: 'Nächster Schritt', comConta: 'Konto',
   } : lang === 'en' ? {
-    eyebrow: 'Management', title: 'ESG consultancies', subtitle: 'One case per company — you fill it in, the client sees the journey and the report.',
-    nova: '+ New ESG consultancy', nome: 'Contact person', empresa: 'Company', email: 'Email', telefone: 'Phone', setor: 'Sector',
-    criar: 'Create and start', cancelar: 'Cancel', abrir: 'Open →',
+    title: 'ESG consultancies',
+    nova: '+ New ESG consultancy', nome: 'Contact person', empresa: 'Company',
+    criar: 'Create and start', cancelar: 'Cancel',
     ativa: 'Active', concluida: 'Completed', pausada: 'Paused', todas: 'All',
-    fase: 'Phase', proxima: 'Next step', tudoPronto: 'Every phase complete',
+    tudoPronto: 'Every phase complete',
     vazio: 'No ESG consultancies yet. Create the first one.',
-    loading: 'Loading…', erro: 'Error (migration 036 required).', semNome: 'The contact person is required.',
+    loading: 'Loading…', erro: 'Could not load. Please try again.', erroCriar: 'Could not create. Please try again.', semNome: 'The contact person is required.',
     abrirLista: 'Open', hCliente: 'Company', hEstado: 'Status', hFases: 'Phases', hProximo: 'Next step', comConta: 'Account',
   } : {
-    eyebrow: 'Gestão', title: 'Consultorias ESG', subtitle: 'Um caso por empresa — a Lúcia preenche, o cliente vê o percurso e o relatório.',
-    nova: '+ Nova consultoria ESG', nome: 'Pessoa de contacto', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor',
-    criar: 'Criar e começar', cancelar: 'Cancelar', abrir: 'Abrir →',
+    title: 'Consultorias ESG',
+    nova: '+ Nova consultoria ESG', nome: 'Pessoa de contacto', empresa: 'Empresa',
+    criar: 'Criar e começar', cancelar: 'Cancelar',
     ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada', todas: 'Todas',
-    fase: 'Fase', proxima: 'Próximo passo', tudoPronto: 'Todas as fases fechadas',
+    tudoPronto: 'Todas as fases fechadas',
     vazio: 'Ainda não há consultorias ESG. Cria a primeira.',
-    loading: 'A carregar…', erro: 'Erro (é necessária a migração 036).', semNome: 'A pessoa de contacto é obrigatória.',
+    loading: 'A carregar…', erro: 'Não foi possível carregar. Tenta de novo.', erroCriar: 'Não foi possível criar. Tenta de novo.', semNome: 'A pessoa de contacto é obrigatória.',
     abrirLista: 'Abrir', hCliente: 'Empresa', hEstado: 'Estado', hFases: 'Fases', hProximo: 'Próximo passo', comConta: 'Conta',
   }
 
@@ -94,11 +100,10 @@ export default function ConsultoriasESG() {
     if (!form?.nome.trim()) { setErr(L.semNome); return }
     setSaving(true); setErr('')
     const { data, error } = await supabase.from('esg_consultorias').insert({
-      nome: form.nome.trim(), empresa: form.empresa || null, email: form.email || null,
-      telefone: form.telefone || null, setor: form.setor || null, user_id: null,   // a conta liga-se depois, dentro do caso
+      nome: form.nome.trim(), empresa: form.empresa || null, user_id: null,   // a conta liga-se depois, dentro do caso
     }).select('id').single()
     setSaving(false)
-    if (error || !data) { setErr(L.erro); return }
+    if (error || !data) { setErr(L.erroCriar); return }
     navigate(`/gestao/esg/${data.id}`)   // entra logo a trabalhar
   }
 
@@ -123,14 +128,9 @@ export default function ConsultoriasESG() {
         <div style={{ ...card, padding: '18px 20px', marginBottom: '16px' }}>
           {/* Sem o campo "conta" na criação (10/10): a lista mostrava os nomes e e-mails das
               contas de outros clientes. A conta liga-se depois, em "Editar" dentro do caso. */}
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
             <div><div style={lblStyle}>{L.empresa}</div><input autoFocus value={form.empresa} onChange={e => setForm(f => ({ ...f, empresa: e.target.value }))} style={inputStyle} /></div>
             <div><div style={lblStyle}>{L.nome} *</div><input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} style={inputStyle} /></div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px', marginBottom: '14px' }}>
-            <div><div style={lblStyle}>{L.email}</div><input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} style={inputStyle} /></div>
-            <div><div style={lblStyle}>{L.telefone}</div><input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} style={inputStyle} /></div>
-            <div><div style={lblStyle}>{L.setor}</div><input value={form.setor} onChange={e => setForm(f => ({ ...f, setor: e.target.value }))} style={inputStyle} /></div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={criar} disabled={saving || !form.nome.trim()} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 700, fontSize: '13px', cursor: form.nome.trim() ? 'pointer' : 'default', opacity: form.nome.trim() ? 1 : .5 }}>{saving ? '…' : L.criar}</button>
@@ -153,7 +153,7 @@ export default function ConsultoriasESG() {
       {!form && loading && <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>}
       {!form && !loading && visiveis.length === 0 && (
         <div style={{ ...card, padding: '34px 28px', textAlign: 'center' }}>
-          <div style={{ fontSize: '34px', marginBottom: '10px' }}>🌱</div>
+          <div style={{ marginBottom: '10px', color: t.subtle }}><IconFolha /></div>
           <div style={{ fontSize: '14px', color: t.textMuted }}>{L.vazio}</div>
         </div>
       )}
@@ -163,7 +163,8 @@ export default function ConsultoriasESG() {
       {!form && !loading && visiveis.length > 0 && (
         <ListaCasos
           abrirRotulo={L.abrirLista}
-          cabecalho={{ cliente: L.hCliente, estado: L.hEstado, fases: L.hFases, resumo: L.hProximo }}
+          // Estado só em "Todas" (13-D, 13/10), como nas Consultorias
+          cabecalho={{ cliente: L.hCliente, estado: filtro === 'todas' ? L.hEstado : null, fases: L.hFases, resumo: L.hProximo }}
           linhas={visiveis.map(c => {
             const p = progresso[c.id] || progressoESG({})
             const tone = statusTone[c.status] || statusTone.ativa
@@ -172,7 +173,7 @@ export default function ConsultoriasESG() {
               id: c.id,
               titulo: c.empresa || c.nome,
               sub: [c.empresa ? c.nome : c.email, c.setor].filter(Boolean).join(' · '),
-              estado: { rotulo: statusLabel[c.status], bg: tone.bg, ink: tone.ink },
+              estado: filtro === 'todas' ? { rotulo: statusLabel[c.status], bg: tone.bg, ink: tone.ink } : null,
               chips: c.user_id ? [L.comConta] : [],
               fases: FASES.map(f => ({ n: f.n, titulo: rotuloFase(f, lang), pct: p[f.key].pct, atual: f.key === p.proxima, pronto: p[f.key].estado === 'pronto' })),
               resumo: prox

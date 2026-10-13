@@ -232,7 +232,9 @@ export function descrever(c, lang) {
   out.push(liq.ok ? `  O saldo mantém-se positivo todo o ano.`
     : `  O saldo fica NEGATIVO a partir do mês ${liq.negativos[0].mes}.`)
 
-  if (c.notas?.trim()) out.push(`\n## Notas internas da consultora\n  ${c.notas.trim()}`)
+  // E1 (13-D, 13/10): as notas internas continuam a dar contexto à IA, mas com
+  // um título que diz que nunca entram no relatório (o relatório vai ao banco).
+  if (c.notas?.trim()) out.push(`\n## CONTEXTO INTERNO DA CONSULTORA — NUNCA CITAR NEM REPRODUZIR\n  (Só para te orientar. Não cites, não resumas nem reproduzas estas notas em nenhuma secção do relatório nem nas lacunas.)\n  ${c.notas.trim()}`)
   return out.join('\n')
 }
 
@@ -260,6 +262,8 @@ A decisão é da consultora, não tua.
 # Regras concretas
 - Escreve em ${IDIOMA[lang] || IDIOMA.pt}.
 - Usa apenas o que está na ficha. Zero suposições sobre o setor, o mercado ou a pessoa.
+- A parte "CONTEXTO INTERNO DA CONSULTORA" é só para te orientar: nunca a cites, resumas ou
+  reproduzas — o relatório vai ao banco e essas notas não podem aparecer nele.
 - Os valores marcados CALCULADO e VERIFICAÇÃO já vêm calculados — cita-os, nunca recalcules
   nem contradigas.
 - As duas verificações são o coração do dossiê. Quando uma delas dá NÃO, diz isso com todas as

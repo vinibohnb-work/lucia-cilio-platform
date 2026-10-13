@@ -8,6 +8,8 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 // linhas: [{ id, titulo, sub, estado: {rotulo, bg, ink}, chips: [texto],
 //            fases: [{ n, titulo, pct, atual, pronto, apagada }],
 //            resumo: nó, href, novaGuia, onAbrir }]
+// Sem `cabecalho.estado` (e com `estado` a null) a coluna Estado não aparece —
+// 13-D, 13/10: com um filtro de estado ativo, todas as linhas diziam o mesmo.
 
 export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
   const { t } = useTheme()
@@ -49,7 +51,7 @@ export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
               <div style={{ fontSize: '14.5px', fontWeight: 800, color: t.heading }}>{l.titulo}</div>
               {l.sub && <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '2px' }}>{l.sub}</div>}
             </div>
-            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, flex: 'none' }}>{l.estado.rotulo}</span>
+            {l.estado && <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, flex: 'none' }}>{l.estado.rotulo}</span>}
           </div>
           <Fases fases={l.fases} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '8px', fontSize: '11.5px', color: t.textMuted }}>
@@ -67,7 +69,7 @@ export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
         <thead>
           <tr>
             <th style={th}>{cabecalho.cliente}</th>
-            <th style={th}>{cabecalho.estado}</th>
+            {cabecalho.estado && <th style={th}>{cabecalho.estado}</th>}
             <th style={{ ...th, width: '190px' }}>{cabecalho.fases}</th>
             <th style={th}>{cabecalho.resumo}</th>
             <th style={{ ...th, width: '1%' }} />
@@ -87,9 +89,9 @@ export default function ListaCasos({ linhas, cabecalho, abrirRotulo }) {
                   </div>
                 )}
               </td>
-              <td style={td}>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, whiteSpace: 'nowrap' }}>{l.estado.rotulo}</span>
-              </td>
+              {cabecalho.estado && <td style={td}>
+                {l.estado && <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: l.estado.bg, color: l.estado.ink, whiteSpace: 'nowrap' }}>{l.estado.rotulo}</span>}
+              </td>}
               <td style={td}><Fases fases={l.fases} /></td>
               <td style={{ ...td, fontSize: '12px', color: t.textMuted }}>{l.resumo}</td>
               <td style={{ ...td, textAlign: 'right' }}><Abrir l={l} /></td>

@@ -2,13 +2,16 @@ import { useState } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
-import { Titulo, Botao, Cartao, Campo, Kpi, Vazio, Ic, useCampos, usePerfil } from '../ui'
+import { Titulo, Botao, Cartao, Campo, Vazio, Ic, useCampos, usePerfil } from '../ui'
 import { ATIVIDADES, MESES_LONGOS, hojeIso, somaDias, dataDe, fmtData } from '../regras'
 
 // Horas da equipa (pedido da Letícia, 09/10): quanto tempo foi dedicado a cada
 // cliente e a cada atividade (marketing, interno…). Regista-se só a quantidade
-// de horas do dia — sem horário de entrada e saída. Em cima, os totais de hoje,
-// da semana e do mês; em baixo, o mês por cliente/atividade e os registos.
+// de horas do dia — sem horário de entrada e saída. Em cima, os totais de hoje
+// e da semana; em baixo, o mês por cliente/atividade e os registos.
+// 13-D (13/10): os três cartões de totais passaram a uma linha só ("Este mês"
+// repetia o "Total de <mês>" de baixo e ignorava o mês escolhido lá); a coluna
+// "Quem" dos registos só aparece em "Toda a equipa".
 
 const fmtH = (n) => `${(Math.round(n * 100) / 100).toLocaleString('pt-PT', { maximumFractionDigits: 2 })} h`
 const soma = (lista) => lista.reduce((t, h) => t + Number(h.horas || 0), 0)
@@ -40,7 +43,7 @@ export default function Horas() {
     const atividade = novo.destino === OUTRA ? novo.outra.trim() : novo.destino.startsWith('a:') ? novo.destino.slice(2) : ''
     const clienteId = novo.destino.startsWith('c:') ? novo.destino.slice(2) : null
     if (!clienteId && !atividade) { setAviso('Escolha o cliente ou a atividade.'); return }
-    if (!(horas > 0) || horas > 24) { setAviso('Indique as horas (entre 0,25 e 24).'); return }
+    if (!(horas > 0) || horas > 24) { setAviso('Indique as horas: mais de 0 e no máximo 24.'); return }
     acoes.registarHoras({ data: novo.data || hoje, pessoa: novo.pessoa || s.eu, clienteId, atividade, horas, descricao: novo.descricao.trim() || null })
     setAviso('')
     // Fica a data, a pessoa e o destino: é comum registar várias linhas seguidas.
@@ -52,7 +55,6 @@ export default function Horas() {
   const semana0 = inicioSemana(hoje)
   const totHoje = soma(minhas.filter(h => h.data === hoje))
   const totSemana = soma(minhas.filter(h => h.data >= semana0 && h.data <= somaDias(semana0, 6)))
-  const totMesAtual = soma(minhas.filter(h => h.data.startsWith(hoje.slice(0, 7))))
 
   const doMes = minhas.filter(h => h.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data) || (a.pessoa || '').localeCompare(b.pessoa || ''))
   const totMes = soma(doMes)
@@ -75,11 +77,10 @@ export default function Horas() {
 
   return (
     <div>
-      <Titulo eyebrow="Gestão" titulo="Horas"
-        sub="Quanto tempo foi dedicado a cada cliente e a cada atividade. Regista-se só a quantidade de horas do dia, sem horários." />
+      <Titulo titulo="Horas" />
 
       {/* ── Registar ── */}
-      <Cartao titulo="Registar horas" icone={<Ic.agenda />} estilo={{ marginBottom: '16px' }}>
+      <Cartao titulo="Registar horas" icone={<Ic.relogio />} estilo={{ marginBottom: '16px' }}>
         {/* Quebra em linhas conforme a largura: nunca empurra o botão para fora do cartão. */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 140px' }}><Campo rotulo="Dia"><input type="date" value={novo.data} max={hoje} onChange={set('data')} style={c.input} /></Campo></div>
@@ -111,18 +112,17 @@ export default function Horas() {
       </Cartao>
 
       {/* ── Totais ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.textMuted }}>Ver:</span>
         <select value={quem} onChange={e => setQuem(e.target.value)} style={{ ...sel, width: 'auto' }} aria-label="Pessoa">
           <option value={s.eu}>As minhas horas</option>
           {s.equipa.filter(p => p !== s.eu).map(p => <option key={p} value={p}>{p}</option>)}
           <option value="">Toda a equipa</option>
         </select>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '14px', marginBottom: '16px' }}>
-        <Kpi icone={<Ic.agenda size={22} />} rotulo="Hoje" valor={fmtH(totHoje)} sub={fmtData(hoje)} />
-        <Kpi icone={<Ic.agenda size={22} />} rotulo="Esta semana" valor={fmtH(totSemana)} sub={`${fmtData(semana0)} – ${fmtData(somaDias(semana0, 6))}`} />
-        <Kpi icone={<Ic.agenda size={22} />} rotulo="Este mês" valor={fmtH(totMesAtual)} sub={nomeMes(hoje.slice(0, 7))} />
+        <span style={{ fontSize: '13.5px', color: t.textMuted, marginLeft: isMobile ? 0 : '6px' }}>
+          Hoje <strong style={{ color: t.heading }}>{fmtH(totHoje)}</strong>
+          {' · '}<span title={`${fmtData(semana0)} – ${fmtData(somaDias(semana0, 6))}`}>Semana <strong style={{ color: t.heading }}>{fmtH(totSemana)}</strong></span>
+        </span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr) minmax(0, 1.25fr)', gap: '16px', alignItems: 'start' }}>
@@ -164,11 +164,11 @@ export default function Horas() {
           {doMes.length === 0 ? <Vazio>Nada registado neste mês.</Vazio> : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '520px' }}>
-                <thead><tr>{['Dia', 'Quem', 'Cliente ou atividade', 'Horas', ''].map(h => <th key={h} style={c.th}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Dia', ...(quem ? [] : ['Quem']), 'Cliente ou atividade', 'Horas', ''].map(h => <th key={h} style={c.th}>{h}</th>)}</tr></thead>
                 <tbody>{doMes.map(h => (
                   <tr key={h.id}>
                     <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{fmtData(h.data)}</td>
-                    <td style={c.td}>{h.pessoa || '—'}</td>
+                    {!quem && <td style={c.td}>{h.pessoa || '—'}</td>}
                     <td style={c.td}><div style={{ fontWeight: 600, color: t.heading }}>{destinoDe(h)}</div>{h.descricao && <div style={{ fontSize: '11.5px', color: t.subtle }}>{h.descricao}</div>}</td>
                     <td style={{ ...c.td, whiteSpace: 'nowrap', fontWeight: 700 }}>{fmtH(h.horas)}</td>
                     <td style={{ ...c.td, textAlign: 'right' }}>

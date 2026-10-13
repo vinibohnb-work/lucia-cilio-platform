@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
-import { Janela, Campo, Botao, Chip, useCampos, Vazio } from '../ui'
-import { RECORRENCIAS, ESTADOS_TAREFA, FECHADOS, fmtData, hojeIso, diasAte, PAISES } from '../regras'
+import { Janela, Campo, Botao, Chip, useCampos, Vazio, Ic } from '../ui'
+import { RECORRENCIAS, ESTADOS_TAREFA, FECHADOS, fmtData, hojeIso, diasAte } from '../regras'
 import { tarefaAtrasada, lembreteAtivo, clientePorId } from '../seletores'
 
 // Tarefas internas (documento, secção 4): criadas à mão, repetidas, ligadas a
@@ -14,7 +14,9 @@ export function FormTarefa({ inicial, aoFechar }) {
   const s = usePortal()
   const c = useCampos()
   const isMobile = useIsMobile()
-  const [f, setF] = useState({ titulo: '', clienteId: '', obrigacaoId: '', responsavel: s.equipa[0], prazo: hojeIso(), recorrencia: 'nenhuma', lembreteDias: 2, notas: '', ...inicial })
+  // Responsável por omissão = quem está a criar (se for da equipa); antes era
+  // sempre a 1.ª pessoa da lista e a tarefa ficava com a pessoa errada (E7, 13/10).
+  const [f, setF] = useState({ titulo: '', clienteId: '', obrigacaoId: '', responsavel: s.equipa.includes(s.eu) ? s.eu : s.equipa[0], prazo: hojeIso(), recorrencia: 'nenhuma', lembreteDias: 2, notas: '', ...inicial })
   const set = (k) => (e) => setF(p => ({ ...p, [k]: e.target.value }))
   const obrigs = s.obrigacoes.filter(o => o.clienteId === f.clienteId && (!FECHADOS.includes(o.estado) || o.id === f.obrigacaoId)).sort((a, b) => a.prazo.localeCompare(b.prazo))
 
@@ -97,12 +99,13 @@ export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não h�
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '11.5px', color: t.subtle, marginTop: '2px' }}>
                     {obr && <span>↳ {obr.nome} · {obr.periodo}</span>}
                     {x.recorrencia !== 'nenhuma' && <span title="Repete-se">↻ {x.recorrencia}</span>}
-                    {lembreteAtivo(x, hoje) && !atraso && <span style={{ color: t.accentText, fontWeight: 700 }}>🔔 lembrete</span>}
+                    {lembreteAtivo(x, hoje) && !atraso && <span style={{ color: t.accentText, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}><Ic.sino size={12} />lembrete</span>}
                   </div>
                 </td>
+                {/* Sem o país por baixo do cliente: pouco útil numa lista de tarefas (13-D, 13/10). */}
                 {mostrarCliente && (
                   <td style={c.td}>
-                    {cli ? <button onClick={() => navigate(`/gestao/clientes/${cli.id}`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.heading, fontWeight: 600, fontSize: '13px', fontFamily: 'inherit', textAlign: 'left' }}>{cli.nome}<div style={{ fontSize: '11px', color: t.subtle, fontWeight: 500 }}>{PAISES[cli.pais]}</div></button> : <span style={{ color: t.subtle }}>Interna</span>}
+                    {cli ? <button onClick={() => navigate(`/gestao/clientes/${cli.id}`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.heading, fontWeight: 600, fontSize: '13px', fontFamily: 'inherit', textAlign: 'left' }}>{cli.nome}</button> : <span style={{ color: t.subtle }}>Interna</span>}
                   </td>
                 )}
                 <td style={{ ...c.td, fontSize: '12.5px' }}>{x.responsavel}</td>

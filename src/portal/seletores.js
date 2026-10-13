@@ -24,3 +24,6 @@ export const lembreteAtivo = (t, hoje = hojeIso()) => t.estado !== 'concluida' &
 export const naoLidas = (s, cid) => s.mensagens.filter(m => (!cid || m.clienteId === cid) && m.de === 'cliente' && !m.lida)
 export const obrigacoesEmAtraso = (s) => s.obrigacoes.filter(o => estadoEfetivo(o) === 'em_atraso')
 export const clientePorId = (s, id) => s.clientes.find(c => c.id === id)
+// Regra única para as contagens da equipa (Início, Relatórios, Mensagens):
+// os clientes inativos não contam (13-D, 13/10).
+export const clienteEmCurso = (c) => !!c && c.estado !== 'inativo'

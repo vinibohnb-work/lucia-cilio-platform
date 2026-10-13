@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { localeDe } from '../../lib/formato'
-import { opcaoDe } from '../../data/enquadramento'
+import { opcaoDe, campo, rot } from '../../data/enquadramento'
 import { criarLeadDeContacto } from '../../lib/leadsCrm'
 
 // Respostas do formulário público de diagnóstico.
@@ -28,6 +28,7 @@ export default function Diagnosticos() {
   const [filtro, setFiltro] = useState('novo')
   const [aberta, setAberta] = useState(null)      // id da resposta expandida
   const [ocupado, setOcupado] = useState(null)
+  const [copiada, setCopiada] = useState(false)   // feedback do "Copiar ligação"
 
   const L = lang === 'de' ? {
     eyebrow: 'Verwaltung', titulo: 'Erstdiagnosen', subtitulo: 'Antworten aus dem öffentlichen Formular. Der Filter entscheidet, was ins CRM aufsteigt — verloren geht nichts.',
@@ -36,6 +37,7 @@ export default function Diagnosticos() {
     addCrm: '+ Zum CRM', descartar: 'Verwerfen', verCrm: 'Im CRM ansehen →', repor: 'Zurückholen',
     vazio: 'Noch keine Antworten.', erro: 'Fehler (Migration 032 nötig).',
     contacto: 'Kontakt', respostas: 'Antworten', semResposta: 'ohne Antwort', ligacao: 'Formular-Link',
+    copiar: 'Link kopieren', copiado: 'Link kopiert',
   } : lang === 'en' ? {
     eyebrow: 'Management', titulo: 'Initial diagnoses', subtitulo: 'Answers from the public form. The filter decides what rises to the CRM — nothing is lost.',
     novo: 'New', no_crm: 'In CRM', descartado: 'Discarded', todas: 'All',
@@ -43,6 +45,7 @@ export default function Diagnosticos() {
     addCrm: '+ Add to CRM', descartar: 'Discard', verCrm: 'See in CRM →', repor: 'Restore',
     vazio: 'No answers yet.', erro: 'Error (migration 032 required).',
     contacto: 'Contact', respostas: 'Answers', semResposta: 'not answered', ligacao: 'Form link',
+    copiar: 'Copy link', copiado: 'Link copied',
   } : {
     eyebrow: 'Gestão', titulo: 'Diagnósticos', subtitulo: 'Respostas do formulário público. O filtro decide o que sobe ao CRM — não se perde nada.',
     novo: 'Novos', no_crm: 'No CRM', descartado: 'Descartados', todas: 'Todas',
@@ -50,6 +53,7 @@ export default function Diagnosticos() {
     addCrm: '+ Juntar ao CRM', descartar: 'Descartar', verCrm: 'Ver no CRM →', repor: 'Repor',
     vazio: 'Ainda não há respostas.', erro: 'Erro (é necessária a migração 032).',
     contacto: 'Contacto', respostas: 'Respostas', semResposta: 'sem resposta', ligacao: 'Ligação do formulário',
+    copiar: 'Copiar ligação', copiado: 'Ligação copiada',
   }
 
   const load = useCallback(async () => {
@@ -81,6 +85,14 @@ export default function Diagnosticos() {
     setOcupado(null); load()
   }
 
+  // A ligação servia só para ser copiada e obrigava a selecioná-la à mão no
+  // <code>. Passa a um botão (13-D, 13/10); o endereço fica no title.
+  const ligacaoForm = `${window.location.origin}/diagnostico`
+  async function copiarLigacao() {
+    try { await navigator.clipboard.writeText(ligacaoForm) } catch { window.prompt(L.ligacao, ligacaoForm); return }
+    setCopiada(true); setTimeout(() => setCopiada(false), 2000)
+  }
+
   const visiveis = filtro === 'todas' ? lista : lista.filter(s => s.estado === filtro)
   const conta = (e) => lista.filter(s => s.estado === e).length
 
@@ -93,8 +105,12 @@ export default function Diagnosticos() {
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
       <div>
         <h1 className="so-leitores">{L.titulo}</h1>
-        <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '8px' }}>
-          {L.ligacao}: <code style={{ color: t.accentText, fontWeight: 700 }}>{window.location.origin}/diagnostico</code>
+        <div style={{ marginTop: '8px', marginBottom: '12px' }}>
+          <button onClick={copiarLigacao} title={ligacaoForm}
+            style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: '6px', background: copiada ? t.dueOk.bg : 'transparent', border: `1px solid ${copiada ? t.dueOk.bg : t.cardBorder}`, color: copiada ? t.dueOk.ink : t.accentText }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+            {copiada ? L.copiado : L.copiar}
+          </button>
         </div>
       </div>
 
@@ -140,7 +156,8 @@ export default function Diagnosticos() {
                   {L.respostas} {aberto ? '▴' : '▾'}
                 </button>
                 {s.estado === 'no_crm' ? (
-                  <button onClick={() => navigate('/gestao/crm')} style={{ ...btn, background: t.dueOk.bg, color: t.dueOk.ink }}>{L.verCrm}</button>
+                  // Abre o próprio lead no CRM (crm_lead_id está gravado), não só o quadro.
+                  <button onClick={() => navigate('/gestao/crm', { state: { abrirLead: s.crm_lead_id } })} style={{ ...btn, background: t.dueOk.bg, color: t.dueOk.ink }}>{L.verCrm}</button>
                 ) : (
                   <>
                     <button onClick={() => juntarAoCrm(s)} disabled={ocupado === s.id}
@@ -164,7 +181,8 @@ export default function Diagnosticos() {
                     : (opcaoDe(k, v, lang) || L.semResposta)
                   return (
                     <div key={k} style={{ fontSize: '12px' }}>
-                      <span style={{ color: t.subtle }}>{k}: </span>
+                      {/* Rótulos do formulário em vez das chaves cruas ("pais:", "faturacao:") */}
+                      <span style={{ color: t.subtle }}>{rot(campo(k), lang) || k}: </span>
                       <span style={{ color: v ? t.heading : t.subtle, fontWeight: v ? 600 : 400 }}>{texto}</span>
                     </div>
                   )

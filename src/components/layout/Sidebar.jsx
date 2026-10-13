@@ -7,13 +7,12 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
 import { getCompanySettings } from '../../lib/companySettings'
-import { supabase } from '../../lib/supabase'
 import { isLite, LITE_SECTIONS } from '../../lib/platformHome'
 import { useFiscalAlerts } from '../../hooks/useFiscalAlerts'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import Flag from '../Flag'
 import { usePortal } from '../../portal/dados'
-import { tarefaAtrasada } from '../../portal/seletores'
+import { naoLidas } from '../../portal/seletores'
 
 // ── Ícones (stroke = currentColor) ─────────────────────────────────────────
 const Icon = ({ d, size = 17, sw = 1.7, children }) => (
@@ -29,7 +28,6 @@ const IconPreco = () => <Icon><rect x="4" y="2.5" width="16" height="19" rx="2.5
 const IconClientes = () => <Icon><circle cx="9" cy="8" r="3.3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.5a3 3 0 0 1 0 5.6M17.5 20a5 5 0 0 0-3-4.6"/></Icon>
 const IconObrig = () => <Icon><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/></Icon>
 const IconEmpresa = () => <Icon><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/></Icon>
-const IconAdmin = () => <Icon><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></Icon>
 const IconRucklagen = () => <Icon><path d="M12 3 4 6v6c0 4.5 3.2 7.5 8 9 4.8-1.5 8-4.5 8-9V6z"/><path d="M9.3 12h5.4M12 9.3v5.4" strokeWidth="1.5"/></Icon>
 // ESG
 const IconDiag = () => <Icon><path d="M12 21c4-2.5 6-6 6-11a6 6 0 0 0-12 0c0 5 2 8.5 6 11z" transform="scale(1)"/><path d="M12 3c0 6 0 12 0 16" strokeWidth="1.4"/></Icon>
@@ -42,10 +40,21 @@ const IconRelatorios = () => <Icon><path d="M6 3.5h8l4 4V20a1 1 0 0 1-1 1H6a1 1 
 const IconTarefas = () => <Icon><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></Icon>
 const IconHoras = () => <Icon><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></Icon>
 const IconMensagens = () => <Icon><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></Icon>
+// 13-D (13/10): um ícone por item da Gestão — antes Relatórios, CRM e
+// Diagnósticos usavam todos o IconKpi e a Agenda o ícone das Obrigações.
+const IconCalendario = () => <Icon><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/><circle cx="8.5" cy="13.5" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="13.5" r=".9" fill="currentColor" stroke="none"/><circle cx="15.5" cy="13.5" r=".9" fill="currentColor" stroke="none"/><circle cx="8.5" cy="17" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></Icon>
+const IconBarras = () => <Icon><path d="M5 20V11M10 20V5M15 20v-7M20 20V9"/></Icon>
+const IconFunil = () => <Icon><path d="M3.5 4.5h17l-6.5 8v6l-4 2v-8z"/></Icon>
+const IconFormulario = () => <Icon><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.8h6V4M8.5 10h7M8.5 13.5h7M8.5 17h4"/></Icon>
+const IconPasta = () => <Icon><rect x="3.5" y="7" width="17" height="12.5" rx="2"/><path d="M9 7V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2M3.5 12.5h17"/></Icon>
+const IconFolha = () => <Icon><path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z"/><path d="M5 19 13 11" strokeWidth="1.5"/></Icon>
+const IconEuro = () => <Icon><path d="M17 6.5A7 7 0 1 0 17 17.5M4 10.5h9M4 13.5h8"/></Icon>
+const IconChave = () => <Icon><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16.5 6.5l2.5 2.5M14 9l2 2"/></Icon>
 const STAFF = ['admin', 'comercial', 'marketing']
 const IconLogout = () => <Icon size={15}><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></Icon>
-const SunIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-const MoonIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+// Os nomes estavam trocados (o "Sun" desenhava a lua) — 13-D, 13/10.
+const MoonIcon = ({ cor }) => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="1.8" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+const SunIcon = ({ cor }) => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
 
 const NAV = {
   accounting: [
@@ -86,32 +95,35 @@ const NAV = {
   // serviços (o que ela vende). Sem isto, a Consultoria e os Diagnósticos
   // apareciam no meio dos Acessos e do Marketing.
   // 29/09: o portal de gestão de clientes (a antiga v2) abre a Gestão — é onde
-  // a equipa passa o dia. O Marketing sai do menu da administradora (era um
-  // marcador de lugar); continua a ser a área do papel "marketing".
+  // a equipa passa o dia. O Marketing é partilhado pelas três (reunião de
+  // 01/10): a administradora e o papel "marketing" veem-no.
   management: [
-    // 10/10: Início solto no topo; depois os Clientes, a Gestão (o dia a dia da
-    // equipa) e os Serviços.
+    // 13-D (13/10): agrupado por frequência de uso. Em cima, sem rótulo, o dia a
+    // dia (os rótulos "Clientes" e "Gestão" repetiam o item e a plataforma);
+    // depois o Comercial, os Serviços e, no fim, o Escritório (usa-se pouco).
+    // Os Diagnósticos saem dos Serviços: são a entrada do formulário público,
+    // que alimenta a Prospeção. A visibilidade por papel não mudou.
     { key: 'section_topo', items: [
       { to: '/gestao/inicio',     Icon: IconInicio,     labelKey: 'nav_inicio_equipa',   roles: STAFF },
-    ]},
-    { key: 'section_carteira', items: [
       { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
-      { to: '/gestao/relatorios', Icon: IconKpi,        labelKey: 'nav_relatorios_trim', roles: STAFF },
-      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
-    ]},
-    { key: 'section_gestao', items: [
-      { to: '/gestao/agenda',     Icon: IconObrig,      labelKey: 'nav_agenda',          roles: STAFF },
+      { to: '/gestao/agenda',     Icon: IconCalendario, labelKey: 'nav_agenda',          roles: STAFF },
       { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },
+      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
       { to: '/gestao/horas',      Icon: IconHoras,      labelKey: 'nav_horas',           roles: STAFF },
-      { to: '/gestao/crm',        Icon: IconKpi,        labelKey: 'nav_crm',             roles: ['admin', 'comercial'] },
-      { to: '/gestao/marketing',  Icon: IconMarketing,  labelKey: 'nav_marketing',       roles: ['admin', 'marketing'] },
-      { to: '/gestao/financeiro', Icon: IconCaixa,      labelKey: 'nav_fin_gestao',      roles: ['admin'] },
-      { to: '/gestao/acessos',    Icon: IconAdmin,      labelKey: 'nav_acessos',         roles: ['admin'] },
+      { to: '/gestao/relatorios', Icon: IconBarras,     labelKey: 'nav_relatorios_trim', roles: STAFF },
+    ]},
+    { key: 'section_comercial', items: [
+      { to: '/gestao/crm',          Icon: IconFunil,      labelKey: 'nav_crm',          roles: ['admin', 'comercial'] },
+      { to: '/gestao/diagnosticos', Icon: IconFormulario, labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
+      { to: '/gestao/marketing',    Icon: IconMarketing,  labelKey: 'nav_marketing',    roles: ['admin', 'marketing'] },
     ]},
     { key: 'section_servicos', items: [
-      { to: '/gestao/consultorias', Icon: IconRelatorios, labelKey: 'nav_consultorias', roles: ['admin'] },
-      { to: '/gestao/esg',          Icon: IconMaterial,   labelKey: 'nav_esg_consultorias', roles: ['admin'] },
-      { to: '/gestao/diagnosticos', Icon: IconKpi,        labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
+      { to: '/gestao/consultorias', Icon: IconPasta,      labelKey: 'nav_consultorias', roles: ['admin'] },
+      { to: '/gestao/esg',          Icon: IconFolha,      labelKey: 'nav_esg_consultorias', roles: ['admin'] },
+    ]},
+    { key: 'section_escritorio', items: [
+      { to: '/gestao/financeiro', Icon: IconEuro,       labelKey: 'nav_fin_gestao',      roles: ['admin'] },
+      { to: '/gestao/acessos',    Icon: IconChave,      labelKey: 'nav_acessos',         roles: ['admin'] },
     ]},
   ],
 }
@@ -140,12 +152,6 @@ export default function Sidebar() {
   // da gestão: abre num separador próprio e tem de parecer a plataforma ESG.
   const casoId = pathname.match(/^\/gestao\/esg\/([^/]+)/)?.[1] || null
   const esgBase = casoId ? `/gestao/esg/${casoId}` : '/esg'
-  const [casoNome, setCasoNome] = useState(null)
-  useEffect(() => {
-    if (!casoId) { setCasoNome(null); return }
-    supabase.from('esg_consultorias').select('empresa,nome').eq('id', casoId).maybeSingle()
-      .then(({ data }) => setCasoNome(data ? (data.empresa || data.nome) : null))
-  }, [casoId])
   const platformFromPath = casoId ? 'esg' : pathname.startsWith('/gestao') ? 'management' : pathname.startsWith('/esg') ? 'esg' : 'accounting'
   const viewPlatform = isTeamRole
     ? 'management'
@@ -177,13 +183,15 @@ export default function Sidebar() {
   }
 
   const W = isMobile ? 264 : 238
-  const tarefasAtrasadas = portal.tarefas.filter(x => tarefaAtrasada(x)).length
+  // 13-D (13/10): o número passa das Tarefas para as Mensagens (mensagens de
+  // clientes por ler). Conta sempre que o armazém do portal está carregado;
+  // antes disso não se mostra nada, em vez de um 0 que depois muda.
+  const porLer = portal.carregado ? naoLidas(portal).length : 0
 
   const navRow = (item) => {
-    // Badge dinâmico: obrigações fiscais vencidas / a vencer
-    // …e tarefas em atraso da equipa (quando o portal já foi aberto nesta sessão)
+    // Badge dinâmico: obrigações fiscais vencidas / a vencer · mensagens por ler
     const badge = item.to === '/contabilidade/obrigacoes' ? (alertCount || null)
-      : item.to === '/gestao/tarefas' ? (tarefasAtrasadas || null) : item.badge
+      : item.to === '/gestao/mensagens' ? (porLer || null) : item.badge
     return (
     <NavLink key={item.to} to={item.to} onClick={closeOnMobile}
       style={({ isActive }) => ({
@@ -210,9 +218,9 @@ export default function Sidebar() {
     section_acc: { pt: 'Contabilidade', de: 'Buchhaltung', en: 'Accounting' },
     section_mgmt: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' },
     section_esg: { pt: 'ESG Consulting', de: 'ESG-Beratung', en: 'ESG Consulting' },
-    section_gestao: { pt: 'Gestão', de: 'Verwaltung', en: 'Management' },
+    section_comercial: { pt: 'Comercial', de: 'Vertrieb', en: 'Sales' },
     section_servicos: { pt: 'Serviços', de: 'Dienstleistungen', en: 'Services' },
-    section_carteira: { pt: 'Clientes', de: 'Mandanten', en: 'Clients' },
+    section_escritorio: { pt: 'Escritório', de: 'Büro', en: 'Office' },
   }
 
   return (
@@ -237,12 +245,8 @@ export default function Sidebar() {
             {sectionLabel[sec.key] && <div style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 5px', color: t.sectionLabel }}>
               {sectionLabel[sec.key][lang] || sectionLabel[sec.key].pt}
             </div>}
-            {/* Num caso aberto, o nome da empresa fica por cima do menu — é dela que se está a falar */}
-            {sec.key === 'section_esg' && casoNome && (
-              <div style={{ margin: '0 12px 10px', padding: '9px 12px', borderRadius: '9px', background: 'rgba(201,168,76,.12)', border: '1px solid rgba(201,168,76,.28)', fontSize: '13px', fontWeight: 700, color: '#f3ecdb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {casoNome}
-              </div>
-            )}
+            {/* 13-D (13/10): saiu a caixa com o nome da empresa por cima do menu ESG
+                — o nome já está na tira do caso (CasoESG). */}
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 12px' }}>
               {sec.items.map(navRow)}
               {sec.key === 'section_mgmt' && country === 'DE' && navRow({ to: '/contabilidade/rucklagen', Icon: IconRucklagen, labelKey: 'nav_rucklagen' })}
@@ -255,12 +259,10 @@ export default function Sidebar() {
       {/* Footer */}
       <div style={{ marginTop: 'auto', padding: '12px 20px 14px', borderTop: `1px solid ${t.sidebarBorder}` }}>
         {/* Utilizador + sair */}
+        {/* 13-D (13/10): saiu o círculo com as iniciais — decorativo, o nome está ao lado */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 6px 10px' }}>
-          <div style={{ width: '30px', height: '30px', flex: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, fontFamily: t.fontDisplay, background: t.avatarBg, color: t.avatarInk, border: t.avatarBorder }}>
-            {(user?.user_metadata?.display_name || user?.email || 'LC').slice(0,2).toUpperCase()}
-          </div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: '12px', color: '#f3ecdb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '12px', color: t.navActiveText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Utilizador'}
             </div>
           </div>
@@ -283,7 +285,7 @@ export default function Sidebar() {
               <button key={p} onClick={() => switchAdminView(p)} style={{
                 flex: 1, padding: '7px 4px', borderRadius: '7px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
                 background: viewPlatform === p ? t.accent : 'transparent',
-                color: viewPlatform === p ? '#0a2f1a' : t.sidebarSub,
+                color: viewPlatform === p ? t.sidebarBg : t.sidebarSub,
               }}>{lbl}</button>
             ))}
           </div>
@@ -291,12 +293,14 @@ export default function Sidebar() {
         {/* Idioma + tema */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'inline-flex', borderRadius: '8px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, border: `1px solid ${t.sidebarBorder}` }}>
-            {['pt','de','en'].map(code => (
-              <span key={code} onClick={() => setLang(code)} title={code.toUpperCase()} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 9px', cursor: 'pointer', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></span>
+            {/* Botões a sério (13-D, 13/10): antes eram <span> sem teclado nem leitor de ecrã */}
+            {[['pt', 'Português'], ['de', 'Deutsch'], ['en', 'English']].map(([code, nome]) => (
+              <button key={code} type="button" onClick={() => setLang(code)} title={nome} aria-label={nome} aria-pressed={lang === code} style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 9px', cursor: 'pointer', border: 'none', opacity: lang === code ? 1 : 0.5, background: lang === code ? t.accent : 'transparent' }}><Flag code={code} size={20} /></button>
             ))}
           </div>
-          <button onClick={toggle} title={night ? (lang==='de'?'Heller Modus':'Modo claro') : (lang==='de'?'Nachtmodus':'Modo noturno')} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>
-            {night ? <MoonIcon /> : <SunIcon />}
+          <button onClick={toggle} aria-label={night ? (lang==='de'?'Heller Modus':lang==='en'?'Light mode':'Modo claro') : (lang==='de'?'Nachtmodus':lang==='en'?'Night mode':'Modo noturno')} title={night ? (lang==='de'?'Heller Modus':lang==='en'?'Light mode':'Modo claro') : (lang==='de'?'Nachtmodus':lang==='en'?'Night mode':'Modo noturno')} style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: t.toggleBg, border: `1px solid ${t.sidebarBorder}` }}>
+            {/* No modo noturno mostra o sol (passar a claro); no claro, a lua */}
+            {night ? <SunIcon cor={t.accent} /> : <MoonIcon cor={t.accent} />}
           </button>
         </div>
       </div>

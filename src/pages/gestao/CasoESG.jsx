@@ -15,6 +15,13 @@ import { BASE } from '../../lib/v2'
 //
 // Por isso este ficheiro é só uma tira fina em cima (quem é, estado, o que o
 // cliente vê) e as seis páginas por baixo, iguais às de sempre.
+// 13-D (13/10): a etiqueta "Conta ligada" e a caixa "O cliente vê…" eram dois
+// controlos para a mesma pergunta — fica um só, "Cliente vê: Sim · Não". O nome
+// da empresa vive só nesta tira (saiu a caixa por cima do menu lateral).
+
+const IconLapis = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></svg>
+)
 
 export default function CasoESG() {
   const { id } = useParams()
@@ -38,16 +45,16 @@ export default function CasoESG() {
   }
 
   const L = lang === 'de' ? {
-    voltar: 'ESG-Beratungen', editar: 'Bearbeiten', guardar: 'Speichern', nome: 'Kontaktperson', empresa: 'Unternehmen', email: 'E-Mail', telefone: 'Telefon', setor: 'Branche', contaL: 'Plattformkonto', semContaOpt: '— ohne Konto —', apresentar: 'Präsentationsmodus', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
-    conta: 'Konto verknüpft', semConta: 'ohne Konto', visivel: 'Kunde sieht Weg & Bericht', oculto: 'Für den Kunden ausgeblendet',
+    voltar: 'ESG-Beratungen', editar: 'Bearbeiten', guardar: 'Speichern', fechar: 'Schließen', nome: 'Kontaktperson', empresa: 'Unternehmen', email: 'E-Mail', telefone: 'Telefon', setor: 'Branche', contaL: 'Plattformkonto', semContaOpt: '— ohne Konto —', apresentar: 'Dem Kunden zeigen', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
+    clienteVe: 'Kunde sieht', sim: 'Ja', nao: 'Nein', semConta: 'ohne Konto (unter „Bearbeiten“ verknüpfen)', ajudaVe: 'Weg und Bericht in der Plattform des Kunden',
     naoEncontrado: 'ESG-Beratung nicht gefunden.', erroSave: 'Speichern fehlgeschlagen.',
   } : lang === 'en' ? {
-    voltar: 'ESG consultancies', editar: 'Edit', guardar: 'Save', nome: 'Contact person', empresa: 'Company', email: 'E-mail', telefone: 'Phone', setor: 'Sector', contaL: 'Platform account', semContaOpt: '— no account —', apresentar: 'Presentation mode', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
-    conta: 'Account linked', semConta: 'no account', visivel: 'Client sees journey & report', oculto: 'Hidden from the client',
+    voltar: 'ESG consultancies', editar: 'Edit', guardar: 'Save', fechar: 'Close', nome: 'Contact person', empresa: 'Company', email: 'E-mail', telefone: 'Phone', setor: 'Sector', contaL: 'Platform account', semContaOpt: '— no account —', apresentar: 'Show to client', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
+    clienteVe: 'Client sees', sim: 'Yes', nao: 'No', semConta: 'no account (link it in Edit)', ajudaVe: "Journey and report in the client's platform",
     naoEncontrado: 'ESG consultancy not found.', erroSave: 'Save failed.',
   } : {
-    voltar: 'Consultorias ESG', editar: 'Editar', guardar: 'Guardar', nome: 'Pessoa de contacto', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor', contaL: 'Conta na plataforma', semContaOpt: '— sem conta —', apresentar: 'Modo apresentação', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
-    conta: 'Conta ligada', semConta: 'sem conta', visivel: 'O cliente vê percurso e relatório', oculto: 'Escondido do cliente',
+    voltar: 'Consultorias ESG', editar: 'Editar', guardar: 'Guardar', fechar: 'Fechar', nome: 'Pessoa de contacto', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor', contaL: 'Conta na plataforma', semContaOpt: '— sem conta —', apresentar: 'Apresentar ao cliente', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
+    clienteVe: 'Cliente vê', sim: 'Sim', nao: 'Não', semConta: 'sem conta (ligar em Editar)', ajudaVe: 'Percurso e relatório na plataforma do cliente',
     naoEncontrado: 'Consultoria ESG não encontrada.', erroSave: 'Falha ao guardar.',
   }
 
@@ -87,7 +94,7 @@ export default function CasoESG() {
           <span style={{ color: t.subtle }}>·</span>
           <span style={{ fontWeight: 700, color: t.heading }}>{caso.empresa || caso.nome}</span>
           {caso.empresa && <span>{caso.nome}</span>}
-          <button onClick={abrirEdicao} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '11.5px' }}>✏️ {L.editar}</button>
+          <button onClick={abrirEdicao} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '11.5px' }}><IconLapis /> {L.editar}</button>
           <span style={{ marginLeft: 'auto' }} />
           {/* Abre num separador próprio, sem menus — para mostrar ao cliente (18/09) */}
           <a href={`${BASE}/apresentacao/esg/${id}`} target="_blank" rel="noopener"
@@ -96,14 +103,21 @@ export default function CasoESG() {
             style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', background: tone.bg, color: tone.ink, cursor: 'pointer', outline: 'none' }}>
             {['ativa', 'concluida', 'pausada'].map(s => <option key={s} value={s}>{L[s]}</option>)}
           </select>
-          <span title={caso.user_id ? L.conta : L.semConta} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.softCardBg, color: caso.user_id ? t.accentText : t.subtle, whiteSpace: 'nowrap' }}>
-            {caso.user_id ? '🔗 ' + L.conta : L.semConta}
-          </span>
-          {caso.user_id && (
-            <label title={caso.visivel_cliente ? L.visivel : L.oculto} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              <input type="checkbox" checked={!!caso.visivel_cliente} onChange={e => alterar({ visivel_cliente: e.target.checked })} style={{ accentColor: t.accent }} />
-              {caso.visivel_cliente ? L.visivel : L.oculto}
-            </label>
+          {caso.user_id ? (
+            <span role="group" aria-label={L.clienteVe} title={L.ajudaVe} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              {L.clienteVe}:
+              <span style={{ display: 'inline-flex', padding: '2px', borderRadius: '20px', background: t.segBg, border: `1px solid ${t.segBorder}` }}>
+                {[[true, L.sim], [false, L.nao]].map(([v, rot]) => {
+                  const on = !!caso.visivel_cliente === v
+                  return (
+                    <button key={rot} type="button" aria-pressed={on} onClick={() => { if (!on) alterar({ visivel_cliente: v }) }}
+                      style={{ padding: '2px 10px', borderRadius: '20px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: on ? 'default' : 'pointer', background: on ? t.cardBg : 'transparent', color: on ? (v ? t.dueOk.ink : t.heading) : t.subtle }}>{rot}</button>
+                  )
+                })}
+              </span>
+            </span>
+          ) : (
+            <span style={{ fontSize: '11px', fontWeight: 600, color: t.subtle, whiteSpace: 'nowrap' }}>{L.clienteVe}: {L.semConta}</span>
           )}
           {erro && <span style={{ fontWeight: 700, color: t.neg }}>{erro}</span>}
         </div>
@@ -122,7 +136,7 @@ export default function CasoESG() {
               </select>
             </label>
             <button onClick={guardarEdicao} disabled={!editar.nome.trim()} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: t.btnBg, color: t.btnInk, fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.guardar}</button>
-            <button onClick={() => setEditar(null)} style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted, fontSize: '12.5px', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setEditar(null)} aria-label={L.fechar} title={L.fechar} style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted, fontSize: '12.5px', cursor: 'pointer' }}>✕</button>
           </div>
         )}
 

@@ -15,7 +15,16 @@ import { devidoNoPeriodo } from '../../lib/periodicidade'
 // O contrato é devido no período? Regra comum a avenças e despesas recorrentes.
 export const isDueInPeriod = devidoNoPeriodo
 
-const EMPTY = { client_name: '', user_id: '', service: '', amount: '', periodicity: 'monthly', start_month: new Date().toISOString().slice(0, 7), notes: '' }
+// Ícone da conta ligada (substitui o emoji 🔗; 13-D, 13/10)
+const IconConta = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ verticalAlign: '-0.1em' }}>
+    <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+  </svg>
+)
+
+// cliente_id = ficha escolhida; semFicha = disse-se explicitamente que o
+// cliente não tem ficha (só aí o nome é texto livre).
+const EMPTY = { cliente_id: '', semFicha: false, client_name: '', user_id: '', service: '', amount: '', periodicity: 'monthly', start_month: new Date().toISOString().slice(0, 7), notes: '' }
 
 export default function Financeiro() {
   const { lang } = useLang()
@@ -39,9 +48,11 @@ export default function Financeiro() {
 
   const L = lang === 'de' ? {
     eyebrow: 'Verwaltung', title: 'Finanzen', subtitle: 'Verträge und Zahlungseingänge Ihrer Mandanten — pro Monat bestätigen.',
-    expected: 'Erwartet (Monat)', received: 'Erhalten (Monat)', pendingK: 'Ausstehend', contracts: 'Aktive Verträge',
+    received: 'Erhalten (Monat)', pendingK: 'Ausstehend',
     contractsT: 'Verträge', monthT: 'Eingänge im Monat', new: '+ Neuer Vertrag',
     client: 'Mandant', linkUser: 'Plattform-Nutzer (optional)', none: '— keiner —', service: 'Leistung',
+    escolherFicha: '— Mandantenakte wählen —', semFicha: '— Mandant ohne Akte —', nomeSemFicha: 'Name (ohne Akte)',
+    contaDaFicha: 'Plattform-Konto aus der Akte', inactive: 'Inaktiv', toggleHint: 'Klicken zum Umschalten', cancel: 'Abbrechen',
     contrato: 'Vertrag', anexar: 'PDF anhängen', verContrato: 'Vertrag öffnen', trocar: 'Ersetzen',
     semContrato: 'kein Vertrag', erroAnexo: 'Datei konnte nicht hochgeladen werden.',
     amount: 'Betrag (€)', periodicity: 'Häufigkeit', monthly: 'Monatlich', quarterly: 'Vierteljährlich',
@@ -52,9 +63,11 @@ export default function Financeiro() {
     servicePh: 'z.B. Plattform, ESG-Beratung…',
   } : lang === 'en' ? {
     eyebrow: 'Management', title: 'Finance', subtitle: 'Your clients\' contracts and incoming payments — confirm month by month.',
-    expected: 'Expected (month)', received: 'Received (month)', pendingK: 'Outstanding', contracts: 'Active contracts',
+    received: 'Received (month)', pendingK: 'Outstanding',
     contractsT: 'Contracts', monthT: 'Payments this month', new: '+ New contract',
     client: 'Client', linkUser: 'Platform user (optional)', none: '— none —', service: 'Service',
+    escolherFicha: '— choose the client file —', semFicha: '— client without a file —', nomeSemFicha: 'Name (no file)',
+    contaDaFicha: 'Platform account from the file', inactive: 'Inactive', toggleHint: 'Click to switch', cancel: 'Cancel',
     contrato: 'Contract', anexar: 'Attach PDF', verContrato: 'Open contract', trocar: 'Replace',
     semContrato: 'no contract', erroAnexo: 'Could not upload the file.',
     amount: 'Amount (€)', periodicity: 'Frequency', monthly: 'Monthly', quarterly: 'Quarterly',
@@ -65,9 +78,11 @@ export default function Financeiro() {
     servicePh: 'e.g. Platform, ESG consulting…',
   } : {
     eyebrow: 'Gestão', title: 'Financeiro', subtitle: 'Contratos e recebimentos dos teus clientes — confirma mês a mês.',
-    expected: 'Previsto (mês)', received: 'Recebido (mês)', pendingK: 'Por receber', contracts: 'Contratos ativos',
+    received: 'Recebido (mês)', pendingK: 'Por receber',
     contractsT: 'Contratos', monthT: 'Recebimentos do mês', new: '+ Novo contrato',
     client: 'Cliente', linkUser: 'Utilizador da plataforma (opcional)', none: '— nenhum —', service: 'Serviço',
+    escolherFicha: '— escolher a ficha do cliente —', semFicha: '— cliente sem ficha —', nomeSemFicha: 'Nome (sem ficha)',
+    contaDaFicha: 'Conta na plataforma da ficha', inactive: 'Inativo', toggleHint: 'Clicar para alternar', cancel: 'Cancelar',
     contrato: 'Contrato', anexar: 'Anexar PDF', verContrato: 'Abrir contrato', trocar: 'Substituir',
     semContrato: 'sem contrato', erroAnexo: 'N\u00e3o foi poss\u00edvel carregar o ficheiro.',
     amount: 'Valor (€)', periodicity: 'Periodicidade', monthly: 'Mensal', quarterly: 'Trimestral',
@@ -99,21 +114,33 @@ export default function Financeiro() {
   // ── Derivados do mês ──
   const paidByBilling = Object.fromEntries(payments.map(p => [p.billing_id, p]))
   const dueThisMonth = billing.filter(b => b.active && isDueInPeriod(b, period))
-  const expected = dueThisMonth.reduce((s, b) => s + Number(b.amount), 0)
   const received = dueThisMonth.reduce((s, b) => s + (paidByBilling[b.id] ? Number(paidByBilling[b.id].amount) : 0), 0)
   const outstanding = dueThisMonth.filter(b => !paidByBilling[b.id]).reduce((s, b) => s + Number(b.amount), 0)
-  const activeCount = billing.filter(b => b.active).length
+  // "Previsto" e "Contratos ativos" saíram (13-D, 13/10): o previsto é Recebido +
+  // Por receber, e a contagem vê-se na lista de contratos.
+  const mesPorExtenso = (() => {
+    const [y, m] = period.split('-').map(Number)
+    if (!y || !m) return period
+    return new Date(y, m - 1, 1).toLocaleDateString(loc, { month: 'long', year: 'numeric' })
+  })()
+  const fichaEscolhida = fichas.find(f => f.id === form.cliente_id) || null
+  const contaDaFicha = !form.semFicha && fichaEscolhida?.user_id ? fichaEscolhida.user_id : null
+  const podeGuardar = form.amount !== '' && (form.semFicha ? !!form.client_name.trim() : !!fichaEscolhida)
 
   // ── CRUD contratos ──
   async function saveContract() {
-    if (!form.client_name.trim() || form.amount === '') return
+    if (!podeGuardar) return
     setErr('')
     // O contrato liga-se à ficha do cliente na Gestão — é daí que a página do
-    // cliente lê a avença. Pela conta, se houver; senão pelo nome (sem acentos).
-    const norm = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-    const ficha = (form.user_id && fichas.find(f => f.user_id === form.user_id)) || fichas.find(f => norm(f.nome) === norm(form.client_name))
+    // cliente lê a avença (portal/dados.js). Antes ligava pelo nome escrito à
+    // mão, em silêncio, e um nome escrito de outra forma deixava a avença fora
+    // da ficha (E3, 13/10). Agora escolhe-se a ficha; texto livre só quando se
+    // marca "cliente sem ficha". A conta vem da ficha quando ela a tem.
+    const ficha = form.semFicha ? null : fichaEscolhida
     const payload = {
-      client_name: form.client_name.trim(), user_id: form.user_id || null, cliente_id: ficha?.id || null,
+      client_name: ficha ? ficha.nome : form.client_name.trim(),
+      user_id: ficha?.user_id || form.user_id || null,
+      cliente_id: ficha?.id || null,
       service: form.service || null, amount: parseFloat(form.amount) || 0,
       periodicity: form.periodicity, start_month: form.start_month || null, notes: form.notes || null,
     }
@@ -123,10 +150,12 @@ export default function Financeiro() {
     if (error) { setErr(L.saveErr); return }
     setForm(EMPTY); setShowForm(false); setEditingId(null); load()
   }
+  // O ✕ vivia na linha, a 4 px do ✎; passou para dentro da edição (13-D, 13/10)
   async function removeContract(b) {
     if (!window.confirm(L.confirmDel(b.client_name))) return
     const { error } = await supabase.from('client_billing').delete().eq('id', b.id)
     if (error) setErr(L.saveErr)
+    setShowForm(false); setEditingId(null); setForm(EMPTY)
     load()
   }
   // ── Contrato em PDF ──────────────────────────────────────────────────────
@@ -161,7 +190,7 @@ export default function Financeiro() {
   }
   function openEdit(b) {
     setEditingId(b.id)
-    setForm({ client_name: b.client_name, user_id: b.user_id || '', service: b.service || '', amount: String(b.amount), periodicity: b.periodicity, start_month: b.start_month || '', notes: b.notes || '' })
+    setForm({ cliente_id: b.cliente_id || '', semFicha: !b.cliente_id, client_name: b.client_name, user_id: b.user_id || '', service: b.service || '', amount: String(b.amount), periodicity: b.periodicity, start_month: b.start_month || '', notes: b.notes || '' })
     setShowForm(true)
   }
 
@@ -196,7 +225,6 @@ export default function Financeiro() {
           <h1 className="so-leitores">{L.title}</h1>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input type="month" value={period} onChange={e => setPeriod(e.target.value)} style={{ ...inputStyle, width: 'auto' }} />
           <button onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(v => !v) }} style={{ padding: '10px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.new}</button>
         </div>
       </div>
@@ -204,12 +232,10 @@ export default function Financeiro() {
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{err}</div>}
 
       {/* KPIs do mês */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: '12px', marginBottom: '18px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '12px', marginBottom: '18px', maxWidth: isMobile ? 'none' : '520px' }}>
         {[
-          { label: L.expected, value: fmt(expected), color: t.heading },
-          { label: L.received, value: fmt(received), color: '#0a7a3e' },
-          { label: L.pendingK, value: fmt(outstanding), color: outstanding > 0 ? '#b45309' : t.heading },
-          { label: L.contracts, value: activeCount, color: t.heading },
+          { label: L.received, value: fmt(received), color: t.dueOk.ink },
+          { label: L.pendingK, value: fmt(outstanding), color: outstanding > 0 ? t.dueSoon.ink : t.heading },
         ].map(k => (
           <div key={k.label} style={{ ...card, padding: '15px 17px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '5px' }}>{k.label}</div>
@@ -223,13 +249,30 @@ export default function Financeiro() {
         <div style={{ ...card, border: `2px solid ${t.accent}`, padding: '16px 18px', marginBottom: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1.2fr 1fr', gap: '11px', marginBottom: '11px' }}>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.client}</div>
-              <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} list="fichas-clientes" style={inputStyle} />
-              <datalist id="fichas-clientes">{fichas.map(f => <option key={f.id} value={f.nome} />)}</datalist></div>
-            <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.linkUser}</div>
-              <select value={form.user_id} onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                <option value="">{L.none}</option>
-                {users.map(u => <option key={u.id} value={u.id}>{u.display_name || u.email}</option>)}
-              </select></div>
+              {/* Escolhe-se a ficha (o select nativo aceita escrever para procurar);
+                  "cliente sem ficha" é uma escolha explícita que abre o texto livre. */}
+              <select value={form.semFicha ? '__sem' : form.cliente_id}
+                onChange={e => { const v = e.target.value; setForm(f => v === '__sem' ? { ...f, semFicha: true, cliente_id: '' } : { ...f, semFicha: false, cliente_id: v }) }}
+                style={{ ...inputStyle, cursor: 'pointer' }}>
+                <option value="">{L.escolherFicha}</option>
+                {fichas.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                <option value="__sem">{L.semFicha}</option>
+              </select>
+              {form.semFicha && (
+                <input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} placeholder={L.nomeSemFicha} aria-label={L.nomeSemFicha} style={{ ...inputStyle, marginTop: '6px' }} />
+              )}</div>
+            <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{contaDaFicha ? L.contaDaFicha : L.linkUser}</div>
+              {contaDaFicha ? (
+                // A conta vem da ficha (clientes.user_id): não se escolhe à mão
+                <div style={{ ...inputStyle, background: t.softCardBg, color: t.textMuted, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <IconConta />{(() => { const u = users.find(x => x.id === contaDaFicha); return u ? (u.display_name || u.email) : '—' })()}
+                </div>
+              ) : (
+                <select value={form.user_id} onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+                  <option value="">{L.none}</option>
+                  {users.map(u => <option key={u.id} value={u.id}>{u.display_name || u.email}</option>)}
+                </select>
+              )}</div>
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.service}</div>
               <input value={form.service} onChange={e => setForm(f => ({ ...f, service: e.target.value }))} placeholder={L.servicePh} style={inputStyle} /></div>
           </div>
@@ -246,15 +289,26 @@ export default function Financeiro() {
             <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '5px' }}>{L.notes}</div>
               <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={inputStyle} /></div>
             <div style={{ display: 'flex', gap: '6px' }}>
-              <button onClick={saveContract} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.save}</button>
-              <button onClick={() => { setShowForm(false); setEditingId(null); setForm(EMPTY) }} style={{ padding: '9px 12px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>✕</button>
+              <button onClick={saveContract} disabled={!podeGuardar} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 700, fontSize: '13px', cursor: podeGuardar ? 'pointer' : 'default', opacity: podeGuardar ? 1 : .5 }}>{L.save}</button>
+              <button onClick={() => { setShowForm(false); setEditingId(null); setForm(EMPTY) }} style={{ padding: '9px 12px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>{L.cancel}</button>
             </div>
           </div>
+          {editingId && (
+            <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: `1px solid ${t.rowBorder || t.cardBorder}`, display: 'flex' }}>
+              <button onClick={() => { const b = billing.find(x => x.id === editingId); if (b) removeContract(b) }}
+                style={{ marginLeft: 'auto', padding: '7px 13px', background: 'transparent', border: `1px solid ${t.dueLate.ink}`, borderRadius: '9px', fontWeight: 700, fontSize: '12px', cursor: 'pointer', color: t.dueLate.ink }}>{L.del}</button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Recebimentos do mês */}
-      <h2 style={{ margin: '0 0 10px', fontFamily: t.fontDisplay, fontWeight: 600, fontSize: '20px', color: t.heading }}>{L.monthT} · {period}</h2>
+      {/* O seletor de mês só afeta os recebimentos: vive no título desta secção,
+          com o mês por extenso em vez de "2026-10" (13-D, 13/10). */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', margin: '0 0 10px' }}>
+        <h2 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: '20px', color: t.heading }}>{L.monthT} · {mesPorExtenso}</h2>
+        <input type="month" value={period} onChange={e => setPeriod(e.target.value)} aria-label={L.monthT} style={{ ...inputStyle, width: 'auto', padding: '5px 8px', fontSize: '12px' }} />
+      </div>
       <div style={{ ...card, overflow: 'hidden', marginBottom: '22px' }}>
         {dueThisMonth.length === 0 && <div style={{ padding: '24px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.noDue}</div>}
         {dueThisMonth.map((b, i) => {
@@ -267,7 +321,7 @@ export default function Financeiro() {
               </div>
               <div style={{ fontSize: '13px', fontWeight: 800, color: t.heading, width: '96px', textAlign: 'right' }}>{fmt(paid ? paid.amount : b.amount)}</div>
               {paid ? (
-                <button onClick={() => undoPayment(b)} disabled={busyId === b.id} style={{ padding: '6px 13px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, border: 'none', background: '#d1fae5', color: '#065f46', cursor: 'pointer' }} title={L.undo}>{L.confirmed}</button>
+                <button onClick={() => undoPayment(b)} disabled={busyId === b.id} style={{ padding: '6px 13px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, border: 'none', background: t.dueOk.bg, color: t.dueOk.ink, cursor: 'pointer' }} title={L.undo}>{L.confirmed}</button>
               ) : (
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <input type="number" min="0" step="0.5" placeholder={String(b.amount)} value={actuals[b.id] ?? ''} onChange={e => setActuals(a => ({ ...a, [b.id]: e.target.value }))} style={{ ...inputStyle, width: '90px' }} />
@@ -286,7 +340,7 @@ export default function Financeiro() {
         {billing.map((b, i) => (
           <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderBottom: i < billing.length - 1 ? `1px solid ${t.rowBorder || t.cardBorder}` : 'none', flexWrap: 'wrap', opacity: b.active ? 1 : 0.55 }}>
             <div style={{ minWidth: '150px', flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: t.heading }}>{b.client_name}{b.user_id && <span title="Utilizador da plataforma" style={{ marginLeft: '6px', fontSize: '11px' }}>🔗</span>}</div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: t.heading }}>{b.client_name}{b.user_id && <span title={L.linkUser} style={{ marginLeft: '6px', color: t.accentText }}><IconConta /></span>}</div>
               <div style={{ fontSize: '11px', color: t.subtle }}>{b.service || '—'}{b.notes ? ` · ${b.notes}` : ''}</div>
             </div>
             <span style={{ padding: '2px 9px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.softCardBg, color: t.textMuted }}>{perLabel[b.periodicity]}</span>
@@ -301,9 +355,11 @@ export default function Financeiro() {
                   onChange={e => anexarContrato(b, e.target.files?.[0])} style={{ display: 'none' }} />
               </label>
             )}
-            <button onClick={() => toggleActive(b)} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', cursor: 'pointer', background: b.active ? '#d1fae5' : '#f1f5f9', color: b.active ? '#065f46' : '#64748b' }}>{L.active}</button>
-            <button onClick={() => openEdit(b)} title={L.edit} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.subtle, fontSize: '13px', padding: '2px' }}>✎</button>
-            <button onClick={() => removeContract(b)} title={L.del} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.subtle, fontSize: '13px', padding: '2px' }}>✕</button>
+            {/* O texto dizia sempre "Ativo", mesmo com o contrato inativo (13-D, 13/10) */}
+            <button onClick={() => toggleActive(b)} title={L.toggleHint} aria-pressed={!!b.active} style={{ padding: '4px 11px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', cursor: 'pointer', background: b.active ? t.dueOk.bg : t.segBg, color: b.active ? t.dueOk.ink : t.textMuted }}>{b.active ? L.active : L.inactive}</button>
+            <button onClick={() => openEdit(b)} title={L.edit} aria-label={L.edit} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.subtle, padding: '4px', display: 'inline-flex' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></svg>
+            </button>
           </div>
         ))}
       </div>

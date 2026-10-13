@@ -6,7 +6,7 @@ import { useSidebar } from '../../context/SidebarContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { BLOCOS, SWOT_QUADRANTES, TOWS_CELULAS, progressoBloco, progressoTotal } from '../../data/consultoriaBlocos'
+import { BLOCOS, SWOT_QUADRANTES, TOWS_CELULAS, progressoBloco } from '../../data/consultoriaBlocos'
 import { Privadas, Capital, Financiamento, Projecao, Liquidez } from '../../components/consultoria/TabelasNumeros'
 import BlocoEnquadramento from '../../components/consultoria/BlocoEnquadramento'
 import { criarLeadDeContacto } from '../../lib/leadsCrm'
@@ -19,6 +19,14 @@ import { criarLeadDeContacto } from '../../lib/leadsCrm'
 // (que mostra os outros clientes) — e recolhe o menu lateral.
 
 const CHAVE_APRESENTACAO = 'lc-consultoria-apresentacao'
+
+// 13-D (13/10): o bloco atual é calculado — o primeiro por acabar, como a fase
+// na ESG. Antes, clicar num bloco só para espreitar gravava-o como o atual.
+const blocoAtualDe = (c) => (BLOCOS.find(b => progressoBloco(b.n, c).pct < 100) || BLOCOS[BLOCOS.length - 1]).n
+
+const IconLapis = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></svg>
+)
 
 export default function ConsultoriaDetalhe() {
   const { id } = useParams()
@@ -56,12 +64,12 @@ export default function ConsultoriaDetalhe() {
     voltar: '← Beratungen', relatorio: 'Bericht →', guardado: 'Gespeichert ✓', aGuardar: 'Wird gespeichert…',
     apresentar: 'Präsentationsmodus', sairApresentar: 'Präsentation beenden', emApresentacao: 'Präsentationsmodus — interne Notizen und CRM sind ausgeblendet.',
     addCrm: 'Zum CRM', noCrm: 'Im CRM ✓', verNoCrm: 'Im CRM ansehen →', crmErro: 'Lead konnte nicht angelegt werden.',
-    bloco: 'Block', porConstruir: 'Dieser Block kommt in der nächsten Phase.',
+    bloco: 'Block', atual: 'aktuell',
     swotVazio: 'Fügen Sie Punkte in die vier Quadranten ein.',
     towsAjuda: 'Was soll ich mit dem tun, was die SWOT gezeigt hat?',
-    eyebrow: 'Verwaltung · Beratung', origem: 'Woraus entsteht', addEstrategia: 'Strategie hinzufügen', escolherOrigem: 'Punkte anklicken, aus denen die Strategie entsteht',
-    add: 'Hinzufügen', remover: 'Entfernen', semItens: 'Noch keine Punkte in der SWOT.',
-    contacto: 'Kontakt', estado: 'Status', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
+    origem: 'Woraus entsteht', addEstrategia: 'Strategie hinzufügen', escolherOrigem: 'Punkte anklicken, aus denen die Strategie entsteht',
+    add: 'Hinzufügen', remover: 'Entfernen', semItens: 'Noch keine Punkte in der SWOT.', addPonto: 'Punkt hinzufügen', editar: 'Bearbeiten', pronto: 'Fertig',
+    email: 'E-Mail', telefone: 'Telefon', setor: 'Branche', estado: 'Status', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
     tGratuita: 'Kostenlos', tImplementacao: 'Geschäftsaufbau',
     notas: 'Interne Notizen', recursos: 'Ressourcen (Links)', addLink: '+ Link',
     titulo: 'Titel', url: 'URL', loading: 'Wird geladen…', erroSave: 'Speichern fehlgeschlagen.',
@@ -70,12 +78,12 @@ export default function ConsultoriaDetalhe() {
     voltar: '← Consultancies', relatorio: 'Report →', guardado: 'Saved ✓', aGuardar: 'Saving…',
     apresentar: 'Presentation mode', sairApresentar: 'End presentation', emApresentacao: 'Presentation mode — internal notes and CRM are hidden.',
     addCrm: '+ Add to CRM', noCrm: 'In CRM ✓', verNoCrm: 'See in CRM →', crmErro: 'Could not create the lead.',
-    bloco: 'Block', porConstruir: 'This block arrives in the next phase.',
+    bloco: 'Block', atual: 'current',
     swotVazio: 'Add items to the four quadrants.',
     towsAjuda: 'With what the SWOT revealed, what should I do?',
-    eyebrow: 'Management · Consultancy', origem: 'Comes from', addEstrategia: 'Add strategy', escolherOrigem: 'Click the items this strategy comes from',
-    add: 'Add', remover: 'Remove', semItens: 'No SWOT items yet.',
-    contacto: 'Contact', estado: 'Status', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
+    origem: 'Comes from', addEstrategia: 'Add strategy', escolherOrigem: 'Click the items this strategy comes from',
+    add: 'Add', remover: 'Remove', semItens: 'No SWOT items yet.', addPonto: 'Add item', editar: 'Edit', pronto: 'Done',
+    email: 'Email', telefone: 'Phone', setor: 'Sector', estado: 'Status', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
     tGratuita: 'Free', tImplementacao: 'Business setup',
     notas: 'Internal notes', recursos: 'Resources (links)', addLink: '+ Link',
     titulo: 'Title', url: 'URL', loading: 'Loading…', erroSave: 'Save failed.',
@@ -84,12 +92,12 @@ export default function ConsultoriaDetalhe() {
     voltar: '← Consultorias', relatorio: 'Relatório →', guardado: 'Guardado ✓', aGuardar: 'A guardar…',
     apresentar: 'Modo apresentação', sairApresentar: 'Sair da apresentação', emApresentacao: 'Modo apresentação — as notas internas e o CRM estão escondidos.',
     addCrm: '+ Juntar ao CRM', noCrm: 'No CRM ✓', verNoCrm: 'Ver no CRM →', crmErro: 'Não foi possível criar o lead.',
-    bloco: 'Bloco', porConstruir: 'Este bloco chega na próxima fase.',
+    bloco: 'Bloco', atual: 'atual',
     swotVazio: 'Acrescenta pontos aos quatro quadrantes.',
     towsAjuda: 'Com aquilo que a SWOT mostrou, o que devo fazer?',
-    eyebrow: 'Gestão · Consultoria', origem: 'Nasce de', addEstrategia: 'Acrescentar estratégia', escolherOrigem: 'Clica nos pontos de onde nasce a estratégia',
-    add: 'Acrescentar', remover: 'Remover', semItens: 'Ainda não há pontos na SWOT.',
-    contacto: 'Contacto', estado: 'Estado', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
+    origem: 'Nasce de', addEstrategia: 'Acrescentar estratégia', escolherOrigem: 'Clica nos pontos de onde nasce a estratégia',
+    add: 'Acrescentar', remover: 'Remover', semItens: 'Ainda não há pontos na SWOT.', addPonto: 'Acrescentar ponto', editar: 'Editar', pronto: 'Feito',
+    email: 'E-mail', telefone: 'Telefone', setor: 'Setor', estado: 'Estado', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
     tGratuita: 'Gratuita', tImplementacao: 'Implementação de negócio',
     notas: 'Notas internas', recursos: 'Recursos (links)', addLink: '+ Link',
     titulo: 'Título', url: 'URL', loading: 'A carregar…', erroSave: 'Falha ao guardar.',
@@ -107,7 +115,7 @@ export default function ConsultoriaDetalhe() {
       setLoading(true)
       const { data } = await supabase.from('consultorias').select('*').eq('id', id).maybeSingle()
       setC(data || null)
-      if (data?.bloco) setBlocoAtivo(data.bloco)
+      if (data) setBlocoAtivo(blocoAtualDe(data))   // abre no primeiro bloco por acabar
       setLoading(false)
     })()
   }, [id])
@@ -195,15 +203,20 @@ export default function ConsultoriaDetalhe() {
   }
 
   // ── Recursos ──
-  const addRecurso = () => alterar({ recursos: [...(c.recursos || []), { titulo: '', url: '' }] }, true)
+  // 13-D (13/10): as ligações mostram-se clicáveis; o lápis abre os dois campos.
+  const [aEditarRecurso, setAEditarRecurso] = useState(null)   // índice em edição
+  const addRecurso = () => { setAEditarRecurso((c.recursos || []).length); alterar({ recursos: [...(c.recursos || []), { titulo: '', url: '' }] }, true) }
   const setRecurso = (i, campo, v) => {
     const r = [...(c.recursos || [])]; r[i] = { ...r[i], [campo]: v }
     alterar({ recursos: r })
   }
   const removeRecurso = (i) => {
     const r = [...(c.recursos || [])]; r.splice(i, 1)
+    setAEditarRecurso(null)
     alterar({ recursos: r }, true)
   }
+  // Sem esquema, "www.x.pt" abria como caminho relativo dentro da plataforma
+  const hrefDe = (u) => (/^[a-z][a-z0-9+.-]*:/i.test(u) ? u : `https://${u}`)
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const inputStyle = { padding: '10px 12px', borderRadius: '9px', border: `1px solid ${t.inputBorder}`, background: t.inputBg, color: t.heading, fontSize: '14px', outline: 'none', width: '100%', boxSizing: 'border-box', fontFamily: t.fontBody }
@@ -213,7 +226,7 @@ export default function ConsultoriaDetalhe() {
   if (!c) return <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.naoEncontrada}</div>
 
   const b = BLOCOS.find(x => x.n === blocoAtivo)
-  const prog = progressoTotal(c)
+  const atual = blocoAtualDe(c)
   const swotItens = (q) => c.swot?.[q] || []
 
   return (
@@ -238,7 +251,7 @@ export default function ConsultoriaDetalhe() {
               style={{ ...inputStyle, border: 'none', background: 'transparent', padding: 0, fontSize: '13px', color: t.textMuted, marginTop: '2px' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexWrap: 'wrap' }}>
-            {estado && <span style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? '#0a7a3e' : t.subtle }}>{estado}</span>}
+            {estado && <span role="status" style={{ fontSize: '11.5px', fontWeight: 700, color: estado === L.guardado ? t.dueOk.ink : t.subtle }}>{estado}</span>}
             {erro && <span style={{ fontSize: '11.5px', fontWeight: 700, color: t.neg }}>{erro}</span>}
             {!apresentacao && <>
             <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.chipBg, color: t.chipText, whiteSpace: 'nowrap' }}>{c.tipo === 'gratuita' ? L.tGratuita : L.tImplementacao}</span>
@@ -260,9 +273,10 @@ export default function ConsultoriaDetalhe() {
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: '10px' }}>
-          {[['email', 'E-mail'], ['telefone', L.contacto], ['setor', 'Setor']].map(([campo, rot]) => (
-            <div key={campo}><div style={lblStyle}>{rot}</div>
-              <input value={c[campo] || ''} onChange={e => alterar({ [campo]: e.target.value })} style={inputStyle} /></div>
+          {/* "Contacto" era o telefone; os três rótulos passam a traduzir-se (13-D, 13/10) */}
+          {[['email', L.email, 'email'], ['telefone', L.telefone, 'tel'], ['setor', L.setor, 'text']].map(([campo, rot, tipo]) => (
+            <label key={campo} style={{ display: 'block' }}><div style={lblStyle}>{rot}</div>
+              <input type={tipo} value={c[campo] || ''} onChange={e => alterar({ [campo]: e.target.value })} style={inputStyle} /></label>
           ))}
         </div>
       </div>
@@ -274,13 +288,16 @@ export default function ConsultoriaDetalhe() {
         {BLOCOS.map(bl => {
           const p = progressoBloco(bl.n, c)
           const on = bl.n === blocoAtivo
+          const eAtual = bl.n === atual
           return (
-            <button key={bl.n} onClick={() => { setBlocoAtivo(bl.n); if (c.bloco !== bl.n) alterar({ bloco: bl.n }, true) }}
+            // Clicar só mostra o bloco — já não grava nada (13-D, 13/10)
+            <button key={bl.n} onClick={() => setBlocoAtivo(bl.n)} aria-pressed={on}
               style={{ flex: isMobile ? '1 1 45%' : '1 1 0', textAlign: 'left', padding: '11px 13px', borderRadius: '11px', cursor: 'pointer',
-                border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg, opacity: bl.porConstruir ? .65 : 1 }}>
+                border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '5px' }}>
-                <span style={{ width: '19px', height: '19px', borderRadius: '50%', background: on ? t.accent : t.trackBg, color: on ? '#0a2f1a' : t.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>{bl.n}</span>
+                <span style={{ width: '19px', height: '19px', flex: 'none', borderRadius: '50%', background: on ? t.accent : t.trackBg, color: on ? t.sidebarBg : t.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800 }}>{bl.n}</span>
                 <span style={{ fontSize: '12.5px', fontWeight: 700, color: on ? t.heading : t.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{txt(bl)}</span>
+                {eAtual && <span style={{ marginLeft: 'auto', flex: 'none', fontSize: '11px', fontWeight: 700, color: t.accentText }}>{L.atual}</span>}
               </div>
               <div style={{ height: '4px', borderRadius: '20px', background: t.trackBg, overflow: 'hidden' }}>
                 <div style={{ width: `${p.pct}%`, height: '100%', background: t.accent }} />
@@ -293,12 +310,7 @@ export default function ConsultoriaDetalhe() {
       {/* Bloco ativo */}
       <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '14px' }}>{txt(b, 'sub')}</div>
 
-      {b.porConstruir && (
-        <div style={{ ...card, padding: '30px 24px', textAlign: 'center', marginBottom: '16px' }}>
-          <div style={{ fontSize: '28px', marginBottom: '8px' }}>🚧</div>
-          <div style={{ fontSize: '13px', color: t.textMuted }}>{L.porConstruir}</div>
-        </div>
-      )}
+      {/* 13-D (13/10): saiu o cartão "Este bloco chega na próxima fase" — nenhum bloco o usava */}
 
       {(b.seccoes || []).map(sec => (
         <div key={sec.key} style={{ ...card, padding: '18px 20px', marginBottom: '14px' }}>
@@ -321,7 +333,7 @@ export default function ConsultoriaDetalhe() {
           {sec.tipo === 'swot' && (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginTop: '12px' }}>
               {SWOT_QUADRANTES.map(q => (
-                <QuadranteSwot key={q.key} q={q} itens={swotItens(q.key)} t={t} txt={txt} lang={lang}
+                <QuadranteSwot key={q.key} q={q} itens={swotItens(q.key)} t={t} txt={txt} L={L}
                   onAdd={(v) => addSwot(q.key, v)} onRemove={(i) => removeSwot(q.key, i)} inputStyle={inputStyle} />
               ))}
               {/* Perguntas de apoio do documento original */}
@@ -383,41 +395,51 @@ export default function ConsultoriaDetalhe() {
             <span style={lblStyle}>{L.recursos}</span>
             <button onClick={addRecurso} style={{ background: 'none', border: 'none', color: t.accentText, fontSize: '11.5px', fontWeight: 700, cursor: 'pointer' }}>{L.addLink}</button>
           </div>
-          {(c.recursos || []).map((r, i) => (
-            <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
-              <input value={r.titulo || ''} onChange={e => setRecurso(i, 'titulo', e.target.value)} placeholder={L.titulo} style={{ ...inputStyle, flex: 1, fontSize: '12px', padding: '7px 9px' }} />
-              <input value={r.url || ''} onChange={e => setRecurso(i, 'url', e.target.value)} placeholder={L.url} style={{ ...inputStyle, flex: 1.2, fontSize: '12px', padding: '7px 9px' }} />
-              <button onClick={() => removeRecurso(i)} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '13px', padding: '0 4px' }}>✕</button>
+          {(c.recursos || []).map((r, i) => (aEditarRecurso === i || !r.url) ? (
+            <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '6px', alignItems: 'center' }}>
+              <input value={r.titulo || ''} onChange={e => setRecurso(i, 'titulo', e.target.value)} placeholder={L.titulo} aria-label={L.titulo} style={{ ...inputStyle, flex: 1, fontSize: '12px', padding: '7px 9px' }} />
+              <input value={r.url || ''} onChange={e => setRecurso(i, 'url', e.target.value)} placeholder={L.url} aria-label={L.url} style={{ ...inputStyle, flex: 1.2, fontSize: '12px', padding: '7px 9px' }} />
+              {r.url && <button onClick={() => setAEditarRecurso(null)} style={{ background: 'none', border: 'none', color: t.accentText, cursor: 'pointer', fontSize: '11.5px', fontWeight: 700, padding: '0 4px' }}>{L.pronto}</button>}
+              <button onClick={() => removeRecurso(i)} aria-label={L.remover} title={L.remover} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '13px', padding: '0 4px' }}>✕</button>
+            </div>
+          ) : (
+            <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center', fontSize: '12.5px' }}>
+              <a href={hrefDe(r.url)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 0, color: t.accentText, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.titulo || r.url} ↗</a>
+              <button onClick={() => setAEditarRecurso(i)} aria-label={L.editar} title={L.editar} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', padding: '0 4px', display: 'flex' }}><IconLapis /></button>
+              <button onClick={() => removeRecurso(i)} aria-label={L.remover} title={L.remover} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '13px', padding: '0 4px' }}>✕</button>
             </div>
           ))}
-          {!(c.recursos || []).length && <div style={{ fontSize: '11.5px', color: t.subtle }}>—</div>}
         </div>
       </div>
-
-      <div style={{ fontSize: '11px', color: t.subtle, marginTop: '14px', textAlign: 'right' }}>{prog.feitas}/{prog.total}</div>
+      {/* 13-D (13/10): saiu o contador final "14/40" — o progresso já está nas barras dos blocos */}
     </div>
   )
 }
 
 // ── Quadrante da SWOT ──────────────────────────────────────────────────────
-function QuadranteSwot({ q, itens, t, txt, onAdd, onRemove, inputStyle }) {
+// 13-D (13/10): sem "interno +/externo −" nem o contador (o nome, a cor e os
+// pontos à vista já o dizem). Acrescenta só com Enter ou com o botão — antes
+// acrescentava ao sair do campo, e clicar noutro sítio metia texto a meio.
+function QuadranteSwot({ q, itens, t, txt, L, onAdd, onRemove, inputStyle }) {
   const [v, setV] = useState('')
-  const submeter = () => { onAdd(v); setV('') }
+  const submeter = () => { if (!v.trim()) return; onAdd(v); setV('') }
   return (
     <div style={{ background: t.softCardBg, borderRadius: '12px', padding: '13px 15px', borderTop: `3px solid ${q.cor}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '9px' }}>
         <span style={{ fontSize: '13px', fontWeight: 800, color: q.cor }}>{txt(q)}</span>
-        <span style={{ fontSize: '11px', color: t.subtle }}>{q.eixo} {q.sinal}</span>
-        <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: t.subtle }}>{itens.length}</span>
       </div>
       {itens.map((it, i) => (
         <div key={i} style={{ display: 'flex', gap: '7px', alignItems: 'flex-start', fontSize: '12px', color: t.text, padding: '5px 0', borderTop: i ? `1px solid ${t.rowBorder || t.cardBorder}` : 'none', lineHeight: 1.4 }}>
           <span style={{ flex: 1 }}>{it}</span>
-          <button onClick={() => onRemove(i)} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '11px', padding: 0, flex: 'none' }}>✕</button>
+          <button onClick={() => onRemove(i)} aria-label={L.remover} title={L.remover} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '11px', padding: 0, flex: 'none' }}>✕</button>
         </div>
       ))}
-      <input value={v} onChange={e => setV(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') submeter() }} onBlur={submeter}
-        placeholder="+" style={{ ...inputStyle, marginTop: '7px', fontSize: '12px', padding: '7px 9px' }} />
+      <div style={{ display: 'flex', gap: '6px', marginTop: '7px' }}>
+        <input value={v} onChange={e => setV(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') submeter() }}
+          placeholder={L.addPonto} aria-label={`${txt(q)} — ${L.addPonto}`} style={{ ...inputStyle, fontSize: '12px', padding: '7px 9px' }} />
+        <button onClick={submeter} disabled={!v.trim()} aria-label={L.addPonto} title={L.addPonto}
+          style={{ flex: 'none', padding: '0 11px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '14px', cursor: v.trim() ? 'pointer' : 'default', opacity: v.trim() ? 1 : .45 }}>+</button>
+      </div>
     </div>
   )
 }
@@ -450,7 +472,7 @@ function CelulaTows({ cel, c, t, txt, L, swotItens, nova, onTexto, onToggleOrige
         <div key={i} style={{ background: t.softCardBg, borderRadius: '9px', padding: '9px 11px', marginBottom: '7px' }}>
           <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
             <span style={{ flex: 1, fontSize: '12.5px', color: t.text, lineHeight: 1.45 }}>{e.texto}</span>
-            <button onClick={() => onRemove(i)} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '11px', padding: 0 }}>✕</button>
+            <button onClick={() => onRemove(i)} aria-label={L.remover} title={L.remover} style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '11px', padding: 0 }}>✕</button>
           </div>
           {!!(e.origem || []).length && (
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>

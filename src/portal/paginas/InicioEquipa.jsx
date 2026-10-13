@@ -2,17 +2,22 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { usePortal } from '../dados'
-import { Titulo, Cartao, Kpi, Vazio, Chip, Pilulas, Botao, Ic } from '../ui'
+import { usePortal, acoes } from '../dados'
+import { Titulo, Cartao, Vazio, Chip, Pilulas, Botao, Ic } from '../ui'
 import { ESTADOS_OBRIG, FECHADOS, estadoEfetivo, hojeIso, somaDias, fmtData } from '../regras'
-import { tarefaAtrasada, docsEmFalta, naoLidas, clientePorId } from '../seletores'
+import { tarefaAtrasada, docsEmFalta, naoLidas, clientePorId, clienteEmCurso } from '../seletores'
+import { FormTarefa } from '../partes/Tarefas'
 
 // Início da equipa (reunião de 08/10): o que há para fazer hoje, de relance.
 // As minhas tarefas, o que os clientes têm pendente (obrigações em atraso ou a
 // chegar, documentos em falta, relatórios do trimestre por fazer, mensagens por
 // ler) e as horas de hoje, com atalho para registar.
+// 13-D (13/10): sem os 5 indicadores do topo — repetiam os dois cartões. As
+// horas de hoje ficam num botão discreto; as listas dizem "+N — ver todas"
+// quando cortam (antes escondiam linhas sem avisar).
 
 const fmtH = (n) => `${(Math.round(n * 100) / 100).toLocaleString('pt-PT', { maximumFractionDigits: 2 })} h`
+const LIM = { tarefas: 8, obrig: 6, docs: 4, nomes: 3 }
 
 export default function InicioEquipa() {
   const { t } = useTheme()
@@ -22,25 +27,27 @@ export default function InicioEquipa() {
   const hoje = hojeIso()
   const em7 = somaDias(hoje, 7)
   const [deQuem, setDeQuem] = useState('minhas')   // 'minhas' | 'equipa'
+  const [verTudo, setVerTudo] = useState({})          // listas abertas por inteiro
+  const [editar, setEditar] = useState(null)          // tarefa aberta no formulário
 
   // ── Tarefas ──
   const abertas = s.tarefas.filter(x => x.estado !== 'concluida' && (deQuem === 'equipa' || x.responsavel === s.eu))
-  const tarefasHoje = abertas.filter(x => x.prazo === hoje)
-  const tarefasAtraso = abertas.filter(x => tarefaAtrasada(x, hoje))
-  const tarefasLista = abertas.filter(x => x.prazo <= em7).sort((a, b) => a.prazo.localeCompare(b.prazo)).slice(0, 8)
+  const tarefas7 = abertas.filter(x => x.prazo <= em7).sort((a, b) => a.prazo.localeCompare(b.prazo))
 
-  // ── Pendências dos clientes ──
-  const obrAtraso = s.obrigacoes.filter(o => estadoEfetivo(o) === 'em_atraso').sort((a, b) => a.prazo.localeCompare(b.prazo))
-  const obrProx = s.obrigacoes.filter(o => !FECHADOS.includes(o.estado) && estadoEfetivo(o) !== 'em_atraso' && o.prazo >= hoje && o.prazo <= em7).sort((a, b) => a.prazo.localeCompare(b.prazo))
+  // ── Pendências dos clientes (regra única: os inativos não contam) ──
+  const emCurso = (cid) => clienteEmCurso(clientePorId(s, cid))
+  const obrAtraso = s.obrigacoes.filter(o => emCurso(o.clienteId) && estadoEfetivo(o) === 'em_atraso').sort((a, b) => a.prazo.localeCompare(b.prazo))
+  const obrProx = s.obrigacoes.filter(o => emCurso(o.clienteId) && !FECHADOS.includes(o.estado) && estadoEfetivo(o) !== 'em_atraso' && o.prazo >= hoje && o.prazo <= em7).sort((a, b) => a.prazo.localeCompare(b.prazo))
   const faltaPorCliente = Object.entries(docsEmFalta(s).reduce((acc, d) => { acc[d.clienteId] = (acc[d.clienteId] || 0) + 1; return acc }, {}))
-    .map(([cid, n]) => ({ cliente: clientePorId(s, cid), n })).filter(x => x.cliente).sort((a, b) => b.n - a.n)
+    .map(([cid, n]) => ({ cliente: clientePorId(s, cid), n })).filter(x => clienteEmCurso(x.cliente)).sort((a, b) => b.n - a.n)
   const porLer = naoLidas(s)
 
-  // Relatório do trimestre que acabou: clientes de contabilidade ativos sem relatório.
+  // Relatório do trimestre que acabou: clientes de contabilidade (não inativos) sem
+  // relatório. Mesma regra da página Relatórios (13-D, 13/10; antes só os "Ativo").
   const d = new Date(); const tAtual = Math.floor(d.getMonth() / 3) + 1
   const [anoR, triR] = tAtual === 1 ? [d.getFullYear() - 1, 4] : [d.getFullYear(), tAtual - 1]
   const fimTri = `${anoR}-${String(triR * 3).padStart(2, '0')}-31`
-  const relPorFazer = s.clientes.filter(c => c.estado === 'ativo' && c.servicos.includes('contabilidade') && (!c.cliente_desde || c.cliente_desde <= fimTri)
+  const relPorFazer = s.clientes.filter(c => clienteEmCurso(c) && c.servicos.includes('contabilidade') && (!c.cliente_desde || c.cliente_desde <= fimTri)
     && !s.relatorios.some(r => r.clienteId === c.id && r.ano === anoR && r.trimestre === triR))
 
   // ── Horas de hoje ──
@@ -52,41 +59,47 @@ export default function InicioEquipa() {
   const primeiro = (s.eu || '').split(' ')[0]
   const tudoEmDia = !obrAtraso.length && !obrProx.length && !faltaPorCliente.length && !relPorFazer.length && !porLer.length
 
+  // Corta uma lista e devolve quantas ficam de fora, para o "+N — ver todas".
+  const corta = (k, lista) => verTudo[k] ? [lista, 0] : [lista.slice(0, LIM[k]), Math.max(0, lista.length - LIM[k])]
+  const [tarefasLista, tarefasMais] = corta('tarefas', tarefas7)
+  const [obrigsLista, obrigsMais] = corta('obrig', [...obrAtraso, ...obrProx])
+  const [docsLista, docsMais] = corta('docs', faltaPorCliente)
+  const verMais = (k, n) => n > 0 && (
+    <button onClick={() => setVerTudo(v => ({ ...v, [k]: true }))} style={{ ...linkBtn, fontSize: '12px', color: t.accentText, padding: '8px 0', display: 'block' }}>+{n} — ver todas</button>
+  )
+  const nomes = (lista) => lista.slice(0, LIM.nomes).join(', ') + (lista.length > LIM.nomes ? ` +${lista.length - LIM.nomes}` : '')
+
   return (
     <div>
-      <Titulo eyebrow={`Gestão · ${fmtData(hoje)}`} titulo={primeiro ? `Olá, ${primeiro}` : 'Início'}
-        sub="O que há para fazer hoje: as tarefas, o que os clientes têm pendente e as horas do dia." />
-
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(185px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-        <Kpi icone={<Ic.lista size={20} />} rotulo="Tarefas para hoje" valor={tarefasHoje.length} sub={tarefasAtraso.length ? `${tarefasAtraso.length} em atraso` : 'nenhuma em atraso'} tom={tarefasAtraso.length ? 'erro' : undefined} onClick={() => navigate('/gestao/tarefas')} />
-        <Kpi icone={<Ic.agenda size={20} />} rotulo="Obrigações em atraso" valor={obrAtraso.length} sub={`${obrProx.length} nos próximos 7 dias`} tom={obrAtraso.length ? 'erro' : undefined} onClick={() => navigate('/gestao/agenda')} />
-        <Kpi icone={<Ic.doc size={20} />} rotulo="Documentos em falta" valor={docsEmFalta(s).length} sub={`${faltaPorCliente.length} cliente(s)`} tom={faltaPorCliente.length ? 'aviso' : undefined} onClick={() => navigate('/gestao/clientes')} />
-        <Kpi icone={<Ic.mensagens size={20} />} rotulo="Mensagens por ler" valor={porLer.length} sub="dos clientes" tom={porLer.length ? 'aviso' : undefined} onClick={() => navigate('/gestao/mensagens')} />
-        <Kpi icone={<Ic.agenda size={20} />} rotulo="As minhas horas hoje" valor={fmtH(horasHoje)} sub="registar →" onClick={() => navigate('/gestao/horas')} />
-      </div>
+      <Titulo titulo={primeiro ? `Olá, ${primeiro}` : 'Início'}
+        acoes={<Botao onClick={() => navigate('/gestao/horas')} title="Abrir as Horas para registar"><Ic.relogio size={16} />Registar horas · hoje {fmtH(horasHoje)}</Botao>} />
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', alignItems: 'start' }}>
         <Cartao titulo="Tarefas" icone={<Ic.lista />}
           acao={<Pilulas opcoes={[['minhas', 'As minhas'], ['equipa', 'Equipa']]} valor={deQuem} aoMudar={setDeQuem} />}>
           {tarefasLista.length === 0 ? <Vazio>Nada para os próximos 7 dias. ✓</Vazio> : tarefasLista.map((x, i) => {
             const atraso = tarefaAtrasada(x, hoje)
+            // Como na tabela das Tarefas: a caixa conclui, o título abre para editar (13-D, 13/10).
             return (
               <div key={x.id} style={{ ...linha, borderTop: i ? linha.borderTop : 'none' }}>
+                <input type="checkbox" checked={false} onChange={() => acoes.alternarTarefa(x.id)} aria-label={`Concluir: ${x.titulo}`}
+                  style={{ width: '18px', height: '18px', accentColor: '#1f6b45', cursor: 'pointer', flex: 'none' }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: t.heading }}>{x.titulo}</div>
+                  <button onClick={() => setEditar(x)} style={linkBtn}>{x.titulo}</button>
                   <div style={{ fontSize: '11.5px', color: t.subtle }}>{x.clienteId ? nome(x.clienteId) : 'Interna'}{deQuem === 'equipa' && x.responsavel ? ` · ${x.responsavel}` : ''}</div>
                 </div>
                 <Chip tom={atraso ? 'erro' : x.prazo === hoje ? 'aviso' : 'neutro'}>{atraso ? `atrasada · ${fmtData(x.prazo)}` : x.prazo === hoje ? 'hoje' : fmtData(x.prazo)}</Chip>
               </div>
             )
           })}
+          {verMais('tarefas', tarefasMais)}
           <div style={{ marginTop: '10px' }}><Botao variante="fantasma" onClick={() => navigate('/gestao/tarefas')}>Ver todas as tarefas →</Botao></div>
         </Cartao>
 
         <Cartao titulo="Pendências dos clientes" icone={<Ic.clientes />}>
           {tudoEmDia ? <Vazio>Tudo em dia. ✓</Vazio> : (
             <div>
-              {[...obrAtraso, ...obrProx].slice(0, 6).map((o, i) => {
+              {obrigsLista.map((o, i) => {
                 const e = estadoEfetivo(o)
                 return (
                   <div key={o.id} style={{ ...linha, borderTop: i ? linha.borderTop : 'none' }}>
@@ -98,20 +111,22 @@ export default function InicioEquipa() {
                   </div>
                 )
               })}
-              {faltaPorCliente.slice(0, 4).map(({ cliente, n }) => (
+              {verMais('obrig', obrigsMais)}
+              {docsLista.map(({ cliente, n }) => (
                 <div key={`d-${cliente.id}`} style={linha}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <button onClick={() => navigate(`/gestao/clientes/${cliente.id}/documentos`)} style={linkBtn}>{cliente.nome}</button>
-                    <div style={{ fontSize: '11.5px', color: t.subtle }}>documentos pedidos que ainda não chegaram</div>
+                    <div style={{ fontSize: '11.5px', color: t.subtle }}>documentos pedidos</div>
                   </div>
                   <Chip tom="aviso">{n} em falta</Chip>
                 </div>
               ))}
+              {verMais('docs', docsMais)}
               {relPorFazer.length > 0 && (
                 <div style={linha}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <button onClick={() => navigate('/gestao/relatorios')} style={linkBtn}>Relatórios do {triR}.º trimestre {anoR}</button>
-                    <div style={{ fontSize: '11.5px', color: t.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{relPorFazer.slice(0, 3).map(c => c.nome).join(', ')}{relPorFazer.length > 3 ? '…' : ''}</div>
+                    <div style={{ fontSize: '11.5px', color: t.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nomes(relPorFazer.map(c => c.nome))}</div>
                   </div>
                   <Chip tom="aviso">{relPorFazer.length} por fazer</Chip>
                 </div>
@@ -120,7 +135,7 @@ export default function InicioEquipa() {
                 <div style={linha}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <button onClick={() => navigate('/gestao/mensagens')} style={linkBtn}>Mensagens dos clientes</button>
-                    <div style={{ fontSize: '11.5px', color: t.subtle }}>{[...new Set(porLer.map(m => nome(m.clienteId)))].slice(0, 3).join(', ')}</div>
+                    <div style={{ fontSize: '11.5px', color: t.subtle }}>{nomes([...new Set(porLer.map(m => nome(m.clienteId)))])}</div>
                   </div>
                   <Chip tom="aviso">{porLer.length} por ler</Chip>
                 </div>
@@ -129,6 +144,7 @@ export default function InicioEquipa() {
           )}
         </Cartao>
       </div>
+      {editar && <FormTarefa inicial={editar} aoFechar={() => setEditar(null)} />}
     </div>
   )
 }

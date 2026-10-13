@@ -270,7 +270,8 @@ export function construirHTML({ c, lang = 'pt' }) {
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:${C.linha2};border:1px solid ${C.linha2}">
     ${porResponder.slice(0, 9).map(q => `<div style="background:#fff;padding:13px 15px;font-size:13.5px;line-height:1.5;color:#3a4a40">${esc(q)}</div>`).join('')}
   </div>` : ''}
-  ${c.notas ? `<div style="margin-top:18px;background:${C.fundoSuave};border-left:3px solid ${C.ouro};padding:12px 14px;font-size:13.5px;line-height:1.55;color:${C.texto}"><b>${esc(L.notaInterna)}.</b> ${esc(c.notas)}</div>` : ''}
+  ${/* E1 (13-D, 13/10): as Notas internas deixaram de ir para o PDF — é o documento
+     que vai ao banco, e o Modo apresentação já as escondia por serem internas. */ ''}
   ${rodape(L, c, ++n)}`))
   }
 

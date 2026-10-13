@@ -53,10 +53,13 @@ export const FATURACAO_FORM_PARA_CRM = {
   gt10k:  '150_500',   // mais de 10 mil/mês = mais de 120 mil/ano
 }
 
+// `tom` é o nome do token do tema (useTheme().t[tom] = { bg, ink }). Antes havia
+// emoji e cores fixas, que não seguiam o tema nem o modo noturno (13-D, 13/10);
+// o ícone desenha-se no CRM.
 export const TEMPERATURES = [
-  { key: 'quente', points: 25, emoji: '🔥', pt: 'Quente', de: 'Heiß',  en: 'Hot',  color: '#c2410c', bg: '#fff1e8' },
-  { key: 'morno',  points: 12, emoji: '🌤', pt: 'Morno',  de: 'Warm',  en: 'Warm', color: '#a9781a', bg: '#fbf3d9' },
-  { key: 'frio',   points: 0,  emoji: '❄',  pt: 'Frio',   de: 'Kalt',  en: 'Cold', color: '#1e60c8', bg: '#e8f0fb' },
+  { key: 'quente', points: 25, tom: 'toneOrange', pt: 'Quente', de: 'Heiß',  en: 'Hot' },
+  { key: 'morno',  points: 12, tom: 'dueSoon',    pt: 'Morno',  de: 'Warm',  en: 'Warm' },
+  { key: 'frio',   points: 0,  tom: 'toneBlue',   pt: 'Frio',   de: 'Kalt',  en: 'Cold' },
 ]
 
 export const SOURCES = [

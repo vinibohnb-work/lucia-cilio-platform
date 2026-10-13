@@ -4,12 +4,14 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
 import { Titulo, Botao, Pilulas, useCampos, Ic } from '../ui'
-import { PAISES, hojeIso, somaDias, somaMeses, dataDe, iso, fmtData, MESES_LONGOS, FECHADOS, estadoEfetivo } from '../regras'
+import { hojeIso, somaDias, somaMeses, dataDe, iso, fmtData, MESES_LONGOS, FECHADOS, estadoEfetivo } from '../regras'
 import { tarefaAtrasada, clientePorId } from '../seletores'
 import { FormTarefa } from '../partes/Tarefas'
 
 // Agenda interna (documento, secção 4): tarefas e prazos fiscais de todos os
-// clientes por dia, semana e mês, com os mesmos filtros das Tarefas.
+// clientes por mês e por dia. 13-D (13/10): saiu a vista Semana (repetia as
+// outras duas: clicar num dia do mês já abre o Dia) e os filtros Cliente e País
+// (a visão de um cliente é a ficha); fica só o Responsável.
 
 const DIAS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom']
 const inicioSemana = (s) => { const d = dataDe(s); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return iso(d) }
@@ -23,34 +25,33 @@ export default function Agenda() {
   const hoje = hojeIso()
   const [vista, setVista] = useState(isMobile ? 'dia' : 'mes')
   const [ref, setRef] = useState(hoje)
-  const [f, setF] = useState({ cliente: '', pais: '', responsavel: '', obrigacoes: true, feitas: false })
+  const [f, setF] = useState({ responsavel: '', obrigacoes: true, feitas: false })
   const [nova, setNova] = useState(null)
 
-  const passaFiltros = (cid, resp) => {
-    const cli = cid ? clientePorId(s, cid) : null
-    return (!f.cliente || cid === f.cliente) && (!f.pais || cli?.pais === f.pais) && (!f.responsavel || resp === f.responsavel)
-  }
+  const passaFiltros = (resp) => !f.responsavel || resp === f.responsavel
   const itensDe = (dia) => [
-    ...s.tarefas.filter(x => x.prazo === dia && (f.feitas || x.estado !== 'concluida') && passaFiltros(x.clienteId, x.responsavel))
+    ...s.tarefas.filter(x => x.prazo === dia && (f.feitas || x.estado !== 'concluida') && passaFiltros(x.responsavel))
       .map(x => ({ tipo: 'tarefa', id: x.id, x, titulo: x.titulo, cid: x.clienteId, atraso: tarefaAtrasada(x, hoje), feita: x.estado === 'concluida' })),
-    ...(f.obrigacoes ? s.obrigacoes.filter(o => o.prazo === dia && (f.feitas || !FECHADOS.includes(o.estado)) && passaFiltros(o.clienteId, clientePorId(s, o.clienteId)?.responsavel))
+    ...(f.obrigacoes ? s.obrigacoes.filter(o => o.prazo === dia && (f.feitas || !FECHADOS.includes(o.estado)) && passaFiltros(clientePorId(s, o.clienteId)?.responsavel))
       .map(o => ({ tipo: 'obrig', id: o.id, titulo: `${o.nome} · ${o.periodo}`, cid: o.clienteId, atraso: estadoEfetivo(o, hoje) === 'em_atraso', feita: FECHADOS.includes(o.estado) })) : []),
   ]
 
-  const mover = (n) => setRef(vista === 'dia' ? somaDias(ref, n) : vista === 'semana' ? somaDias(ref, 7 * n) : somaMeses(ref.slice(0, 8) + '01', n))
+  const mover = (n) => setRef(vista === 'dia' ? somaDias(ref, n) : somaMeses(ref.slice(0, 8) + '01', n))
   const d0 = dataDe(ref)
-  const tituloPeriodo = vista === 'mes' ? `${MESES_LONGOS[d0.getMonth()]} ${d0.getFullYear()}`
-    : vista === 'semana' ? `Semana de ${fmtData(inicioSemana(ref))}` : fmtData(ref)
+  const tituloPeriodo = vista === 'mes' ? `${MESES_LONGOS[d0.getMonth()]} ${d0.getFullYear()}` : fmtData(ref)
 
   const Item = ({ it, compacto }) => {
     const cli = it.cid ? clientePorId(s, it.cid) : null
     const cor = it.atraso ? { bg: t.dueLate.bg, ink: t.dueLate.ink } : it.tipo === 'obrig' ? { bg: t.chipBg, ink: t.chipText } : { bg: t.softCardBg, ink: t.heading }
     return (
-      <div onClick={() => it.cid ? navigate(`/gestao/clientes/${it.cid}/${it.tipo === 'obrig' ? 'obrigacoes' : 'tarefas'}`) : setNova(it.x)}
+      // Uma tarefa abre sempre o formulário para editar; uma obrigação abre a
+      // ficha em Obrigações. Antes a tarefa com cliente ia para …/tarefas, um
+      // separador que já não existe (E8, 13/10).
+      <div onClick={() => it.tipo === 'tarefa' ? setNova(it.x) : navigate(`/gestao/clientes/${it.cid}/obrigacoes`)}
         title={`${cli ? cli.nome + ' — ' : ''}${it.titulo}`}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: compacto ? '2px 6px' : '8px 10px', borderRadius: '7px', background: cor.bg, color: cor.ink, fontSize: compacto ? '11px' : '13px', cursor: 'pointer', opacity: it.feita ? 0.5 : 1, overflow: 'hidden', whiteSpace: compacto ? 'nowrap' : 'normal', marginBottom: '3px', border: it.tipo === 'obrig' ? `1px solid ${t.accent}55` : 'none' }}>
         {it.tipo === 'tarefa' && !compacto && <input type="checkbox" checked={it.feita} onClick={e => e.stopPropagation()} onChange={() => acoes.alternarTarefa(it.id)} style={{ accentColor: '#1f6b45', flex: 'none' }} />}
-        <span style={{ flex: 'none' }}>{it.tipo === 'obrig' ? '📅' : '✓'}</span>
+        {it.tipo === 'obrig' ? <Ic.agenda size={compacto ? 12 : 15} /> : <Ic.tarefas size={compacto ? 12 : 15} />}
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{compacto && cli ? `${cli.nome.split(' ')[0]} · ` : ''}{it.titulo}{!compacto && cli ? <span style={{ opacity: .7 }}> — {cli.nome}</span> : ''}</span>
       </div>
     )
@@ -77,22 +78,6 @@ export default function Agenda() {
         })}
       </div>
     )
-  } else if (vista === 'semana') {
-    const ini = inicioSemana(ref)
-    corpo = (
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(7, minmax(0, 1fr))', gap: '8px' }}>
-        {[...Array(7)].map((_, i) => {
-          const dia = somaDias(ini, i)
-          const its = itensDe(dia)
-          return (
-            <div key={dia} style={{ background: t.cardBg, border: `1px solid ${dia === hoje ? t.accent : t.cardBorder}`, borderRadius: '12px', padding: '10px', minHeight: isMobile ? 0 : '240px', minWidth: 0 }}>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: dia === hoje ? t.accentText : t.heading, marginBottom: '8px' }}>{DIAS[i]} {Number(dia.slice(8))}</div>
-              {its.length === 0 ? <div style={{ fontSize: '11.5px', color: t.subtle }}>—</div> : its.map(it => <Item key={it.id} it={it} compacto={!isMobile} />)}
-            </div>
-          )
-        })}
-      </div>
-    )
   } else {
     const its = itensDe(ref)
     corpo = (
@@ -104,10 +89,10 @@ export default function Agenda() {
 
   return (
     <div>
-      <Titulo eyebrow="Área interna" titulo="Agenda" sub="Tarefas e prazos fiscais de todos os clientes. Clique num dia para o ver em detalhe."
+      <Titulo titulo="Agenda"
         acoes={<Botao variante="primario" onClick={() => setNova({ prazo: ref })}><Ic.mais size={16} />Nova tarefa</Botao>} />
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
-        <Pilulas valor={vista} aoMudar={setVista} opcoes={[['dia', 'Dia'], ['semana', 'Semana'], ['mes', 'Mês']]} />
+        <Pilulas valor={vista} aoMudar={setVista} opcoes={[['mes', 'Mês'], ['dia', 'Dia']]} />
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
           <Botao onClick={() => mover(-1)} aria-label="Anterior" estilo={{ padding: '0 11px' }}>‹</Botao>
           <Botao onClick={() => setRef(hoje)}>Hoje</Botao>
@@ -116,12 +101,10 @@ export default function Agenda() {
         <strong style={{ fontSize: '16px', color: t.heading, textTransform: 'capitalize' }}>{tituloPeriodo}</strong>
       </div>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
-        <select value={f.cliente} onChange={e => setF(p => ({ ...p, cliente: e.target.value }))} style={{ ...c.input, width: 'auto', cursor: 'pointer' }} aria-label="Cliente"><option value="">Todos os clientes</option>{s.clientes.map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}</select>
-        <select value={f.pais} onChange={e => setF(p => ({ ...p, pais: e.target.value }))} style={{ ...c.input, width: 'auto', cursor: 'pointer' }} aria-label="País"><option value="">Todos os países</option>{Object.entries(PAISES).map(([k, r]) => <option key={k} value={k}>{r}</option>)}</select>
         <select value={f.responsavel} onChange={e => setF(p => ({ ...p, responsavel: e.target.value }))} style={{ ...c.input, width: 'auto', cursor: 'pointer' }} aria-label="Responsável"><option value="">Toda a equipa</option>{s.equipa.map(x => <option key={x}>{x}</option>)}</select>
         <label style={{ fontSize: '12.5px', display: 'flex', gap: '6px', alignItems: 'center', cursor: 'pointer' }}><input type="checkbox" checked={f.obrigacoes} onChange={e => setF(p => ({ ...p, obrigacoes: e.target.checked }))} style={{ accentColor: t.btnBg }} />Prazos fiscais</label>
         <label style={{ fontSize: '12.5px', display: 'flex', gap: '6px', alignItems: 'center', cursor: 'pointer' }}><input type="checkbox" checked={f.feitas} onChange={e => setF(p => ({ ...p, feitas: e.target.checked }))} style={{ accentColor: t.btnBg }} />Mostrar concluídas</label>
-        <span style={{ fontSize: '11.5px', color: t.subtle, marginLeft: 'auto' }}>📅 prazo fiscal · ✓ tarefa · <span style={{ color: t.neg }}>vermelho = em atraso</span></span>
+        <span style={{ fontSize: '11.5px', color: t.subtle, marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}><Ic.agenda size={13} />prazo fiscal · <Ic.tarefas size={13} />tarefa · <span style={{ color: t.neg }}>vermelho = em atraso</span></span>
       </div>
       {corpo}
       {nova && <FormTarefa inicial={nova} aoFechar={() => setNova(null)} />}

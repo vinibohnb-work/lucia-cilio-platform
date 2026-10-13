@@ -76,7 +76,8 @@
   **Resto da Gestão avaliado a 12/10** → `docs/auditorias/2026-10-12-simplificacao-gestao.md` (síntese)
   + `docs/auditorias/simplificacao-gestao/` (detalhe ecrã a ecrã). 12 erros a corrigir (E1–E12, o
   mais urgente: Notas internas da consultoria no PDF do banco), menu de 14 → 10–12 itens, 13
-  perguntas para a Lúcia. ⏳ Aprovação do Vinícius para as fases A (erros) e B (sem decisão).
+  perguntas para a Lúcia. **Fases A (erros) e B (sem decisão) aplicadas a 13/10** (ver Concluídos).
+  ⏳ Fase C: as 13 perguntas da síntese (§6) vão à reunião com a Lúcia, junto com os pontos 6–10.
 - [ ] **15.** Consultoria: tirar as perguntas indicadas pela Lúcia e absorver os 8 passos do
   mentor (podem mudar a estrutura, não só tirar perguntas). As perguntas vivem em
   `src/data/consultoriaBlocos.js`; remover não perde respostas. ⏳ Ponto 10.
@@ -299,6 +300,32 @@
 ---
 
 ## Concluídos
+
+### Simplificação da Gestão, fases A e B — 13/10 (13-D)
+- **Erros corrigidos (E1–E12):** as Notas internas da consultoria já não vão para o PDF do banco
+  (a IA continua a recebê-las, marcadas como contexto interno que nunca se cita); o contrato criado
+  no CRM pede a ficha e grava `cliente_id`; o Financeiro escolhe o cliente da lista de fichas (sem
+  ligar pelo nome em silêncio); campo Etapa no lead (o CRM passa a funcionar no telemóvel);
+  "Criar acesso" do CRM leva a Acessos já preenchido (mensagem de boas-vindas, sem palavra-passe
+  num alerta); o relatório da consultoria grava ao sair e avisa quando falha; "Fechar" do
+  relatório trimestral pergunta antes de perder o que foi escrito; "Marcar como enviado (fica
+  visível ao cliente)"; tarefa nova atribuída a quem a cria; a Agenda abre a tarefa para editar;
+  sem estados escritos à mão; "+N — ver todas" no Início.
+- **Menu:** Início, Clientes, Agenda, Tarefas, Mensagens, Horas, Relatórios trimestrais ·
+  COMERCIAL Prospeção, Diagnósticos, Marketing · SERVIÇOS Consultorias, Consultorias ESG ·
+  ESCRITÓRIO Financeiro, Acessos. Um ícone por item; contador de por ler passa para Mensagens; sem
+  as iniciais no rodapé; bandeiras como botões.
+- **Ecrãs:** Início só com os cartões Tarefas e Pendências (+ botão de horas); lista de clientes
+  sem iniciais, país em chip, estado só quando não é ativo, inativos escondidos por omissão;
+  Relatórios com os 3 trimestres fechados; Mensagens sem avatares e com "Outros clientes"; Agenda
+  com Mês e Dia; Tarefas com pílulas Hoje · 7 dias · Em atraso · Todas; Horas com totais numa
+  linha; CRM sem filtro de temperatura, cartões mais limpos, eliminar dentro do lead; Diagnósticos
+  com "Copiar ligação" e respostas legíveis; Financeiro com 2 indicadores e o mês por extenso;
+  Acessos sem o campo Serviço, equipa e clientes separados; Consultorias criadas só com o essencial,
+  bloco atual calculado, Enquadramento recolhível, SWOT só com Enter, Recursos clicáveis; ESG com
+  "Cliente vê: Sim/Não" e "Apresentar ao cliente"; Apresentação imprime sempre em claro.
+- Emojis trocados por ícones e cores fixas por tokens do tema nos ecrãs tocados. Tudo o que tem ⏳
+  ficou como estava. Testado no ambiente local (V1 e V2, computador e telemóvel).
 
 ### Logótipo do cliente — 12/10 (item 29, migração 045)
 - Coluna `clientes.logo`, bucket público `logos` (só PNG/JPEG/WebP, até 2 MB; cada cliente escreve
