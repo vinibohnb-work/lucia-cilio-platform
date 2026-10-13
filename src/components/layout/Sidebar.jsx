@@ -226,7 +226,7 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{ padding: '0 24px 16px', display: 'flex', justifyContent: 'center', marginBottom: '14px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
-        <img src="/logo-letra-branca.png" alt="LC Office Consulting" style={{ width: '100%', maxWidth: '170px', height: 'auto', display: 'block' }} />
+        <img src="/logo-letra-branca.png" alt="LC Office Consulting" style={{ width: '100%', maxWidth: '130px', height: 'auto', display: 'block' }} />
       </div>
 
       {/* Nav */}
