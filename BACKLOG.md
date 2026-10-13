@@ -4,7 +4,8 @@
 > durante o desenvolvimento
 > **Última sincronização:** 08/10/2026 · Reuniões processadas: 16/07, 23/07, 30/07, 06/08,
 > 13/08, 20/08, 27/08, 10/09, 18/09, 25/09, 01/10 e 08/10/2026
-> **Auditorias:** QA de interface 13/08 → `docs/auditorias/2026-08-13-interface.md` **·**
+> **Auditorias:** Simplificação da ficha do cliente 12/10 →
+> `docs/auditorias/2026-10-12-simplificacao-ficha-cliente.md` **·** QA de interface 13/08 → `docs/auditorias/2026-08-13-interface.md` **·**
 > Segurança/RGPD 21/08 → `docs/auditorias/2026-08-21-seguranca-gdpr.md` **·** Jornada, etapa 1
 > 05/10 → `docs/auditorias/2026-10-05-jornada-etapa1.md` **·** Permissões 11/10 →
 > `docs/auditorias/2026-10-11-permissoes.md`
@@ -68,6 +69,9 @@
 - [ ] **13-D.** **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem — sobre o
   12 e o 13, com as anotações da Letícia (chegam pelo WhatsApp). Prazo combinado: 3/11.
   Inclui o resto do R-B11: campos que gravam a cada tecla. *Reunião 08/10*
+  **Ficha do cliente avaliada a 12/10** → `docs/auditorias/2026-10-12-simplificacao-ficha-cliente.md`
+  (9 → 6 separadores, Resumo com 2 cartões, WhatsApp num sítio só). ⏳ Aprovação do Vinícius;
+  estados vs checklist, Relatórios, Conta na plataforma e Software vão à reunião com a Lúcia.
 - [ ] **15.** Consultoria: tirar as perguntas indicadas pela Lúcia e absorver os 8 passos do
   mentor (podem mudar a estrutura, não só tirar perguntas). As perguntas vivem em
   `src/data/consultoriaBlocos.js`; remover não perde respostas. ⏳ Ponto 10.
