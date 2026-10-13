@@ -9,14 +9,15 @@ import { useTheme } from '../../context/ThemeContext'
 import { computeTreatment } from '../../lib/treatmentCalc'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
+import { BRAND } from '../../theme'
 
 // Formatador partilhado: as quatro calculadoras vivem fora do componente
 // principal, por isso cada uma cria o seu a partir da lingua que recebe.
 const criarFmt = (lang) => (n) => isNaN(n) ? '0,00'
   : n.toLocaleString(localeDe(lang), { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = BRAND.green
+const GOLD = BRAND.gold
 const BG = '#f2f6f3'
 
 const p   = (v)  => parseFloat(v) || 0

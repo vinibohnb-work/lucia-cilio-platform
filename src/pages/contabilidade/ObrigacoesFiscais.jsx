@@ -8,9 +8,10 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
+import { BRAND } from '../../theme'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = BRAND.green
+const GOLD = BRAND.gold
 const BG = '#f2f6f3'
 
 const STATUS_STYLE = {

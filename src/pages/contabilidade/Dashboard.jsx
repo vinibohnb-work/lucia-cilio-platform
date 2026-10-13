@@ -15,9 +15,10 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { FlagPT } from '../../components/Flag'
 import EstimateNote from '../../components/EstimateNote'
+import { BRAND } from '../../theme'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = BRAND.green
+const GOLD = BRAND.gold
 const BG = '#f2f6f3'
 const GREEN = '#16a34a'
 const RED = '#e53e3e'
@@ -401,7 +402,7 @@ export default function Dashboard() {
       {/* ── Base Segurança Social (apenas trimestral, só Portugal) ── */}
       {/* Só trabalhadores independentes (não sociedades) — R-B12 */}
       {isQuarter && settings?.country !== 'DE' && settings?.ss_regime !== 'company' && (
-        <div style={{ background: `linear-gradient(135deg, ${G} 0%, #164e2b 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
+        <div style={{ background: `linear-gradient(135deg, ${G} 0%, ${BRAND.greenMid} 100%)`, borderRadius: '14px', padding: '20px 22px', marginBottom: '20px', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <FlagPT size={20} />
             <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0 }}>{L.ssTitle} · {periodLabel}</h3>

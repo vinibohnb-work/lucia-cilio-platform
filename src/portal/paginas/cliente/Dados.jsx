@@ -6,6 +6,7 @@ import { acoes, usePortal } from '../../dados'
 import { exportarCliente } from '../../../lib/adminApi'
 import { Cartao, Campo, Chip, Botao, useCampos, usePerfil, pode, Ic } from '../../ui'
 import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
+import { BASE } from '../../../lib/v2'
 
 // Dados do cliente — os campos do cabeçalho do documento (secção 1) e o perfil
 // fiscal que decide o calendário (secção 3). Estes dados são mantidos pela
@@ -103,7 +104,7 @@ export default function Dados({ cliente, modoCliente, equipa }) {
             <Campo rotulo="Avença">
               <div style={{ fontSize: '13.5px', padding: '9px 0' }}>
                 {cliente.contratoId ? <><strong style={{ color: t.heading }}>{fmtEur(cliente.avenca)}</strong> · {(rotuloPeriodicidade(cliente.avencaPeriodicidade) || cliente.avencaPeriodicidade).toLowerCase()}</> : <span style={{ color: t.subtle }}>sem contrato</span>}
-                <a href="/gestao/financeiro" style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Financeiro →</a>
+                <a href={`${BASE}/gestao/financeiro`} style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Financeiro →</a>
               </div>
             </Campo>
           )}
@@ -120,7 +121,7 @@ export default function Dados({ cliente, modoCliente, equipa }) {
               {livres.map(x => <option key={x.id} value={x.id}>{x.nome} · {x.email}</option>)}
             </select>
             {conta && <Chip tom={conta.ativo ? 'ok' : 'aviso'}>{conta.ativo ? 'Conta ativa' : 'Ainda não entrou'}</Chip>}
-            <a href="/gestao/acessos" style={{ fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Criar conta em Acessos →</a>
+            <a href={`${BASE}/gestao/acessos`} style={{ fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Criar conta em Acessos →</a>
           </div>
         ) : (
           <div style={{ fontSize: '13px', color: t.text }}>{cliente.userId ? 'Tem conta na plataforma.' : 'Sem conta na plataforma.'}</div>

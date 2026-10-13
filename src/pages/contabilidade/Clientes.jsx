@@ -7,8 +7,9 @@ import { getCountryOptions, countryName } from '../../data/countries'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { BRAND } from '../../theme'
 
-const BRAND_G = '#0a2f1a'
+const BRAND_G = BRAND.green
 
 const SERVICE_STYLE = {
   esg:  { bg: '#e8f5ec', color: BRAND_G },

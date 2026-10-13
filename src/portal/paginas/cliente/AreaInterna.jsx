@@ -5,6 +5,7 @@ import { usePortal, acoes } from '../../dados'
 import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, usePerfil, pode, Ic } from '../../ui'
 import { isDueInPeriod } from '../../../pages/gestao/Financeiro'
 import { TIPOS_NOTA, ESCLARECER_COM, fmtData, fmtEur, hojeIso, somaMeses, somaDias, rotuloServico, MESES_LONGOS } from '../../regras'
+import { BASE } from '../../../lib/v2'
 
 // Área interna (documento, secção 9) — nunca visível ao cliente: notas,
 // dúvidas e assuntos pendentes, histórico de contactos, assuntos a esclarecer
@@ -115,8 +116,8 @@ export default function AreaInterna({ cliente }) {
           <Cartao titulo="Controlo da avença" area="interna">
             {cliente.contratoId
               ? <div style={{ fontSize: '13px', marginBottom: '10px' }}><strong style={{ fontSize: '18px', color: t.heading }}>{fmtEur(cliente.avenca)}</strong> <span style={{ color: t.subtle }}>/ {{ anual: 'ano', trimestral: 'trimestre', unico: 'uma vez' }[cliente.avencaPeriodicidade] || 'mês'}</span>
-                <a href="/gestao/financeiro" style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Financeiro →</a></div>
-              : <div style={{ fontSize: '12.5px', color: t.subtle }}>Sem contrato no Financeiro. A avença cria-se em <a href="/gestao/financeiro" style={{ color: t.accentText, fontWeight: 700 }}>Financeiro</a>, com o nome do cliente ou a conta dele.</div>}
+                <a href={`${BASE}/gestao/financeiro`} style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Financeiro →</a></div>
+              : <div style={{ fontSize: '12.5px', color: t.subtle }}>Sem contrato no Financeiro. A avença cria-se em <a href={`${BASE}/gestao/financeiro`} style={{ color: t.accentText, fontWeight: 700 }}>Financeiro</a>, com o nome do cliente ou a conta dele.</div>}
             {periodos.map(per => {
               const pg = pags.find(p => p.periodo === per)
               const [y, m] = per.split('-')

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { THEMES } from '../theme'
+import { THEMES, BRAND } from '../theme'
 
 const ThemeContext = createContext()
 
@@ -15,7 +15,7 @@ export function ThemeProvider({ children }) {
     document.documentElement.style.background = THEMES[theme].appBg
     document.documentElement.dataset.theme = theme   // as barras de scroll (CSS) seguem daqui
     const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', theme === 'night' ? '#04140b' : '#0a2f1a')
+    if (meta) meta.setAttribute('content', theme === 'night' ? THEMES.night.sidebarBg : BRAND.green)
   }, [theme])
 
   const value = {

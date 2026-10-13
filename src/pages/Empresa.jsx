@@ -8,9 +8,10 @@ import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } 
 import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
 import EnvioDocumentos from '../components/EnvioDocumentos'
 import InfoTooltip from '../components/InfoTooltip'
+import { BRAND } from '../theme'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = BRAND.green
+const GOLD = BRAND.gold
 const BG = '#f2f6f3'
 
 

@@ -71,12 +71,12 @@
 - [ ] **15.** Consultoria: tirar as perguntas indicadas pela Lúcia e absorver os 8 passos do
   mentor (podem mudar a estrutura, não só tirar perguntas). As perguntas vivem em
   `src/data/consultoriaBlocos.js`; remover não perde respostas. ⏳ Ponto 10.
-- [ ] **16-B.** **Validação visual com a Lúcia — semana de 13 a 17/10.** Branch
-  `identidade-visual` (`7025caa`): tema claro e noturno com a paleta oficial, títulos Archivo
-  Black; canvas com 6 alternativas e o HTML da plataforma com dados fictícios
-  (`docs/validacao/plataforma-identidade-visual-2026-10-08.html`). Na sessão: alternativa
-  escolhida, fonte do corpo (Arial Nova precisa de licença web; senão Archivo), modo noturno.
-  Depois: merge — **conta com conflitos nos tamanhos de letra** (o QA de 10/10 mexeu neles).
+- [ ] **16-B.** **Validação visual com a Lúcia — semana de 13 a 17/10.** A identidade nova está
+  publicada como **V2** em https://lucia-cilio-platform.vercel.app/v2 — a plataforma de produção
+  inteira (Gestão, área do cliente, ESG), com os dados e as contas reais, só com outro tema; a
+  V1 continua igual em `/`. Na sessão: aprovar a V2, fonte do corpo (Arial Nova precisa de licença
+  web; senão Archivo), modo noturno. Aprovada, a V2 passa a ser a única: os tokens de
+  `THEMES_V2` em `src/theme.js` substituem os da V1 e sai `src/lib/v2.js`.
   ⏳ Sessão com a Lúcia e a Letícia.
 
 **Validação com utilizadores reais**
@@ -290,6 +290,16 @@
 ---
 
 ## Concluídos
+
+### V2 com a identidade visual — 12/10
+- A plataforma de produção com a identidade da LC Office (paleta do documento da Letícia, Archivo
+  Black nos títulos, Arial Nova/Archivo no corpo, tema claro e noturno) servida em **`/v2`** do
+  mesmo site: mesmo código e mesmos dados, para a Lúcia e a Letícia validarem com as contas delas.
+- Como funciona: `src/lib/v2.js` deteta o caminho `/v2`; `src/theme.js` escolhe `THEMES_V2` e
+  `BRAND_V2` (tokens da branch `identidade-visual`, com os da V1 por baixo para nada ficar sem
+  cor); o router usa `basename="/v2"`; o CSS troca as variáveis com `html.v2` e endireita os
+  títulos itálicos (eram para a Cormorant); ligações `<a href>` levam o prefixo; o relatório de
+  consultoria sai com as fontes e cores novas. A V1 não muda.
 
 ### Logótipo novo — 12/10
 - Logótipo "Office Consulting" com letras brancas (enviado pelo Vinícius) em fundo transparente:

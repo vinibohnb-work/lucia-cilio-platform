@@ -9,9 +9,10 @@ import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCa
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { devidoNoPeriodo, mesAtual } from '../../lib/periodicidade'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
+import { BRAND } from '../../theme'
 
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = BRAND.green
+const GOLD = BRAND.gold
 const BG = '#f2f6f3'
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']

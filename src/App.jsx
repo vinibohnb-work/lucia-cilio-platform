@@ -23,6 +23,7 @@ import { homePathFor } from './lib/platformHome'
 // Internal layout (sempre presente — não faz sentido dividir)
 import Sidebar from './components/layout/Sidebar'
 import FiscalBell from './components/FiscalBell'
+import { BASE } from './lib/v2'
 
 // ── Páginas carregadas a pedido (code splitting por rota) ──
 // Cada plataforma só descarrega o seu próprio código: o arranque deixa de
@@ -235,7 +236,7 @@ export default function App() {
       <AuthProvider>
         <ViewAsProvider>
         <SidebarProvider>
-          <BrowserRouter>
+          <BrowserRouter basename={BASE || undefined}>
             <Suspense fallback={null}>
             <Routes>
               <Route path="/"                      element={<Navigate to="/login" replace />} />

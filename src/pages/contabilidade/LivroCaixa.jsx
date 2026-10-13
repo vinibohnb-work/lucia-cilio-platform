@@ -13,14 +13,15 @@ import { useTheme } from '../../context/ThemeContext'
 import { entryTypeLabel } from '../../lib/cashEntry'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { devidoNoPeriodo } from '../../lib/periodicidade'
+import { BRAND } from '../../theme'
 
 // IVA contido num montante total (com IVA): total × taxa/(100+taxa)
 const vatFromGross = (gross, rate) => (rate > 0 ? Number(gross) * rate / (100 + rate) : 0)
 
 
 const NL2 = String.fromCharCode(10) + String.fromCharCode(10)
-const G = '#0a2f1a'
-const GOLD = '#c9a84c'
+const G = BRAND.green
+const GOLD = BRAND.gold
 const BG = '#f2f6f3'
 
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']

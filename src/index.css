@@ -10,6 +10,18 @@
   --bg: #f2f6f3;
 }
 
+/* V2 (/v2): identidade visual da LC Office Consulting */
+html.v2 {
+  --green: #0E3D33;
+  --green-mid: #184F43;
+  --green-light: #E3EEE8;
+  --gold: #C89B3C;
+  --gold-light: #EAD8B7;
+  --bg: #F8F1E4;
+}
+html.v2 body { font-family: 'Arial Nova', 'Archivo', 'Segoe UI', system-ui, sans-serif; color: #2b3a34; }
+html.v2 [style*="font-style: italic"] { font-style: normal !important; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { max-width: 100%; overflow-x: hidden; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #1a2e1a; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
