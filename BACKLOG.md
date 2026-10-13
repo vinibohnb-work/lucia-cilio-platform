@@ -307,7 +307,7 @@
   o anterior, recortado). O tema escolhe o certo (`t.logoSrc`); sai o `logo.png`.
 - Menu lateral: só o logótipo, centrado na largura do menu (saem "Lúcia Cílio" e "Office
   Consulting"). Login, Definir palavra-passe e Formulário de diagnóstico com o logótipo novo; no
-  login sai o subtítulo "Office Consulting", que o logótipo já diz.
+  login saem o título "Lúcia Cílio" e o subtítulo "Office Consulting" — fica só o logótipo.
 - Ícones da app (PWA, favicon, iOS) regenerados com o monograma novo; capa do guia em PDF usa-o.
 
 ### Ficha duplicada da Célia apagada — 12/10 (item 4)

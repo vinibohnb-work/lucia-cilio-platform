@@ -78,8 +78,9 @@ export default function Login() {
       {/* Card */}
       <div style={{ width: '400px', maxWidth: '100%', borderRadius: '20px', padding: '40px 38px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.loginShadow }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px' }}>
-          <img src={t.logoSrc} alt="LC Office Consulting" style={{ width: '200px', maxWidth: '100%', height: 'auto', marginBottom: '16px' }} />
-          <h1 style={{ margin: 0, fontWeight: 400, fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '26px', color: t.heading, lineHeight: 1 }}>Lúcia Cílio</h1>
+          <h1 style={{ margin: 0, lineHeight: 0 }}>
+            <img src={t.logoSrc} alt="LC Office Consulting" style={{ width: '200px', maxWidth: '100%', height: 'auto' }} />
+          </h1>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
