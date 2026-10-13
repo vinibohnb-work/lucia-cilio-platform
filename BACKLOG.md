@@ -21,17 +21,16 @@
 
 ## Checklist de fecho — versão final para entrega (até 14/11)
 
-> Ordem de ataque. O que não tem ⏳ faço eu. Já feitos (ver Concluídos): 1, 2, 3, 13-A, 13-B,
+> Ordem de ataque. O que não tem ⏳ faço eu. O 5 (conferir as fichas dos clientes e gerar os
+> calendários) saiu a 12/10: fica direto com a Lúcia. Já feitos (ver Concluídos): 1, 2, 3, 13-A, 13-B,
 > 13-C, 14, 16, 16-A, 18, 21, 22, 23.
 
 **Agora — fechar o que está a meio**
-- [ ] **4.** Apagar a **ficha duplicada da Célia** com o botão novo, depois de ver qual das duas
-  tem lançamentos e obrigações. ⏳ Confirmar com a Lúcia qual fica. *Reunião 01/10*
-- [ ] **5.** Conferir as **fichas dos clientes**, ficha a ficha: nomes duplicados, contratos do
-  Financeiro por ligar, responsável, forma jurídica, regime e periodicidade (é o que decide o
-  calendário fiscal) — e gerar os calendários que faltam; hoje nenhum cliente tem calendário.
-  Ponto de partida: `supabase/consulta_clientes_duplicados.sql` (só leitura).
-  ⏳ Com a Lúcia, 1 hora.
+- [ ] **4.** Apagar a **ficha duplicada da Célia** — fica a que tem dados; sai a registada como
+  **Alemanha** (sem dados na plataforma). Decidido pelo Vinícius a 12/10. SQL pronto com
+  salvaguardas (`apagar_ficha_celia_alemanha.sql`, na raiz, fora do git): só apaga se for a
+  única ficha da Célia na Alemanha e não tiver conta nem nada ligado. ⏳ O Vinícius correr na
+  produção (parte 1 para confirmar, parte 2 para apagar). *Reunião 01/10*
 
 **Uma sessão de decisões com a Lúcia** (tudo numa reunião — de preferência junto com a 16-B)
 - [ ] **6.** Dúvidas da etapa 1: calendário de um cliente novo só a partir de "cliente desde"
