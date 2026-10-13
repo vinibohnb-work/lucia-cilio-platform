@@ -22,15 +22,8 @@
 ## Checklist de fecho — versão final para entrega (até 14/11)
 
 > Ordem de ataque. O que não tem ⏳ faço eu. O 5 (conferir as fichas dos clientes e gerar os
-> calendários) saiu a 12/10: fica direto com a Lúcia. Já feitos (ver Concluídos): 1, 2, 3, 13-A, 13-B,
+> calendários) saiu a 12/10: fica direto com a Lúcia. Já feitos (ver Concluídos): 1, 2, 3, 4, 13-A, 13-B,
 > 13-C, 14, 16, 16-A, 18, 21, 22, 23.
-
-**Agora — fechar o que está a meio**
-- [ ] **4.** Apagar a **ficha duplicada da Célia** — fica a que tem dados; sai a registada como
-  **Alemanha** (sem dados na plataforma). Decidido pelo Vinícius a 12/10. SQL pronto com
-  salvaguardas (`apagar_ficha_celia_alemanha.sql`, na raiz, fora do git): só apaga se for a
-  única ficha da Célia na Alemanha e não tiver conta nem nada ligado. ⏳ O Vinícius correr na
-  produção (parte 1 para confirmar, parte 2 para apagar). *Reunião 01/10*
 
 **Uma sessão de decisões com a Lúcia** (tudo numa reunião — de preferência junto com a 16-B)
 - [ ] **6.** Dúvidas da etapa 1: calendário de um cliente novo só a partir de "cliente desde"
@@ -297,6 +290,12 @@
 ---
 
 ## Concluídos
+
+### Ficha duplicada da Célia apagada — 12/10 (item 4)
+- Saiu a ficha registada como **Alemanha**, sem conta nem dados ligados; ficou a que tem os
+  dados. Apagada pelo Vinícius na produção com `apagar_ficha_celia_alemanha.sql` (fora do git),
+  que só apagava se fosse a única ficha da Célia na Alemanha e estivesse vazia.
+- O item 5 (conferir as fichas e gerar os calendários) saiu da checklist: fica com a Lúcia.
 
 ### Projeto fora do OneDrive — 12/10
 
