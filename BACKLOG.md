@@ -69,9 +69,10 @@
 - [ ] **13-D.** **Revisão ecrã a ecrã para simplificar**, antes de os clientes testarem — sobre o
   12 e o 13, com as anotações da Letícia (chegam pelo WhatsApp). Prazo combinado: 3/11.
   Inclui o resto do R-B11: campos que gravam a cada tecla. *Reunião 08/10*
-  **Ficha do cliente avaliada a 12/10** → `docs/auditorias/2026-10-12-simplificacao-ficha-cliente.md`
-  (9 → 6 separadores, Resumo com 2 cartões, WhatsApp num sítio só). ⏳ Aprovação do Vinícius;
-  estados vs checklist, Relatórios, Conta na plataforma e Software vão à reunião com a Lúcia.
+  **Ficha do cliente: feita a 12/10** (ver Concluídos). Faltam as decisões da Lúcia — estados vs
+  checklist, separador Relatórios, separador Conta na plataforma, campo Software, data editável na
+  tabela, horas e avença na ficha (juntar ao ponto 7). Próximos ecrãs a rever: lista de clientes,
+  Início da equipa, Tarefas, Agenda.
 - [ ] **15.** Consultoria: tirar as perguntas indicadas pela Lúcia e absorver os 8 passos do
   mentor (podem mudar a estrutura, não só tirar perguntas). As perguntas vivem em
   `src/data/consultoriaBlocos.js`; remover não perde respostas. ⏳ Ponto 10.
@@ -294,6 +295,28 @@
 ---
 
 ## Concluídos
+
+### Simplificação da ficha do cliente — 12/10 (13-D, primeiro ecrã)
+- Avaliação em `docs/auditorias/2026-10-12-simplificacao-ficha-cliente.md`; aplicado o que não
+  precisava da Lúcia.
+- **Cabeçalho:** sem o quadrado das iniciais; o estado só aparece quando não é "Ativo"; uma linha
+  de perfil só com o que está preenchido (setor · serviço · forma · regime); contactos clicáveis
+  com ícones; sai o botão "Mensagem" (3 botões).
+- **Separadores 9 → 8:** o separador Tarefas passou para o Resumo (endereços antigos voltam ao
+  Resumo). Relatórios e Conta na plataforma esperam pela Lúcia.
+- **Resumo:** dois cartões — Obrigações em aberto e Tarefas (todas as abertas, com "Ver
+  concluídas"). Saíram os indicadores, a checklist, a comunicação rápida e as declarações
+  entregues (estas ficam só na vista do cliente).
+- **WhatsApp num sítio só:** botão do cabeçalho (e no detalhe de cada obrigação, que já vem com a
+  obrigação escolhida). Mensagens fica só com a conversa.
+- **Obrigações:** sem o cartão dos critérios (texto num (i)); "+ Obrigação" e "Gerar calendário" na
+  barra do ano; sem contador nem "Processo"; período por baixo do nome.
+- **Documentos:** agrupamento segue a periodicidade do cliente (sai a alternância).
+- **Notas internas:** sai o cartão "Responsável e serviços".
+- **Dados:** exportação RGPD e eliminar ficha dentro de "Mais ações" (fechado). Campos de texto,
+  montante e notas das obrigações gravam ao sair do campo (R-B11).
+- **Etiquetas:** "Visível ao cliente" desaparece; "Área interna" passa a um cadeado (em todo o
+  portal da Gestão).
 
 ### V2 com a identidade visual — 12/10
 - A plataforma de produção com a identidade da LC Office (paleta do documento da Letícia, Archivo

@@ -4,7 +4,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import { usePortal, acoes } from '../../dados'
 import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, usePerfil, pode, Ic } from '../../ui'
 import { isDueInPeriod } from '../../../pages/gestao/Financeiro'
-import { TIPOS_NOTA, ESCLARECER_COM, fmtData, fmtEur, hojeIso, somaMeses, somaDias, rotuloServico, MESES_LONGOS } from '../../regras'
+import { TIPOS_NOTA, ESCLARECER_COM, fmtData, fmtEur, hojeIso, somaMeses, somaDias, MESES_LONGOS } from '../../regras'
 import { BASE } from '../../../lib/v2'
 
 // Área interna (documento, secção 9) — nunca visível ao cliente: notas,
@@ -85,17 +85,6 @@ export default function AreaInterna({ cliente }) {
       </Cartao>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <Cartao titulo="Responsável e serviços" area="interna">
-          <div style={{ fontSize: '13px', color: t.text, lineHeight: 1.9 }}>
-            <div><span style={{ color: t.subtle }}>Responsável: </span>
-              <select value={cliente.responsavel} onChange={e => acoes.atualizarCliente(cliente.id, { responsavel: e.target.value })} style={{ ...c.input, width: 'auto', padding: '4px 8px', display: 'inline-block' }}>
-                {s.equipa.map(x => <option key={x}>{x}</option>)}
-              </select></div>
-            <div><span style={{ color: t.subtle }}>Cliente desde: </span><strong>{fmtData(cliente.cliente_desde)}</strong></div>
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '4px' }}>{cliente.servicos.map(k => <Chip key={k} tom="ouro">{rotuloServico(k)}</Chip>)}</div>
-          </div>
-        </Cartao>
-
         <Cartao titulo="Horas utilizadas" area="interna">
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
             <span style={{ fontSize: '26px', fontWeight: 800, color: incl && noMes > incl ? t.neg : t.heading }}>{noMes.toLocaleString('pt-PT')} h</span>

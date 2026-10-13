@@ -3,7 +3,7 @@ import { IconFicheiro } from '../../../components/Icones'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { usePortal, acoes, abrirFicheiro, listarPasta } from '../../dados'
-import { Cartao, Chip, Botao, Pilulas, useCampos, Vazio, Ic } from '../../ui'
+import { Cartao, Chip, Botao, useCampos, Vazio, Ic } from '../../ui'
 import { ESTADOS_DOC, TIPOS_DOC, MESES_LONGOS, hojeIso, fmtData } from '../../regras'
 
 // Documentos (documento, secção 6): enviados pelo cliente pela plataforma e
@@ -20,7 +20,8 @@ export default function Documentos({ cliente, modoCliente }) {
   const docs = s.documentos.filter(d => d.clienteId === cliente.id)
   const anos = [...new Set([...docs.map(d => d.ano), Number(hoje.slice(0, 4))])].sort((a, b) => b - a)
   const [ano, setAno] = useState(anos[0])
-  const [agrupar, setAgrupar] = useState(cliente.periodicidade === 'mensal' ? 'mes' : 'trimestre')
+  // Agrupa como o cliente é acompanhado — mensal por mês, o resto por trimestre (12/10)
+  const agrupar = cliente.periodicidade === 'mensal' ? 'mes' : 'trimestre'
   const [filtro, setFiltro] = useState('todos')
   const [envio, setEnvio] = useState({ mes: Number(hoje.slice(5, 7)), tipo: TIPOS_DOC[0] })
   const [aviso, setAviso] = useState('')
@@ -112,7 +113,6 @@ export default function Documentos({ cliente, modoCliente }) {
         <select value={ano} onChange={e => setAno(Number(e.target.value))} style={{ ...c.input, width: 'auto', fontWeight: 700, cursor: 'pointer' }} aria-label="Ano">
           {anos.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-        <Pilulas valor={agrupar} aoMudar={setAgrupar} opcoes={[['mes', 'Por mês'], ['trimestre', 'Por trimestre']]} />
         {filtro !== 'todos' && <Botao variante="fantasma" onClick={() => setFiltro('todos')}>Limpar filtro ✕</Botao>}
       </div>
 

@@ -21,11 +21,13 @@ export default function Dados({ cliente, modoCliente, equipa }) {
   const navigate = useNavigate()
   const [confirmar, setConfirmar] = useState('')
   const [aApagar, setAApagar] = useState(false)
+  const [maisAcoes, setMaisAcoes] = useState(false)
   const [exportar, setExportar] = useState('')   // '', 'a exportar', 'feito', ou a mensagem de erro
   const conta = s.contas.find(x => x.id === cliente.userId)
   const livres = s.contas.filter(x => x.id === cliente.userId || !s.clientes.some(k => k.userId === x.id))
   const up = (patch) => acoes.atualizarCliente(cliente.id, patch)
-  const inp = (k, extra = {}) => <input value={cliente[k] ?? ''} onChange={e => up({ [k]: e.target.value })} style={c.input} {...extra} />
+  // Grava ao sair do campo, não a cada tecla (R-B11, 12/10)
+  const inp = (k, extra = {}) => <input key={`${cliente.id}-${k}`} defaultValue={cliente[k] ?? ''} onBlur={e => { if (e.target.value !== String(cliente[k] ?? '')) up({ [k]: e.target.value }) }} style={c.input} {...extra} />
   const sel = (k, opcoes) => (
     <select value={cliente[k] ?? ''} onChange={e => up({ [k]: e.target.value })} style={{ ...c.input, cursor: 'pointer' }}>
       {opcoes.map(([v, r]) => <option key={v} value={v}>{r}</option>)}
@@ -129,41 +131,54 @@ export default function Dados({ cliente, modoCliente, equipa }) {
         <div style={{ fontSize: '12px', color: t.subtle, marginTop: '10px' }}>Com conta, as mensagens daqui aparecem no Início do cliente e os documentos carregados por mês ficam na pasta dele. Sem conta, fica tudo registado aqui e a comunicação é por WhatsApp.</div>
       </Cartao>
 
-      {/* Exportação RGPD (art. 20 — portabilidade; auditoria de 21/08, R4) */}
+      {/* Raramente usadas: ficam num bloco fechado por omissão (12/10) */}
       {s.admin && (
-        <Cartao titulo="Dados do cliente (RGPD)" icone={<Ic.doc size={17} />} area="interna">
-          <div style={{ fontSize: '13px', color: t.text, marginBottom: '10px' }}>
-            Um ficheiro com tudo o que a plataforma guarda sobre este cliente — ficha, conta, contabilidade, obrigações, mensagens, relatórios, consultorias, ESG e a lista de ficheiros com ligações de download válidas 7 dias. É o que se entrega quando o cliente pede os seus dados.
-          </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Botao disabled={exportar === 'a exportar'} onClick={async () => {
-              setExportar('a exportar')
-              try { await exportarCliente({ clienteId: cliente.id, userId: cliente.userId || null, nome: cliente.nome }); setExportar('feito') }
-              catch (e) { setExportar(e.message || 'Não foi possível exportar.') }
-            }}>{exportar === 'a exportar' ? 'A preparar…' : 'Exportar dados (JSON)'}</Botao>
-            {exportar === 'feito' && <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.dueOk.ink }}>Ficheiro descarregado ✓</span>}
-            {exportar && !['a exportar', 'feito'].includes(exportar) && <span role="alert" style={{ fontSize: '12.5px', fontWeight: 700, color: t.dueLate.ink }}>{exportar}</span>}
-          </div>
-        </Cartao>
-      )}
+        <div>
+          <button onClick={() => setMaisAcoes(v => !v)} aria-expanded={maisAcoes}
+            style={{ background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '13px', fontFamily: 'inherit' }}>
+            Mais ações {maisAcoes ? '▴' : '▾'}
+          </button>
+          {maisAcoes && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '10px' }}>
+              {/* Exportação RGPD (art. 20 — portabilidade; auditoria de 21/08, R4) */}
+              {s.admin && (
+                <Cartao titulo="Dados do cliente (RGPD)" icone={<Ic.doc size={17} />} area="interna">
+                  <div style={{ fontSize: '13px', color: t.text, marginBottom: '10px' }}>
+                    Um ficheiro com tudo o que a plataforma guarda sobre este cliente — ficha, conta, contabilidade, obrigações, mensagens, relatórios, consultorias, ESG e a lista de ficheiros com ligações de download válidas 7 dias. É o que se entrega quando o cliente pede os seus dados.
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Botao disabled={exportar === 'a exportar'} onClick={async () => {
+                      setExportar('a exportar')
+                      try { await exportarCliente({ clienteId: cliente.id, userId: cliente.userId || null, nome: cliente.nome }); setExportar('feito') }
+                      catch (e) { setExportar(e.message || 'Não foi possível exportar.') }
+                    }}>{exportar === 'a exportar' ? 'A preparar…' : 'Exportar dados (JSON)'}</Botao>
+                    {exportar === 'feito' && <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.dueOk.ink }}>Ficheiro descarregado ✓</span>}
+                    {exportar && !['a exportar', 'feito'].includes(exportar) && <span role="alert" style={{ fontSize: '12.5px', fontWeight: 700, color: t.dueLate.ink }}>{exportar}</span>}
+                  </div>
+                </Cartao>
+              )}
 
-      {/* Eliminar a ficha: só a administradora, e só depois de escrever o nome.
-          Para fichas criadas por engano e duplicados (teste de 05/10). */}
-      {s.admin && (
-        <Cartao titulo="Eliminar ficha" icone={<Ic.cadeado size={17} />} area="interna">
-          <div style={{ fontSize: '13px', color: t.text, marginBottom: '10px' }}>
-            Apaga a ficha e tudo o que lhe pertence: calendário fiscal, tarefas, pedidos de documentos, relatórios, notas e horas. Não se desfaz.
-            {cliente.userId ? ' A conta na plataforma fica — apaga-se em Acessos, se for o caso.' : ''}
-          </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <input value={confirmar} onChange={e => setConfirmar(e.target.value)} placeholder={`Escreva "${cliente.nome}" para confirmar`} style={{ ...c.input, width: 'auto', minWidth: '280px' }} aria-label="Confirmar nome" />
-            <Botao variante="perigo" disabled={confirmar.trim() !== cliente.nome.trim() || aApagar} onClick={async () => {
-              setAApagar(true)
-              if (await acoes.apagarCliente(cliente.id)) navigate('/gestao/clientes')
-              else setAApagar(false)
-            }}>{aApagar ? 'A eliminar…' : 'Eliminar ficha'}</Botao>
-          </div>
-        </Cartao>
+              {/* Eliminar a ficha: só a administradora, e só depois de escrever o nome.
+                  Para fichas criadas por engano e duplicados (teste de 05/10). */}
+              {s.admin && (
+                <Cartao titulo="Eliminar ficha" icone={<Ic.cadeado size={17} />} area="interna">
+                  <div style={{ fontSize: '13px', color: t.text, marginBottom: '10px' }}>
+                    Apaga a ficha e tudo o que lhe pertence: calendário fiscal, tarefas, pedidos de documentos, relatórios, notas e horas. Não se desfaz.
+                    {cliente.userId ? ' A conta na plataforma fica — apaga-se em Acessos, se for o caso.' : ''}
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input value={confirmar} onChange={e => setConfirmar(e.target.value)} placeholder={`Escreva "${cliente.nome}" para confirmar`} style={{ ...c.input, width: 'auto', minWidth: '280px' }} aria-label="Confirmar nome" />
+                    <Botao variante="perigo" disabled={confirmar.trim() !== cliente.nome.trim() || aApagar} onClick={async () => {
+                      setAApagar(true)
+                      if (await acoes.apagarCliente(cliente.id)) navigate('/gestao/clientes')
+                      else setAApagar(false)
+                    }}>{aApagar ? 'A eliminar…' : 'Eliminar ficha'}</Botao>
+                  </div>
+                </Cartao>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

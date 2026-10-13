@@ -33,6 +33,7 @@ export const Ic = {
   olho: (p) => <I size={12} sw={2} {...p}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></I>,
   sino: (p) => <I {...p}><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0" /></I>,
   mais: (p) => <I {...p}><path d="M12 5v14M5 12h14" /></I>,
+  telefone: (p) => <I {...p}><path d="M5 4h3.5l1.5 4-2 1.3a11 11 0 0 0 6.7 6.7l1.3-2 4 1.5V19a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4z" /></I>,
   mail: (p) => <I {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 6.5 8.5 6 8.5-6" /></I>,
   pin: (p) => <I size={13} sw={2} {...p}><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.2" /></I>,
   clip: (p) => <I size={15} {...p}><path d="m20 11.5-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.7-7.7" /></I>,
@@ -62,12 +63,15 @@ export function Chip({ tom = 'neutro', children, title, forte }) {
 }
 
 // A marca das duas áreas do documento: o que o cliente vê e o que é só da equipa.
+// Simplificado a 12/10: só os cartões internos levam marca (um cadeado); o resto é
+// visível ao cliente sem precisar de etiqueta.
 export function Area({ interna }) {
   const { t } = useTheme()
+  if (!interna) return null
   return (
-    <span title={interna ? 'Só a equipa da LC Office Consulting vê isto' : 'O cliente também vê isto'}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, background: interna ? t.segBg : t.dueOk.bg, color: interna ? t.textMuted : t.dueOk.ink, whiteSpace: 'nowrap' }}>
-      {interna ? <Ic.cadeado /> : <Ic.olho />}{interna ? 'Área interna' : 'Visível ao cliente'}
+    <span title="Área interna — só a equipa da LC Office Consulting vê isto" aria-label="Área interna"
+      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '26px', height: '26px', borderRadius: '8px', background: t.segBg, color: t.textMuted, flex: 'none' }}>
+      <Ic.cadeado size={13} />
     </span>
   )
 }

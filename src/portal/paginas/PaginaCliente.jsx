@@ -5,9 +5,9 @@ import { useViewAs } from '../../context/ViewAsContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal } from '../dados'
 import { usePerfil, Chip, Botao, Janela, Ic, Cartao } from '../ui'
-import { PAISES, ESTADOS_CLIENTE, rotuloServico, rotuloPeriodicidade, rotuloRegime, iniciais, linkWhatsApp } from '../regras'
+import { PAISES, ESTADOS_CLIENTE, rotuloServico, rotuloPeriodicidade, rotuloRegime, linkWhatsApp } from '../regras'
 import { naoLidas } from '../seletores'
-import { FormTarefa, TabelaTarefas } from '../partes/Tarefas'
+import { FormTarefa } from '../partes/Tarefas'
 import { Chat, CompositorWhatsApp } from '../partes/Comunicacao'
 import Resumo from './cliente/Resumo'
 import Obrigacoes from './cliente/Obrigacoes'
@@ -48,8 +48,8 @@ export default function PaginaCliente({ idFixo }) {
   const porLer = naoLidas(s, id).length
 
   const separadores = [
+    // As Tarefas vivem no Resumo (simplificação de 12/10)
     ['resumo', 'Resumo'], ['obrigacoes', 'Obrigações fiscais'],
-    ...(modoCliente ? [] : [['tarefas', 'Tarefas']]),
     ['documentos', 'Documentos'], ['relatorios', 'Relatórios'],
     ['mensagens', 'Mensagens', !modoCliente && porLer], ['dados', modoCliente ? 'Os meus dados' : 'Dados do cliente'],
     ...(modoCliente ? [] : [['notas', 'Notas internas', null, true]]),
@@ -59,6 +59,19 @@ export default function PaginaCliente({ idFixo }) {
   if (!separadores.some(([k]) => k === sep)) return <Navigate to={base} replace />
 
   const est = ESTADOS_CLIENTE[cliente.estado]
+  // Uma linha de perfil só com o que está preenchido (sem rótulos vazios)
+  const perfil = [
+    cliente.setor,
+    [cliente.servicos.map(rotuloServico).join(' + '), rotuloPeriodicidade(cliente.periodicidade).toLowerCase()].filter(Boolean).join(' '),
+    cliente.forma,
+    cliente.regime && rotuloRegime(cliente),
+  ].filter(x => x && String(x).trim() && x !== '—').join(' · ')
+  const tel = (cliente.telefone || '').replace(/[^\d+]/g, '')
+  const contactos = [
+    cliente.pessoa && ['pessoa', <Ic.clientes size={15} />, cliente.pessoa],
+    cliente.email && ['email', <Ic.mail size={15} />, cliente.email, `mailto:${cliente.email}`],
+    cliente.telefone && ['tel', <Ic.telefone size={15} />, cliente.telefone, `tel:${tel}`],
+  ].filter(Boolean)
 
   // "Ver como o cliente" (08/10): entra na conta dele em só leitura, na página
   // que ele vê ao entrar, e a barra de cima traz de volta a esta ficha.
@@ -75,31 +88,27 @@ export default function PaginaCliente({ idFixo }) {
         <button onClick={() => navigate('/gestao/clientes')} style={{ background: 'none', border: 'none', padding: 0, marginBottom: '14px', color: t.accentText, fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>← Todos os clientes</button>
       )}
 
-      {/* ── Cabeçalho (secção 1) ── */}
+      {/* ── Cabeçalho (secção 1) ──
+          Simplificado a 12/10: sem o quadrado das iniciais; uma linha de perfil só com o que
+          está preenchido; contactos clicáveis; o estado só aparece quando não é "Ativo". */}
       <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <div style={{ flex: 'none', width: isMobile ? '72px' : '104px', height: isMobile ? '72px' : '104px', borderRadius: '14px', background: '#efe8d8', border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: t.fontDisplay, fontSize: isMobile ? '28px' : '38px', fontWeight: 600, color: '#6b5a2a', letterSpacing: '1px' }}>
-          {iniciais(cliente.nome)}
-        </div>
         <div style={{ flex: 1, minWidth: '240px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '38px', lineHeight: 1.05, color: t.heading }}>{cliente.nome}</h1>
+            <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '36px', lineHeight: 1.05, color: t.heading }}>{cliente.nome}</h1>
             <Chip tom="ouro"><Ic.pin />{PAISES[cliente.pais]}</Chip>
-            <Chip tom={est.tom}>{cliente.estado === 'ativo' ? '♥ ' : ''}{est.rotulo}</Chip>
+            {cliente.estado !== 'ativo' && est && <Chip tom={est.tom}>{est.rotulo}</Chip>}
           </div>
-          <div style={{ fontSize: '15px', color: t.textMuted, marginTop: '6px' }}>
-            {cliente.setor} · {cliente.servicos.map(rotuloServico).join(' + ')} {rotuloPeriodicidade(cliente.periodicidade).toLowerCase()}
-          </div>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '10px', fontSize: '12.5px', color: t.text }}>
-            <span><span style={{ color: t.subtle }}>Forma jurídica </span><strong>{cliente.forma}</strong></span>
-            <span><span style={{ color: t.subtle }}>Regime </span><strong>{rotuloRegime(cliente)}</strong></span>
-            <span><span style={{ color: t.subtle }}>Software </span><strong>{cliente.software}</strong></span>
-            {!modoCliente && <span><span style={{ color: t.subtle }}>Responsável </span><strong>{cliente.responsavel}</strong></span>}
-          </div>
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '6px', fontSize: '12.5px', color: t.textMuted }}>
-            <span>👤 {cliente.pessoa || '—'}</span>
-            <span>✉ {cliente.email || '—'}</span>
-            <span>☎ {cliente.telefone || 'sem telefone'}</span>
-          </div>
+          {perfil && <div style={{ fontSize: '14.5px', color: t.textMuted, marginTop: '6px' }}>{perfil}</div>}
+          {contactos.length > 0 && (
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '8px', fontSize: '13px' }}>
+              {contactos.map(([k, icone, texto, href]) => (
+                <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: t.text }}>
+                  <span style={{ color: t.subtle, display: 'flex' }}>{icone}</span>
+                  {href ? <a href={href} style={{ color: 'inherit', textDecoration: 'none' }}>{texto}</a> : texto}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
           {modoCliente ? (
@@ -112,8 +121,8 @@ export default function PaginaCliente({ idFixo }) {
             <>
               {papel === 'admin' && <Botao onClick={verComoCliente} disabled={!cliente.userId}
                 title={cliente.userId ? 'Abre a plataforma exatamente como o cliente a vê (só leitura)' : 'Este cliente ainda não tem conta na plataforma'}><Ic.olho size={15} />Ver como o cliente</Botao>}
+              {/* O único sítio da ficha para escrever um WhatsApp (12/10) */}
               <Botao variante="whats" onClick={() => setWhats(true)}><Ic.whats />WhatsApp</Botao>
-              <Botao onClick={() => navigate(`${base}/mensagens`)}><Ic.mail />Mensagem</Botao>
               <Botao variante="ouro" onClick={() => setTarefa(true)}><Ic.mais />Adicionar tarefa</Botao>
             </>
           )}
@@ -138,24 +147,12 @@ export default function PaginaCliente({ idFixo }) {
 
       {sep === 'resumo' && <Resumo cliente={cliente} base={base} modoCliente={modoCliente} />}
       {sep === 'obrigacoes' && <Obrigacoes cliente={cliente} modoCliente={modoCliente} />}
-      {sep === 'tarefas' && (
-        <Cartao titulo="Tarefas deste cliente" icone={<Ic.lista />} area="interna" acao={<Botao variante="primario" onClick={() => setTarefa(true)}><Ic.mais size={15} />Nova tarefa</Botao>} semPadding>
-          <TabelaTarefas mostrarCliente={false} tarefas={s.tarefas.filter(x => x.clienteId === id).sort((a, b) => (a.estado === 'concluida') - (b.estado === 'concluida') || a.prazo.localeCompare(b.prazo))} />
-        </Cartao>
-      )}
       {sep === 'documentos' && <Documentos cliente={cliente} modoCliente={modoCliente} />}
       {sep === 'relatorios' && <RelatoriosCliente cliente={cliente} modoCliente={modoCliente} />}
       {sep === 'mensagens' && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile || modoCliente ? '1fr' : '1.4fr 1fr', gap: '16px', alignItems: 'start' }}>
-          <Cartao titulo={modoCliente ? 'Conversa com a LC Office Consulting' : `Conversa com ${cliente.pessoa || cliente.nome}`} icone={<Ic.mensagens />} area={modoCliente || !cliente.userId ? undefined : 'cliente'}>
-            <Chat clienteId={id} como={modoCliente ? 'cliente' : 'equipa'} />
-          </Cartao>
-          {!modoCliente && (
-            <Cartao titulo="WhatsApp com modelo" icone={<Ic.whats />}>
-              <CompositorWhatsApp clienteId={id} compacto />
-            </Cartao>
-          )}
-        </div>
+        <Cartao titulo={modoCliente ? 'Conversa com a LC Office Consulting' : `Conversa com ${cliente.pessoa || cliente.nome}`} icone={<Ic.mensagens />}>
+          <Chat clienteId={id} como={modoCliente ? 'cliente' : 'equipa'} />
+        </Cartao>
       )}
       {sep === 'dados' && <Dados cliente={cliente} modoCliente={modoCliente} equipa={s.equipa} />}
       {sep === 'notas' && <AreaInterna cliente={cliente} />}
