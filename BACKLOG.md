@@ -4,7 +4,8 @@
 > durante o desenvolvimento
 > **Última sincronização:** 08/10/2026 · Reuniões processadas: 16/07, 23/07, 30/07, 06/08,
 > 13/08, 20/08, 27/08, 10/09, 18/09, 25/09, 01/10 e 08/10/2026
-> **Auditorias:** Simplificação da ficha do cliente 12/10 →
+> **Auditorias:** Simplificação da Gestão 12/10 → `docs/auditorias/2026-10-12-simplificacao-gestao.md`
+> **·** Simplificação da ficha do cliente 12/10 →
 > `docs/auditorias/2026-10-12-simplificacao-ficha-cliente.md` **·** QA de interface 13/08 → `docs/auditorias/2026-08-13-interface.md` **·**
 > Segurança/RGPD 21/08 → `docs/auditorias/2026-08-21-seguranca-gdpr.md` **·** Jornada, etapa 1
 > 05/10 → `docs/auditorias/2026-10-05-jornada-etapa1.md` **·** Permissões 11/10 →
@@ -71,8 +72,11 @@
   Inclui o resto do R-B11: campos que gravam a cada tecla. *Reunião 08/10*
   **Ficha do cliente: feita a 12/10** (ver Concluídos). Faltam as decisões da Lúcia — estados vs
   checklist, separador Relatórios, separador Conta na plataforma, campo Software, data editável na
-  tabela, horas e avença na ficha (juntar ao ponto 7). Próximos ecrãs a rever: lista de clientes,
-  Início da equipa, Tarefas, Agenda.
+  tabela, horas e avença na ficha (juntar ao ponto 7).
+  **Resto da Gestão avaliado a 12/10** → `docs/auditorias/2026-10-12-simplificacao-gestao.md` (síntese)
+  + `docs/auditorias/simplificacao-gestao/` (detalhe ecrã a ecrã). 12 erros a corrigir (E1–E12, o
+  mais urgente: Notas internas da consultoria no PDF do banco), menu de 14 → 10–12 itens, 13
+  perguntas para a Lúcia. ⏳ Aprovação do Vinícius para as fases A (erros) e B (sem decisão).
 - [ ] **15.** Consultoria: tirar as perguntas indicadas pela Lúcia e absorver os 8 passos do
   mentor (podem mudar a estrutura, não só tirar perguntas). As perguntas vivem em
   `src/data/consultoriaBlocos.js`; remover não perde respostas. ⏳ Ponto 10.
