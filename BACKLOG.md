@@ -309,6 +309,8 @@
   Consulting"). Login, Definir palavra-passe e Formulário de diagnóstico com o logótipo novo; no
   login saem o título "Lúcia Cílio" e o subtítulo "Office Consulting" — fica só o logótipo.
 - Ícones da app (PWA, favicon, iOS) regenerados com o monograma novo; capa do guia em PDF usa-o.
+- Capa do relatório de consultoria: o logótipo no lugar do "Lúcia Cílio"; logótipo do menu
+  lateral com 130 px.
 
 ### Ficha duplicada da Célia apagada — 12/10 (item 4)
 - Saiu a ficha registada como **Alemanha**, sem conta nem dados ligados; ficou a que tem os

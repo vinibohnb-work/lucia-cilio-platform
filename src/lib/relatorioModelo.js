@@ -33,6 +33,9 @@ const SERIF = V2 ? "'Archivo Black','Archivo','Arial Nova',sans-serif" : "'Cormo
 const SANS = V2 ? "'Arial Nova','Archivo',system-ui,sans-serif" : "'Instrument Sans',system-ui,sans-serif"
 if (V2) Object.assign(C, { verde: '#0E3D33', verdeMed: '#184F43', ouro: '#C89B3C' })
 
+// O relatório abre numa janela nova (about:blank): o logótipo precisa do endereço completo.
+const LOGO = `${typeof window !== 'undefined' ? window.location.origin : ''}/logo-letra-branca.png`
+
 export const esc = (s) => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
@@ -181,7 +184,7 @@ export function construirHTML({ c, lang = 'pt' }) {
   addPagina(`
 <section class="page" style="display:flex;flex-direction:column;background:${C.verde};color:${C.creme};padding:0">
   <div style="flex:none;padding:64px 64px 0;display:flex;justify-content:space-between;align-items:flex-start">
-    <div style="font-family:${SERIF};font-size:26px;font-style:italic;color:${C.ouro}">Lúcia Cílio</div>
+    <img src="${LOGO}" alt="LC Office Consulting" style="width:170px;height:auto;display:block" />
     <div style="text-align:right;font-size:12px;letter-spacing:2.4px;text-transform:uppercase;color:${C.verdeMudo};line-height:2">${esc(L.relatorio)}<br/><span style="color:${C.ouro}">${dataCurta(rel.gerado_em || Date.now(), lang)}</span></div>
   </div>
   <div style="flex:1;padding:0 64px;display:flex;flex-direction:column;justify-content:center;gap:26px">
