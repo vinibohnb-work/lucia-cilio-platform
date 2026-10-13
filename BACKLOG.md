@@ -50,6 +50,14 @@
   perguntas a tirar da consultoria; regras do **limite de faturação em Portugal**; formato do
   **relatório fiscal PT**.
 
+**Em curso**
+- [ ] **29.** **Logótipo do cliente** (pedido de 12/10) — branch `logo-cliente`, migração **045**
+  (coluna `clientes.logo`, bucket público `logos` só PNG/JPEG/WebP até 2 MB, função
+  `definir_logo_cliente`). No lugar das iniciais da ficha; a equipa carrega em Dados do cliente (ou
+  no espaço vazio do cabeçalho), o cliente em Empresa; passo novo no onboarding. Testado no DEV
+  (permissões: cada cliente só na sua pasta e na sua ficha). ⏳ O Vinícius correr
+  `migration_045.sql` na produção; depois faço o merge.
+
 **Implementar as decisões e simplificar**
 - [ ] **11.** As decisões dos pontos 6 a 8 (cada uma é pequena; a Calculadora é a maior).
 - [ ] **12.** **Uma ficha por cliente** (Fase 2 da simplificação, ≈1 semana — o item mais

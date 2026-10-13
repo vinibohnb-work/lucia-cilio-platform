@@ -13,6 +13,7 @@
 import { useSyncExternalStore } from 'react'
 import { supabase } from '../lib/supabase'
 import { listUsers } from '../lib/adminApi'
+import { validarLogo, enviarLogo, apagarLogo } from '../lib/logos'
 import { gerarCalendario, hojeIso, iso, somaMeses, diasAte, docsEsperados } from './regras'
 
 const novoId = () => crypto.randomUUID()
@@ -58,7 +59,7 @@ function deCliente(r, contrato) {
     periodicidade: r.periodicidade, regime: r.regime || '', trabalhadores: !!r.trabalhadores,
     software: r.software || '', estado: r.estado, responsavel: r.responsavel || '',
     horasIncluidas: Number(r.horas_incluidas || 0), cliente_desde: r.cliente_desde, notas: r.notas || '',
-    userId: r.user_id || null,
+    userId: r.user_id || null, logo: r.logo || null,
     // A avença vive no Financeiro (client_billing); aqui só se lê.
     contratoId: contrato?.id || null,
     avenca: contrato ? Number(contrato.amount) : null,
@@ -355,6 +356,23 @@ export const acoes = {
     mudar(s => { s.obrigacoes = s.obrigacoes.filter(o => o.id !== id); s.tarefas.forEach(t => { if (t.obrigacaoId === id) t.obrigacaoId = null }) })
     gravar(supabase.from('fiscal_obligations').delete().eq('id', id))
   },
+  // Logótipo da empresa (migração 045): substitui o anterior e apaga-o do bucket.
+  async carregarLogo(id, ficheiro) {
+    const motivo = validarLogo(ficheiro)
+    if (motivo) { estado = { ...estado, erro: motivo }; avisar(); return false }
+    const antes = estado.clientes.find(c => c.id === id)?.logo
+    const r = await enviarLogo(`ficha/${id}`, ficheiro)
+    if (r.erro) { estado = { ...estado, erro: `O logótipo não foi carregado (${r.erro}).` }; avisar(); return false }
+    acoes.atualizarCliente(id, { logo: r.caminho })
+    apagarLogo(antes)
+    return true
+  },
+  removerLogo(id) {
+    const antes = estado.clientes.find(c => c.id === id)?.logo
+    acoes.atualizarCliente(id, { logo: null })
+    apagarLogo(antes)
+  },
+
   async anexarComprovativo(id, ficheiro) {
     const o = estado.obrigacoes.find(x => x.id === id)
     const caminho = await enviarFicheiro(o.clienteId, 'Comprovativos', ficheiro)

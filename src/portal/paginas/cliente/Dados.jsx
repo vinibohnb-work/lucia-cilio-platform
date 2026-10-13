@@ -4,6 +4,7 @@ import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { acoes, usePortal } from '../../dados'
 import { exportarCliente } from '../../../lib/adminApi'
+import { urlLogo } from '../../../lib/logos'
 import { Cartao, Campo, Chip, Botao, useCampos, usePerfil, pode, Ic } from '../../ui'
 import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
 import { BASE } from '../../../lib/v2'
@@ -61,6 +62,18 @@ export default function Dados({ cliente, modoCliente, equipa }) {
           <Campo rotulo="E-mail">{inp('email', { type: 'email' })}</Campo>
           <Campo rotulo="Telefone (WhatsApp)">{inp('telefone', { placeholder: '+49 …' })}</Campo>
           <Campo rotulo="Estado do cliente">{sel('estado', Object.entries(ESTADOS_CLIENTE).map(([k, v]) => [k, v.rotulo]))}</Campo>
+        </div>
+        {/* Logótipo (12/10): aparece no cabeçalho da ficha. O cliente também o pode pôr, em Empresa. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '14px', flexWrap: 'wrap' }}>
+          <span style={{ ...c.rotulo, marginBottom: 0 }}>Logótipo</span>
+          {cliente.logo && <img src={urlLogo(cliente.logo)} alt="" style={{ height: '40px', maxWidth: '120px', objectFit: 'contain', background: '#fff', borderRadius: '6px', border: `1px solid ${t.cardBorder}`, padding: '3px' }} />}
+          <label style={{ fontSize: '12.5px', fontWeight: 700, color: t.accentText, cursor: 'pointer', border: `1px dashed ${t.inputBorder}`, borderRadius: '8px', padding: '6px 11px' }}>
+            {cliente.logo ? 'Trocar' : 'Carregar imagem'}
+            <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) acoes.carregarLogo(cliente.id, f) }} />
+          </label>
+          {cliente.logo && <Botao variante="fantasma" onClick={() => acoes.removerLogo(cliente.id)}>Remover</Botao>}
+          <span style={{ fontSize: '11.5px', color: t.subtle }}>PNG, JPEG ou WebP, até 2 MB.</span>
         </div>
       </Cartao>
 

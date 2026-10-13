@@ -28,6 +28,7 @@ export default function ChecklistOnboarding({ userId, cliente }) {
     p_contrato: 'Vertrag angehängt', p_contrato_s: 'PDF im Finanzbereich',
     p_docs: 'Erste Belege', p_docs_s: 'Etwas wurde hochgeladen',
     p_msg: 'Willkommensnachricht', p_msg_s: 'Mindestens eine Nachricht gesendet',
+    p_logo: 'Firmenlogo', p_logo_s: 'In der Akte oder unter Firmendaten',
     ir: 'Erledigen →',
   } : lang === 'en' ? {
     titulo: 'Onboarding', feitos: (a, b) => `${a} of ${b} done`, completo: 'Onboarding complete',
@@ -38,6 +39,7 @@ export default function ChecklistOnboarding({ userId, cliente }) {
     p_contrato: 'Contract attached', p_contrato_s: 'PDF in the finance area',
     p_docs: 'First documents', p_docs_s: 'Something has been uploaded',
     p_msg: 'Welcome message', p_msg_s: 'At least one message sent',
+    p_logo: 'Company logo', p_logo_s: 'On the client file or in Company details',
     ir: 'Do it →',
   } : {
     titulo: 'Onboarding', feitos: (a, b) => `${a} de ${b} feitos`, completo: 'Onboarding completo',
@@ -48,16 +50,18 @@ export default function ChecklistOnboarding({ userId, cliente }) {
     p_contrato: 'Contrato anexado', p_contrato_s: 'PDF no Financeiro',
     p_docs: 'Primeiros documentos', p_docs_s: 'já foi enviado alguma coisa',
     p_msg: 'Mensagem de boas-vindas', p_msg_s: 'pelo menos uma mensagem enviada',
+    p_logo: 'Logótipo da empresa', p_logo_s: 'na ficha ou pelo cliente, em Empresa',
     ir: 'Tratar →',
   }
 
   const load = useCallback(async () => {
     if (!userId) return
-    const [cfg, bil, avisos, docs] = await Promise.all([
+    const [cfg, bil, avisos, docs, ficha] = await Promise.all([
       supabase.from('company_settings').select('country,company_name').eq('user_id', userId).maybeSingle(),
       supabase.from('client_billing').select('contract_path').eq('user_id', userId).limit(1),
       supabase.from('client_notices').select('id').eq('user_id', userId).limit(1),
       supabase.storage.from('client-docs').list(userId, { limit: 20 }),
+      supabase.from('clientes').select('logo').eq('user_id', userId).maybeSingle(),
     ])
     // Pastas vêm com id a null; só contam ficheiros, incluindo os de dentro das
     // pastas por mês (basta haver uma pasta criada por um envio).
@@ -67,6 +71,7 @@ export default function ChecklistOnboarding({ userId, cliente }) {
       contrato: !!(bil.data || []).some(b => b.contract_path),
       avisos: (avisos.data || []).length > 0,
       docs: temDocs,
+      logo: !!ficha.data?.logo,
     })
   }, [userId])
   useEffect(() => { load() }, [load])
@@ -82,6 +87,7 @@ export default function ChecklistOnboarding({ userId, cliente }) {
     { key: 'msg', ok: estado.avisos, rot: L.p_msg, sub: L.p_msg_s },
     { key: 'acesso', ok: jaEntrou, rot: L.p_acesso, sub: L.p_acesso_s },
     { key: 'docs', ok: estado.docs, rot: L.p_docs, sub: L.p_docs_s },
+    { key: 'logo', ok: estado.logo, rot: L.p_logo, sub: L.p_logo_s },
   ]
   const feitos = passos.filter(p => p.ok).length
   const completo = feitos === passos.length

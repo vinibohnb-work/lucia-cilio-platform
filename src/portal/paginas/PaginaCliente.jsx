@@ -3,7 +3,8 @@ import { useParams, useNavigate, NavLink, Navigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useViewAs } from '../../context/ViewAsContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { usePortal } from '../dados'
+import { usePortal, acoes } from '../dados'
+import { urlLogo } from '../../lib/logos'
 import { usePerfil, Chip, Botao, Janela, Ic, Cartao } from '../ui'
 import { PAISES, ESTADOS_CLIENTE, rotuloServico, rotuloPeriodicidade, rotuloRegime, linkWhatsApp } from '../regras'
 import { naoLidas } from '../seletores'
@@ -59,6 +60,7 @@ export default function PaginaCliente({ idFixo }) {
   if (!separadores.some(([k]) => k === sep)) return <Navigate to={base} replace />
 
   const est = ESTADOS_CLIENTE[cliente.estado]
+  const caixaLogo = { flex: 'none', width: isMobile ? '72px' : '96px', height: isMobile ? '72px' : '96px', borderRadius: '14px', border: `1px solid ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', overflow: 'hidden' }
   // Uma linha de perfil só com o que está preenchido (sem rótulos vazios)
   const perfil = [
     cliente.setor,
@@ -89,9 +91,22 @@ export default function PaginaCliente({ idFixo }) {
       )}
 
       {/* ── Cabeçalho (secção 1) ──
-          Simplificado a 12/10: sem o quadrado das iniciais; uma linha de perfil só com o que
+          Simplificado a 12/10: o logótipo no lugar das iniciais; uma linha de perfil só com o que
           está preenchido; contactos clicáveis; o estado só aparece quando não é "Ativo". */}
       <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '20px' }}>
+        {/* Logótipo do cliente (12/10, migração 045). Sem logótipo, a equipa vê o espaço para o carregar. */}
+        {cliente.logo ? (
+          <div style={{ ...caixaLogo, background: '#fff', padding: '8px' }}>
+            <img src={urlLogo(cliente.logo)} alt={`Logótipo de ${cliente.nome}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          </div>
+        ) : !modoCliente && (
+          <label title="Carregar o logótipo do cliente (PNG, JPEG ou WebP, até 2 MB)"
+            style={{ ...caixaLogo, border: `1.5px dashed ${t.inputBorder}`, cursor: 'pointer', flexDirection: 'column', gap: '4px', color: t.subtle, fontSize: '11.5px', fontWeight: 700, textAlign: 'center' }}>
+            <Ic.mais size={18} />Logótipo
+            <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) acoes.carregarLogo(cliente.id, f) }} />
+          </label>
+        )}
         <div style={{ flex: 1, minWidth: '240px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <h1 style={{ margin: 0, fontFamily: t.fontDisplay, fontWeight: 600, fontSize: isMobile ? '28px' : '36px', lineHeight: 1.05, color: t.heading }}>{cliente.nome}</h1>

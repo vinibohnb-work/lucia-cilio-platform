@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext'
 import { getCompanySettings, saveCompanySettings, VAT_RATES, DEFAULT_SETTINGS } from '../lib/companySettings'
 import { useEffectiveUserId, useViewAs } from '../context/ViewAsContext'
 import EnvioDocumentos from '../components/EnvioDocumentos'
+import LogoEmpresa from '../components/LogoEmpresa'
 import InfoTooltip from '../components/InfoTooltip'
 import { BRAND } from '../theme'
 
@@ -132,6 +133,9 @@ export default function Empresa() {
         <div style={{ marginBottom: '16px' }}>
           {label(L.name)}
           <input value={form.company_name || ''} onChange={e => update('company_name', e.target.value)} placeholder={L.namePh} style={inputStyle} />
+        </div>
+        <div style={{ marginBottom: '16px' }}>
+          <LogoEmpresa userId={eid} soLeitura={isViewing} />
         </div>
         <div style={grid2}>
           <div>
