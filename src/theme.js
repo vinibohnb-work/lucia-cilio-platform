@@ -8,6 +8,8 @@ export const THEMES = {
     appBg: '#f5f1e8', mainBg: '#f5f1e8',
     sidebarBg: '#0a2f1a', sidebarBorder: 'rgba(201,168,76,.22)', sidebarSub: '#9db3a3',
     logoBg: 'transparent', logoInk: '#c9a84c', logoBorder: '1.5px solid #c9a84c',
+    // Logótipo com as letras na cor que se lê sobre o fundo do tema
+    logoSrc: '/logo-letra-verde.png',
     navActiveBg: 'rgba(201,168,76,.13)', navActiveText: '#f3ecdb', navText: '#b9c8be',
     sectionLabel: '#6f8b78',
     cardBg: '#fff', cardBorder: '#e7decd', cardShadow: '0 1px 2px rgba(10,47,26,.04)',
@@ -39,6 +41,7 @@ export const THEMES = {
     appBg: '#071c11', mainBg: 'radial-gradient(120% 100% at 100% 0%,#0d2c1a 0%,#071c11 55%)',
     sidebarBg: '#04140b', sidebarBorder: 'rgba(201,168,76,.22)', sidebarSub: '#8ba392',
     logoBg: 'linear-gradient(140deg,#c9a84c,#a5842f)', logoInk: '#071c11', logoBorder: 'none',
+    logoSrc: '/logo-letra-branca.png',
     navActiveBg: 'rgba(201,168,76,.16)', navActiveText: '#f3ecdb', navText: '#8ba392',
     sectionLabel: '#5f7c6b',
     cardBg: 'rgba(255,255,255,.045)', cardBorder: 'rgba(201,168,76,.14)', cardShadow: 'none',

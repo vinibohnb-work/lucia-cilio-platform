@@ -225,12 +225,8 @@ export default function Sidebar() {
       paddingTop: 'calc(20px + env(safe-area-inset-top))', paddingBottom: 'calc(0px + env(safe-area-inset-bottom))',
     }}>
       {/* Logo */}
-      <div style={{ padding: '0 24px 16px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
-        <img src="/logo.png" alt="LC" style={{ width: '42px', height: '42px', flex: 'none', objectFit: 'contain' }} />
-        <div>
-          <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '19px', lineHeight: 1, color: '#f3ecdb' }}>Lúcia Cílio</div>
-          <div style={{ fontSize: '11px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.sidebarSub }}>Office Consulting</div>
-        </div>
+      <div style={{ padding: '0 24px 16px', display: 'flex', justifyContent: 'center', marginBottom: '14px', borderBottom: `1px solid ${t.sidebarBorder}` }}>
+        <img src="/logo-letra-branca.png" alt="LC Office Consulting" style={{ width: '100%', maxWidth: '170px', height: 'auto', display: 'block' }} />
       </div>
 
       {/* Nav */}

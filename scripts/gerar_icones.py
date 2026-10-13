@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Gera os ícones da aplicação a partir de public/logo.png.
+"""Gera os ícones da aplicação a partir de public/logo-letra-branca.png.
 
 O logótimo completo é um lettering largo ("Office Consulting") que fica
 ilegível a 48px. O ícone usa só o monograma dourado, centrado sobre o verde
@@ -11,13 +11,13 @@ from PIL import Image
 import os
 
 VERDE = (13, 59, 32, 255)       # #0d3b20 — o mesmo do theme_color/background_color
-ORIGEM = 'public/logo.png'
+ORIGEM = 'public/logo-letra-branca.png'
 DESTINO = 'public/icons'
 
 # O monograma vive na metade de cima do ficheiro; a caixa é apurada pelo alfa
 # para não depender de coordenadas escritas à mão.
 base = Image.open(ORIGEM).convert('RGBA')
-caixa = base.crop((0, 0, base.width, 500)).getbbox()
+caixa = base.crop((0, 0, base.width, int(base.height * 0.62))).getbbox()
 mono = base.crop(caixa)
 
 

@@ -105,11 +105,7 @@ export default function FormularioDiagnostico() {
         {/* Cabeçalho com a marca e a escolha de língua */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/logo.png" alt="" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-            <div>
-              <div style={{ fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '19px', lineHeight: 1, color: t.heading }}>Lúcia Cílio</div>
-              <div style={{ fontSize: '9.5px', letterSpacing: '2.4px', textTransform: 'uppercase', marginTop: '3px', color: t.accentText }}>Office Consulting</div>
-            </div>
+            <img src={t.logoSrc} alt="LC Office Consulting" style={{ height: '52px', width: 'auto' }} />
           </div>
           <div style={{ display: 'inline-flex', borderRadius: '9px', overflow: 'hidden', border: `1px solid ${t.cardBorder}` }}>
             {['pt', 'de', 'en'].map(code => (

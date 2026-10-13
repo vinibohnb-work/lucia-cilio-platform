@@ -291,6 +291,15 @@
 
 ## Concluídos
 
+### Logótipo novo — 12/10
+- Logótipo "Office Consulting" com letras brancas (enviado pelo Vinícius) em fundo transparente:
+  `public/logo-letra-branca.png` (fundos escuros) e `public/logo-letra-verde.png` (fundos claros;
+  o anterior, recortado). O tema escolhe o certo (`t.logoSrc`); sai o `logo.png`.
+- Menu lateral: só o logótipo, centrado na largura do menu (saem "Lúcia Cílio" e "Office
+  Consulting"). Login, Definir palavra-passe e Formulário de diagnóstico com o logótipo novo; no
+  login sai o subtítulo "Office Consulting", que o logótipo já diz.
+- Ícones da app (PWA, favicon, iOS) regenerados com o monograma novo; capa do guia em PDF usa-o.
+
 ### Ficha duplicada da Célia apagada — 12/10 (item 4)
 - Saiu a ficha registada como **Alemanha**, sem conta nem dados ligados; ficou a que tem os
   dados. Apagada pelo Vinícius na produção com `apagar_ficha_celia_alemanha.sql` (fora do git),

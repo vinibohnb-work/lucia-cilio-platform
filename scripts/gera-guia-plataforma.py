@@ -146,10 +146,10 @@ def ecra(kick, titulo, onde, intro, nome, itens, notas=None, altura_max=13.2 * c
 def capa(canv, doc):
     canv.saveState()
     canv.setFillColor(DEEP); canv.rect(0, 0, PAGE_W, PAGE_H, stroke=0, fill=1)
-    logo = RAIZ / "public" / "logo.png"
+    logo = RAIZ / "public" / "logo-letra-branca.png"
     if logo.exists():
-        w = 3.2 * cm
-        canv.drawImage(str(logo), (PAGE_W - w) / 2, PAGE_H - 6.0 * cm, w, w, mask="auto", preserveAspectRatio=True)
+        w, h = 6.4 * cm, 3.3 * cm
+        canv.drawImage(str(logo), (PAGE_W - w) / 2, PAGE_H - 6.0 * cm, w, h, mask="auto", preserveAspectRatio=True)
     canv.setStrokeColor(GOLD); canv.setLineWidth(1.1)
     canv.line(MARG, PAGE_H - 7.0 * cm, PAGE_W - MARG, PAGE_H - 7.0 * cm)
     canv.setFillColor(HexColor("#f3ecdb")); canv.setFont("Helvetica-Bold", 25)

@@ -82,7 +82,7 @@ export default function DefinirSenha() {
 
       <div style={{ width: '400px', maxWidth: '100%', borderRadius: '20px', padding: '40px 38px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.loginShadow }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '24px' }}>
-          <img src="/logo.png" alt="LC" style={{ width: '68px', height: '68px', objectFit: 'contain', marginBottom: '14px' }} />
+          <img src={t.logoSrc} alt="LC Office Consulting" style={{ width: '170px', maxWidth: '100%', height: 'auto', marginBottom: '16px' }} />
           <h1 style={{ fontFamily: t.fontDisplay, fontSize: '24px', fontWeight: 600, color: t.heading, margin: '0 0 6px' }}>{mustChangePassword ? L.titleChange : L.title}</h1>
           <p style={{ fontSize: '13px', color: t.textMuted, margin: 0, lineHeight: 1.5 }}>{mustChangePassword ? L.subtitleChange : L.subtitle}</p>
         </div>

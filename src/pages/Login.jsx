@@ -27,17 +27,17 @@ export default function Login() {
   }, [authLoading, session, role, platform, navigate])
 
   const L = lang === 'de' ? {
-    subtitle: 'Office Consulting', email: 'E-Mail', password: 'Passwort',
+    email: 'E-Mail', password: 'Passwort',
     enter: 'Anmelden', entering: 'Wird angemeldet…',
     invalid: 'E-Mail oder Passwort ungültig.', generic: 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
     contact: 'Zugang auf Einladung · keine öffentliche Registrierung', show: 'Anzeigen', hide: 'Verbergen',
   } : lang === 'en' ? {
-    subtitle: 'Office Consulting', email: 'Email', password: 'Password',
+    email: 'Email', password: 'Password',
     enter: 'Sign in', entering: 'Signing in…',
     invalid: 'Invalid email or password.', generic: 'Could not sign in. Please try again.',
     contact: 'Invite-only access · no public sign-up', show: 'Show', hide: 'Hide',
   } : {
-    subtitle: 'Office Consulting', email: 'E-mail', password: 'Palavra-passe',
+    email: 'E-mail', password: 'Palavra-passe',
     enter: 'Entrar', entering: 'A entrar…',
     invalid: 'E-mail ou palavra-passe incorretos.', generic: 'Não foi possível entrar. Tente novamente.',
     contact: 'Acesso restrito · sem registo público', show: 'Mostrar', hide: 'Ocultar',
@@ -78,9 +78,8 @@ export default function Login() {
       {/* Card */}
       <div style={{ width: '400px', maxWidth: '100%', borderRadius: '20px', padding: '40px 38px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.loginShadow }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '30px' }}>
-          <img src="/logo.png" alt="LC" style={{ width: '68px', height: '68px', objectFit: 'contain', marginBottom: '14px' }} />
+          <img src={t.logoSrc} alt="LC Office Consulting" style={{ width: '200px', maxWidth: '100%', height: 'auto', marginBottom: '16px' }} />
           <h1 style={{ margin: 0, fontWeight: 400, fontFamily: t.fontDisplay, fontStyle: 'italic', fontSize: '26px', color: t.heading, lineHeight: 1 }}>Lúcia Cílio</h1>
-          <div style={{ fontSize: '11px', letterSpacing: '2.6px', textTransform: 'uppercase', marginTop: '5px', color: t.accentText }}>{L.subtitle}</div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
