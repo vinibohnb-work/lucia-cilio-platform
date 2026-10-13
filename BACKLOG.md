@@ -23,7 +23,7 @@
 ## Checklist de fecho — versão final para entrega (até 14/11)
 
 > Ordem de ataque. O que não tem ⏳ faço eu. O 5 (conferir as fichas dos clientes e gerar os
-> calendários) saiu a 12/10: fica direto com a Lúcia. Já feitos (ver Concluídos): 1, 2, 3, 4, 13-A, 13-B,
+> calendários) saiu a 12/10: fica direto com a Lúcia. Já feitos (ver Concluídos): 1, 2, 3, 4, 29, 13-A, 13-B,
 > 13-C, 14, 16, 16-A, 18, 21, 22, 23.
 
 **Uma sessão de decisões com a Lúcia** (tudo numa reunião — de preferência junto com a 16-B)
@@ -49,14 +49,6 @@
   domínio); **CSVs bancários** reais; **Excel** do contabilista; **8 passos do mentor Luís** e as
   perguntas a tirar da consultoria; regras do **limite de faturação em Portugal**; formato do
   **relatório fiscal PT**.
-
-**Em curso**
-- [ ] **29.** **Logótipo do cliente** (pedido de 12/10) — branch `logo-cliente`, migração **045**
-  (coluna `clientes.logo`, bucket público `logos` só PNG/JPEG/WebP até 2 MB, função
-  `definir_logo_cliente`). No lugar das iniciais da ficha; a equipa carrega em Dados do cliente (ou
-  no espaço vazio do cabeçalho), o cliente em Empresa; passo novo no onboarding. Testado no DEV
-  (permissões: cada cliente só na sua pasta e na sua ficha). ⏳ O Vinícius correr
-  `migration_045.sql` na produção; depois faço o merge.
 
 **Implementar as decisões e simplificar**
 - [ ] **11.** As decisões dos pontos 6 a 8 (cada uma é pequena; a Calculadora é a maior).
@@ -303,6 +295,14 @@
 ---
 
 ## Concluídos
+
+### Logótipo do cliente — 12/10 (item 29, migração 045)
+- Coluna `clientes.logo`, bucket público `logos` (só PNG/JPEG/WebP, até 2 MB; cada cliente escreve
+  só na sua pasta, a equipa em todo o bucket) e função `definir_logo_cliente` (o cliente grava na
+  sua ficha sem poder alterar o resto). Testada no DEV; corrida pelo Vinícius na produção a 12/10.
+- Ficha: logótipo no lugar das iniciais; sem logótipo, a equipa vê o espaço "+ Logótipo" para o
+  carregar. Dados do cliente: carregar, trocar, remover. Conta do cliente: Empresa → Geral →
+  "Logótipo da empresa" (PT/DE/EN). Onboarding: passo "Logótipo da empresa".
 
 ### Simplificação da ficha do cliente — 12/10 (13-D, primeiro ecrã)
 - Avaliação em `docs/auditorias/2026-10-12-simplificacao-ficha-cliente.md`; aplicado o que não
