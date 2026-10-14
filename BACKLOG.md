@@ -28,8 +28,8 @@
 > 13-C, 14, 16, 16-A, 18, 21, 22, 23.
 
 **Uma sessão de decisões com a Lúcia** (tudo numa reunião — de preferência junto com a 16-B)
-> Pauta pronta (13/10): https://claude.ai/artifact/3PMoZe1bguw3JPVcszRNmv — 29 decisões com
-> recomendação (pontos 6–8, 16-B, fase C da simplificação, acessos), páginas do cliente a marcar
+> Pauta pronta para 15/10: https://claude.ai/artifact/3PMoZe1bguw3JPVcszRNmv — 31 decisões com
+> recomendação (pontos 6–8, 16-B, fase C da simplificação, acessos, domínio próprio do item 26), páginas do cliente a marcar
 > (ponto 9) e pedidos (ponto 10). No fim, "Copiar resumo" dá o texto para aplicar as decisões.
 - [ ] **6.** Dúvidas da etapa 1: calendário de um cliente novo só a partir de "cliente desde"
   (hoje Q1–Q3 nascem "em atraso"); conta nova em **Lite** ou completa; onde o cliente muda a
@@ -110,6 +110,9 @@
 - [ ] **26.** **Domínio próprio e e-mail**: servir a plataforma do domínio do site da Lúcia
   (Vercel + DNS) e resolver o erro de certificado SMTP no Outlook. ⏳ I Love Design (acesso ao
   domínio) e acesso ao Outlook.
+  14/10: a gestora do site pediu o IP do servidor — a Vercel não tem IP fixo nosso; liga-se um
+  subdomínio (ex.: `app.`) com um registo CNAME que a Vercel indica ao acrescentar o domínio. Depois:
+  Site URL e retornos no Supabase, `VITE_APP_URL` na Vercel. Na pauta de 15/10.
 - [ ] **27.** **Relatório fiscal PT** em versão detalhada e resumida, uma língua por relatório (o
   EÜR alemão já existe). Se o formato não chegar, passa para depois. ⏳ Ponto 10.
 - [ ] **28.** **Sessão de entrega** com a Lúcia: percorrer o guia, as decisões, o que ficou para
