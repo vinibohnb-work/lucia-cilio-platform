@@ -219,29 +219,25 @@ export default function Financeiro() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      {/* Cabeçalho */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
-        <div>
-          <h1 className="so-leitores">{L.title}</h1>
-        </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(v => !v) }} style={{ padding: '10px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.new}</button>
-        </div>
-      </div>
+      <h1 className="so-leitores">{L.title}</h1>
 
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{err}</div>}
 
-      {/* KPIs do mês */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '12px', marginBottom: '18px', maxWidth: isMobile ? 'none' : '520px' }}>
-        {[
-          { label: L.received, value: fmt(received), color: t.dueOk.ink },
-          { label: L.pendingK, value: fmt(outstanding), color: outstanding > 0 ? t.dueSoon.ink : t.heading },
-        ].map(k => (
-          <div key={k.label} style={{ ...card, padding: '15px 17px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '5px' }}>{k.label}</div>
-            <div style={{ fontSize: '21px', fontWeight: 800, color: k.color, fontFamily: t.fontNum || t.fontDisplay }}>{k.value}</div>
-          </div>
-        ))}
+      {/* KPIs do mês e "+ Novo contrato" na mesma linha (13/10) — sem linha só para o botão */}
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '18px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '12px', flex: isMobile ? '1 1 100%' : '0 1 520px' }}>
+          {[
+            { label: L.received, value: fmt(received), color: t.dueOk.ink },
+            { label: L.pendingK, value: fmt(outstanding), color: outstanding > 0 ? t.dueSoon.ink : t.heading },
+          ].map(k => (
+            <div key={k.label} style={{ ...card, padding: '15px 17px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: '5px' }}>{k.label}</div>
+              <div style={{ fontSize: '21px', fontWeight: 800, color: k.color, fontFamily: t.fontNum || t.fontDisplay }}>{k.value}</div>
+            </div>
+          ))}
+        </div>
+        <span style={{ flex: 1 }} />
+        <button onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(v => !v) }} style={{ padding: '10px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>{L.new}</button>
       </div>
 
       {/* Form contrato */}
