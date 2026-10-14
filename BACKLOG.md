@@ -28,7 +28,7 @@
 > 13-C, 14, 16, 16-A, 18, 21, 22, 23.
 
 **Uma sessão de decisões com a Lúcia** (tudo numa reunião — de preferência junto com a 16-B)
-> Pauta pronta para 15/10: https://claude.ai/artifact/3PMoZe1bguw3JPVcszRNmv — 31 decisões com
+> Pauta pronta para 15/10: https://claude.ai/artifact/3PMoZe1bguw3JPVcszRNmv — 30 decisões com
 > recomendação (pontos 6–8, 16-B, fase C da simplificação, acessos, domínio próprio do item 26), páginas do cliente a marcar
 > (ponto 9) e pedidos (ponto 10). No fim, "Copiar resumo" dá o texto para aplicar as decisões.
 - [ ] **6.** Dúvidas da etapa 1: calendário de um cliente novo só a partir de "cliente desde"
@@ -309,7 +309,8 @@
 
 ### Simplificação da Gestão, fases A e B — 13/10 (13-D)
 - **Erros corrigidos (E1–E12):** as Notas internas da consultoria já não vão para o PDF do banco
-  (a IA continua a recebê-las, marcadas como contexto interno que nunca se cita); o contrato criado
+  (a IA continua a recebê-las, marcadas como contexto interno que nunca se cita) — **decisão
+  confirmada pelo Vinícius a 14/10: ficam fora**; o contrato criado
   no CRM pede a ficha e grava `cliente_id`; o Financeiro escolhe o cliente da lista de fichas (sem
   ligar pelo nome em silêncio); campo Etapa no lead (o CRM passa a funcionar no telemóvel);
   "Criar acesso" do CRM leva a Acessos já preenchido (mensagem de boas-vindas, sem palavra-passe

@@ -53,7 +53,7 @@ const T = {
     swot: 'Análise SWOT', pesos: 'Peso dos fatores', tows: 'Matriz TOWS · estratégias',
     prioridades: 'Por onde começar', capital: 'Necessidade de capital e financiamento',
     projecoes: 'Previsões e viabilidade', aberto: 'Em aberto',
-    porResponder: 'Por responder na ficha', notaInterna: 'Nota interna',
+    porResponder: 'Por responder na ficha',
     ajuda: 'Ajuda', trava: 'Trava', interno: 'Interno', externo: 'Externo',
     forcas: 'Forças', fraquezas: 'Fraquezas', oportunidades: 'Oportunidades', ameacas: 'Ameaças',
     leitura: 'Leitura', impacto: 'Impacto →', esforco: 'Esforço →', baixo: 'Baixo', alto: 'Alto',
@@ -74,10 +74,10 @@ const T = {
 }
 T.de = { ...T.pt, relatorio: 'Beratungsbericht', cliente: 'Kunde', setor: 'Branche',
   emitido: 'Bericht erstellt am', sumario: 'Zusammenfassung', sim: 'JA', nao: 'NEIN',
-  aberto: 'Offen', porResponder: 'Im Fragebogen offen', notaInterna: 'Interne Notiz' }
+  aberto: 'Offen', porResponder: 'Im Fragebogen offen' }
 T.en = { ...T.pt, relatorio: 'Consultancy report', cliente: 'Client', setor: 'Sector',
   emitido: 'Report issued on', sumario: 'Executive summary', sim: 'YES', nao: 'NO',
-  aberto: 'Open items', porResponder: 'Unanswered in the form', notaInterna: 'Internal note' }
+  aberto: 'Open items', porResponder: 'Unanswered in the form' }
 
 // ── Formatação ──────────────────────────────────────────────────────────────
 const locale = (lang) => lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT'
