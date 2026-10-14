@@ -57,6 +57,9 @@ export default function InicioEquipa() {
   const linha = { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderTop: `1px solid ${t.rowBorder}`, fontSize: '13px' }
   const linkBtn = { background: 'none', border: 'none', padding: 0, font: 'inherit', fontWeight: 700, color: t.heading, cursor: 'pointer', textAlign: 'left' }
   const primeiro = (s.eu || '').split(' ')[0]
+  const hora = new Date().getHours()
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 20 ? 'Boa tarde' : 'Boa noite'
+  const hojeExtenso = new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
   const tudoEmDia = !obrAtraso.length && !obrProx.length && !faltaPorCliente.length && !relPorFazer.length && !porLer.length
 
   // Corta uma lista e devolve quantas ficam de fora, para o "+N — ver todas".
@@ -71,8 +74,18 @@ export default function InicioEquipa() {
 
   return (
     <div>
-      <Titulo titulo={primeiro ? `Olá, ${primeiro}` : 'Início'}
-        acoes={<Botao onClick={() => navigate('/gestao/horas')} title="Abrir as Horas para registar"><Ic.relogio size={16} />Registar horas · hoje {fmtH(horasHoje)}</Botao>} />
+      {/* Boas-vindas à esquerda e "Registar horas" à direita, na mesma linha (14/10).
+          O <h1> continua só para leitores de ecrã, como nas outras páginas. */}
+      <Titulo titulo="Início" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: t.fontDisplay, fontSize: isMobile ? '20px' : '23px', fontWeight: 600, color: t.heading, lineHeight: 1.15 }}>
+            {saudacao}{primeiro ? `, ${primeiro}` : ''}
+          </div>
+          <div style={{ fontSize: '13px', color: t.textMuted, marginTop: '2px' }}>{hojeExtenso}</div>
+        </div>
+        <Botao onClick={() => navigate('/gestao/horas')} title="Abrir as Horas para registar"><Ic.relogio size={16} />Registar horas · hoje {fmtH(horasHoje)}</Botao>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', alignItems: 'start' }}>
         <Cartao titulo="Tarefas" icone={<Ic.lista />}
