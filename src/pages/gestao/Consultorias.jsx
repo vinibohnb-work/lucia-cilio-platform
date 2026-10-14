@@ -98,12 +98,7 @@ export default function Consultorias() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
-        <div>
-          <h1 className="so-leitores">{L.title}</h1>
-        </div>
-        {!form && <button onClick={() => setForm({ ...EMPTY })} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.nova}</button>}
-      </div>
+      <h1 className="so-leitores">{L.title}</h1>
 
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{err}</div>}
 
@@ -129,7 +124,8 @@ export default function Consultorias() {
       {/* Com o formulário de nova consultoria aberto (muitas vezes com o cliente ao
           lado), a lista dos outros clientes não aparece — reunião de 08/10. */}
       {/* Filtro por estado */}
-      {!form && <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px' }}>
+      {/* Filtros e o botão de criar na mesma linha (13/10) — sem linha só para o botão */}
+      {!form && <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '14px' }}>
         {['ativa', 'concluida', 'pausada', 'todas'].map(f => (
           <button key={f} onClick={() => setFiltro(f)} style={{
             padding: '7px 14px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer',
@@ -137,6 +133,8 @@ export default function Consultorias() {
             background: filtro === f ? t.softCardBg : 'transparent', color: filtro === f ? t.accentText : t.textMuted,
           }}>{f === 'todas' ? L.todas : statusLabel[f]}</button>
         ))}
+        <span style={{ flex: 1 }} />
+        <button onClick={() => setForm({ ...EMPTY })} style={{ padding: '10px 20px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.nova}</button>
       </div>}
 
       {!form && loading && <div style={{ padding: '40px', color: t.subtle, fontSize: '14px' }}>{L.loading}</div>}
