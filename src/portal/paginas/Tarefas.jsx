@@ -45,16 +45,17 @@ export default function Tarefas() {
 
   return (
     <div>
-      <Titulo titulo="Tarefas"
-        acoes={<Botao variante="primario" onClick={() => setNova(true)}><Ic.mais size={16} />Nova tarefa</Botao>} />
+      {/* "Nova tarefa" na linha dos filtros, ao lado do Estado (13/10) — sem linha só para o botão */}
+      <Titulo titulo="Tarefas" />
 
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '14px' }}>
         <Pilulas valor={f.prazo} aoMudar={mudarPrazo}
           opcoes={[['hoje', `Hoje (${n('hoje')})`], ['7dias', `7 dias (${n('7dias')})`], ['atraso', `Em atraso (${n('atraso')})`], ['todas', 'Todas']]} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginLeft: isMobile ? 0 : 'auto', width: isMobile ? '100%' : '380px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '190px 190px auto', gap: '10px', alignItems: 'center', marginLeft: isMobile ? 0 : 'auto', width: isMobile ? '100%' : 'auto' }}>
           <select value={f.responsavel} onChange={set('responsavel')} style={{ ...c.input, cursor: 'pointer' }} aria-label="Responsável"><option value="">Toda a equipa</option>{s.equipa.map(x => <option key={x}>{x}</option>)}</select>
           {/* Estado: fica como está até a Lúcia decidir se "Em curso" é usado (⏳). */}
           <select value={f.estado} onChange={set('estado')} style={{ ...c.input, cursor: 'pointer' }} aria-label="Estado"><option value="abertas">Por fazer</option><option value="pendente">Pendentes</option><option value="em_curso">Em curso</option><option value="concluida">Concluídas</option><option value="todas">Todas</option></select>
+          <Botao variante="primario" onClick={() => setNova(true)} estilo={isMobile ? { gridColumn: '1 / -1', justifyContent: 'center' } : undefined}><Ic.mais size={16} />Nova tarefa</Botao>
         </div>
       </div>
 

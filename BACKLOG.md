@@ -319,7 +319,7 @@
   sem iniciais, país em chip, estado só quando não é ativo, inativos escondidos por omissão;
   Relatórios com os 3 trimestres fechados; Mensagens sem avatares e com "Outros clientes"; Agenda
   com Mês e Dia; Tarefas com pílulas Hoje · 7 dias · Em atraso · Todas; Horas com totais numa
-  linha; CRM sem filtro de temperatura, cartões mais limpos, eliminar dentro do lead; Diagnósticos
+  linha ("Nova tarefa" na linha dos filtros); CRM sem filtro de temperatura, cartões mais limpos, eliminar dentro do lead; Diagnósticos
   com "Copiar ligação" e respostas legíveis; Financeiro com 2 indicadores e o mês por extenso;
   Acessos sem o campo Serviço, equipa e clientes separados; Consultorias criadas só com o essencial,
   bloco atual calculado, Enquadramento recolhível, SWOT só com Enter, Recursos clicáveis; ESG com
