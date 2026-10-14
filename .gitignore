@@ -24,7 +24,8 @@ dist-ssr
 *.sw?
 
 # Claude Code local config
-.claude/
+.claude/*
+!.claude/skills/
 
 # Local reference materials (not for public repo)
 ref/
