@@ -320,11 +320,19 @@ export default function Crm() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px', flexWrap: 'wrap', marginBottom: '14px' }}>
-        <div>
-          <h1 className="so-leitores">{L.title}</h1>
-        </div>
-        {/* Cria sempre na primeira etapa; a etapa muda-se no modal (os "+" por coluna saíram) */}
+      <h1 className="so-leitores">{L.title}</h1>
+
+      {/* Filtro de origem (⏳: fica até a Lúcia decidir se mede de onde vêm os leads) e "+ Lead"
+          na mesma linha (13/10). O lead novo nasce na primeira etapa; muda-se no modal. */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '14px' }}>
+        <select value={fSource} onChange={e => setFSource(e.target.value)} aria-label={L.source} style={{ ...selStyle, width: 'auto' }}>
+          <option value="">{L.source}: {L.all}</option>
+          {SOURCES.map(x => <option key={x.key} value={x.key}>{label(x)}</option>)}
+        </select>
+        {(fSource || fOverdue) && (
+          <button onClick={() => { setFSource(''); setFOverdue(false) }} style={{ padding: '8px 11px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', border: 'none', background: 'transparent', color: t.subtle, display: 'inline-flex', alignItems: 'center', gap: '5px' }}><IcFechar tam={11} />{L.all}</button>
+        )}
+        <span style={{ flex: 1 }} />
         <button onClick={() => { setConfirmDel(false); setForm({ ...EMPTY }) }} style={{ padding: '10px 18px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>{L.add}</button>
       </div>
 
@@ -337,17 +345,6 @@ export default function Crm() {
           <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 800, opacity: .8, display: 'inline-flex' }}>{fOverdue ? <IcFechar tam={12} /> : '→'}</span>
         </button>
       )}
-
-      {/* Filtro de origem (⏳: fica até a Lúcia decidir se mede de onde vêm os leads) */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '14px' }}>
-        <select value={fSource} onChange={e => setFSource(e.target.value)} aria-label={L.source} style={{ ...selStyle, width: 'auto' }}>
-          <option value="">{L.source}: {L.all}</option>
-          {SOURCES.map(x => <option key={x.key} value={x.key}>{label(x)}</option>)}
-        </select>
-        {(fSource || fOverdue) && (
-          <button onClick={() => { setFSource(''); setFOverdue(false) }} style={{ padding: '8px 11px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', border: 'none', background: 'transparent', color: t.subtle, display: 'inline-flex', alignItems: 'center', gap: '5px' }}><IcFechar tam={11} />{L.all}</button>
-        )}
-      </div>
 
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{err}</div>}
       {info && (
