@@ -28,9 +28,9 @@
 > 13-C, 14, 16, 16-A, 18, 21, 22, 23.
 
 **Uma sessão de decisões com a Lúcia** (tudo numa reunião — de preferência junto com a 16-B)
-> Pauta pronta para 15/10: https://claude.ai/artifact/3PMoZe1bguw3JPVcszRNmv — 30 decisões com
-> recomendação (pontos 6–8, 16-B, fase C da simplificação, acessos, domínio próprio do item 26), páginas do cliente a marcar
-> (ponto 9) e pedidos (ponto 10). No fim, "Copiar resumo" dá o texto para aplicar as decisões.
+> Pauta pronta para 15/10: https://claude.ai/artifact/3PMoZe1bguw3JPVcszRNmv — 32 decisões com
+> recomendação (pontos 6–8, 16-B, fase C da simplificação, acessos, domínio próprio do item 26) e
+> páginas do cliente a marcar (ponto 9). Os pedidos do ponto 10 ficaram fora da pauta (14/10). No fim, "Copiar resumo" dá o texto para aplicar as decisões.
 - [ ] **6.** Dúvidas da etapa 1: calendário de um cliente novo só a partir de "cliente desde"
   (hoje Q1–Q3 nascem "em atraso"); conta nova em **Lite** ou completa; onde o cliente muda a
   **língua** (um alemão vê PT); **relatórios trimestrais** visíveis ao cliente já ou só PDF; o
