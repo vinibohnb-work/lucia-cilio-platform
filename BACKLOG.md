@@ -32,7 +32,7 @@
 > recomendação (pontos 6–8, 16-B, fase C da simplificação, acessos, domínio próprio do item 26) e
 > páginas do cliente a marcar (ponto 9). Os pedidos do ponto 10 ficaram fora da pauta (14/10). No fim, "Copiar resumo" dá o texto para aplicar as decisões.
 - [ ] **6.** Dúvidas da etapa 1: calendário de um cliente novo só a partir de "cliente desde"
-  (hoje Q1–Q3 nascem "em atraso"); conta nova em **Lite** ou completa; onde o cliente muda a
+  (hoje Q1–Q3 nascem "em atraso"); se a **Contabilidade Lite** se mantém (foi criada para uma demonstração; proposta de 14/10: retirar e ficar uma só versão); onde o cliente muda a
   **língua** (um alemão vê PT); **relatórios trimestrais** visíveis ao cliente já ou só PDF; o
   que interessa da aba "Conta na plataforma".
 - [ ] **7.** Pendentes da Fase 1 da simplificação:
