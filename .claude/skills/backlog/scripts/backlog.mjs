@@ -35,8 +35,11 @@ if (!acao) { console.error('uso: backlog.mjs <clientes|listar|criar|concluir|atu
 
 function token() {
   if (process.env.SCALASYS_TOKEN) return process.env.SCALASYS_TOKEN.trim()
-  const arq = path.join(os.homedir(), '.scalasys', 'token')
-  if (fs.existsSync(arq)) return fs.readFileSync(arq, 'utf8').trim()
+  // o Bloco de Notas costuma salvar como token.txt: vale também
+  for (const nome of ['token', 'token.txt']) {
+    const arq = path.join(os.homedir(), '.scalasys', nome)
+    if (fs.existsSync(arq)) return fs.readFileSync(arq, 'utf8').trim()
+  }
   console.error('Sem token. Gere no painel (Clientes Ativos → cliente → Backlog → Conectar o Claude Code) e salve em ~/.scalasys/token.')
   process.exit(2)
 }
