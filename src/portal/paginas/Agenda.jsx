@@ -89,8 +89,8 @@ export default function Agenda() {
 
   return (
     <div>
-      <Titulo titulo="Agenda"
-        acoes={<Botao variante="primario" onClick={() => setNova({ prazo: ref })}><Ic.mais size={16} />Nova tarefa</Botao>} />
+      {/* "Nova tarefa" na linha da data, à direita (15/10) — sem linha só para o botão */}
+      <Titulo titulo="Agenda" />
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
         <Pilulas valor={vista} aoMudar={setVista} opcoes={[['mes', 'Mês'], ['dia', 'Dia']]} />
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -99,6 +99,8 @@ export default function Agenda() {
           <Botao onClick={() => mover(1)} aria-label="Seguinte" estilo={{ padding: '0 11px' }}>›</Botao>
         </div>
         <strong style={{ fontSize: '16px', color: t.heading, textTransform: 'capitalize' }}>{tituloPeriodo}</strong>
+        <span style={{ flex: 1 }} />
+        <Botao variante="primario" onClick={() => setNova({ prazo: ref })}><Ic.mais size={16} />Nova tarefa</Botao>
       </div>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
         <select value={f.responsavel} onChange={e => setF(p => ({ ...p, responsavel: e.target.value }))} style={{ ...c.input, width: 'auto', cursor: 'pointer' }} aria-label="Responsável"><option value="">Toda a equipa</option>{s.equipa.map(x => <option key={x}>{x}</option>)}</select>
