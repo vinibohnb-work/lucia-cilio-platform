@@ -2,6 +2,8 @@
 
 Contexto deste projeto para quem trabalha nele (e para o Claude Code de cada pessoa). Mantido pela Scalasys; atualize quando algo aqui mudar.
 
+Sistema interno: cliente `52b83a81-a61f-4a4c-98a5-b8b1b43c9ee5` (Lúcia Cílio). O backlog fica em Clientes Ativos → Lúcia Cílio → Backlog; no Claude Code, `/backlog`.
+
 ## O cliente e o produto
 
 - **Cliente:** Lúcia Cílio · Office Consulting — contabilista (TOC) e consultora ESG, com clientes em Portugal e na Alemanha. A Letícia é da equipa dela (administradora desde 08/10/2026).
@@ -168,14 +170,14 @@ docs/                   planos, auditorias, guia da plataforma
 
 ## Estado e pendências combinadas
 
-- A lista viva é a **Checklist de fecho** do `BACKLOG.md`. Em aberto em 13/10: reunião de decisões com a Lúcia (pontos 6–10: calendário de cliente novo, Lite ou completa, língua do cliente, relatórios trimestrais, acessos de comercial/marketing, reserva de imposto com ou sem IVA, regras da Calculadora de Preços, que páginas do cliente se usam) junto com a validação visual da V2 (16-B, semana de 13 a 17/10).
+- A lista viva é o grupo **Checklist de fecho** do backlog no sistema interno (`/backlog`). Em aberto em 13/10: reunião de decisões com a Lúcia (pontos 6–10: calendário de cliente novo, Lite ou completa, língua do cliente, relatórios trimestrais, acessos de comercial/marketing, reserva de imposto com ou sem IVA, regras da Calculadora de Preços, que páginas do cliente se usam) junto com a validação visual da V2 (16-B, semana de 13 a 17/10).
 - Depois da reunião: **uma ficha por cliente** (12 — hoje o cliente existe em vários lugares sem chave comum, incluindo a lista `clients` que a Lúcia usava como lista do escritório), ligar o portal do cliente (13), resto da simplificação (13-D, prazo 3/11).
 - Validação com usuários reais (uma pessoa da equipe e uma cliente externa), CSVs bancários reais, pacote RGPD com a advogada (inclui DPA da Anthropic), domínio próprio e e-mail (dependem do fornecedor do site), guia da plataforma e sessão de entrega.
 - Depois da entrega: app nativa (Android primeiro), integração WhatsApp/Instagram, audit log, aceite dos termos (quando for SaaS), limite de faturação português.
 
 ## Documentos do repositório
 
-- [BACKLOG.md](BACKLOG.md) — checklist de fecho até 14/11, decisões das reuniões e histórico do que foi feito.
+- `BACKLOG.md` antigo (se existir na sua pasta): arquivo morto, importado para o sistema interno em 14/10/2026. A fonte é o backlog do painel, pela skill `/backlog`.
 - [docs/PLANO_CONSULTORIA.md](docs/PLANO_CONSULTORIA.md) — desenho do módulo de consultoria (base IHK).
 - [docs/PLANO_ESG.md](docs/PLANO_ESG.md) — modelo da plataforma ESG (diagnóstico → materialidade → projetos → KPIs → relatório).
 - [docs/PLANO_MELHORIAS.md](docs/PLANO_MELHORIAS.md) — fases da Contabilidade (empresa, recorrentes, planeamento).
@@ -189,7 +191,7 @@ docs/                   planos, auditorias, guia da plataforma
 
 ## Como trabalhamos neste repositório
 
-- **Tarefas:** o `BACKLOG.md` é a lista viva do projeto. Pegue dali o que fazer e marque o que terminou. A sprint da semana (meta + 3 entregas) é definida pelo Vinícius no painel interno da Scalasys.
+- **Tarefas:** o backlog do projeto vive no sistema interno (Clientes Ativos → cliente → Backlog), compartilhado entre o Vinícius e a Raquel. No Claude Code, use `/backlog` para ver o próximo item, marcar o que terminou (com o que foi entregue) e anotar o que surgir; é preciso o token pessoal (painel → Backlog → Conectar o Claude Code). A sprint da semana (meta + 3 entregas) fica no painel.
 - **Mudanças passam por revisão:** quem não é o Vinícius trabalha numa branch própria (`nome/assunto`) e abre um Pull Request para a `main`. Nada de push direto na `main`: ela é o que está no ar para o cliente. O Vinícius revisa a prévia e aprova.
 - **Banco de dados:** mudança de estrutura vira um arquivo `.sql` versionado no repositório (`supabase/migration_NNN.sql`, testado antes no projeto DEV). Quem roda SQL em produção é o Vinícius; desenvolvimento usa o ambiente de testes.
 - **Segredos e dados:** nunca commitar `.env*` (exceto `.env.example`), chaves, tokens, nem planilhas/CSVs/PDFs com dados do cliente. Valores das variáveis de ambiente: pedir ao Vinícius.
