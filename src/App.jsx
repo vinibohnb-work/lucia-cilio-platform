@@ -24,6 +24,7 @@ import { homePathFor } from './lib/platformHome'
 import Sidebar from './components/layout/Sidebar'
 import FiscalBell from './components/FiscalBell'
 import { BASE } from './lib/v2'
+import LinguaPeloPais from './components/LinguaPeloPais'
 
 // ── Páginas carregadas a pedido (code splitting por rota) ──
 // Cada plataforma só descarrega o seu próprio código: o arranque deixa de
@@ -234,6 +235,7 @@ export default function App() {
     <ThemeProvider>
     <LangProvider>
       <AuthProvider>
+        <LinguaPeloPais />
         <ViewAsProvider>
         <SidebarProvider>
           <BrowserRouter basename={BASE || undefined}>

@@ -32,8 +32,7 @@
 > recomendação (pontos 6–8, 16-B, fase C da simplificação, acessos, domínio próprio do item 26) e
 > páginas do cliente a marcar (ponto 9). Os pedidos do ponto 10 ficaram fora da pauta (14/10). No fim, "Copiar resumo" dá o texto para aplicar as decisões.
 - [ ] **6.** Dúvidas da etapa 1: calendário de um cliente novo só a partir de "cliente desde"
-  (hoje Q1–Q3 nascem "em atraso"); se a **Contabilidade Lite** se mantém (foi criada para uma demonstração; proposta de 14/10: retirar e ficar uma só versão); onde o cliente muda a
-  **língua** (um alemão vê PT); **relatórios trimestrais** visíveis ao cliente já ou só PDF; o
+  (hoje Q1–Q3 nascem "em atraso"); se a **Contabilidade Lite** se mantém (foi criada para uma demonstração; proposta de 14/10: retirar e ficar uma só versão); ~~língua do cliente~~ (feito 14/10: segue o país da ficha, a escolha nas bandeiras fica guardada); **relatórios trimestrais** visíveis ao cliente já ou só PDF; o
   que interessa da aba "Conta na plataforma".
 - [ ] **7.** Pendentes da Fase 1 da simplificação:
   · **O que as contas comercial e marketing veem** — hoje leem todas as fichas, obrigações e
@@ -306,6 +305,13 @@
 ---
 
 ## Concluídos
+
+### Língua do cliente pelo país — 14/10 (ponto 6)
+- Decidido pelo Vinícius conforme a recomendação: ao entrar, o cliente vê a plataforma na língua do
+  país da empresa (país da ficha; senão o dos dados da empresa): DE → alemão, PT → português.
+- A escolha feita nas bandeiras passa a ficar guardada no dispositivo e prevalece sobre o país (antes
+  a língua voltava sempre a PT ao recarregar). Antes do login, um browser em alemão abre em alemão.
+  A equipa não muda de língua automaticamente. As regras fiscais continuam a depender só do país.
 
 ### Simplificação da Gestão, fases A e B — 13/10 (13-D)
 - **Erros corrigidos (E1–E12):** as Notas internas da consultoria já não vão para o PDF do banco
