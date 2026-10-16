@@ -329,10 +329,12 @@ export const acoes = {
     const novas = gerarCalendario(c, ano)
       .filter(g => !codigos.has(g.codigo))
       .filter(g => !existentes.some(o => familia(o.codigo) === familia(g.codigo) && Math.abs(diasAte(o.prazo, g.prazo)) <= 14))
-      .map(g => ({ id: novoId(), clienteId, codigo: g.codigo, nome: g.nome, periodo: g.periodo, prazo: g.prazo, estado: 'por_preparar', valor: null, comprovativo: null, checklist: {}, notas: '', origem: 'portal' }))
+      // Decisão da Lúcia (15/10): o que tinha prazo antes de "cliente desde" foi tratado
+      // antes de ela pegar no cliente — entra como entregue, não "em atraso".
+      .map(g => ({ id: novoId(), clienteId, codigo: g.codigo, nome: g.nome, periodo: g.periodo, prazo: g.prazo, estado: c.cliente_desde && g.prazo < c.cliente_desde ? 'entregue' : 'por_preparar', valor: null, comprovativo: null, checklist: {}, notas: '', origem: 'portal' }))
     if (!novas.length) return 0
     mudar(s => { s.obrigacoes.push(...novas) })
-    depoisDaFicha(clienteId, () => gravar(supabase.from('fiscal_obligations').insert(novas.map(o => ({ id: o.id, cliente_id: clienteId, user_id: c.userId, country: c.pais, client: c.nome, source: 'portal', status: 'pending', ...paraObrigacao(o) })))))
+    depoisDaFicha(clienteId, () => gravar(supabase.from('fiscal_obligations').insert(novas.map(o => ({ id: o.id, cliente_id: clienteId, user_id: c.userId, country: c.pais, client: c.nome, source: 'portal', status: o.estado === 'entregue' ? 'done' : 'pending', ...paraObrigacao(o) })))))
     return novas.length
   },
   criarObrigacao(dados) {
