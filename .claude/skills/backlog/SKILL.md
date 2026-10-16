@@ -29,6 +29,7 @@ node .claude/skills/backlog/scripts/backlog.mjs <ação> [args]
 | `criar --titulo "…" [--detalhe "…"] [--grupo "…"] [--tipo dev\|validacao\|diretriz] [--responsavel "…"]` | Algo que surgiu no desenvolvimento. |
 | `concluir <id> --entrega "…"` | Item terminado, com uma frase do que foi entregue (commit, tela, migração). |
 | `atualizar <id> --campo valor` | Corrigir título ou detalhe, mudar o grupo ou o responsável, descartar (`--estado descartado`). |
+| `resumo` | Próximos itens, novidades e concluídos dos últimos 7 dias e ações de reunião por decidir. Roda sozinho no começo de cada conversa (hook `SessionStart` em `.claude/settings.json`): é o backlog ao vivo do projeto. |
 | `pendentes` | Ações das reuniões dos últimos 60 dias que ninguém decidiu ainda. |
 | `decidir <meeting_id> <item> <dev\|validacao\|comercial\|tratada> [--titulo "…"]` | Dar destino a uma ação de reunião. |
 
@@ -36,7 +37,8 @@ Acrescente `--json` para receber os dados crus.
 
 ## Como trabalhar
 
-1. **No começo de uma tarefa,** rode `listar --estado aberto` e mostre os primeiros itens.
+1. **No começo de uma tarefa,** o resumo do backlog já veio no início da conversa (se não veio, rode `resumo`).
+   Para a lista completa, `listar --estado aberto`.
    - Se a pessoa não disse o que fazer, sugira o de cima, considerando também a sprint da
      semana (meta + 3 entregas, no painel).
    - Ao pegar um item sem responsável, ponha o nome de quem está trabalhando

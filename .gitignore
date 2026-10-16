@@ -26,6 +26,7 @@ dist-ssr
 # Claude Code local config
 .claude/*
 !.claude/skills/
+!.claude/settings.json
 
 # Local reference materials (not for public repo)
 ref/
