@@ -81,11 +81,16 @@ const NAV = {
   // quando a Lúcia abre um caso na Gestão (o mesmo menu, o mesmo produto).
   esg: [
     { key: 'section_esg', items: [
+      // Ordem do método da Lúcia (documento de 15/10): compreender → diagnosticar →
+      // priorizar → agir → medir → evoluir → reportar.
       { rota: 'percurso',      Icon: IconRelatorios,  labelKey: 'nav_esg_percurso' },
-      { rota: 'materialidade', Icon: IconMaterial,    labelKey: 'nav_esg_material' },
+      { rota: 'arranque',      Icon: IconClientes,    labelKey: 'nav_esg_arranque' },
       { rota: 'diagnostico',   Icon: IconDiag,        labelKey: 'nav_esg_diag' },
+      { rota: 'materialidade', Icon: IconMaterial,    labelKey: 'nav_esg_material' },
+      { rota: 'projetos',      Icon: IconProjetos,    labelKey: 'nav_esg_plano' },
       { rota: 'kpis',          Icon: IconKpi,         labelKey: 'nav_esg_kpis' },
-      { rota: 'projetos',      Icon: IconProjetos,    labelKey: 'nav_projects' },
+      { rota: 'acompanhamento', Icon: IconTarefas,    labelKey: 'nav_esg_acompanhamento' },
+      { rota: 'documentos',    Icon: IconProjetos,    labelKey: 'nav_esg_documentos', soEquipa: true },
       { rota: 'relatorios',    Icon: IconRelatorios,  labelKey: 'nav_esg_reports' },
       { to: '/consultoria',    Icon: IconCaixa,       labelKey: 'nav_consultoria', soCliente: true },
     ]},
@@ -170,6 +175,7 @@ export default function Sidebar() {
       items: sec.items
         .filter(it => !it.roles || it.roles.includes(role))
         .filter(it => !(casoId && it.soCliente))
+        .filter(it => !(!casoId && it.soEquipa))   // documentos do caso: só dentro da Gestão
         .filter(it => !(lite && it.semLite))
         .map(it => it.rota ? { ...it, to: `${esgBase}/${it.rota}` } : it),
     })).filter(sec => sec.items.length > 0)

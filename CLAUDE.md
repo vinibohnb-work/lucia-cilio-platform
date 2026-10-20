@@ -47,7 +47,7 @@ npm run lint
 
 ## Banco de dados
 
-- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_045.sql` (a próxima é a 046), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
+- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_047.sql` (a próxima é a 048), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
 - Cabeçalho de cada migração: número e título, porquê, o que muda, se apaga dados, e "Executar no Supabase: SQL Editor → New query → colar → Run". Escrever idempotente (`if not exists`, `drop policy if exists` antes do `create policy`).
 - Aplicação é manual no SQL Editor: primeiro no DEV, depois o Vinícius corre na produção. Código que depende de uma migração só vai para a `main` depois de ela estar aplicada.
 - RLS em tudo. Funções `public.is_admin()` e `public.is_equipa()` (admin, comercial, marketing). O cliente só lê o que tem o seu `user_id` ou a sua ficha; anónimo não lê nada; o formulário público grava só via `api/diagnostico.js` (migração 042).
@@ -60,7 +60,7 @@ npm run lint
   - `bank_imports`, `bank_transactions` — extratos importados e conciliação.
   - `tarefas`, `documentos_cliente`, `mensagens_cliente`, `relatorios_trimestrais`, `notas_cliente`, `horas_cliente`, `client_notices` — portal da Gestão.
   - `consultorias`, `consulting_notes`, `crm_leads`, `diagnostico_submissoes`, `client_billing`, `billing_payments` — consultoria, CRM e financeiro.
-  - `esg_consultorias` (casos ESG), `esg_diagnostics`, `esg_materiality`, `esg_projects`, `esg_reports`.
+  - `esg_consultorias` (casos ESG; `nivel` e `metodo` jsonb do método da Lúcia, migração 046), `esg_diagnostics`, `esg_materiality`, `esg_projects` (também o plano de ação), `esg_reports`, `esg_interno` (notas internas e opinião por reunião, só admin), `esg_comentarios` (comentário por item, lados equipa/cliente; é a única coisa que o cliente escreve na ESG, migração 047).
   - `marketing_posts`, `marketing_notas` — aba de Marketing.
 
 ## Mapa do código
@@ -107,7 +107,7 @@ docs/                   planos, auditorias, guia da plataforma
 - **Gravação:** campos de texto gravam ao sair do campo, não a cada tecla. No portal, `src/portal/dados.js` muda o armazém em memória e grava a seguir; ids gerados no cliente com `crypto.randomUUID()`. Antes de fechar um formulário com texto por gravar, pergunte.
 - **Contas:** não há convite por e-mail — a equipe cria a conta com senha temporária gerada (sem caracteres ambíguos) e o usuário é obrigado a trocá-la no primeiro acesso (requisitos: 8 caracteres, maiúscula, minúscula, número, especial). "Redefinir palavra-passe" gera outra temporária. Verificação em dois passos (TOTP) é opcional por conta.
 - **CRM:** leads entram manualmente ("Juntar ao CRM"), por decisão de 18/09, para evitar registos indevidos. O formulário público `/diagnostico` substituiu o JotForm e faz triagem (`src/lib/triagem.js`): quem fica abaixo do corte não desaparece, aparece com o motivo. Contratos (CRM e Financeiro) ligam-se à ficha escolhida da lista, nunca pelo nome escrito.
-- **ESG é ferramenta interna da Lúcia** (18/09): um caso ESG (`esg_consultorias`) é o dono dos dados, a Lúcia preenche e o cliente só vê (se `visivel_cliente`). O caso abre numa aba própria do navegador com o menu da ESG, para ela compartilhar a tela. Fluxo: Diagnóstico → Materialidade → Projetos → KPIs → Relatório, com o financeiro (investimento, poupança, payback) em cada elo; KPIs seguem os temas materiais; nada de dados fictícios nas telas ao vivo.
+- **ESG é ferramenta interna da Lúcia** (18/09): um caso ESG (`esg_consultorias`) é o dono dos dados, a Lúcia preenche e o cliente só vê (se `visivel_cliente`). O caso abre numa aba própria do navegador com o menu da ESG, para ela compartilhar a tela. Fluxo (método da Lúcia, documento e reunião de 15/10): Arranque (7 perguntas, as três primeiras reuniões com protocolo à mão, documentos) → Diagnóstico (+ fotografia por pilar e primeira devolução) → Materialidade (+ problemas sintoma → causa → impacto) → Plano de ação → KPIs → Acompanhamento (reuniões, feedback trimestral, avaliação, documentos em `client-docs/esg/<id>`) → Relatório, vendido em três níveis (Diagnóstico · Desenvolvimento · Reporting), com o financeiro (investimento, poupança, payback) em cada elo; KPIs seguem os temas materiais; nada de dados fictícios nas telas ao vivo.
 - **Extratos bancários por ficheiro (CSV/Excel)**, sem integração bancária direta (13/08); o formato é detectado pelo conteúdo e reimportar é inofensivo. WhatsApp não é integrado: a plataforma só gera o texto para copiar ou abrir no WhatsApp (01/10).
 - **Checklists derivadas, não manuais:** o onboarding (e indicadores parecidos) lê o estado dos dados (contrato anexado, país preenchido, primeiro acesso…), em vez de caixas marcadas à mão.
 - **Eliminar um cliente** apaga também os ficheiros da pasta dele no Storage (RGPD); ao mexer em eliminação, mantenha isso. Eliminar uma conta desliga primeiro as obrigações da ficha, para não as apagar em cascata. Contratos e extratos de um cliente com conta vivem na pasta dele em `client-docs`.

@@ -111,7 +111,7 @@ export default function ApresentacaoESG() {
   const k = porAno[ano] ? computeKpis(porAno[ano]) : null
   const kPrev = anoPrev ? computeKpis(porAno[anoPrev]) : null
   const rep = d.reports.find(r => r.reference_year === ano)
-  const prog = progressoESG({ materiality, diagnostic: porAno[ano] ? { answers: porAno[ano] } : null, projects, report: rep })
+  const prog = progressoESG({ materiality, diagnostic: porAno[ano] ? { answers: porAno[ano] } : null, projects, report: rep, caso: d.caso })
   const limiar = Number(materiality?.threshold) || 3.5
   const topics = materiality?.topics || {}
   const pontuados = ESG_TOPICS.filter(tp => topics[tp.key]?.applicable && topics[tp.key]?.stakeholder && topics[tp.key]?.company)

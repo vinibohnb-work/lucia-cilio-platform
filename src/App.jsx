@@ -81,6 +81,9 @@ const DiagnosticoESG      = lazy(() => import('./pages/esg/Diagnostico'))
 const Materialidade       = lazy(() => import('./pages/esg/Materialidade'))
 const KPIs                = lazy(() => import('./pages/esg/KPIs'))
 const ProjetosESG         = lazy(() => import('./pages/esg/ProjetosESG'))
+const ArranqueESG         = lazy(() => import('./pages/esg/ArranqueESG'))
+const AcompanhamentoESG   = lazy(() => import('./pages/esg/AcompanhamentoESG'))
+const DocumentosESG       = lazy(() => import('./pages/esg/DocumentosESG'))
 const RelatoriosESG       = lazy(() => import('./pages/esg/RelatoriosESG'))
 
 // Fallback: leva cada utilizador à sua plataforma (nunca vê um seletor)
@@ -145,6 +148,8 @@ function AppLayout() {
             <Route element={<PlatformRoute requirePlatform="esg" />}>
               <Route element={<ClienteESG />}>
                 <Route path="/esg/percurso"      element={<PercursoESG />} />
+                <Route path="/esg/arranque"      element={<ArranqueESG />} />
+                <Route path="/esg/acompanhamento" element={<AcompanhamentoESG />} />
                 <Route path="/esg/diagnostico"   element={<DiagnosticoESG />} />
                 <Route path="/esg/materialidade" element={<Materialidade />} />
                 <Route path="/esg/kpis"          element={<KPIs />} />
@@ -178,6 +183,9 @@ function AppLayout() {
             <Route path="/gestao/esg/:id" element={<RoleRoute requireRole="admin"><CasoESG /></RoleRoute>}>
               <Route index                element={<Navigate to="percurso" replace />} />
               <Route path="percurso"      element={<PercursoESG />} />
+              <Route path="arranque"      element={<ArranqueESG />} />
+              <Route path="acompanhamento" element={<AcompanhamentoESG />} />
+              <Route path="documentos"    element={<DocumentosESG />} />
               <Route path="materialidade" element={<Materialidade />} />
               <Route path="diagnostico"   element={<DiagnosticoESG />} />
               <Route path="kpis"          element={<KPIs />} />

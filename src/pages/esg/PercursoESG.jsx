@@ -20,7 +20,7 @@ export default function PercursoESG() {
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const navigate = useNavigate()
-  const { id: cid, base } = useAlvoESG()
+  const { id: cid, base, caso } = useAlvoESG()
 
   const [dados, setDados] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -76,7 +76,7 @@ export default function PercursoESG() {
 
   if (loading) return <EsqueletoPagina cartoes={3} linhas={5} />
 
-  const p = progressoESG(dados || {})
+  const p = progressoESG({ ...(dados || {}), caso })
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const tom = {
     pronto: t.dueOk,

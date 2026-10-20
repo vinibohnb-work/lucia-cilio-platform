@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 import { useAlvoESG } from '../../context/AlvoESGContext'
 import { computeKpis } from '../../lib/esgKpis'
 import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../data/esgTopics'
+import { CAMPOS_DEVOLUCAO, PERGUNTAS_AVALIACAO, txt } from '../../data/esgMetodo'
 
 // Relatório ESG descritivo — a estrutura da Lúcia:
 //   1. Dupla materialidade (o que é importante para as duas partes + financeiro)
@@ -154,11 +155,29 @@ export default function RelatoriosESG() {
     // Cada secção só entra se tiver texto escrito ou dados — um título seguido de
     // "sem dados" não diz nada ao cliente (reunião de 25/09).
     const bloco = (titulo, texto, tabela) => (texto || tabela) ? `<h2>${esc(titulo)}</h2>${texto}${tabela}` : ''
+    // Método da Lúcia (15/10): devolução, problemas, plano de ação e avaliação — só o que estiver preenchido
+    const LM = lang === 'de'
+      ? { dev: 'Erste Rückmeldung', prob: 'Konkrete Probleme', sint: 'Symptom', causa: 'Ursache', imp: 'Auswirkung', plano: 'Maßnahmenplan', acao: 'Maßnahme', obj: 'Ziel', resp: 'Verantwortlich', prazo: 'Frist', kpi: 'Kennzahl', meta: 'Ausgangswert → Ziel', evid: 'Nachweis', aval: 'Bewertung und nächster Schritt' }
+      : lang === 'en'
+        ? { dev: 'First feedback', prob: 'Concrete problems', sint: 'Symptom', causa: 'Cause', imp: 'Impact', plano: 'Action plan', acao: 'Action', obj: 'Objective', resp: 'Owner', prazo: 'Deadline', kpi: 'Indicator', meta: 'Baseline → target', evid: 'Evidence', aval: 'Evaluation and next step' }
+        : { dev: 'Primeira devolução', prob: 'Problemas concretos', sint: 'Sintoma', causa: 'Causa', imp: 'Impacto', plano: 'Plano de ação', acao: 'Ação', obj: 'Objetivo', resp: 'Responsável', prazo: 'Prazo', kpi: 'Indicador', meta: 'Baseline → meta', evid: 'Evidência', aval: 'Avaliação e próximo passo' }
+    const metodo = caso?.metodo || {}
+    const par = (rot, v) => String(v ?? '').trim() ? `<p class="txt"><strong>${esc(rot)}:</strong> ${esc(v).replace(/\n/g, '<br/>')}</p>` : ''
+    const devTxt = CAMPOS_DEVOLUCAO.map(c => par(txt(c.t, lang), metodo.devolucao?.[c.key])).join('')
+    const probRows = (metodo.problemas || []).filter(x => String(x.sintoma || '').trim())
+      .map(x => `<tr><td>${esc(x.sintoma)}</td><td>${esc(x.causa || '—')}</td><td>${esc(x.impacto || '—')}</td></tr>`).join('')
+    const comPlano = projects.filter(p => p.objetivo || p.responsavel || p.prazo || p.kpi || p.meta || p.evidencia)
+    const planoRows = comPlano.map(p => `<tr><td>${esc(p.name)}</td><td>${esc(p.objetivo || '—')}</td><td>${esc(p.responsavel || '—')}</td><td>${esc(p.prazo || '—')}</td><td>${esc(p.kpi || '—')}</td><td>${esc([p.baseline, p.meta].filter(Boolean).join(' → ') || '—')}</td><td>${esc(p.evidencia || '—')}</td></tr>`).join('')
+    const avalTxt = PERGUNTAS_AVALIACAO.map(q => par(txt(q.t, lang), metodo.avaliacao?.[q.key])).join('')
     const corpo = [
+      bloco(LM.dev, devTxt, ''),
       bloco(L.s1, secText('materialidade'), matRows ? `<table><tr>${L.matHeader.map(h => `<th>${esc(h)}</th>`).join('')}</tr>${matRows}</table>` : ''),
       bloco(L.s2, secText('diagnostico'), ''),
       bloco(L.s3, secText('projetos'), pjRows ? `<table><tr><th>${esc(L.s3.slice(3))}</th><th>Status</th><th>${esc(L.invest)}</th><th>${esc(L.saving2)}</th><th>%</th></tr>${pjRows}</table>` : ''),
+      bloco(LM.prob, '', probRows ? `<table><tr><th>${esc(LM.sint)}</th><th>${esc(LM.causa)}</th><th>${esc(LM.imp)}</th></tr>${probRows}</table>` : ''),
+      bloco(LM.plano, '', planoRows ? `<table><tr><th>${esc(LM.acao)}</th><th>${esc(LM.obj)}</th><th>${esc(LM.resp)}</th><th>${esc(LM.prazo)}</th><th>${esc(LM.kpi)}</th><th>${esc(LM.meta)}</th><th>${esc(LM.evid)}</th></tr>${planoRows}</table>` : ''),
       bloco(L.s4, secText('kpis'), kpiRows ? `<table><tr><th>KPI</th><th>${year}</th><th>${prevYear || '—'}</th></tr>${kpiRows}</table>` : ''),
+      bloco(LM.aval, avalTxt, ''),
     ].join('')
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>ESG ${year}</title><style>
       body{font-family:Georgia,serif;color:#1a2b20;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.55}
