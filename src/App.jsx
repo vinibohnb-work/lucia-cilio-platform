@@ -23,7 +23,6 @@ import { homePathFor } from './lib/platformHome'
 // Internal layout (sempre presente — não faz sentido dividir)
 import Sidebar from './components/layout/Sidebar'
 import FiscalBell from './components/FiscalBell'
-import { BASE } from './lib/v2'
 import LinguaPeloPais from './components/LinguaPeloPais'
 
 // ── Páginas carregadas a pedido (code splitting por rota) ──
@@ -58,6 +57,12 @@ const CasoESG             = lazy(() => import('./pages/gestao/CasoESG'))
 const ClienteESG          = lazy(() => import('./pages/esg/ClienteESG'))
 // Modo apresentação de um caso ESG: página própria, sem menus, para partilhar o ecrã e imprimir.
 const ApresentacaoESG     = lazy(() => import('./pages/gestao/ApresentacaoESG'))
+
+// Ligações antigas para /v2/... (a identidade nova validou-se lá até 19/10): o mesmo ecrã sem o prefixo.
+function SemV2() {
+  const { pathname, search, hash } = useLocation()
+  return <Navigate to={(pathname.replace(/^\/v2/, '') || '/') + search + hash} replace />
+}
 
 const Dashboard           = lazy(() => import('./pages/contabilidade/Dashboard'))
 const Clientes            = lazy(() => import('./pages/contabilidade/Clientes'))
@@ -238,7 +243,7 @@ export default function App() {
         <LinguaPeloPais />
         <ViewAsProvider>
         <SidebarProvider>
-          <BrowserRouter basename={BASE || undefined}>
+          <BrowserRouter>
             <Suspense fallback={null}>
             <Routes>
               <Route path="/"                      element={<Navigate to="/login" replace />} />
@@ -249,7 +254,7 @@ export default function App() {
               <Route path="/apresentacao/esg/:id" element={
                 <ProtectedRoute><RoleRoute requireRole="admin"><ApresentacaoESG /></RoleRoute></ProtectedRoute>
               } />
-              <Route path="/v2/*" element={<Navigate to="/gestao/clientes" replace />} />
+              <Route path="/v2/*" element={<SemV2 />} />
               <Route path="/*" element={
                 <ProtectedRoute>
                   <AppLayout />

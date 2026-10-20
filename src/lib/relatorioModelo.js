@@ -17,7 +17,6 @@ import {
 } from './consultoriaCalc.js'
 import { SWOT_QUADRANTES, TOWS_CELULAS, BLOCOS } from '../data/consultoriaBlocos.js'
 import { CAMPOS as CAMPOS_ENQ, opcaoDe } from '../data/enquadramento.js'
-import { V2 } from './v2.js'
 
 // ── Paleta do modelo ────────────────────────────────────────────────────────
 const C = {
@@ -29,9 +28,10 @@ const C = {
   laranja: '#d98f4e', vermelho: '#c25a3a', positivo: '#8fc9a2', negativo: '#e08a6a',
   verdeMudo: '#8ba394', azul: '#2f6b8a', azul2: '#4a86a5', azul3: '#7aa8bf', azul4: '#a9c6d4',
 }
-const SERIF = V2 ? "'Archivo Black','Archivo','Arial Nova',sans-serif" : "'Cormorant Garamond',Georgia,serif"
-const SANS = V2 ? "'Arial Nova','Archivo',system-ui,sans-serif" : "'Instrument Sans',system-ui,sans-serif"
-if (V2) Object.assign(C, { verde: '#0E3D33', verdeMed: '#184F43', ouro: '#C89B3C' })
+// Identidade LC Office: Archivo e a paleta verde/dourado nova
+const SERIF = "'Archivo Black','Archivo','Arial Nova',sans-serif"
+const SANS = "'Arial Nova','Archivo',system-ui,sans-serif"
+Object.assign(C, { verde: '#0E3D33', verdeMed: '#184F43', ouro: '#C89B3C' })
 
 // O relatório abre numa janela nova (about:blank): o logótipo precisa do endereço completo.
 const LOGO = `${typeof window !== 'undefined' ? window.location.origin : ''}/logo-letra-branca.png`
@@ -550,8 +550,7 @@ export function construirHTML({ c, lang = 'pt' }) {
 <title>${esc(L.relatorio)} — ${esc(c.nome)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-${V2 ? '<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">' : ''}
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box}
   body{margin:0;font-family:${SANS};background:#e8ece9;-webkit-print-color-adjust:exact;print-color-adjust:exact}

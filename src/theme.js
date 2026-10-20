@@ -1,5 +1,3 @@
-import { V2 } from './lib/v2'
-
 // Tokens de tema (light "Editorial Premium" / night "Imersivo").
 // Copiado do protótipo de redesign (handoff). A marca (verde+dourado) mantém-se.
 
@@ -72,11 +70,11 @@ const THEMES_V1 = {
   },
 }
 
-// ── V2: identidade visual da LC Office Consulting, servida em /v2 para validação ──
+// ── Identidade visual da LC Office Consulting (a "V2", validada em /v2 e oficial desde 19/10) ──
 // (documento da Letícia, 08/10/2026): verde principal #0E3D33, verde secundário
 // #184F43, bege #EAD8B7, creme #F8F1E4, dourado #C89B3C, branco. Títulos em
 // Archivo Black, corpo em Arial Nova (com Archivo como fonte web de recurso).
-// Os tokens que a V2 não define vêm da V1, para nenhum ecrã ficar sem cor.
+// Os tokens que esta identidade não define vêm da V1, para nenhum ecrã ficar sem cor.
 const BRAND_V2 = { green: '#0E3D33', greenMid: '#184F43', gold: '#C89B3C', beige: '#EAD8B7', cream: '#F8F1E4' }
 
 const FONT_BODY = "'Arial Nova','Archivo','Segoe UI',system-ui,sans-serif"
@@ -151,5 +149,7 @@ const THEMES_V2 = {
   night: { ...THEMES_V1.night, ...THEMES_V2_BASE.night, logoSrc: '/logo-letra-branca.png' },
 }
 
-export const BRAND = V2 ? BRAND_V2 : BRAND_V1
-export const THEMES = V2 ? THEMES_V2 : THEMES_V1
+// A V1 fica só como base dos tokens que a V2 não redefine.
+void BRAND_V1
+export const BRAND = BRAND_V2
+export const THEMES = THEMES_V2

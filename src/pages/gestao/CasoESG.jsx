@@ -6,7 +6,6 @@ import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { AlvoESGProvider } from '../../context/AlvoESGContext'
 import { listUsers } from '../../lib/adminApi'
-import { BASE } from '../../lib/v2'
 
 // Um caso ESG aberto na Gestão. Abre num separador próprio, com o menu da ESG
 // na barra lateral — é a plataforma ESG tal como o cliente a vê, só que com a
@@ -77,7 +76,7 @@ export default function CasoESG() {
   if (loading) return <EsqueletoPagina cartoes={2} linhas={4} />
   if (!caso) return (
     <div style={{ padding: '40px 0' }}>
-      <a href={`${BASE}/gestao/esg`} style={{ color: t.accentText, fontWeight: 700, fontSize: '13px', textDecoration: 'none' }}>← {L.voltar}</a>
+      <a href="/gestao/esg" style={{ color: t.accentText, fontWeight: 700, fontSize: '13px', textDecoration: 'none' }}>← {L.voltar}</a>
       <div style={{ color: t.subtle, fontSize: '14px', marginTop: '12px' }}>{L.naoEncontrado}</div>
     </div>
   )
@@ -90,14 +89,14 @@ export default function CasoESG() {
       <div style={{ width: '100%', fontFamily: t.fontBody }}>
         {/* Tira do caso: discreta, para não roubar o ecrã às páginas */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '12px', color: t.textMuted, marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${t.cardBorder}` }}>
-          <a href={`${BASE}/gestao/esg`} style={{ color: t.accentText, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>← {L.voltar}</a>
+          <a href="/gestao/esg" style={{ color: t.accentText, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>← {L.voltar}</a>
           <span style={{ color: t.subtle }}>·</span>
           <span style={{ fontWeight: 700, color: t.heading }}>{caso.empresa || caso.nome}</span>
           {caso.empresa && <span>{caso.nome}</span>}
           <button onClick={abrirEdicao} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '11.5px' }}><IconLapis /> {L.editar}</button>
           <span style={{ marginLeft: 'auto' }} />
           {/* Abre num separador próprio, sem menus — para mostrar ao cliente (18/09) */}
-          <a href={`${BASE}/apresentacao/esg/${id}`} target="_blank" rel="noopener"
+          <a href="/apresentacao/esg/${id}" target="_blank" rel="noopener"
             style={{ padding: '5px 12px', borderRadius: '8px', background: t.btnBg, color: t.btnInk, fontSize: '11.5px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>{L.apresentar} ↗</a>
           <select value={caso.status} onChange={e => alterar({ status: e.target.value })}
             style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', background: tone.bg, color: tone.ink, cursor: 'pointer', outline: 'none' }}>

@@ -9,7 +9,6 @@ import { getCompanySettings, saveCompanySettings } from '../../lib/companySettin
 import { overheadPerHour, computePlanTotals, famvCheck } from '../../lib/planCalc'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
-import { BASE } from '../../lib/v2'
 
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) ? n : 0 }
 
@@ -289,7 +288,7 @@ export default function RucklagenSteuern() {
                   <div style={capLabel}>{L.pctLabel}</div>
                   {/* A percentagem edita-se só na Empresa — antes havia dois sítios com limites diferentes (R-B8) */}
                   <div style={{ fontSize: '22px', fontWeight: 800, color: t.heading, lineHeight: '38px' }}>{pct} %</div>
-                  <a href={`${BASE}/contabilidade/empresa`} style={{ ...sub, marginTop: '5px', display: 'inline-block', color: t.accentText, fontWeight: 700, textDecoration: 'none' }}>{L.pctSub} →</a>
+                  <a href="/contabilidade/empresa" style={{ ...sub, marginTop: '5px', display: 'inline-block', color: t.accentText, fontWeight: 700, textDecoration: 'none' }}>{L.pctSub} →</a>
                 </div>
                 <div style={{ background: tone.green.bg, borderRadius: '12px', padding: '14px 16px' }}>
                   <div style={{ fontSize: '11.5px', fontWeight: 700, color: t.text, marginBottom: '4px', lineHeight: 1.3 }}>{L.recTax}</div>
