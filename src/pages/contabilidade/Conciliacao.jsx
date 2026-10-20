@@ -6,7 +6,8 @@ import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
-import { parseCSV, extrairMovimentos, conciliar, movimentoParaLancamento } from '../../lib/extratoBancario'
+import { parseCSV, extrairMovimentos, conciliar, movimentoParaLancamento, sugerirCategoria } from '../../lib/extratoBancario'
+import { EXPENSE_CATEGORIES } from '../../data/expenseCategories'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 
 // Conciliação caixa/banco a partir do extrato.
@@ -33,6 +34,10 @@ export default function Conciliacao() {
   // Taxa de IVA para "Criar lançamento": por omissão a da empresa (0 se isenta)
   const [settings, setSettings] = useState(null)
   const [taxas, setTaxas] = useState({})   // tx.id -> taxa escolhida
+  // Categoria da despesa a criar: por omissão, a proposta a partir da coluna de
+  // categoria do extrato (raw.categoria); a pessoa confirma ou troca no seletor
+  const [categorias, setCategorias] = useState({})   // tx.id -> chave escolhida
+  const categoriaDe = (tx) => categorias[tx.id] ?? sugerirCategoria(tx.raw?.categoria)
   useEffect(() => { if (eid) getCompanySettings(eid).then(setSettings) }, [eid])
   const taxaEmpresa = settings ? (settings.vat_regime === 'exempt' ? 0 : Number(settings.vat_default_rate) || 0) : 0
   const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
@@ -53,6 +58,7 @@ export default function Conciliacao() {
     erroVazio: 'Keine Buchungen in der Datei gefunden.', semAlteracoes: 'Alle Buchungen waren bereits importiert.',
     importados: 'Importierte Kontoauszüge', abrirFicheiro: 'Öffnen', semFicheiro: 'ohne Datei',
     verComo: 'Im Ansichtsmodus nicht möglich.',
+    semCategoria: '— ohne Kategorie —', categoriaTitulo: 'Kategorie der neuen Buchung', categoriaExtrato: 'Kategorie im Auszug',
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
     subtitle: 'Import a bank statement (CSV or Excel) and match it against the cash book.',
@@ -67,6 +73,7 @@ export default function Conciliacao() {
     erroVazio: 'No transactions found in the file.', semAlteracoes: 'Every transaction was already imported.',
     importados: 'Imported statements', abrirFicheiro: 'Open', semFicheiro: 'no file',
     verComo: 'Not available in view-as mode.',
+    semCategoria: '— no category —', categoriaTitulo: 'Category of the new entry', categoriaExtrato: 'Category in the statement',
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
     subtitle: 'Importa o extrato bancário (CSV ou Excel) e cruza-o com o Livro de Caixa.',
@@ -81,6 +88,7 @@ export default function Conciliacao() {
     erroVazio: 'Não encontrei movimentos no ficheiro.', semAlteracoes: 'Todos os movimentos já tinham sido importados.',
     verComo: 'Não disponível no modo "ver como".',
     importados: 'Extratos importados', abrirFicheiro: 'Abrir', semFicheiro: 'sem ficheiro',
+    semCategoria: '— sem categoria —', categoriaTitulo: 'Categoria do lançamento a criar', categoriaExtrato: 'Categoria no extrato',
   }
 
   const fmt = (v) => (Number(v) || 0).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -177,7 +185,7 @@ export default function Conciliacao() {
       .upsert(movimentos.map(m => ({
         user_id: eid, import_id: imp.id, tx_date: m.data, description: m.descricao,
         amount: m.valor, type: m.tipo, balance: m.saldo, fingerprint: m.fingerprint,
-        raw: { linha: m.raw },
+        raw: m.categoria ? { linha: m.raw, categoria: m.categoria } : { linha: m.raw },
       })), { onConflict: 'user_id,fingerprint', ignoreDuplicates: true })
       .select('id')
     if (e2) { setErro(e2.message); return }
@@ -213,7 +221,7 @@ export default function Conciliacao() {
   }
   async function criarLancamento(tx) {
     if (isViewing) return
-    const novo = movimentoParaLancamento({ data: tx.tx_date, descricao: tx.description, valor: Number(tx.amount), tipo: tx.type }, Number(taxas[tx.id] ?? taxaEmpresa))
+    const novo = movimentoParaLancamento({ data: tx.tx_date, descricao: tx.description, valor: Number(tx.amount), tipo: tx.type }, Number(taxas[tx.id] ?? taxaEmpresa), categoriaDe(tx))
     const { data, error } = await supabase.from('cash_entries').insert({ ...novo, user_id: eid }).select('id,entry_date,description,type,amount,destination').single()
     if (error) { setErro(error.message); return }
     setEntries(prev => [...prev, data])
@@ -389,6 +397,9 @@ export default function Conciliacao() {
                             {s.ambiguo && <div style={{ fontSize: '11px', color: t.dueSoon.ink, marginTop: '4px', fontWeight: 600 }}>⚠ {L.ambiguo}</div>}
                           </div>
                         )}
+                        {tx.type === 'saida' && tx.raw?.categoria && (
+                          <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '7px' }}>{L.categoriaExtrato}: {tx.raw.categoria}</div>
+                        )}
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
                           {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
                           <select value={taxas[tx.id] ?? taxaEmpresa} onChange={e => setTaxas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label="IVA"
@@ -396,6 +407,15 @@ export default function Conciliacao() {
                             style={{ ...btn, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                             {vatOptions.map(r => <option key={r} value={r}>{(lang === 'de' ? 'USt ' : lang === 'en' ? 'VAT ' : 'IVA ') + r + '%'}</option>)}
                           </select>
+                          {tx.type === 'saida' && (
+                            <select value={categoriaDe(tx)} onChange={e => setCategorias(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing}
+                              aria-label={L.categoriaTitulo}
+                              title={tx.raw?.categoria ? `${L.categoriaExtrato}: ${tx.raw.categoria}` : L.categoriaTitulo}
+                              style={{ ...btn, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                              <option value="">{L.semCategoria}</option>
+                              {EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang]?.label || c.pt.label}</option>)}
+                            </select>
+                          )}
                           <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btn, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
                           <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btn, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
                         </div>

@@ -128,6 +128,8 @@ const PISTAS = {
   saldo:     ['saldo', 'balance', 'kontostand'],
   debito:    ['debito', 'débito', 'debit', 'soll', 'saida', 'levantamento'],
   credito:   ['credito', 'crédito', 'credit', 'haben', 'entrada', 'deposito'],
+  // Folhas preparadas à mão (e alguns bancos) trazem a categoria de cada movimento
+  categoria: ['kategorie', 'categoria', 'category', 'rubrica'],
 }
 // Pistas curtas que só valem como palavra inteira ("in" não pode casar com
 // "Buchungstag"): extratos e folhas preparadas à mão com "Betrag (in)" / "Betrag (out)",
@@ -222,20 +224,25 @@ export function detetarColunas(linhas) {
   }
   if (iValor < 0 && iDebito < 0) return null
 
+  // Categoria: só pelo cabeçalho (sem ele, uma coluna de texto curto pode ser qualquer coisa)
+  const usadasNum = new Set([iData, iValor, iSaldo, iDebito, iCredito])
+  const cCat = perfil.find(p => p.cabecalho && !usadasNum.has(p.i) && p.fNum < 0.5 && casa(p.cabecalho, 'categoria'))
+  const iCategoria = cCat ? cCat.i : -1
+
   // Descrição: o cabeçalho manda; senão, a coluna de texto mais longa
   let iDesc = -1
   for (const pista of PISTAS.descricao) {
-    const c = perfil.find(p => p.cabecalho && semAcentos(p.cabecalho).includes(pista))
+    const c = perfil.find(p => p.cabecalho && p.i !== iCategoria && semAcentos(p.cabecalho).includes(pista))
     if (c) { iDesc = c.i; break }
   }
   if (iDesc < 0) {
-    const usadas = new Set([iData, iValor, iSaldo, iDebito, iCredito])
+    const usadas = new Set([iData, iValor, iSaldo, iDebito, iCredito, iCategoria])
     const c = perfil.filter(p => !usadas.has(p.i) && p.fNum < 0.5 && p.preenchida > 0.5)
       .sort((a, b) => b.compMedio - a.compMedio)[0]
     iDesc = c ? c.i : -1
   }
 
-  return { idxCabecalho: idxCab, cabecalho: cab, iData, iDesc, iValor, iSaldo, iDebito, iCredito, dados }
+  return { idxCabecalho: idxCab, cabecalho: cab, iData, iDesc, iValor, iSaldo, iDebito, iCredito, iCategoria, dados }
 }
 
 // A coluna `s` comporta-se como saldo acumulado da coluna `v`?
@@ -303,6 +310,7 @@ export function extrairMovimentos(linhas) {
       valor: Math.abs(bruto),
       tipo: bruto < 0 ? 'saida' : 'entrada',
       saldo: mapa.iSaldo >= 0 ? parseValor(l[mapa.iSaldo]) : null,
+      categoria: mapa.iCategoria >= 0 ? String(l[mapa.iCategoria] ?? '').trim() : '',
       raw: l,
     }
     movimentos.push(m)
@@ -411,7 +419,8 @@ export function conciliar(movimentos, entries) {
 
 // Um movimento do extrato que não existe no Livro de Caixa vira lançamento.
 // O valor do extrato é bruto: o IVA sai da taxa escolhida (R-A3 — antes ia sempre a 0).
-export function movimentoParaLancamento(m, taxa = 0) {
+// A categoria só vale para saídas (como no Livro de Caixa).
+export function movimentoParaLancamento(m, taxa = 0, categoria = '') {
   return {
     entry_date: m.data,
     description: m.descricao,
@@ -423,5 +432,44 @@ export function movimentoParaLancamento(m, taxa = 0) {
     vat_amount: taxa > 0 ? Math.round(m.valor * taxa / (100 + taxa) * 100) / 100 : 0,
     quantity: 1,
     private: false,
+    category: m.tipo === 'saida' ? (categoria || null) : null,
   }
+}
+
+// ── Categoria do extrato → categoria de despesa ─────────────────────────────
+// A folha da cliente traz a categoria em texto livre ("Miete", "Kategorie EÜR:
+// Bewirtung", "Software"). Propõe-se a chave de src/data/expenseCategories.js;
+// a pessoa confirma no seletor. A ordem conta: "Steuerberater" é honorário antes
+// de ser imposto, "Kfz-Versicherung" é automóvel antes de ser seguro.
+// `inclui` casa em qualquer parte da palavra; `palavras` só como palavra inteira.
+const MAPA_CATEGORIAS = [
+  { key: 'honorarios', inclui: ['honorar', 'steuerberat', 'rechtsanwalt', 'anwalt', 'beratungskost', 'buchhalt', 'contabil', 'advogad', 'consultor', 'accountant', 'lawyer', 'professional fee'], palavras: ['legal'] },
+  { key: 'auto', inclui: ['fahrzeug', 'benzin', 'diesel', 'tanken', 'kraftstoff', 'combust', 'gasoleo', 'gasolina', 'portage', 'estacionamento', 'parken', 'parkgeb', 'automovel', 'vehicle', 'fuel'], palavras: ['kfz', 'pkw', 'maut', 'auto', 'car', 'petrol'] },
+  { key: 'impostos', inclui: ['verwaltungsgeb', 'taxa administrativ'], palavras: [] },
+  { key: 'bancos', inclui: ['gebuhr', 'bank', 'banc', 'kontofuhr', 'comiss', 'paypal', 'stripe'], palavras: ['fees', 'fee', 'charges'] },
+  { key: 'software', inclui: ['software', 'subscri', 'abonnement', 'lizenz', 'hosting', 'saas', 'cloud'], palavras: ['abo', 'app', 'apps'] },
+  { key: 'telecom', inclui: ['telefon', 'telekom', 'telecom', 'internet', 'mobilfunk', 'handy', 'telemovel', 'phone', 'porto'], palavras: [] },
+  { key: 'renda', inclui: ['miete', 'renda', 'aluguer', 'arrendamento', 'raumkost', 'coworking', 'buroraum', 'instalac', 'premises'], palavras: ['rent', 'raum'] },
+  { key: 'refeicoes', inclui: ['verpflegung', 'essen', 'bewirtung', 'refeic', 'restaurant', 'almoco', 'jantar', 'meal', 'food'], palavras: [] },
+  { key: 'viagens', inclui: ['reise', 'viage', 'hotel', 'ubernacht', 'flug', 'desloca', 'travel', 'comboio'], palavras: ['bahn', 'taxi', 'voo', 'voos'] },
+  { key: 'marketing', inclui: ['werbung', 'marketing', 'publicidad', 'anzeige', 'advertis', 'flyer'], palavras: ['ads'] },
+  { key: 'formacao', inclui: ['fortbildung', 'weiterbildung', 'schulung', 'seminar', 'formac', 'fachliteratur', 'training', 'workshop'], palavras: ['kurs', 'kurse', 'curso', 'cursos', 'course', 'courses'] },
+  { key: 'limpeza', inclui: ['reinigung', 'limpeza', 'cleaning', 'higiene', 'hygiene'], palavras: [] },
+  { key: 'seguros', inclui: ['versicherung', 'seguro', 'insurance'], palavras: [] },
+  { key: 'equipamentos', inclui: ['abschreibung', 'equipament', 'investi', 'hardware', 'computer', 'mobiliario', 'anlagegut'], palavras: ['afa', 'gwg'] },
+  { key: 'material', inclui: ['material', 'wareneinkauf', 'verbrauch', 'consumive', 'burobedarf', 'supplies', 'mercadoria'], palavras: ['waren'] },
+  { key: 'impostos', inclui: ['steuer', 'imposto', 'abgabe', 'beitrag', 'licenca'], palavras: ['tax', 'taxes', 'taxa', 'taxas', 'duties'] },
+  { key: 'outros', inclui: ['sonstig', 'outros', 'outras', 'diverso'], palavras: ['other', 'misc'] },
+]
+
+export function sugerirCategoria(texto) {
+  const n = normalizar(texto)
+  if (!n) return ''
+  // Movimentos privados não são despesa da empresa: não se propõe categoria
+  if (/privat|pessoal|private/.test(n)) return ''
+  const palavras = n.split(' ')
+  for (const c of MAPA_CATEGORIAS) {
+    if (c.inclui.some(p => n.includes(p)) || c.palavras.some(p => palavras.includes(p))) return c.key
+  }
+  return ''
 }
