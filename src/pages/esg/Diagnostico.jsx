@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { ESG_PILLARS, ESG_QUESTIONS, ESG_TOTAL, questionsByPillar } from '../../data/esgQuestions'
 import { useAlvoESG } from '../../context/AlvoESGContext'
 import FotografiaESG from '../../components/esg/FotografiaESG'
+import ComentariosESG from '../../components/esg/ComentariosESG'
 
 export default function Diagnostico() {
   const { lang } = useLang()
@@ -223,6 +224,8 @@ export default function Diagnostico() {
                 }}>{lbl}</button>
               ))}
             </div>
+            {/* "Uma caixinha de comentários para cada um deles" (15/10): consultora e cliente */}
+            <ComentariosESG chave={`diag:${q.id}`} />
           </div>
         </div>
       </div>

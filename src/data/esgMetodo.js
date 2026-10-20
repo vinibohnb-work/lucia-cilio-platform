@@ -50,6 +50,24 @@ export const PERGUNTAS_ARRANQUE = [
     destaque: T('Revela o resultado que o cliente quer comprar.', 'Zeigt, welches Ergebnis der Kunde kaufen möchte.', 'Reveals the result the client wants to buy.') },
 ]
 
+// As primeiras reuniões, como a Lúcia as faz (15/10): "primeira reunião com a
+// liderança, primeira reunião com a parte operacional e uma terceira reunião
+// extra, onde eu faço o protocolo". Sem IA nas reuniões com o cliente: o
+// protocolo é escrito à mão. Gravam-se em metodo.primeiras[key].
+export const REUNIOES_ARRANQUE = [
+  { key: 'lideranca', nome: T('Reunião com a liderança', 'Gespräch mit der Geschäftsführung', 'Meeting with leadership'),
+    ajuda: T('prioridades, riscos, oportunidades, porquê agora', 'Prioritäten, Risiken, Chancen, warum jetzt', 'priorities, risks, opportunities, why now') },
+  { key: 'operacional', nome: T('Reunião com a parte operacional', 'Gespräch mit dem Betrieb', 'Meeting with operations'),
+    ajuda: T('energia, resíduos, fornecedores, processos, instalações', 'Energie, Abfall, Lieferanten, Prozesse, Räume', 'energy, waste, suppliers, processes, premises') },
+  { key: 'extra', nome: T('Reunião extra', 'Zusätzliches Gespräch', 'Extra meeting'),
+    ajuda: T('o que ficou por ver; observação do espaço', 'was noch offen ist; Besichtigung', 'what is still open; site visit') },
+]
+export const CAMPOS_REUNIAO = [
+  { key: 'participantes', t: T('Com quem', 'Mit wem', 'With whom'), linhas: 1 },
+  { key: 'protocolo', t: T('Protocolo da reunião', 'Gesprächsprotokoll', 'Meeting minutes'), linhas: 6 },
+  { key: 'proximos', t: T('Próximos passos', 'Nächste Schritte', 'Next steps'), linhas: 2 },
+]
+
 // Com quem se fala dentro da empresa (o ESG é transversal)
 export const INTERLOCUTORES = [
   { key: 'gestao', nome: T('Gestão / Founder', 'Geschäftsführung / Gründer', 'Management / Founder'),

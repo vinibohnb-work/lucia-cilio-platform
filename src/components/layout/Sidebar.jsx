@@ -90,6 +90,7 @@ const NAV = {
       { rota: 'projetos',      Icon: IconProjetos,    labelKey: 'nav_esg_plano' },
       { rota: 'kpis',          Icon: IconKpi,         labelKey: 'nav_esg_kpis' },
       { rota: 'acompanhamento', Icon: IconTarefas,    labelKey: 'nav_esg_acompanhamento' },
+      { rota: 'documentos',    Icon: IconProjetos,    labelKey: 'nav_esg_documentos', soEquipa: true },
       { rota: 'relatorios',    Icon: IconRelatorios,  labelKey: 'nav_esg_reports' },
       { to: '/consultoria',    Icon: IconCaixa,       labelKey: 'nav_consultoria', soCliente: true },
     ]},
@@ -174,6 +175,7 @@ export default function Sidebar() {
       items: sec.items
         .filter(it => !it.roles || it.roles.includes(role))
         .filter(it => !(casoId && it.soCliente))
+        .filter(it => !(!casoId && it.soEquipa))   // documentos do caso: só dentro da Gestão
         .filter(it => !(lite && it.semLite))
         .map(it => it.rota ? { ...it, to: `${esgBase}/${it.rota}` } : it),
     })).filter(sec => sec.items.length > 0)

@@ -34,7 +34,7 @@ const POR_FICHA = [
   ['fiscal_obligations', 'cliente_id'], ['client_billing', 'cliente_id'],
 ]
 const POR_EMAIL = [['crm_leads', 'email'], ['consultorias', 'email'], ['diagnostico_submissoes', 'email']]
-const ESG_POR_CASO = ['esg_diagnostics', 'esg_materiality', 'esg_projects', 'esg_reports', 'esg_interno']
+const ESG_POR_CASO = ['esg_diagnostics', 'esg_materiality', 'esg_projects', 'esg_reports', 'esg_interno', 'esg_comentarios']
 
 async function listarFicheiros(db, prefixo) {
   const { data, error } = await db.storage.from(BUCKET).list(prefixo, { limit: 1000, sortBy: { column: 'name', order: 'asc' } })

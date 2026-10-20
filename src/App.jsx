@@ -83,6 +83,7 @@ const KPIs                = lazy(() => import('./pages/esg/KPIs'))
 const ProjetosESG         = lazy(() => import('./pages/esg/ProjetosESG'))
 const ArranqueESG         = lazy(() => import('./pages/esg/ArranqueESG'))
 const AcompanhamentoESG   = lazy(() => import('./pages/esg/AcompanhamentoESG'))
+const DocumentosESG       = lazy(() => import('./pages/esg/DocumentosESG'))
 const RelatoriosESG       = lazy(() => import('./pages/esg/RelatoriosESG'))
 
 // Fallback: leva cada utilizador à sua plataforma (nunca vê um seletor)
@@ -184,6 +185,7 @@ function AppLayout() {
               <Route path="percurso"      element={<PercursoESG />} />
               <Route path="arranque"      element={<ArranqueESG />} />
               <Route path="acompanhamento" element={<AcompanhamentoESG />} />
+              <Route path="documentos"    element={<DocumentosESG />} />
               <Route path="materialidade" element={<Materialidade />} />
               <Route path="diagnostico"   element={<DiagnosticoESG />} />
               <Route path="kpis"          element={<KPIs />} />
