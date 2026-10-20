@@ -1,14 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 import { Buffer } from 'node:buffer'
+import { randomBytes } from 'node:crypto'
 
 // ============================================================================
 // Área de participantes dos eventos (/momentos/participantes, migração 048).
 //
-// Os participantes não têm conta: entram pelo link pessoal (token) que a Lúcia
-// lhes envia a partir da lista de inscritos do Luma. Esta função é a única
-// porta deles para a base — confere o token, devolve só o que podem ver e grava
-// só o perfil do próprio. A base não tem políticas para anónimos.
+// Os participantes não têm conta. Na chamada de 20/10 a Lúcia pediu que fosse
+// assim, em vez de crachás: no dia, quem está na sala lê um QR code (com o
+// código do evento), escreve o nome e recebe um token pessoal, que fica no
+// telemóvel. Esta função é a única porta deles para a base — confere o código e
+// o token, devolve só o que podem ver e grava só o perfil do próprio. A base
+// não tem políticas para anónimos. Fora da janela do evento (aberto_de →
+// aberto_ate, datas de Lisboa) nada abre.
 //
+//   POST /api/evento { codigo, acao: 'entrar', nome }   → cria-me e devolve { t }
 //   GET  /api/evento?t=<token>                 → o meu perfil + quem partilhou
 //   POST /api/evento { t, acao: 'perfil', perfil }      → guardar o meu perfil
 //   POST /api/evento { t, acao: 'foto', imagem }         → data URL (≤ 2 MB)
@@ -25,8 +30,19 @@ const VALIDADE_FOTO = 3600
 export const LIMITES = { nome: 80, negocio: 80, localidade: 60, sobre: 400, instagram: 60, linkedin: 200, site: 200, fotoBytes: 2 * 1024 * 1024 }
 const TIPOS_FOTO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
+const MAX_PARTICIPANTES = 600
 const corta = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '')
 const tokenValido = (t) => typeof t === 'string' && /^[A-Za-z0-9_-]{24,64}$/.test(t)
+const codigoValido = (c) => typeof c === 'string' && /^[A-Za-z0-9_-]{8,40}$/.test(c)
+export const hojeLisboa = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Lisbon' }).format(new Date())
+const novoToken = () => randomBytes(24).toString('base64url')
+
+// A área só abre dentro da janela do evento
+function janela(evento, hoje) {
+  if (evento.aberto_de && hoje < evento.aberto_de) return [403, { error: 'A área de participantes abre no dia do evento.', abre: evento.aberto_de }]
+  if (evento.aberto_ate && hoje > evento.aberto_ate) return [410, { error: 'A área de participantes deste evento já fechou.' }]
+  return null
+}
 
 // "@ana.martins", "instagram.com/ana.martins/" → "ana.martins"
 export function limparInstagram(v) {
@@ -65,15 +81,33 @@ async function fotosAssinadas(db, linhas) {
   return Object.fromEntries((data || []).filter(x => x.signedUrl).map(x => [x.path, x.signedUrl]))
 }
 
-export async function tratar(db, { metodo, query = {}, body = {} }, hoje = new Date().toISOString().slice(0, 10)) {
+export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeLisboa()) {
+  // Entrar pelo QR code: o código do evento + o nome → um token pessoal
+  if (metodo === 'POST' && body.acao === 'entrar') {
+    if (!codigoValido(body.codigo)) return [404, { error: 'Este QR code não é válido.' }]
+    const { data: evento } = await db.from('eventos').select('id, nome, data, aberto_de, aberto_ate').eq('codigo', body.codigo).maybeSingle()
+    if (!evento) return [404, { error: 'Este QR code não é válido. Peça o atual à organização.' }]
+    const fechado = janela(evento, hoje)
+    if (fechado) return fechado
+    const nome = corta(body.nome, LIMITES.nome)
+    if (!nome) return [400, { error: 'Escreva o seu nome.' }]
+    const { count } = await db.from('evento_participantes').select('id', { count: 'exact', head: true }).eq('evento_id', evento.id)
+    if ((count || 0) >= MAX_PARTICIPANTES) return [429, { error: 'A área está cheia. Fale com a organização.' }]
+    const t = novoToken()
+    const { error } = await db.from('evento_participantes').insert({ evento_id: evento.id, nome, token: t })
+    if (error) return [500, { error: 'Não foi possível entrar. Tente de novo.' }]
+    return [200, { t }]
+  }
+
   const t = metodo === 'GET' ? query.t : body.t
-  if (!tokenValido(t)) return [401, { error: 'Link inválido.' }]
+  if (!tokenValido(t)) return [401, { error: 'Acesso inválido. Leia o QR code do evento.' }]
 
   const { data: eu } = await db.from('evento_participantes').select('*').eq('token', t).maybeSingle()
-  if (!eu) return [401, { error: 'Este link não é válido. Peça um novo à organização.' }]
-  const { data: evento } = await db.from('eventos').select('id, nome, data, aberto_ate').eq('id', eu.evento_id).maybeSingle()
+  if (!eu) return [401, { error: 'Este acesso já não é válido. Volte a ler o QR code do evento.' }]
+  const { data: evento } = await db.from('eventos').select('id, nome, data, aberto_de, aberto_ate').eq('id', eu.evento_id).maybeSingle()
   if (!evento) return [404, { error: 'Evento não encontrado.' }]
-  if (evento.aberto_ate && hoje > evento.aberto_ate) return [410, { error: 'A área de participantes deste evento já fechou.' }]
+  const fechado = janela(evento, hoje)
+  if (fechado) return fechado
 
   if (metodo === 'GET') {
     await db.from('evento_participantes').update({ ultimo_acesso: new Date().toISOString() }).eq('id', eu.id)

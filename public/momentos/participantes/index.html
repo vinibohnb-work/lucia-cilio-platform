@@ -118,9 +118,11 @@ label.campo textarea { min-height: 110px; resize: vertical }
 </div>
 
 <script>
-// Área de participantes — fala só com /api/evento, que confere o link pessoal.
-// O token chega no fim do link (#t=…), fica guardado neste dispositivo e sai da
-// barra de endereço logo a seguir, para não ir parar a capturas de ecrã.
+// Área de participantes — fala só com /api/evento.
+// Pedido da Lúcia (20/10), em vez de crachás: no dia, o QR code do evento abre
+// esta página com o código (#c=…); a pessoa escreve o nome e recebe um token
+// pessoal, que fica guardado neste telemóvel. O código e o token saem da barra
+// de endereço logo a seguir, para não irem parar a capturas de ecrã.
 (function () {
   const CHAVE = 'momentos-participante'
   const app = document.getElementById('app')
@@ -129,10 +131,13 @@ label.campo textarea { min-height: 110px; resize: vertical }
   const guardar = (t) => { try { if (t) localStorage.setItem(CHAVE, t); else localStorage.removeItem(CHAVE) } catch { /* sem armazenamento */ } }
 
   // Um link novo colado nesta mesma aba só muda o "#": recarrega para o ler
-  window.addEventListener('hashchange', () => { if (/[#&]t=/.test(location.hash)) location.reload() })
+  window.addEventListener('hashchange', () => { if (/[#&][tc]=/.test(location.hash)) location.reload() })
   const m = /(?:^|[#&])t=([A-Za-z0-9_-]{24,64})/.exec(location.hash)
-  if (m) { guardar(m[1]); history.replaceState(null, '', location.pathname) }
-  const token = (m && m[1]) || ler()
+  const mc = /(?:^|[#&])c=([A-Za-z0-9_-]{8,40})/.exec(location.hash)
+  if (m) guardar(m[1])
+  if (m || mc) history.replaceState(null, '', location.pathname)
+  let token = (m && m[1]) || ler()
+  const codigo = mc && mc[1]
 
   let dados = null, aba = 'participantes', filtro = ''
 
@@ -217,14 +222,14 @@ label.campo textarea { min-height: 110px; resize: vertical }
           <label class="campo" for="f-site">Site <small>Opcional.</small><input id="f-site" name="site" maxlength="200" value="${esc(eu.site)}" placeholder="www.o-teu-negocio.pt" autocapitalize="off" inputmode="url"></label>
           <label class="partilha" for="f-partilhar">
             <input id="f-partilhar" name="partilhar" type="checkbox" ${eu.partilhar ? 'checked' : ''}>
-            <span><strong>Partilhar o meu perfil com os participantes</strong><small>O perfil fica visível apenas para quem está inscrito neste evento. O teu e-mail nunca é mostrado. Podes deixar de partilhar a qualquer momento.</small></span>
+            <span><strong>Partilhar o meu perfil com os participantes</strong><small>O perfil fica visível apenas para quem está no evento e entrou pelo QR code. Podes deixar de partilhar a qualquer momento.</small></span>
           </label>
           <div class="acoes">
             <button class="btn btn-verde" type="submit" id="guardar">Guardar perfil</button>
             <span class="estado" id="estado" role="status"></span>
           </div>
           <div class="privacidade">
-            <p>Responsável pelos dados: LC Office Consulting. Usamos o que escreveres aqui só para os participantes deste evento se conhecerem; nada é vendido nem usado para publicidade. A área fecha a 31 de janeiro de 2027 e os perfis são apagados depois disso.</p>
+            <p>Responsável pelos dados: LC Office Consulting. Usamos o que escreveres aqui só para os participantes deste evento se conhecerem; nada é vendido nem usado para publicidade. A área está aberta apenas no dia do evento e os perfis são apagados depois.</p>
             <div id="zona-apagar"><button class="btn btn-perigo" type="button" id="apagar">Apagar o meu perfil</button></div>
             <p style="margin-top:10px"><button class="btn btn-linha" type="button" id="sair">Sair neste dispositivo</button></p>
           </div>
@@ -270,7 +275,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
           catch (e) { z.innerHTML = `<p class="estado erro">${esc(e.message)}</p>` }
         })
       })
-      document.getElementById('sair').addEventListener('click', () => { guardar(null); semAcesso('Saíste neste dispositivo', 'Para voltar, abre de novo o link pessoal que recebeste da organização.') })
+      document.getElementById('sair').addEventListener('click', () => { guardar(null); semAcesso('Saíste neste dispositivo', 'Para voltar, lê de novo o QR code do evento. Vais entrar com um perfil novo.') })
     }
     document.getElementById('tab-participantes').addEventListener('click', () => { aba = 'participantes'; render() })
     document.getElementById('tab-perfil').addEventListener('click', () => { aba = 'perfil'; render() })
@@ -298,15 +303,44 @@ label.campo textarea { min-height: 110px; resize: vertical }
       dados = await api('GET')
       if (mostrar) { aba = dados.eu.partilhar ? 'participantes' : 'perfil'; render() }
     } catch (e) {
-      if (e.estado === 401) { guardar(null); semAcesso('Link inválido', 'Este link não é válido ou foi substituído. Pede um novo à organização do evento.') }
+      if (e.estado === 401) { guardar(null); token = null; semAcesso('Acesso inválido', 'Volta a ler o QR code do evento para entrares.') }
+      else if (e.estado === 403) semAcesso('Ainda não abriu', 'A área de participantes abre no dia do evento, 24 de outubro.')
       else if (e.estado === 410) semAcesso('A área fechou', e.message)
       else semAcesso('Não foi possível abrir', e.message)
       throw e
     }
   }
 
-  if (!token) semAcesso('Área reservada a participantes', 'Para entrar, abre o link pessoal que recebeste depois da inscrição no evento.')
-  else carregar().catch(() => {})
+  // Entrar pela primeira vez: só o nome; o resto do perfil vem a seguir
+  function entrada() {
+    app.innerHTML = `<div class="centro">
+        <div class="hero" style="padding-top:0"><div class="ev">Momentos entre Empreendedores</div><h1>Bem-vindo</h1>
+        <p>Em vez de crachás, um perfil no telemóvel. Escreve o teu nome para entrares; o resto preenches a seguir.</p></div>
+        <form id="form-entrar" class="perfil" novalidate style="text-align:left">
+          <label class="campo" for="e-nome">O teu nome<input id="e-nome" maxlength="80" required autocomplete="name"></label>
+          <div class="acoes"><button class="btn btn-verde" type="submit" id="entrar">Entrar</button><span class="estado" id="estado-entrar" role="status"></span></div>
+          <p class="privacidade">Só aparece aos outros quem escolher partilhar o perfil. A área está aberta apenas no dia do evento.</p>
+        </form></div>`
+    const f = document.getElementById('form-entrar')
+    f.addEventListener('submit', async (ev) => {
+      ev.preventDefault()
+      const nome = document.getElementById('e-nome').value.trim()
+      const est = document.getElementById('estado-entrar')
+      if (!nome) { est.className = 'estado erro'; est.textContent = 'Escreve o teu nome.'; return }
+      const btn = document.getElementById('entrar'); btn.disabled = true; est.className = 'estado'; est.textContent = 'A entrar…'
+      try {
+        const r = await fetch('/api/evento', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'entrar', codigo, nome }) })
+        const j = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(j.error || 'Não foi possível entrar.')
+        token = j.t; guardar(token)
+        await carregar()
+      } catch (e) { est.className = 'estado erro'; est.textContent = e.message; btn.disabled = false }
+    })
+  }
+
+  if (token) carregar().catch(() => { if (codigo) entrada() })
+  else if (codigo) entrada()
+  else semAcesso('Área reservada a participantes', 'No dia do evento, lê o QR code à entrada do District Space para entrares.')
 })()
 </script>
 </body>

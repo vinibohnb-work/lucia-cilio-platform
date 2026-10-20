@@ -2,14 +2,18 @@
 -- Migração 048 — Área de participantes dos eventos (Momentos entre Empreendedores)
 --
 -- Porquê: a Lúcia quer que os participantes do evento de 24/10 se conheçam e se
--- liguem antes e depois do encontro (pedido de 20/10). Decisões do Vinícius:
--- link pessoal por participante (sem conta nem palavra-passe), a partir da lista
--- de inscritos do Luma; a página fica junto à landing (/momentos/participantes).
+-- liguem (pedido de 20/10). Na chamada da tarde de 20/10 ficou assim: em vez de
+-- crachás, quem está na sala lê um QR code, cria o seu perfil e vê os outros;
+-- a área só abre no dia do evento. Sem conta nem palavra-passe: ao entrar pelo
+-- QR, cada pessoa recebe um token pessoal guardado no telemóvel. A página fica
+-- junto à landing (/momentos/participantes).
 --
 -- O que muda:
---   1. eventos — o evento (nome, data, até quando a área fica aberta).
---   2. evento_participantes — um inscrito por linha: nome e e-mail (do Luma),
---      o link pessoal (token aleatório) e o perfil que ele próprio preenche.
+--   1. eventos — o evento (nome, data), o código do QR e a janela em que a área
+--      está aberta (aberto_de/aberto_ate, datas de Lisboa).
+--   2. evento_participantes — uma pessoa por linha: o token pessoal (aleatório,
+--      criado ao entrar pelo QR) e o perfil que ela própria preenche. O e-mail é
+--      opcional (só se a equipa juntar alguém à mão).
 --      O perfil só aparece aos outros com `partilhar = true` (opt-in, RGPD).
 --      O e-mail nunca é mostrado a outros participantes.
 --   3. Bucket 'eventos' (privado) para as fotografias de perfil: só imagens
@@ -29,7 +33,9 @@ create table if not exists public.eventos (
   id text primary key,                       -- ex.: 'momentos-2026-10'
   nome text not null,
   data date,
-  aberto_ate date,                           -- depois desta data a área fecha
+  codigo text unique,                        -- vai no QR code; trocar invalida o QR antigo
+  aberto_de date,                            -- a área abre neste dia (Lisboa)…
+  aberto_ate date,                           -- …e fecha depois deste
   created_at timestamptz not null default now()
 );
 alter table public.eventos enable row level security;
@@ -37,8 +43,12 @@ drop policy if exists eventos_admin on public.eventos;
 create policy eventos_admin on public.eventos
   for all using (public.is_admin()) with check (public.is_admin());
 
-insert into public.eventos (id, nome, data, aberto_ate)
-values ('momentos-2026-10', 'Momentos entre Empreendedores', '2026-10-24', '2027-01-31')
+alter table public.eventos add column if not exists codigo text unique;
+alter table public.eventos add column if not exists aberto_de date;
+
+insert into public.eventos (id, nome, data, codigo, aberto_de, aberto_ate)
+values ('momentos-2026-10', 'Momentos entre Empreendedores', '2026-10-24',
+        substr(md5(random()::text || clock_timestamp()::text), 1, 16), '2026-10-24', '2026-10-24')
 on conflict (id) do nothing;
 
 -- 2. Participantes ---------------------------------------------------------------
