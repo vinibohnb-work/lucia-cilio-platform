@@ -7,6 +7,7 @@ import { Titulo, Botao, Pilulas, useCampos, Ic } from '../ui'
 import { hojeIso, somaDias, somaMeses, dataDe, iso, fmtData, MESES_LONGOS, FECHADOS, estadoEfetivo } from '../regras'
 import { tarefaAtrasada, clientePorId } from '../seletores'
 import { FormTarefa } from '../partes/Tarefas'
+import PrazosAT from '../partes/PrazosAT'
 
 // Agenda interna (documento, secção 4): tarefas e prazos fiscais de todos os
 // clientes por mês e por dia. 13-D (13/10): saiu a vista Semana (repetia as
@@ -27,6 +28,7 @@ export default function Agenda() {
   const [ref, setRef] = useState(hoje)
   const [f, setF] = useState({ responsavel: '', obrigacoes: true, feitas: false })
   const [nova, setNova] = useState(null)
+  const [prazosAT, setPrazosAT] = useState(false)
 
   const passaFiltros = (resp) => !f.responsavel || resp === f.responsavel
   const itensDe = (dia) => [
@@ -100,6 +102,7 @@ export default function Agenda() {
         </div>
         <strong style={{ fontSize: '16px', color: t.heading, textTransform: 'capitalize' }}>{tituloPeriodo}</strong>
         <span style={{ flex: 1 }} />
+        <Botao onClick={() => setPrazosAT(true)} title="Conferir os prazos de Portugal com os quadros oficiais da AT">Prazos da AT</Botao>
         <Botao variante="primario" onClick={() => setNova({ prazo: ref })}><Ic.mais size={16} />Nova tarefa</Botao>
       </div>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
@@ -110,6 +113,7 @@ export default function Agenda() {
       </div>
       {corpo}
       {nova && <FormTarefa inicial={nova} aoFechar={() => setNova(null)} />}
+      {prazosAT && <PrazosAT aoFechar={() => setPrazosAT(false)} />}
     </div>
   )
 }

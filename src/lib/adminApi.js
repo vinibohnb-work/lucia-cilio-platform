@@ -62,3 +62,10 @@ export async function exportarCliente({ userId = null, clienteId = null, nome = 
   setTimeout(() => URL.revokeObjectURL(a.href), 2000)
   return dados
 }
+
+// Quadros-resumo da AT (prazos oficiais de Portugal) do ano pedido, do anterior
+// e do seguinte, já lidos pelo servidor (api/agenda-fiscal.js).
+export async function obterAgendaFiscalPT(ano) {
+  const res = await fetch(`/api/agenda-fiscal?ano=${encodeURIComponent(ano)}`, { headers: await authHeaders() })
+  return handle(res)
+}
