@@ -121,6 +121,7 @@ const NAV = {
       { to: '/gestao/crm',          Icon: IconFunil,      labelKey: 'nav_crm',          roles: ['admin', 'comercial'] },
       { to: '/gestao/diagnosticos', Icon: IconFormulario, labelKey: 'nav_diagnosticos', roles: ['admin', 'comercial'] },
       { to: '/gestao/marketing',    Icon: IconMarketing,  labelKey: 'nav_marketing',    roles: ['admin', 'marketing'] },
+      { to: '/gestao/eventos',      Icon: IconCalendario, labelKey: 'nav_eventos',      roles: ['admin'] },
     ]},
     { key: 'section_servicos', items: [
       { to: '/gestao/consultorias', Icon: IconPasta,      labelKey: 'nav_consultorias', roles: ['admin'] },
