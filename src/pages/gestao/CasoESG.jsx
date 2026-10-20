@@ -96,7 +96,7 @@ export default function CasoESG() {
           <button onClick={abrirEdicao} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '11.5px' }}><IconLapis /> {L.editar}</button>
           <span style={{ marginLeft: 'auto' }} />
           {/* Abre num separador próprio, sem menus — para mostrar ao cliente (18/09) */}
-          <a href="/apresentacao/esg/${id}" target="_blank" rel="noopener"
+          <a href={`/apresentacao/esg/${id}`} target="_blank" rel="noopener"
             style={{ padding: '5px 12px', borderRadius: '8px', background: t.btnBg, color: t.btnInk, fontSize: '11.5px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>{L.apresentar} ↗</a>
           <select value={caso.status} onChange={e => alterar({ status: e.target.value })}
             style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', background: tone.bg, color: tone.ink, cursor: 'pointer', outline: 'none' }}>
