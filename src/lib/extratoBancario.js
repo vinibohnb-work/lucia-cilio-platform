@@ -122,15 +122,25 @@ export function parseCSV(texto, sep) {
 // ── Descobrir que coluna é o quê ────────────────────────────────────────────
 const PISTAS = {
   data:      ['data', 'date', 'datum', 'valuta', 'buchungstag', 'wertstellung', 'data valor', 'data mov'],
-  descricao: ['descri', 'descript', 'verwendungszweck', 'buchungstext', 'movimento', 'historico', 'referencia', 'beguns', 'text', 'detalhe'],
+  // Por ordem de preferência: "Verwendungszweck" diz mais do que "Buchungstext" (GUTSCHR, LASTSCHRIFT)
+  descricao: ['descri', 'descript', 'verwendungszweck', 'movimento', 'historico', 'detalhe', 'referencia', 'buchungstext', 'beguns', 'text'],
   valor:     ['valor', 'amount', 'betrag', 'montante', 'importancia', 'umsatz'],
   saldo:     ['saldo', 'balance', 'kontostand'],
   debito:    ['debito', 'débito', 'debit', 'soll', 'saida', 'levantamento'],
   credito:   ['credito', 'crédito', 'credit', 'haben', 'entrada', 'deposito'],
 }
+// Pistas curtas que só valem como palavra inteira ("in" não pode casar com
+// "Buchungstag"): extratos e folhas preparadas à mão com "Betrag (in)" / "Betrag (out)",
+// "Eingang"/"Ausgang", "Entradas"/"Saídas".
+const PALAVRAS = {
+  debito:  ['out', 'ausgang', 'ausgaben', 'abgang', 'lastschrift', 'belastung', 'saidas', 'withdrawal', 'withdrawals'],
+  credito: ['in', 'eingang', 'einnahmen', 'zugang', 'gutschrift', 'entradas', 'deposit', 'deposits'],
+}
 const casa = (cabecalho, chave) => {
   const h = semAcentos(cabecalho)
-  return PISTAS[chave].some(p => h.includes(semAcentos(p)))
+  if (PISTAS[chave].some(p => h.includes(semAcentos(p)))) return true
+  const palavras = h.split(/[^a-z0-9]+/)
+  return (PALAVRAS[chave] || []).some(p => palavras.includes(p))
 }
 
 // Uma linha é cabeçalho se quase nada nela for número ou data
@@ -173,8 +183,11 @@ export function detetarColunas(linhas) {
   }
   if (iData < 0) return null
 
-  // Numéricas candidatas (a data não conta)
-  const numericas = perfil.filter(p => p.i !== iData && p.fNum > 0.7)
+  // Numéricas candidatas. Nenhuma coluna de datas conta ("31.01.2026" também
+  // se lê como número), nem a "Data valor" dos bancos portugueses, cujo
+  // cabeçalho traz "valor" mas é uma data.
+  const numericas = perfil.filter(p => p.i !== iData && p.fNum > 0.7 && p.fData <= 0.5
+    && !(p.cabecalho && casa(p.cabecalho, 'data')))
 
   let iValor = -1, iSaldo = -1, iDebito = -1, iCredito = -1
   const porCab = (chave) => numericas.find(p => p.cabecalho && casa(p.cabecalho, chave))
@@ -199,7 +212,8 @@ export function detetarColunas(linhas) {
       }
     }
     // Duas numéricas sem cabeçalho, cada linha só com uma preenchida → débito/crédito
-    if (iValor >= 0 && iSaldo < 0) {
+    // (só quando o valor não veio do cabeçalho: com "Betrag"/"Montante" é uma coluna só)
+    if (iValor >= 0 && iSaldo < 0 && !cV) {
       const outras = numericas.filter(p => p.i !== iValor)
       if (outras.length === 1 && exclusivas(dados, iValor, outras[0].i)) {
         iDebito = iValor; iCredito = outras[0].i; iValor = -1
@@ -209,7 +223,11 @@ export function detetarColunas(linhas) {
   if (iValor < 0 && iDebito < 0) return null
 
   // Descrição: o cabeçalho manda; senão, a coluna de texto mais longa
-  let iDesc = perfil.findIndex(p => p.cabecalho && casa(p.cabecalho, 'descricao'))
+  let iDesc = -1
+  for (const pista of PISTAS.descricao) {
+    const c = perfil.find(p => p.cabecalho && semAcentos(p.cabecalho).includes(pista))
+    if (c) { iDesc = c.i; break }
+  }
   if (iDesc < 0) {
     const usadas = new Set([iData, iValor, iSaldo, iDebito, iCredito])
     const c = perfil.filter(p => !usadas.has(p.i) && p.fNum < 0.5 && p.preenchida > 0.5)
@@ -233,13 +251,16 @@ function pareceSaldo(dados, s, v) {
 }
 // Duas colunas em que cada linha preenche uma e só uma
 function exclusivas(dados, a, b) {
-  let n = 0
+  let na = 0, nb = 0
   for (const l of dados) {
     const va = parseValor(l[a]), vb = parseValor(l[b])
-    if ((va !== null && va !== 0) && (vb !== null && vb !== 0)) return false
-    if (va !== null || vb !== null) n++
+    const ca = va !== null && va !== 0, cb = vb !== null && vb !== 0
+    if (ca && cb) return false
+    if (ca) na++
+    if (cb) nb++
   }
-  return n >= 2
+  // As duas têm de ter movimentos (uma coluna de zeros não é a do crédito)
+  return na >= 1 && nb >= 1 && na + nb >= 2
 }
 
 // ── Do ficheiro para movimentos ─────────────────────────────────────────────
@@ -247,12 +268,16 @@ export function fingerprint(m) {
   return [m.data, m.tipo, m.valor.toFixed(2), normalizar(m.descricao).slice(0, 60)].join('|')
 }
 
+// Linha de saldo (inicial/final) que alguns bancos e folhas põem no meio dos movimentos
+const RX_SALDO = /^(saldo|anfangssaldo|endsaldo|saldovortrag|vortrag|kontostand|opening balance|closing balance)\b/
+
 export function extrairMovimentos(linhas) {
   const mapa = detetarColunas(linhas)
   if (!mapa) return { erro: 'formato', movimentos: [], mapa: null }
 
   const movimentos = []
   const ignoradas = []
+  const saldos = []
   for (const l of mapa.dados) {
     const data = parseData(l[mapa.iData])
     if (!data) { ignoradas.push(l); continue }
@@ -266,25 +291,55 @@ export function extrairMovimentos(linhas) {
     }
     if (bruto === null || bruto === 0) { ignoradas.push(l); continue }
 
+    const desc = mapa.iDesc >= 0 ? String(l[mapa.iDesc] ?? '').trim() : ''
+    // Só a linha cuja descrição é o próprio saldo ("Saldo inicial", "Anfangssaldo"),
+    // não um pagamento que fala de saldo ("Pagamento do saldo da fatura 12")
+    const nd = normalizar(desc)
+    if (desc && RX_SALDO.test(nd) && nd.split(' ').length <= 3) { saldos.push({ data, valor: bruto }); continue }
     const m = {
       data,
-      descricao: (mapa.iDesc >= 0 ? l[mapa.iDesc] : '') || '(sem descrição)',
+      descricao: desc || '(sem descrição)',
+      semDescricao: !desc,
       valor: Math.abs(bruto),
       tipo: bruto < 0 ? 'saida' : 'entrada',
       saldo: mapa.iSaldo >= 0 ? parseValor(l[mapa.iSaldo]) : null,
       raw: l,
     }
-    m.fingerprint = fingerprint(m)
     movimentos.push(m)
   }
-  // Uma reimportação do mesmo ficheiro não deve gerar duplicados nem aqui
-  const vistos = new Set()
-  const unicos = movimentos.filter(m => vistos.has(m.fingerprint) ? false : vistos.add(m.fingerprint))
+
+  // Saldo inicial sem descrição: a primeira linha, sozinha num ano anterior ao
+  // dos movimentos (ex.: 31/12 do ano passado com o saldo transitado). Não é
+  // um movimento — contá-lo como entrada inflacionava as receitas.
+  if (movimentos.length > 2 && movimentos[0].semDescricao) {
+    const ano = (m) => m.data.slice(0, 4)
+    const a0 = ano(movimentos[0])
+    if (a0 < ano(movimentos[movimentos.length - 1]) && movimentos.slice(1).every(m => ano(m) !== a0)) {
+      const [s0] = movimentos.splice(0, 1)
+      saldos.unshift({ data: s0.data, valor: s0.tipo === 'saida' ? -s0.valor : s0.valor })
+    }
+  }
+
+  // Movimentos iguais no mesmo ficheiro (duas taxas de 3,70 € no mesmo dia, com
+  // a mesma descrição) são movimentos diferentes: a 2.ª, 3.ª… ocorrência leva
+  // o número na impressão digital. Reimportar o mesmo ficheiro gera as mesmas
+  // impressões, por isso continua a não duplicar nada.
+  const ocorrencias = new Map()
+  let repetidos = 0
+  for (const m of movimentos) {
+    delete m.semDescricao
+    const base = fingerprint(m)
+    const n = (ocorrencias.get(base) || 0) + 1
+    ocorrencias.set(base, n)
+    if (n > 1) repetidos++
+    m.fingerprint = n > 1 ? `${base}|#${n}` : base
+  }
 
   return {
-    erro: unicos.length ? null : 'vazio',
-    movimentos: unicos,
-    duplicadosNoFicheiro: movimentos.length - unicos.length,
+    erro: movimentos.length ? null : 'vazio',
+    movimentos,
+    repetidosNoFicheiro: repetidos,
+    saldoInicial: saldos[0] || null,
     ignoradas: ignoradas.length,
     mapa,
   }

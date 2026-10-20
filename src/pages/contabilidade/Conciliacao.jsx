@@ -43,7 +43,7 @@ export default function Conciliacao() {
     eyebrow: 'Buchhaltung', title: 'Abstimmung Kasse/Bank',
     subtitle: 'Kontoauszug importieren (CSV oder Excel) und mit dem Kassenbuch abgleichen.',
     escolher: 'Datei wählen', aLer: 'Wird gelesen…', importar: 'Importieren', cancelar: 'Abbrechen',
-    detetado: 'Erkanntes Format', linhas: 'Zeilen', novos: 'neu', repetidos: 'bereits importiert',
+    detetado: 'Erkanntes Format', linhas: 'Zeilen', semDataValor: 'ohne Datum oder Betrag', saldoInicial: 'Anfangssaldo', naoConta: 'zählt nicht als Buchung', novos: 'neu', repetidos: 'bereits importiert',
     pendente: 'Offen', conciliado: 'Abgestimmt', ignorado: 'Ignoriert', semExtrato: 'Nicht im Auszug',
     sugestao: 'Vorschlag', conciliar: 'Abstimmen', criar: 'Buchung anlegen', ignorar: 'Ignorieren',
     desfazer: 'Rückgängig', confianca: 'Sicherheit', ambiguo: 'Mehrere gleiche Buchungen — bitte prüfen',
@@ -57,7 +57,7 @@ export default function Conciliacao() {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
     subtitle: 'Import a bank statement (CSV or Excel) and match it against the cash book.',
     escolher: 'Choose file', aLer: 'Reading…', importar: 'Import', cancelar: 'Cancel',
-    detetado: 'Detected format', linhas: 'rows', novos: 'new', repetidos: 'already imported',
+    detetado: 'Detected format', linhas: 'rows', semDataValor: 'without date or amount', saldoInicial: 'opening balance', naoConta: 'not counted as a transaction', novos: 'new', repetidos: 'already imported',
     pendente: 'Pending', conciliado: 'Matched', ignorado: 'Ignored', semExtrato: 'Not in statement',
     sugestao: 'Suggestion', conciliar: 'Match', criar: 'Create entry', ignorar: 'Ignore',
     desfazer: 'Undo', confianca: 'confidence', ambiguo: 'Several identical entries — please check',
@@ -71,7 +71,7 @@ export default function Conciliacao() {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
     subtitle: 'Importa o extrato bancário (CSV ou Excel) e cruza-o com o Livro de Caixa.',
     escolher: 'Escolher ficheiro', aLer: 'A ler…', importar: 'Importar', cancelar: 'Cancelar',
-    detetado: 'Formato detetado', linhas: 'linhas', novos: 'novos', repetidos: 'já importados',
+    detetado: 'Formato detetado', linhas: 'linhas', semDataValor: 'sem data ou valor', saldoInicial: 'saldo inicial', naoConta: 'não conta como movimento', novos: 'novos', repetidos: 'já importados',
     pendente: 'Por conciliar', conciliado: 'Conciliados', ignorado: 'Ignorados', semExtrato: 'Não constam do extrato',
     sugestao: 'Sugestão', conciliar: 'Conciliar', criar: 'Criar lançamento', ignorar: 'Ignorar',
     desfazer: 'Desfazer', confianca: 'confiança', ambiguo: 'Há vários lançamentos iguais — confirma qual',
@@ -119,17 +119,24 @@ export default function Conciliacao() {
     if (!file) return
     setErro(''); setAviso(''); setALer(true); setPrevia(null)
     try {
-      let linhas
+      let r
       if (/\.xlsx?$/i.test(file.name)) {
-        // Só se carrega o leitor de Excel quando é mesmo preciso
+        // Só se carrega o leitor de Excel quando é mesmo preciso. A versão 9 do
+        // leitor devolve todas as folhas ([{ sheet, data }]); fica a folha onde
+        // se leem mais movimentos (o ficheiro pode trazer também o resumo, a EÜR
+        // ou a lista de categorias noutras folhas).
         const { default: readXlsxFile } = await import('read-excel-file/browser')
-        const rows = await readXlsxFile(file)
-        linhas = rows.map(r => r.map(c => (c instanceof Date ? c.toISOString().slice(0, 10) : String(c ?? '').trim())))
-          .filter(r => r.some(c => c !== ''))
+        const folhas = await readXlsxFile(file)
+        for (const f of folhas) {
+          const linhas = (f.data || []).map(l => l.map(c => (c instanceof Date ? c.toISOString().slice(0, 10) : String(c ?? '').trim())))
+            .filter(l => l.some(c => c !== ''))
+          const res = extrairMovimentos(linhas)
+          if (!r || res.movimentos.length > r.movimentos.length) r = res
+        }
+        if (!r) r = { erro: 'vazio', movimentos: [] }
       } else {
-        linhas = parseCSV(await file.text())
+        r = extrairMovimentos(parseCSV(await file.text()))
       }
-      const r = extrairMovimentos(linhas)
       if (r.erro === 'formato') { setErro(L.erroFormato); return }
       if (r.erro === 'vazio' || !r.movimentos.length) { setErro(L.erroVazio); return }
       setPrevia({ ...r, ficheiro: file.name, blob: file })
@@ -258,8 +265,8 @@ export default function Conciliacao() {
           <div style={{ fontSize: '13px', fontWeight: 800, color: t.heading, marginBottom: '4px' }}>{previa.ficheiro}</div>
           <div style={{ fontSize: '11.5px', color: t.textMuted, marginBottom: '12px' }}>
             {L.detetado}: {previa.movimentos.length} {L.linhas}
-            {previa.duplicadosNoFicheiro ? ` · ${previa.duplicadosNoFicheiro} repetidas no ficheiro` : ''}
-            {previa.ignoradas ? ` · ${previa.ignoradas} sem data ou valor` : ''}
+            {previa.saldoInicial ? ` · ${L.saldoInicial} ${fmt(previa.saldoInicial.valor)} (${dataFmt(previa.saldoInicial.data)}) ${L.naoConta}` : ''}
+            {previa.ignoradas ? ` · ${previa.ignoradas} ${L.semDataValor}` : ''}
           </div>
           <div style={{ background: t.softCardBg, borderRadius: '10px', padding: '10px 12px', marginBottom: '12px', maxHeight: '190px', overflowY: 'auto' }}>
             {previa.movimentos.slice(0, 8).map((m, i) => (
