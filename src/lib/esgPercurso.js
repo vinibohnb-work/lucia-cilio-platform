@@ -13,22 +13,33 @@
 import { ESG_TOPICS, isMaterial } from '../data/esgTopics'
 import { ESG_QUESTIONS } from '../data/esgQuestions'
 import { isAnswered, computeKpis } from './esgKpis'
+import { PERGUNTAS_ARRANQUE, respostasArranque, preenchido } from '../data/esgMetodo'
 
 // `rota` é relativa ao caso: /gestao/esg/:id/<rota> na Gestão, /esg/<rota> no cliente.
+// Ordem do método da Lúcia (documento de 15/10): COMPREENDER → DIAGNOSTICAR →
+// PRIORIZAR → AGIR → MEDIR → EVOLUIR, e por fim o relatório ("o relatório é o
+// resultado de um processo; não deve ser o processo"). Antes (10/09) a
+// materialidade vinha antes do diagnóstico.
 export const FASES = [
-  { key: 'materialidade', n: 1, rota: 'materialidade',
-    pt: 'Materialidade', de: 'Wesentlichkeit', en: 'Materiality',
-    subPt: 'O que importa a este negócio', subDe: 'Was für dieses Unternehmen zählt', subEn: 'What matters to this business' },
+  { key: 'arranque', n: 1, rota: 'arranque',
+    pt: 'Arranque', de: 'Start', en: 'Kick-off',
+    subPt: 'Perceber o negócio', subDe: 'Das Unternehmen verstehen', subEn: 'Understand the business' },
   { key: 'diagnostico', n: 2, rota: 'diagnostico',
     pt: 'Diagnóstico', de: 'Diagnose', en: 'Diagnosis',
-    subPt: 'Os números de partida', subDe: 'Die Ausgangszahlen', subEn: 'The starting numbers' },
-  { key: 'kpis', n: 3, rota: 'kpis',
-    pt: 'Indicadores', de: 'Kennzahlen', en: 'Indicators',
-    subPt: 'O que os números dizem', subDe: 'Was die Zahlen sagen', subEn: 'What the numbers say' },
+    subPt: 'Onde estamos', subDe: 'Wo wir stehen', subEn: 'Where we stand' },
+  { key: 'materialidade', n: 3, rota: 'materialidade',
+    pt: 'Materialidade', de: 'Wesentlichkeit', en: 'Materiality',
+    subPt: 'O que realmente importa', subDe: 'Was wirklich zählt', subEn: 'What really matters' },
   { key: 'projetos', n: 4, rota: 'projetos',
-    pt: 'Projetos', de: 'Projekte', en: 'Projects',
-    subPt: 'O que vai mudar, e quanto custa', subDe: 'Was sich ändert und was es kostet', subEn: 'What will change, and what it costs' },
-  { key: 'relatorio', n: 5, rota: 'relatorios',
+    pt: 'Plano de ação', de: 'Maßnahmenplan', en: 'Action plan',
+    subPt: 'Onde queremos chegar, e quanto custa', subDe: 'Wohin wir wollen und was es kostet', subEn: 'Where we want to get, and what it costs' },
+  { key: 'kpis', n: 5, rota: 'kpis',
+    pt: 'Indicadores', de: 'Kennzahlen', en: 'Indicators',
+    subPt: 'Estamos a avançar?', subDe: 'Kommen wir voran?', subEn: 'Are we making progress?' },
+  { key: 'acompanhamento', n: 6, rota: 'acompanhamento',
+    pt: 'Acompanhamento', de: 'Begleitung', en: 'Follow-up',
+    subPt: 'O que mudou, e o próximo passo', subDe: 'Was sich verändert hat, und der nächste Schritt', subEn: 'What changed, and the next step' },
+  { key: 'relatorio', n: 7, rota: 'relatorios',
     pt: 'Relatório', de: 'Bericht', en: 'Report',
     subPt: 'O que se entrega', subDe: 'Was übergeben wird', subEn: 'What gets delivered' },
 ]
@@ -66,13 +77,16 @@ const faseDe = (feitas, total, extra = {}) => ({
 })
 
 /**
- * Estado das cinco fases.
+ * Estado das sete fases.
+ *   caso        — linha de esg_consultorias (o método, migração 046). Sem caso
+ *                 (ex.: a ficha do cliente), o arranque e o acompanhamento não
+ *                 contam para o progresso nem para a "próxima fase".
  *   materiality — linha de esg_materiality ({ topics, threshold })
  *   diagnostic  — linha de esg_diagnostics do ano ({ answers })
  *   projects    — linhas de esg_projects
  *   report      — linha de esg_reports do ano ({ sections })
  */
-export function progressoESG({ materiality, diagnostic, projects = [], report } = {}) {
+export function progressoESG({ materiality, diagnostic, projects = [], report, caso } = {}) {
   const topics = materiality?.topics || {}
   const limiar = Number(materiality?.threshold) || 3.5
   const answers = diagnostic?.answers || {}
@@ -106,7 +120,15 @@ export function progressoESG({ materiality, diagnostic, projects = [], report } 
   const escritas = SECCOES_RELATORIO.filter(s => String(seccoes[s] || '').trim()).length
   const relatorio = faseDe(escritas, SECCOES_RELATORIO.length)
 
-  const fases = { materialidade, diagnostico, kpis, projetos, relatorio }
+  // Arranque e acompanhamento — do método (esg_consultorias.metodo)
+  const metodo = caso?.metodo || {}
+  const ausente = { feitas: 0, total: 0, pct: 0, estado: 'espera', ausente: true }
+  const arranque = caso ? faseDe(respostasArranque(metodo), PERGUNTAS_ARRANQUE.length) : ausente
+  const acompanhamento = caso
+    ? faseDe([(metodo.reunioes || []).length > 0, (metodo.feedback || []).length > 0, preenchido(metodo.avaliacao?.proximo)].filter(Boolean).length, 3)
+    : ausente
+
+  const fases = { arranque, diagnostico, materialidade, projetos, kpis, acompanhamento, relatorio }
 
   // A próxima é a primeira que ainda não está pronta (e que não está à espera
   // de outra). Se estiver tudo pronto, não há próxima.
@@ -115,9 +137,10 @@ export function progressoESG({ materiality, diagnostic, projects = [], report } 
     return e === 'vazio' || e === 'curso'
   })?.key || null
 
-  const somaPct = FASES.reduce((s, f) => s + (fases[f.key].estado === 'espera' ? 0 : fases[f.key].pct), 0)
+  const contam = FASES.filter(f => !fases[f.key].ausente)
+  const somaPct = contam.reduce((s, f) => s + (fases[f.key].estado === 'espera' ? 0 : fases[f.key].pct), 0)
 
-  return { ...fases, proxima, pctGeral: Math.round(somaPct / FASES.length) }
+  return { ...fases, proxima, pctGeral: Math.round(somaPct / Math.max(1, contam.length)) }
 }
 
 // ── Ano de referência de um caso ────────────────────────────────────────────

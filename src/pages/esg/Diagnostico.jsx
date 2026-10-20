@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { ESG_PILLARS, ESG_QUESTIONS, ESG_TOTAL, questionsByPillar } from '../../data/esgQuestions'
 import { useAlvoESG } from '../../context/AlvoESGContext'
+import FotografiaESG from '../../components/esg/FotografiaESG'
 
 export default function Diagnostico() {
   const { lang } = useLang()
@@ -294,6 +295,8 @@ export default function Diagnostico() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginTop: '14px', fontSize: '11.5px', color: t.subtle }}>
         <span>ⓘ</span><span>{L.disclaimer}</span>
       </div>
+      {/* Método da Lúcia (15/10): a fotografia qualitativa e a primeira devolução */}
+      <FotografiaESG />
     </div>
   )
 }

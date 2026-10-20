@@ -90,7 +90,7 @@ export default function ConsultoriasESG() {
     ;(proj.data || []).forEach(p => { if (p.consultoria_id) de(p.consultoria_id).projects.push(p) })
     ;(rep.data || []).forEach(r => { if (r.consultoria_id && r.reference_year === (anoDe[r.consultoria_id] ?? ano)) de(r.consultoria_id).report = r })
     const prog = {}
-    ;(casos.data || []).forEach(c => { prog[c.id] = progressoESG(por[c.id] || {}) })
+    ;(casos.data || []).forEach(c => { prog[c.id] = progressoESG({ ...(por[c.id] || {}), caso: c }) })
     setProgresso(prog)
     setLoading(false)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

@@ -8,6 +8,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
 import { useAlvoESG } from '../../context/AlvoESGContext'
 import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, topicHint, isMaterial } from '../../data/esgTopics'
+import ProblemasESG from '../../components/esg/ProblemasESG'
 
 // Dupla materialidade simplificada (modelo VSME/PME):
 // eixo X = importância/impacto para a empresa · eixo Y = importância para os
@@ -417,6 +418,9 @@ export default function Materialidade() {
           </div>
         </div>
       </div>
+      {/* Método da Lúcia (15/10): sintoma → causa → impacto */}
+      <div style={{ marginTop: '18px' }} />
+      <ProblemasESG />
     </div>
   )
 }

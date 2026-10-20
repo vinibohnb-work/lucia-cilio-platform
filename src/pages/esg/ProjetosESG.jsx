@@ -12,8 +12,14 @@ import { ESG_TOPICS, TOPIC_PILLAR_META, topicLabel, isMaterial } from '../../dat
 // Projetos ESG do cliente — nascem da Dupla Materialidade ("os projetos devem
 // vir da materialidade") e carregam sempre a relação custo/benefício:
 // investimento, poupança anual e payback, além do impacto esperado no KPI.
+//
+// Método da Lúcia (15/10): é o plano de ação. Para cada tema prioritário,
+// Objetivo → Ação → Responsável → Prazo → Indicador → Evidência, e a medição
+// baseline → meta → resultado ("sem baseline é difícil mostrar o que mudou").
+// Campos da migração 046.
 
-const EMPTY = { topic_key: '', name: '', description: '', status: 'planned', start_month: '', progress: 0, investment: '', annual_saving: '', expected_impact: '' }
+const PLANO = ['objetivo', 'responsavel', 'prazo', 'kpi', 'baseline', 'meta', 'resultado', 'evidencia']
+const EMPTY = { topic_key: '', name: '', description: '', status: 'planned', start_month: '', progress: 0, investment: '', annual_saving: '', expected_impact: '', ...Object.fromEntries(PLANO.map(k => [k, ''])) }
 
 export default function ProjetosESG() {
   const { lang } = useLang()
@@ -38,10 +44,12 @@ export default function ProjetosESG() {
     start: 'Beginn', progress: 'Fortschritt', invest: 'Investition (€)', saving: 'Einsparung/Jahr (€)',
     payback: 'Payback', yrs: 'Jahre', impact: 'Erwartete Wirkung (KPI)', impactPh: 'z. B. CO₂ von 85 t auf 60 t senken',
     save: 'Speichern', saving2: 'Wird gespeichert…', cancel: 'Abbrechen', saved: 'Gespeichert ✓',
-    saveErr: 'Speichern fehlgeschlagen (Migration 024 nötig).', loading: 'Wird geladen…',
+    saveErr: 'Speichern fehlgeschlagen (Migration 046 nötig?).', loading: 'Wird geladen…',
     empty: 'Noch keine Projekte. Erstellen Sie das erste aus einem wesentlichen Thema.',
     emptyCta: 'Zur Wesentlichkeit →', totals: 'Übersicht',
     tInvest: 'Gesamtinvestition', tSaving: 'Einsparung/Jahr', tActive: 'laufend', tDone: 'abgeschlossen',
+    planoT: 'Maßnahmenplan', objetivo: 'Ziel', responsavel: 'Verantwortlich', prazo: 'Frist', kpi: 'Kennzahl (KPI)', baseline: 'Ausgangswert', meta: 'Zielwert', resultado: 'Ergebnis', evidencia: 'Nachweis',
+    objetivoPh: 'z. B. Verbrauch kennen', kpiPh: 'z. B. kWh/m²', evidenciaPh: 'z. B. monatliche Zählerablesung',
   } : lang === 'en' ? {
     eyebrow: 'ESG Projects', title: 'Projects & Actions',
     subtitle: 'Projects are born from materiality — always with a cost-benefit lens (investment, saving, payback).',
@@ -51,10 +59,12 @@ export default function ProjetosESG() {
     start: 'Start', progress: 'Progress', invest: 'Investment (€)', saving: 'Saving/year (€)',
     payback: 'Payback', yrs: 'years', impact: 'Expected impact (KPI)', impactPh: 'e.g. cut CO₂ from 85 t to 60 t',
     save: 'Save', saving2: 'Saving…', cancel: 'Cancel', saved: 'Saved ✓',
-    saveErr: 'Save failed (migration 024 required).', loading: 'Loading…',
+    saveErr: 'Save failed (migration 046 required?).', loading: 'Loading…',
     empty: 'No projects yet. Create the first one from a material topic.',
     emptyCta: 'Go to materiality →', totals: 'Overview',
     tInvest: 'Total investment', tSaving: 'Saving/year', tActive: 'in progress', tDone: 'done',
+    planoT: 'Action plan', objetivo: 'Objective', responsavel: 'Owner', prazo: 'Deadline', kpi: 'Indicator (KPI)', baseline: 'Baseline', meta: 'Target', resultado: 'Result', evidencia: 'Evidence',
+    objetivoPh: 'e.g. know the consumption', kpiPh: 'e.g. kWh/m²', evidenciaPh: 'e.g. monthly meter reading',
   } : {
     eyebrow: 'Projetos ESG', title: 'Projetos & Ações',
     subtitle: 'Os projetos nascem da materialidade — sempre com a lente custo/benefício (investimento, poupança, payback).',
@@ -64,10 +74,12 @@ export default function ProjetosESG() {
     start: 'Início', progress: 'Progresso', invest: 'Investimento (€)', saving: 'Poupança/ano (€)',
     payback: 'Payback', yrs: 'anos', impact: 'Impacto esperado (KPI)', impactPh: 'ex.: reduzir CO₂ de 85 t para 60 t',
     save: 'Guardar', saving2: 'A guardar…', cancel: 'Cancelar', saved: 'Guardado ✓',
-    saveErr: 'Falha ao guardar (é necessária a migração 024).', loading: 'A carregar…',
+    saveErr: 'Falha ao guardar (falta a migração 046?).', loading: 'A carregar…',
     empty: 'Ainda não há projetos. Cria o primeiro a partir de um tema material.',
     emptyCta: 'Ir à materialidade →', totals: 'Visão geral',
     tInvest: 'Investimento total', tSaving: 'Poupança/ano', tActive: 'em curso', tDone: 'concluídos',
+    planoT: 'Plano de ação', objetivo: 'Objetivo', responsavel: 'Responsável', prazo: 'Prazo', kpi: 'Indicador (KPI)', baseline: 'Baseline', meta: 'Meta', resultado: 'Resultado', evidencia: 'Evidência',
+    objetivoPh: 'ex.: conhecer o consumo', kpiPh: 'ex.: kWh/m²', evidenciaPh: 'ex.: leitura mensal do contador',
   }
 
   const STATUS = {
@@ -116,6 +128,7 @@ export default function ProjetosESG() {
       investment: form.investment === '' ? null : Number(form.investment),
       annual_saving: form.annual_saving === '' ? null : Number(form.annual_saving),
       expected_impact: form.expected_impact || null, updated_at: new Date().toISOString(),
+      ...Object.fromEntries(PLANO.map(k => [k, String(form[k] ?? '').trim() || null])),
     }
     const q = form.id
       ? supabase.from('esg_projects').update(row).eq('id', form.id)
@@ -204,6 +217,16 @@ export default function ProjetosESG() {
             <div style={{ gridColumn: 'span 2' }}><div style={labelStyle}>{L.impact}</div>
               <input value={form.expected_impact} onChange={e => setForm(f => ({ ...f, expected_impact: e.target.value }))} placeholder={L.impactPh} style={inputStyle} /></div>
           </div>
+          <div style={{ fontSize: '12px', fontWeight: 800, color: t.heading, marginTop: '4px' }}>{L.planoT}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '12px' }}>
+            {PLANO.map(k => (
+              <div key={k} style={{ gridColumn: ['objetivo', 'evidencia'].includes(k) && !isMobile ? 'span 2' : undefined }}><div style={labelStyle}>{L[k]}</div>
+                {k === 'prazo'
+                  ? <input type="month" value={form.prazo || ''} onChange={e => setForm(f => ({ ...f, prazo: e.target.value }))} style={inputStyle} />
+                  : <input value={form[k] || ''} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} placeholder={L[`${k}Ph`] || ''} style={inputStyle} />}
+              </div>
+            ))}
+          </div>
           {payback(form.investment, form.annual_saving) != null && (
             <div style={{ fontSize: '12px', fontWeight: 700, color: '#0a7a3e' }}>💶 {L.payback}: {payback(form.investment, form.annual_saving).toFixed(1)} {L.yrs}</div>
           )}
@@ -243,12 +266,22 @@ export default function ProjetosESG() {
                 {p.start_month && <span style={{ fontSize: '11px', color: t.subtle }}>{L.start}: {p.start_month}</span>}
                 {!soLeitura && (
                   <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
-                    <button onClick={() => setForm({ ...EMPTY, ...p, investment: p.investment ?? '', annual_saving: p.annual_saving ?? '', description: p.description || '', expected_impact: p.expected_impact || '', topic_key: p.topic_key || '', start_month: p.start_month || '' })} style={{ padding: '5px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>{L.edit}</button>
+                    <button onClick={() => setForm({ ...EMPTY, ...p, ...Object.fromEntries(PLANO.map(k => [k, p[k] || ''])), investment: p.investment ?? '', annual_saving: p.annual_saving ?? '', description: p.description || '', expected_impact: p.expected_impact || '', topic_key: p.topic_key || '', start_month: p.start_month || '' })} style={{ padding: '5px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.textMuted }}>{L.edit}</button>
                     <button onClick={() => deleteProject(p.id)} style={{ padding: '5px 11px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', border: `1px solid ${t.cardBorder}`, background: 'transparent', color: t.neg }}>{L.del}</button>
                   </span>
                 )}
               </div>
               {p.description && <div style={{ fontSize: '12.5px', color: t.text, lineHeight: 1.5, marginBottom: '8px' }}>{p.description}</div>}
+              {PLANO.some(k => p[k]) && (
+                <dl style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))', gap: '8px 14px', margin: '0 0 10px', fontSize: '12px' }}>
+                  {PLANO.filter(k => p[k]).map(k => (
+                    <div key={k} style={{ minWidth: 0 }}>
+                      <dt style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.04em' }}>{L[k]}</dt>
+                      <dd style={{ margin: 0, color: t.heading, overflowWrap: 'anywhere' }}>{p[k]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px', fontSize: '12px' }}>
                 {p.investment != null && <span style={{ color: t.textMuted }}>{L.invest.split(' (')[0]}: <strong style={{ color: t.heading }}>{fmtEur(p.investment)}</strong></span>}
                 {p.annual_saving != null && <span style={{ color: t.textMuted }}>{L.saving.split('/')[0]}: <strong style={{ color: '#0a7a3e' }}>{fmtEur(p.annual_saving)}</strong></span>}

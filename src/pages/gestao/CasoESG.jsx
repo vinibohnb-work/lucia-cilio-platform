@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Outlet, useParams } from 'react-router-dom'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
@@ -6,6 +6,8 @@ import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { AlvoESGProvider } from '../../context/AlvoESGContext'
 import { listUsers } from '../../lib/adminApi'
+import NotasInternasESG from '../../components/esg/NotasInternasESG'
+import { NIVEIS, txt } from '../../data/esgMetodo'
 
 // Um caso ESG aberto na Gestão. Abre num separador próprio, com o menu da ESG
 // na barra lateral — é a plataforma ESG tal como o cliente a vê, só que com a
@@ -46,20 +48,25 @@ export default function CasoESG() {
   const L = lang === 'de' ? {
     voltar: 'ESG-Beratungen', editar: 'Bearbeiten', guardar: 'Speichern', fechar: 'Schließen', nome: 'Kontaktperson', empresa: 'Unternehmen', email: 'E-Mail', telefone: 'Telefon', setor: 'Branche', contaL: 'Plattformkonto', semContaOpt: '— ohne Konto —', apresentar: 'Dem Kunden zeigen', ativa: 'Laufend', concluida: 'Abgeschlossen', pausada: 'Pausiert',
     clienteVe: 'Kunde sieht', sim: 'Ja', nao: 'Nein', semConta: 'ohne Konto (unter „Bearbeiten“ verknüpfen)', ajudaVe: 'Weg und Bericht in der Plattform des Kunden',
-    naoEncontrado: 'ESG-Beratung nicht gefunden.', erroSave: 'Speichern fehlgeschlagen.',
+    naoEncontrado: 'ESG-Beratung nicht gefunden.', erroSave: 'Speichern fehlgeschlagen.', nivel: 'Leistungsstufe',
   } : lang === 'en' ? {
     voltar: 'ESG consultancies', editar: 'Edit', guardar: 'Save', fechar: 'Close', nome: 'Contact person', empresa: 'Company', email: 'E-mail', telefone: 'Phone', setor: 'Sector', contaL: 'Platform account', semContaOpt: '— no account —', apresentar: 'Show to client', ativa: 'Active', concluida: 'Completed', pausada: 'Paused',
     clienteVe: 'Client sees', sim: 'Yes', nao: 'No', semConta: 'no account (link it in Edit)', ajudaVe: "Journey and report in the client's platform",
-    naoEncontrado: 'ESG consultancy not found.', erroSave: 'Save failed.',
+    naoEncontrado: 'ESG consultancy not found.', erroSave: 'Save failed.', nivel: 'Service level',
   } : {
     voltar: 'Consultorias ESG', editar: 'Editar', guardar: 'Guardar', fechar: 'Fechar', nome: 'Pessoa de contacto', empresa: 'Empresa', email: 'E-mail', telefone: 'Telefone', setor: 'Setor', contaL: 'Conta na plataforma', semContaOpt: '— sem conta —', apresentar: 'Apresentar ao cliente', ativa: 'Ativa', concluida: 'Concluída', pausada: 'Pausada',
     clienteVe: 'Cliente vê', sim: 'Sim', nao: 'Não', semConta: 'sem conta (ligar em Editar)', ajudaVe: 'Percurso e relatório na plataforma do cliente',
-    naoEncontrado: 'Consultoria ESG não encontrada.', erroSave: 'Falha ao guardar.',
+    naoEncontrado: 'Consultoria ESG não encontrada.', erroSave: 'Falha ao guardar.', nivel: 'Nível do serviço',
   }
 
+  // O método (migração 046) grava-se por partes — arranque, fotografia, reuniões…
+  // A referência guarda o objeto inteiro mais recente, para duas gravações
+  // seguidas não se apagarem uma à outra.
+  const metodoRef = useRef({})
   const load = useCallback(async () => {
     setLoading(true)
     const { data } = await supabase.from('esg_consultorias').select('*').eq('id', id).maybeSingle()
+    metodoRef.current = data?.metodo || {}
     setCaso(data || null)
     setLoading(false)
   }, [id])
@@ -71,6 +78,11 @@ export default function CasoESG() {
     const { error } = await supabase.from('esg_consultorias')
       .update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id)
     if (error) { setErro(L.erroSave); load() }
+  }
+
+  async function alterarMetodo(chave, valor) {
+    metodoRef.current = { ...metodoRef.current, [chave]: valor }
+    await alterar({ metodo: metodoRef.current })
   }
 
   if (loading) return <EsqueletoPagina cartoes={2} linhas={4} />
@@ -85,7 +97,7 @@ export default function CasoESG() {
   const tone = statusTone[caso.status] || statusTone.ativa
 
   return (
-    <AlvoESGProvider value={{ caso, id: caso.id, base: `/gestao/esg/${id}`, soLeitura: false, recarregar: load }}>
+    <AlvoESGProvider value={{ caso, id: caso.id, base: `/gestao/esg/${id}`, soLeitura: false, recarregar: load, alterarMetodo }}>
       <div style={{ width: '100%', fontFamily: t.fontBody }}>
         {/* Tira do caso: discreta, para não roubar o ecrã às páginas */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '12px', color: t.textMuted, marginBottom: '16px', paddingBottom: '12px', borderBottom: `1px solid ${t.cardBorder}` }}>
@@ -98,6 +110,11 @@ export default function CasoESG() {
           {/* Abre num separador próprio, sem menus — para mostrar ao cliente (18/09) */}
           <a href={`/apresentacao/esg/${id}`} target="_blank" rel="noopener"
             style={{ padding: '5px 12px', borderRadius: '8px', background: t.btnBg, color: t.btnInk, fontSize: '11.5px', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>{L.apresentar} ↗</a>
+          {/* Nível contratado (documento do método, 15/10): Diagnóstico · Desenvolvimento · Reporting */}
+          <select value={caso.nivel || 'diagnostico'} onChange={e => alterar({ nivel: e.target.value })} aria-label={L.nivel} title={L.nivel}
+            style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.heading, cursor: 'pointer', outline: 'none' }}>
+            {NIVEIS.map(n => <option key={n.key} value={n.key}>{txt(n.nome, lang)}</option>)}
+          </select>
           <select value={caso.status} onChange={e => alterar({ status: e.target.value })}
             style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, border: 'none', background: tone.bg, color: tone.ink, cursor: 'pointer', outline: 'none' }}>
             {['ativa', 'concluida', 'pausada'].map(s => <option key={s} value={s}>{L[s]}</option>)}
@@ -140,6 +157,10 @@ export default function CasoESG() {
         )}
 
         <Outlet />
+        {/* Caixa de comentários interna (pedido de 15/10). Só aqui, na Gestão: o
+            modo apresentação e a área do cliente não a mostram, e a tabela
+            esg_interno só a administradora a lê. */}
+        <NotasInternasESG casoId={caso.id} />
       </div>
     </AlvoESGProvider>
   )
