@@ -167,7 +167,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
       ${fotoHtml(p.foto, p.nome)}
       <div style="min-width:0">
         <h3>${esc(p.nome)}</h3>
-        ${p.negocio ? `<p class="neg">${esc(p.negocio)}</p>` : ''}
+        ${p.cargo || p.negocio ? `<p class="neg">${esc([p.cargo, p.negocio].filter(Boolean).join(' · '))}</p>` : ''}
         ${p.localidade ? `<p class="loc"><svg width="14" height="14"><use href="#i-local"/></svg>${esc(p.localidade)}</p>` : ''}
       </div>
       ${p.sobre ? `<p class="sobre">${esc(p.sobre)}</p>` : ''}
@@ -177,7 +177,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
 
   function render() {
     const eu = dados.eu
-    const lista = dados.participantes.filter(p => !filtro || [p.nome, p.negocio, p.localidade].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(filtro))
+    const lista = dados.participantes.filter(p => !filtro || [p.nome, p.negocio, p.cargo, p.localidade].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(filtro))
     const nomeEvento = dados.evento.nome
     const cab = `<div class="hero">
         <div class="ev">${esc(nomeEvento)}</div>
@@ -194,7 +194,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
       app.innerHTML = cab + convite + `
         <div class="pesquisa"><svg width="18" height="18"><use href="#i-lupa"/></svg>
           <label class="so-leitores" for="pesquisa">Pesquisar</label>
-          <input id="pesquisa" type="search" placeholder="Pesquisar nome, negócio ou localidade" value="${esc(filtro)}" autocomplete="off"></div>
+          <input id="pesquisa" type="search" placeholder="Pesquisar nome, empresa, cargo ou localidade" value="${esc(filtro)}" autocomplete="off"></div>
         <p class="contagem">${dados.participantes.length === 1 ? '1 participante partilhou o perfil' : dados.participantes.length + ' participantes partilharam o perfil'}${filtro ? ` · ${lista.length} encontrado(s)` : ''}</p>
         ${lista.length ? `<div class="grelha">${lista.map(cartao).join('')}</div>` : `<div class="vazio">${dados.participantes.length ? 'Ninguém corresponde à pesquisa.' : 'Ainda ninguém partilhou o perfil. Sê o primeiro!'}</div>`}`
       const inp = document.getElementById('pesquisa')
@@ -212,7 +212,8 @@ label.campo textarea { min-height: 110px; resize: vertical }
             </div>
           </div>
           <label class="campo" for="f-nome">Nome<input id="f-nome" name="nome" maxlength="80" required value="${esc(eu.nome)}" autocomplete="name"></label>
-          <label class="campo" for="f-negocio">Negócio ou profissão<input id="f-negocio" name="negocio" maxlength="80" value="${esc(eu.negocio)}" placeholder="Ex.: Marketing e comunicação"></label>
+          <label class="campo" for="f-empresa">Empresa<input id="f-empresa" name="negocio" maxlength="80" value="${esc(eu.negocio)}" placeholder="Ex.: LC Office Consulting" autocomplete="organization"></label>
+          <label class="campo" for="f-cargo">Cargo<input id="f-cargo" name="cargo" maxlength="80" value="${esc(eu.cargo)}" placeholder="Ex.: Fundadora" autocomplete="organization-title"></label>
           <label class="campo" for="f-localidade">Localidade<input id="f-localidade" name="localidade" maxlength="60" value="${esc(eu.localidade)}" placeholder="Ex.: Lisboa" autocomplete="address-level2"></label>
           <label class="campo" for="f-sobre">Sobre o meu negócio <small>Até 400 caracteres. O que fazes e com quem gostavas de te ligar.</small><textarea id="f-sobre" name="sobre" maxlength="400">${esc(eu.sobre)}</textarea></label>
           <div class="duplo">
@@ -240,7 +241,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
       form.addEventListener('submit', async (ev) => {
         ev.preventDefault()
         const f = new FormData(form)
-        const perfil = { nome: f.get('nome'), negocio: f.get('negocio'), localidade: f.get('localidade'), sobre: f.get('sobre'), instagram: f.get('instagram'), linkedin: f.get('linkedin'), site: f.get('site'), partilhar: document.getElementById('f-partilhar').checked }
+        const perfil = { nome: f.get('nome'), negocio: f.get('negocio'), cargo: f.get('cargo'), localidade: f.get('localidade'), sobre: f.get('sobre'), instagram: f.get('instagram'), linkedin: f.get('linkedin'), site: f.get('site'), partilhar: document.getElementById('f-partilhar').checked }
         if (!String(perfil.nome).trim()) { estado.className = 'estado erro'; estado.textContent = 'Escreve o teu nome.'; return }
         const btn = document.getElementById('guardar'); btn.disabled = true; estado.className = 'estado'; estado.textContent = 'A guardar…'
         try {

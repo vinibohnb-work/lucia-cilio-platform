@@ -27,7 +27,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const BUCKET = 'eventos'
 const VALIDADE_FOTO = 3600
 
-export const LIMITES = { nome: 80, negocio: 80, localidade: 60, sobre: 400, instagram: 60, linkedin: 200, site: 200, fotoBytes: 2 * 1024 * 1024 }
+export const LIMITES = { nome: 80, negocio: 80, cargo: 80, localidade: 60, sobre: 400, instagram: 60, linkedin: 200, site: 200, fotoBytes: 2 * 1024 * 1024 }
 const TIPOS_FOTO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
 const MAX_PARTICIPANTES = 600
@@ -61,7 +61,8 @@ export function limparLigacao(v, max) {
 export function perfilLimpo(p = {}) {
   return {
     nome: corta(p.nome, LIMITES.nome),
-    negocio: corta(p.negocio, LIMITES.negocio) || null,
+    negocio: corta(p.negocio, LIMITES.negocio) || null, // o nome da empresa (21/10)
+    cargo: corta(p.cargo, LIMITES.cargo) || null,
     localidade: corta(p.localidade, LIMITES.localidade) || null,
     sobre: corta(p.sobre, LIMITES.sobre) || null,
     instagram: limparInstagram(p.instagram) || null,
@@ -72,7 +73,7 @@ export function perfilLimpo(p = {}) {
 }
 
 // O que os outros veem de cada pessoa
-const publico = (l, foto) => ({ id: l.id, nome: l.nome, negocio: l.negocio, localidade: l.localidade, sobre: l.sobre, instagram: l.instagram, linkedin: l.linkedin, site: l.site, foto })
+const publico = (l, foto) => ({ id: l.id, nome: l.nome, negocio: l.negocio, cargo: l.cargo, localidade: l.localidade, sobre: l.sobre, instagram: l.instagram, linkedin: l.linkedin, site: l.site, foto })
 
 async function fotosAssinadas(db, linhas) {
   const caminhos = linhas.map(l => l.foto_path).filter(Boolean)
@@ -112,7 +113,7 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
   if (metodo === 'GET') {
     await db.from('evento_participantes').update({ ultimo_acesso: new Date().toISOString() }).eq('id', eu.id)
     const { data: outros } = await db.from('evento_participantes')
-      .select('id, nome, negocio, localidade, sobre, instagram, linkedin, site, foto_path')
+      .select('id, nome, negocio, cargo, localidade, sobre, instagram, linkedin, site, foto_path')
       .eq('evento_id', eu.evento_id).eq('partilhar', true).neq('id', eu.id).order('nome', { ascending: true })
     const fotos = await fotosAssinadas(db, [eu, ...(outros || [])])
     return [200, {
@@ -149,7 +150,7 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
   // Apagar o meu perfil: fica só o nome e o e-mail da inscrição (vêm do Luma), sem foto
   if (body.acao === 'apagar') {
     if (eu.foto_path) await db.storage.from(BUCKET).remove([eu.foto_path])
-    await db.from('evento_participantes').update({ negocio: null, localidade: null, sobre: null, instagram: null, linkedin: null, site: null, foto_path: null, partilhar: false, updated_at: new Date().toISOString() }).eq('id', eu.id)
+    await db.from('evento_participantes').update({ negocio: null, cargo: null, localidade: null, sobre: null, instagram: null, linkedin: null, site: null, foto_path: null, partilhar: false, updated_at: new Date().toISOString() }).eq('id', eu.id)
     return [200, { ok: true }]
   }
 

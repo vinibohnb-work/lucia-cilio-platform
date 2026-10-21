@@ -41,7 +41,7 @@ export default function Eventos() {
     setEvento(ev)
     if (ev) {
       const { data } = await supabase.from('evento_participantes')
-        .select('id, nome, negocio, localidade, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', ev.id).order('nome')
+        .select('id, nome, negocio, cargo, localidade, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', ev.id).order('nome')
       setPessoas(data || [])
       if (ev.codigo) setQr(await QRCode.toDataURL(linkQR(ev.codigo), { width: 520, margin: 2, color: { dark: '#0E3D33', light: '#FFFFFF' } }))
     }
@@ -126,12 +126,12 @@ export default function Eventos() {
           : (
             <div className="table-scroll">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr><th style={th}>Nome</th><th style={th}>Negócio</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
+                <thead><tr><th style={th}>Nome</th><th style={th}>Empresa · cargo</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
                 <tbody>
                   {pessoas.map(p => (
                     <tr key={p.id}>
                       <td style={{ ...td, fontWeight: 700, color: t.heading }}>{p.nome}</td>
-                      <td style={td}>{p.negocio || '—'}{p.localidade ? <span style={{ color: t.subtle }}> · {p.localidade}</span> : null}</td>
+                      <td style={td}>{[p.negocio, p.cargo].filter(Boolean).join(' · ') || '—'}{p.localidade ? <span style={{ color: t.subtle }}> · {p.localidade}</span> : null}</td>
                       <td style={td}>{p.partilhar ? <Chip tom="ok">Partilha</Chip> : <Chip>Não partilha</Chip>}</td>
                       <td style={{ ...td, fontVariantNumeric: 'tabular-nums' }}>{dataCurta(p.created_at.slice(0, 10))}</td>
                       <td style={{ ...td, whiteSpace: 'nowrap' }}>
