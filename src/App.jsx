@@ -41,6 +41,7 @@ const MensagensPortal     = lazy(() => import('./portal/paginas/Mensagens'))
 const Crm                 = lazy(() => import('./pages/gestao/Crm'))
 const Financeiro          = lazy(() => import('./pages/gestao/Financeiro'))
 const Marketing           = lazy(() => import('./pages/gestao/Marketing'))
+const Eventos             = lazy(() => import('./pages/gestao/Eventos'))
 const Consultorias        = lazy(() => import('./pages/gestao/Consultorias'))
 const Diagnosticos        = lazy(() => import('./pages/gestao/Diagnosticos'))
 const Inicio              = lazy(() => import('./pages/contabilidade/Inicio'))
@@ -193,6 +194,7 @@ function AppLayout() {
               <Route path="relatorios"    element={<RelatoriosESG />} />
             </Route>
             <Route path="/gestao/marketing"     element={<RoleRoute requireRole={['admin', 'marketing']}><Marketing /></RoleRoute>} />
+            <Route path="/gestao/eventos"       element={<RoleRoute requireRole="admin"><Eventos /></RoleRoute>} />
             <Route path="/gestao/financeiro"    element={<RoleRoute requireRole="admin"><Financeiro /></RoleRoute>} />
             <Route path="/gestao/acessos"       element={<RoleRoute requireRole="admin"><AdminHome /></RoleRoute>} />
             <Route path="/admin"                element={<Navigate to="/gestao/clientes" replace />} />

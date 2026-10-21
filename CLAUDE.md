@@ -47,7 +47,7 @@ npm run lint
 
 ## Banco de dados
 
-- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_047.sql` (a próxima é a 048), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
+- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_048.sql` (a próxima é a 049), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
 - Cabeçalho de cada migração: número e título, porquê, o que muda, se apaga dados, e "Executar no Supabase: SQL Editor → New query → colar → Run". Escrever idempotente (`if not exists`, `drop policy if exists` antes do `create policy`).
 - Aplicação é manual no SQL Editor: primeiro no DEV, depois o Vinícius corre na produção. Código que depende de uma migração só vai para a `main` depois de ela estar aplicada.
 - RLS em tudo. Funções `public.is_admin()` e `public.is_equipa()` (admin, comercial, marketing). O cliente só lê o que tem o seu `user_id` ou a sua ficha; anónimo não lê nada; o formulário público grava só via `api/diagnostico.js` (migração 042).
@@ -62,6 +62,7 @@ npm run lint
   - `consultorias`, `consulting_notes`, `crm_leads`, `diagnostico_submissoes`, `client_billing`, `billing_payments` — consultoria, CRM e financeiro.
   - `esg_consultorias` (casos ESG; `nivel` e `metodo` jsonb do método da Lúcia, migração 046), `esg_diagnostics`, `esg_materiality`, `esg_projects` (também o plano de ação), `esg_reports`, `esg_interno` (notas internas e opinião por reunião, só admin), `esg_comentarios` (comentário por item, lados equipa/cliente; é a única coisa que o cliente escreve na ESG, migração 047).
   - `marketing_posts`, `marketing_notas` — aba de Marketing.
+  - `eventos`, `evento_participantes` (+ bucket privado `eventos`) — área de participantes dos eventos da Lúcia (migração 048). Só admin pela app; os participantes não têm conta e passam sempre por `api/evento.js`, que confere o link pessoal (token).
 
 ## Mapa do código
 
@@ -71,6 +72,9 @@ api/                    funções Vercel (service role e chave da IA só aqui)
   consultoria-relatorio.js  relatório da consultoria com a API da Anthropic
   diagnostico.js        formulário público /diagnostico com anti-robôs
   exportar-cliente.js   exportação RGPD de um cliente (JSON)
+  agenda-fiscal.js      quadros oficiais de prazos da AT (Portugal)
+  evento.js             área de participantes dos eventos (link pessoal, sem conta)
+public/momentos/        landing do evento de 24/10 e /participantes (HTML estático, servido antes da SPA)
 src/App.jsx             rotas e guardas (ProtectedRoute, RoleRoute, PlatformRoute)
 src/pages/contabilidade/  área do cliente: Contabilidade
 src/pages/esg/          área do cliente: ESG (reutilizada nos casos ESG da Gestão)
