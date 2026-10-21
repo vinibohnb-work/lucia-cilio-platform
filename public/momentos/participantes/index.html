@@ -70,6 +70,8 @@ button, input, textarea { font: inherit }
 .pessoa::before { content: ''; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--green), var(--gold-2)) }
 .foto { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; background: var(--green); display: block; box-shadow: 0 0 0 3px var(--papel), 0 0 0 4.5px var(--gold-2) }
 .foto.vazia { display: flex; align-items: center; justify-content: center; color: var(--gold-3) }
+.pessoa.eu { border-color: var(--gold-2) }
+.tu { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 2px 9px; border-radius: 999px; background: var(--gold-2); color: var(--green-3); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase }
 .pessoa h3 { margin: 0; font-size: 18px; line-height: 1.25; color: var(--green) }
 .pessoa .neg { margin: 3px 0 0; color: var(--gold-text); font-size: 13.5px; font-weight: 600 }
 .pessoa .loc { margin: 4px 0 0; color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 4px }
@@ -190,10 +192,10 @@ label.campo textarea { min-height: 110px; resize: vertical }
     if (p.instagram) lig.push(`<a class="btn btn-verde" href="https://instagram.com/${encodeURIComponent(p.instagram)}" target="_blank" rel="noopener noreferrer"><svg width="18" height="18"><use href="#i-ig"/></svg>Instagram</a>`)
     if (p.linkedin) lig.push(`<a class="btn btn-linha" href="${esc(p.linkedin)}" target="_blank" rel="noopener noreferrer"><svg width="18" height="18"><use href="#i-in"/></svg>LinkedIn</a>`)
     if (p.site) lig.push(`<a class="btn btn-linha" href="${esc(p.site)}" target="_blank" rel="noopener noreferrer"><svg width="18" height="18"><use href="#i-site"/></svg>Site</a>`)
-    return `<article class="pessoa">
+    return `<article class="pessoa${p.tu ? ' eu' : ''}">
       ${fotoHtml(p.foto, p.nome)}
       <div style="min-width:0">
-        <h3>${esc(p.nome)}</h3>
+        <h3>${esc(p.nome)}${p.tu ? ' <span class="tu">Tu</span>' : ''}</h3>
         ${p.cargo || p.negocio ? `<p class="neg">${esc([p.cargo, p.negocio].filter(Boolean).join(' · '))}</p>` : ''}
         ${p.localidade ? `<p class="loc"><svg width="14" height="14"><use href="#i-local"/></svg>${esc(p.localidade)}</p>` : ''}
       </div>
@@ -204,7 +206,9 @@ label.campo textarea { min-height: 110px; resize: vertical }
 
   function render() {
     const eu = dados.eu
-    const lista = dados.participantes.filter(p => !filtro || [p.nome, p.negocio, p.cargo, p.localidade].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(filtro))
+    // O próprio perfil também aparece (primeiro, com "Tu"), para cada um ver como os outros o veem
+    const todos = eu.partilhar ? [{ ...eu, tu: true }, ...dados.participantes] : dados.participantes
+    const lista = todos.filter(p => !filtro || [p.nome, p.negocio, p.cargo, p.localidade].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(filtro))
     const nomeEvento = dados.evento.nome
     const cab = `<section class="banda"><div class="wrap">${marca}
       <div class="hero">
@@ -223,8 +227,8 @@ label.campo textarea { min-height: 110px; resize: vertical }
         <div class="pesquisa"><svg width="18" height="18"><use href="#i-lupa"/></svg>
           <label class="so-leitores" for="pesquisa">Pesquisar</label>
           <input id="pesquisa" type="search" placeholder="Pesquisar nome, empresa, cargo ou localidade" value="${esc(filtro)}" autocomplete="off"></div>
-        <p class="contagem">${dados.participantes.length === 1 ? '1 participante partilhou o perfil' : dados.participantes.length + ' participantes partilharam o perfil'}${filtro ? ` · ${lista.length} encontrado(s)` : ''}</p>
-        ${lista.length ? `<div class="grelha">${lista.map(cartao).join('')}</div>` : `<div class="vazio">${dados.participantes.length ? 'Ninguém corresponde à pesquisa.' : 'Ainda ninguém partilhou o perfil. Sê o primeiro!'}</div>`}</div>`
+        <p class="contagem">${todos.length === 1 ? '1 participante partilhou o perfil' : todos.length + ' participantes partilharam o perfil'}${filtro ? ` · ${lista.length} encontrado(s)` : ''}</p>
+        ${lista.length ? `<div class="grelha">${lista.map(cartao).join('')}</div>` : `<div class="vazio">${todos.length ? 'Ninguém corresponde à pesquisa.' : 'Ainda ninguém partilhou o perfil. Sê o primeiro!'}</div>`}</div>`
       const inp = document.getElementById('pesquisa')
       inp.addEventListener('input', () => { filtro = inp.value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); const pos = inp.selectionStart; render(); const n = document.getElementById('pesquisa'); n.focus(); n.setSelectionRange(pos, pos) })
       document.getElementById('ir-perfil')?.addEventListener('click', () => { aba = 'perfil'; render() })
