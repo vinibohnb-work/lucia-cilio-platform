@@ -1,6 +1,16 @@
 {
   "redirects": [
     {
+      "source": "/momentos",
+      "destination": "/momentos/",
+      "permanent": true
+    },
+    {
+      "source": "/momentos/participantes",
+      "destination": "/momentos/participantes/",
+      "permanent": true
+    },
+    {
       "source": "/v2",
       "destination": "/",
       "permanent": false
