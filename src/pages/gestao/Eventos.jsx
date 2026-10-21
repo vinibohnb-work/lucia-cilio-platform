@@ -13,7 +13,8 @@ import { Cartao, Botao, Chip, Vazio, useCampos } from '../../portal/ui'
 // partilhado fora da sala, por exemplo).
 
 const BUCKET = 'eventos'
-const ORIGEM = typeof window !== 'undefined' ? window.location.origin : ''
+// No domínio próprio, o QR aponta para o site (lcoffice.pt/momentos), não para app.lcoffice.pt
+const ORIGEM = typeof window === 'undefined' ? '' : window.location.hostname.endsWith('lcoffice.pt') ? 'https://lcoffice.pt' : window.location.origin
 const linkQR = (codigo) => `${ORIGEM}/momentos/participantes/#c=${codigo}`
 const novoCodigo = () => {
   const b = new Uint8Array(12)

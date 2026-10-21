@@ -1,6 +1,50 @@
 {
   "redirects": [
     {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.lcoffice.pt"
+        }
+      ],
+      "destination": "https://lcoffice.pt/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path((?!momentos|api/|favicon\\.svg).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "lcoffice.pt"
+        }
+      ],
+      "destination": "https://app.lcoffice.pt/:path",
+      "permanent": false
+    },
+    {
+      "source": "/momentos/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.lcoffice.pt"
+        }
+      ],
+      "destination": "https://lcoffice.pt/momentos/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/momentos",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.lcoffice.pt"
+        }
+      ],
+      "destination": "https://lcoffice.pt/momentos/",
+      "permanent": false
+    },
+    {
       "source": "/momentos",
       "destination": "/momentos/",
       "permanent": true
