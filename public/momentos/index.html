@@ -106,6 +106,11 @@ section { padding-block: 84px }
 .top .btn .ico { width: 16px; height: 16px; transition: transform .3s }
 .top .btn:hover .ico { transform: translateX(3px) }
 @media (max-width: 920px) { .nav { display: none } }
+.acoes-topo { display: flex; gap: 8px; align-items: center; flex: none }
+.top .btn-ghost { box-shadow: none; background: rgba(255,255,255,.55) }
+.acoes-topo .curto { display: none }
+@media (max-width: 1100px) { .acoes-topo .longo { display: none } .acoes-topo .curto { display: inline } }
+@media (max-width: 440px) { .top .bar { gap: 8px } .acoes-topo { gap: 6px } .acoes-topo .btn { padding-inline: 12px; font-size: 12.5px } .acoes-topo .btn .ico { display: none } }
 @media (max-width: 560px) { .top .bar { padding-left: 16px; min-height: 60px } .top .btn { min-height: 44px; padding-inline: 16px } }
 
 /* Hero */
@@ -269,11 +274,6 @@ section { padding-block: 84px }
 .rv { transform: translateY(42px) scale(.985); transition: transform 1.1s cubic-bezier(.16,1,.3,1) }
 .rv.in { transform: none }
 @media (prefers-reduced-motion: reduce) { .rv { transform: none !important; transition: none } .mosaic figure, .card, .orador { transition: none } }
-.dia { padding-block: 0 72px }
-.dia-box { background: var(--cream-2); border: 1px solid var(--cream-3); border-radius: 22px; padding: clamp(22px, 3vw, 36px); display: flex; gap: 18px 28px; align-items: center; justify-content: space-between; flex-wrap: wrap; box-shadow: 0 30px 60px -44px rgba(10,46,39,.45) }
-.dia-box > div { flex: 1 1 380px; min-width: 0 }
-.dia-box h2 { font-size: clamp(22px, 3vw, 32px); margin: 10px 0 8px; color: var(--green) }
-.dia-box p { margin: 0; color: var(--muted); max-width: 62ch }
 footer { background: var(--green-3); color: var(--on-green-muted); padding-block: 40px 48px; font-size: 13px }
 footer .wrap { display: grid; grid-template-columns: 1fr auto; gap: 18px 30px; align-items: center }
 @media (max-width: 640px) { footer .wrap { grid-template-columns: 1fr } }
@@ -308,7 +308,10 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
       <a href="#oradores">Oradores</a>
       <a href="#bilhete">Bilhete</a>
     </nav>
-    <a class="btn btn-primary" href="https://luma.com/coz36n2c" target="_blank" rel="noopener">Garantir lugar<svg class="ico"><use href="#i-arrow"/></svg></a>
+    <div class="acoes-topo">
+      <a class="btn btn-ghost" href="/momentos/participantes/"><span class="longo">Área de participantes</span><span class="curto">Participantes</span></a>
+      <a class="btn btn-primary" href="https://luma.com/coz36n2c" target="_blank" rel="noopener">Garantir lugar<svg class="ico"><use href="#i-arrow"/></svg></a>
+    </div>
   </div>
 </header>
 
@@ -475,18 +478,6 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
   </section>
 
 
-  <section class="dia" aria-labelledby="h-dia">
-    <div class="wrap">
-      <div class="dia-box">
-        <div>
-          <span class="eyebrow">No dia</span>
-          <h2 id="h-dia">Sem crachás: o teu perfil no telemóvel</h2>
-          <p>À entrada do District Space há um QR code. Lês, crias o teu perfil em um minuto (nome, negócio, Instagram ou LinkedIn) e vês quem está na sala. Disponível só no dia do evento.</p>
-        </div>
-        <a class="btn btn-ghost" href="/momentos/participantes/">Área de participantes</a>
-      </div>
-    </div>
-  </section>
   <section id="bilhete" aria-labelledby="h-bilhete">
     <div class="wrap">
       <div class="bilhete-grid">
