@@ -39,11 +39,11 @@ npm run lint
 
 ## Ambientes e deploy
 
-- **Produção:** https://lucia-cilio-platform.vercel.app — projeto Vercel `lucia-cilio-platform`. Todo push na `main` publica automaticamente. Supabase "LC Office (EU)", Frankfurt, ref `smytrevdozsiyuoaxkaa`, plano Pro (backups diários).
+- **Produção:** https://app.lcoffice.pt (plataforma) e https://lcoffice.pt/momentos (landing e área de participantes do evento) — projeto Vercel `lucia-cilio-platform`. Domínio `lcoffice.pt` registado na Dominios.pt em nome da Lúcia (22/10/2026), DNS na Dominios.pt (A `@` → 76.76.21.21, CNAME `app` e `www` → cname.vercel-dns.com). Os redirecionamentos por domínio estão no `vercel.json`: a raiz manda tudo o que não é `/momentos` e `/api` para `app.lcoffice.pt` (até haver site institucional), `www` vai para a raiz, e o endereço antigo `lucia-cilio-platform.vercel.app` redireciona para o novo (menos `/api`). Todo push na `main` publica automaticamente. Supabase "LC Office (EU)", Frankfurt, ref `smytrevdozsiyuoaxkaa`, plano Pro (backups diários).
 - **`/v2`:** endereço antigo da validação visual; desde 19/10 redireciona (no `vercel.json` e no `App.jsx`) para o mesmo ecrã sem o prefixo.
 - **DEV / staging de banco:** Supabase `jlgqvetehwpmywghpabz` (Frankfurt), só dados fictícios, numa organização Supabase separada da produção (para não pagar o segundo projeto no Pro). Não há front de staging: o DEV é usado localmente. Toda migração passa aqui antes da produção.
 - O projeto antigo `wefdhqurbdvsmzmtweno` (EUA) foi apagado em 11/10/2026; docs antigos ainda o citam.
-- `vercel.json`: rewrite de tudo o que não é `/api/` para a SPA, `maxDuration` 300 s no relatório de consultoria, região `fra1`.
+- `vercel.json`: redirecionamentos por domínio (ver acima), rewrite de tudo o que não é `/api/` para a SPA, `maxDuration` 300 s no relatório de consultoria, região `fra1`.
 
 ## Banco de dados
 

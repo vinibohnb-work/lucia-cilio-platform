@@ -1,6 +1,39 @@
 {
   "redirects": [
     {
+      "source": "/momentos/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "lucia-cilio-platform.vercel.app"
+        }
+      ],
+      "destination": "https://lcoffice.pt/momentos/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/momentos",
+      "has": [
+        {
+          "type": "host",
+          "value": "lucia-cilio-platform.vercel.app"
+        }
+      ],
+      "destination": "https://lcoffice.pt/momentos/",
+      "permanent": false
+    },
+    {
+      "source": "/:path((?!api/).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "lucia-cilio-platform.vercel.app"
+        }
+      ],
+      "destination": "https://app.lcoffice.pt/:path",
+      "permanent": false
+    },
+    {
       "source": "/:path*",
       "has": [
         {

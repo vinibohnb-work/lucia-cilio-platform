@@ -2,6 +2,9 @@
 <html lang="pt">
 <head>
 <meta charset="utf-8">
+<!-- Domínio próprio (22/10): o evento vive em lcoffice.pt/momentos (o token pessoal fica guardado por domínio).
+     Está aqui e não só no vercel.json porque a cache da Vercel serve a página antes das regras por domínio. -->
+<script>if (/^(lucia-cilio-platform\.vercel\.app|app\.lcoffice\.pt|www\.lcoffice\.pt)$/.test(location.hostname)) location.replace('https://lcoffice.pt' + location.pathname + location.search + location.hash)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Participantes · Momentos entre Empreendedores</title>
 <meta name="robots" content="noindex, nofollow">

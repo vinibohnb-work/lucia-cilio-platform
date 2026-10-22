@@ -2,6 +2,11 @@
 <html lang="pt">
   <head>
     <meta charset="UTF-8" />
+    <!-- Domínio próprio (22/10): o endereço antigo e a raiz do site levam à plataforma em app.lcoffice.pt.
+         Está aqui e não só no vercel.json porque a cache da Vercel serve a página antes das regras por domínio. -->
+    <script>
+      if (/^(lucia-cilio-platform\.vercel\.app|lcoffice\.pt|www\.lcoffice\.pt)$/.test(location.hostname)) location.replace('https://app.lcoffice.pt' + location.pathname + location.search + location.hash)
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
     <!-- Sem maximum-scale: ampliar com dois dedos é a única forma de o utilizador
          compensar texto pequeno. Bloqueá-lo é falha de acessibilidade (QA 13/08). -->
