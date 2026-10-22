@@ -224,9 +224,12 @@ export function detetarColunas(linhas) {
   }
   if (iValor < 0 && iDebito < 0) return null
 
-  // Categoria: só pelo cabeçalho (sem ele, uma coluna de texto curto pode ser qualquer coisa)
+  // Categoria: só pelo cabeçalho (sem ele, uma coluna de texto curto pode ser qualquer coisa).
+  // Com duas colunas ("Kategorie" e "Kategorie EÜR"), fica a da EÜR: é a que diz
+  // o que a despesa é de facto ("Verpflegung…" onde a outra só diz "Sonstige").
   const usadasNum = new Set([iData, iValor, iSaldo, iDebito, iCredito])
-  const cCat = perfil.find(p => p.cabecalho && !usadasNum.has(p.i) && p.fNum < 0.5 && casa(p.cabecalho, 'categoria'))
+  const cats = perfil.filter(p => p.cabecalho && !usadasNum.has(p.i) && p.fNum < 0.5 && casa(p.cabecalho, 'categoria'))
+  const cCat = cats.find(p => /e[uü]r/.test(semAcentos(p.cabecalho))) || cats[0]
   const iCategoria = cCat ? cCat.i : -1
 
   // Descrição: o cabeçalho manda; senão, a coluna de texto mais longa
@@ -443,13 +446,14 @@ export function movimentoParaLancamento(m, taxa = 0, categoria = '') {
 // de ser imposto, "Kfz-Versicherung" é automóvel antes de ser seguro.
 // `inclui` casa em qualquer parte da palavra; `palavras` só como palavra inteira.
 const MAPA_CATEGORIAS = [
-  { key: 'honorarios', inclui: ['honorar', 'steuerberat', 'rechtsanwalt', 'anwalt', 'beratungskost', 'buchhalt', 'contabil', 'advogad', 'consultor', 'accountant', 'lawyer', 'professional fee'], palavras: ['legal'] },
+  { key: 'honorarios', inclui: ['honorar', 'aufwandsentschadigung', 'steuerberat', 'rechtsanwalt', 'anwalt', 'beratungskost', 'buchhalt', 'contabil', 'advogad', 'consultor', 'accountant', 'lawyer', 'professional fee'], palavras: ['legal'] },
   { key: 'auto', inclui: ['fahrzeug', 'benzin', 'diesel', 'tanken', 'kraftstoff', 'combust', 'gasoleo', 'gasolina', 'portage', 'estacionamento', 'parken', 'parkgeb', 'automovel', 'vehicle', 'fuel'], palavras: ['kfz', 'pkw', 'maut', 'auto', 'car', 'petrol'] },
   { key: 'impostos', inclui: ['verwaltungsgeb', 'taxa administrativ'], palavras: [] },
   { key: 'bancos', inclui: ['gebuhr', 'bank', 'banc', 'kontofuhr', 'comiss', 'paypal', 'stripe'], palavras: ['fees', 'fee', 'charges'] },
   { key: 'software', inclui: ['software', 'subscri', 'abonnement', 'lizenz', 'hosting', 'saas', 'cloud'], palavras: ['abo', 'app', 'apps'] },
   { key: 'telecom', inclui: ['telefon', 'telekom', 'telecom', 'internet', 'mobilfunk', 'handy', 'telemovel', 'phone', 'porto'], palavras: [] },
-  { key: 'renda', inclui: ['miete', 'renda', 'aluguer', 'arrendamento', 'raumkost', 'coworking', 'buroraum', 'instalac', 'premises'], palavras: ['rent', 'raum'] },
+  // Luz, água e encargos do espaço entram em "Renda e Instalações" (não há categoria própria)
+  { key: 'renda', inclui: ['miete', 'renda', 'aluguer', 'arrendamento', 'raumkost', 'coworking', 'buroraum', 'instalac', 'premises', 'nebenkost', 'strom', 'energie', 'heizung', 'wasser', 'eletric', 'electric', 'utilities', 'condominio'], palavras: ['rent', 'raum', 'agua', 'luz', 'gas'] },
   { key: 'refeicoes', inclui: ['verpflegung', 'essen', 'bewirtung', 'refeic', 'restaurant', 'almoco', 'jantar', 'meal', 'food'], palavras: [] },
   { key: 'viagens', inclui: ['reise', 'viage', 'hotel', 'ubernacht', 'flug', 'desloca', 'travel', 'comboio'], palavras: ['bahn', 'taxi', 'voo', 'voos'] },
   { key: 'marketing', inclui: ['werbung', 'marketing', 'publicidad', 'anzeige', 'advertis', 'flyer'], palavras: ['ads'] },
