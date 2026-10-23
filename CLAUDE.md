@@ -39,7 +39,7 @@ npm run lint
 
 ## Ambientes e deploy
 
-- **Produção:** https://app.lcoffice.pt (plataforma) e https://lcoffice.pt/momentos (landing e área de participantes do evento) — projeto Vercel `lucia-cilio-platform`. Domínio `lcoffice.pt` registado na Dominios.pt em nome da Lúcia (22/10/2026), DNS na Dominios.pt (A `@` → 76.76.21.21, CNAME `app` e `www` → cname.vercel-dns.com). Os redirecionamentos por domínio estão no `vercel.json`: a raiz manda tudo o que não é `/momentos` e `/api` para `app.lcoffice.pt` (até haver site institucional), `www` vai para a raiz, e o endereço antigo `lucia-cilio-platform.vercel.app` redireciona para o novo (menos `/api`). Todo push na `main` publica automaticamente. Supabase "LC Office (EU)", Frankfurt, ref `smytrevdozsiyuoaxkaa`, plano Pro (backups diários).
+- **Produção:** https://app.lcoffice.pt (plataforma) e https://lcoffice.pt/momentos (landing e área de participantes do evento) — projeto Vercel `lucia-cilio-platform`. Domínio `lcoffice.pt` registado na Dominios.pt em nome da Lúcia (22/10/2026), DNS na Dominios.pt (A `@` → 76.76.21.21, CNAME `app` e `www` → cname.vercel-dns.com). Os redirecionamentos por domínio estão no `vercel.json`: a raiz manda tudo o que não é `/momentos`, `/participantes` e `/api` para `app.lcoffice.pt` (até haver site institucional), `www` vai para a raiz, e o endereço antigo `lucia-cilio-platform.vercel.app` redireciona para o novo (menos `/api`). Todo push na `main` publica automaticamente. Supabase "LC Office (EU)", Frankfurt, ref `smytrevdozsiyuoaxkaa`, plano Pro (backups diários).
 - **`/v2`:** endereço antigo da validação visual; desde 19/10 redireciona (no `vercel.json` e no `App.jsx`) para o mesmo ecrã sem o prefixo.
 - **DEV / staging de banco:** Supabase `jlgqvetehwpmywghpabz` (Frankfurt), só dados fictícios, numa organização Supabase separada da produção (para não pagar o segundo projeto no Pro). Não há front de staging: o DEV é usado localmente. Toda migração passa aqui antes da produção.
 - O projeto antigo `wefdhqurbdvsmzmtweno` (EUA) foi apagado em 11/10/2026; docs antigos ainda o citam.
@@ -47,7 +47,7 @@ npm run lint
 
 ## Banco de dados
 
-- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_048.sql` (a próxima é a 049), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
+- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_050.sql` (a próxima é a 051), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
 - Cabeçalho de cada migração: número e título, porquê, o que muda, se apaga dados, e "Executar no Supabase: SQL Editor → New query → colar → Run". Escrever idempotente (`if not exists`, `drop policy if exists` antes do `create policy`).
 - Aplicação é manual no SQL Editor: primeiro no DEV, depois o Vinícius corre na produção. Código que depende de uma migração só vai para a `main` depois de ela estar aplicada.
 - RLS em tudo. Funções `public.is_admin()` e `public.is_equipa()` (admin, comercial, marketing). O cliente só lê o que tem o seu `user_id` ou a sua ficha; anónimo não lê nada; o formulário público grava só via `api/diagnostico.js` (migração 042).
@@ -62,7 +62,7 @@ npm run lint
   - `consultorias`, `consulting_notes`, `crm_leads`, `diagnostico_submissoes`, `client_billing`, `billing_payments` — consultoria, CRM e financeiro.
   - `esg_consultorias` (casos ESG; `nivel` e `metodo` jsonb do método da Lúcia, migração 046), `esg_diagnostics`, `esg_materiality`, `esg_projects` (também o plano de ação), `esg_reports`, `esg_interno` (notas internas e opinião por reunião, só admin), `esg_comentarios` (comentário por item, lados equipa/cliente; é a única coisa que o cliente escreve na ESG, migração 047).
   - `marketing_posts`, `marketing_notas` — aba de Marketing.
-  - `eventos`, `evento_participantes` (+ bucket privado `eventos`) — área de participantes dos eventos da Lúcia (migração 048). Só admin pela app; os participantes não têm conta e passam sempre por `api/evento.js`, que confere o link pessoal (token).
+  - `eventos`, `evento_participantes` (+ bucket privado `eventos`) — repositório de eventos da Lúcia (Gestão → Eventos): cada evento tem local, landing (`landing_url`) e, se tiver `codigo`, uma área de participantes com QR (migrações 048, 049 cargo e 050). Só admin pela app; os participantes não têm conta e passam sempre por `api/evento.js`, que confere o código do QR e o link pessoal (token).
 
 ## Mapa do código
 
@@ -74,7 +74,8 @@ api/                    funções Vercel (service role e chave da IA só aqui)
   exportar-cliente.js   exportação RGPD de um cliente (JSON)
   agenda-fiscal.js      quadros oficiais de prazos da AT (Portugal)
   evento.js             área de participantes dos eventos (link pessoal, sem conta)
-public/momentos/        landing do evento de 24/10 e /participantes (HTML estático, servido antes da SPA)
+public/momentos/        landing do evento de 24/10 (HTML estático, servido antes da SPA)
+public/participantes/   área de participantes, a mesma página para todos os eventos (o QR leva #c=<codigo>)
 src/App.jsx             rotas e guardas (ProtectedRoute, RoleRoute, PlatformRoute)
 src/pages/contabilidade/  área do cliente: Contabilidade
 src/pages/esg/          área do cliente: ESG (reutilizada nos casos ESG da Gestão)

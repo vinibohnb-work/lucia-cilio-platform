@@ -13,6 +13,7 @@ import { randomBytes } from 'node:crypto'
 // não tem políticas para anónimos. Fora da janela do evento (aberto_de →
 // aberto_ate, datas de Lisboa) nada abre.
 //
+//   GET  /api/evento?c=<codigo do QR>           → nome, data, local e landing do evento
 //   POST /api/evento { codigo, acao: 'entrar', nome }   → cria-me e devolve { t }
 //   GET  /api/evento?t=<token>                 → o meu perfil + quem partilhou
 //   POST /api/evento { t, acao: 'perfil', perfil }      → guardar o meu perfil
@@ -37,10 +38,14 @@ const codigoValido = (c) => typeof c === 'string' && /^[A-Za-z0-9_-]{8,40}$/.tes
 export const hojeLisboa = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Lisbon' }).format(new Date())
 const novoToken = () => randomBytes(24).toString('base64url')
 
+const CAMPOS_EVENTO = 'id, nome, data, local, landing_url, aberto_de, aberto_ate'
+// O que a página mostra do evento (repositório de eventos, migração 050)
+const infoEvento = (e) => ({ id: e.id, nome: e.nome, data: e.data, local: e.local || null, landing: e.landing_url || null })
+
 // A área só abre dentro da janela do evento
 function janela(evento, hoje) {
-  if (evento.aberto_de && hoje < evento.aberto_de) return [403, { error: 'A área de participantes abre no dia do evento.', abre: evento.aberto_de }]
-  if (evento.aberto_ate && hoje > evento.aberto_ate) return [410, { error: 'A área de participantes deste evento já fechou.' }]
+  if (evento.aberto_de && hoje < evento.aberto_de) return [403, { error: 'A área de participantes abre no dia do evento.', abre: evento.aberto_de, evento: infoEvento(evento) }]
+  if (evento.aberto_ate && hoje > evento.aberto_ate) return [410, { error: 'A área de participantes deste evento já fechou.', evento: infoEvento(evento) }]
   return null
 }
 
@@ -83,10 +88,18 @@ async function fotosAssinadas(db, linhas) {
 }
 
 export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeLisboa()) {
+  // Antes de entrar: o QR só diz o código; a página mostra o nome do evento e se já abriu
+  if (metodo === 'GET' && query.c !== undefined && query.t === undefined) {
+    if (!codigoValido(query.c)) return [404, { error: 'Este QR code não é válido.' }]
+    const { data: evento } = await db.from('eventos').select(CAMPOS_EVENTO).eq('codigo', query.c).maybeSingle()
+    if (!evento) return [404, { error: 'Este QR code não é válido. Peça o atual à organização.' }]
+    return janela(evento, hoje) || [200, { evento: infoEvento(evento) }]
+  }
+
   // Entrar pelo QR code: o código do evento + o nome → um token pessoal
   if (metodo === 'POST' && body.acao === 'entrar') {
     if (!codigoValido(body.codigo)) return [404, { error: 'Este QR code não é válido.' }]
-    const { data: evento } = await db.from('eventos').select('id, nome, data, aberto_de, aberto_ate').eq('codigo', body.codigo).maybeSingle()
+    const { data: evento } = await db.from('eventos').select(CAMPOS_EVENTO).eq('codigo', body.codigo).maybeSingle()
     if (!evento) return [404, { error: 'Este QR code não é válido. Peça o atual à organização.' }]
     const fechado = janela(evento, hoje)
     if (fechado) return fechado
@@ -105,7 +118,7 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
 
   const { data: eu } = await db.from('evento_participantes').select('*').eq('token', t).maybeSingle()
   if (!eu) return [401, { error: 'Este acesso já não é válido. Volte a ler o QR code do evento.' }]
-  const { data: evento } = await db.from('eventos').select('id, nome, data, aberto_de, aberto_ate').eq('id', eu.evento_id).maybeSingle()
+  const { data: evento } = await db.from('eventos').select(CAMPOS_EVENTO).eq('id', eu.evento_id).maybeSingle()
   if (!evento) return [404, { error: 'Evento não encontrado.' }]
   const fechado = janela(evento, hoje)
   if (fechado) return fechado
@@ -117,7 +130,7 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
       .eq('evento_id', eu.evento_id).eq('partilhar', true).neq('id', eu.id).order('nome', { ascending: true })
     const fotos = await fotosAssinadas(db, [eu, ...(outros || [])])
     return [200, {
-      evento: { nome: evento.nome, data: evento.data },
+      evento: infoEvento(evento),
       eu: { ...publico(eu, fotos[eu.foto_path] || null), partilhar: eu.partilhar },
       participantes: (outros || []).map(l => publico(l, fotos[l.foto_path] || null)),
     }]

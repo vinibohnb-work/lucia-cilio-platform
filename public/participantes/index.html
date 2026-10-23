@@ -6,7 +6,7 @@
      Está aqui e não só no vercel.json porque a cache da Vercel serve a página antes das regras por domínio. -->
 <script>if (/^(lucia-cilio-platform\.vercel\.app|app\.lcoffice\.pt|www\.lcoffice\.pt)$/.test(location.hostname)) location.replace('https://lcoffice.pt' + location.pathname + location.search + location.hash)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Participantes · Momentos entre Empreendedores</title>
+<title>Participantes · LC Office Consulting</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0E3D33">
@@ -167,23 +167,39 @@ label.campo textarea { min-height: 110px; resize: vertical }
   let token = (m && m[1]) || ler()
   const codigo = mc && mc[1]
 
-  let dados = null, aba = 'participantes', filtro = ''
+  // ev: o evento (nome, data, local, landing) — vem da API, a página serve qualquer evento (migração 050)
+  let dados = null, aba = 'participantes', filtro = '', ev = null
+  const conhecer = (e) => { if (e && e.nome) { ev = e; document.title = 'Participantes · ' + e.nome } }
+  const dataLonga = (d) => new Date(d + 'T12:00:00').toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })
 
   async function api(metodo, corpo) {
     const r = metodo === 'GET'
       ? await fetch('/api/evento?t=' + encodeURIComponent(token), { cache: 'no-store' })
       : await fetch('/api/evento', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, ...corpo }) })
     const j = await r.json().catch(() => ({}))
-    if (!r.ok) throw Object.assign(new Error(j.error || 'Algo correu mal. Tente de novo.'), { estado: r.status })
+    if (!r.ok) { conhecer(j.evento); throw Object.assign(new Error(j.error || 'Algo correu mal. Tente de novo.'), { estado: r.status, dados: j }) }
     return j
   }
 
-  const marca = `<div class="marca"><img src="/momentos/img/logo-branca.png" alt="LC Office Consulting" height="32"><span class="selo"><svg width="12" height="12"><use href="#i-cadeado"/></svg>Participantes</span></div>`
+  // Antes de entrar: o código do QR diz que evento é e se a área já abriu
+  async function eventoDoQR() {
+    const r = await fetch('/api/evento?c=' + encodeURIComponent(codigo), { cache: 'no-store' })
+    const j = await r.json().catch(() => ({}))
+    conhecer(j.evento)
+    return { estado: r.status, j }
+  }
+  function fechado(estado, j) {
+    if (estado === 403) semAcesso('Ainda não abriu', j.abre ? `A área de participantes abre a ${dataLonga(j.abre)}.` : 'A área de participantes abre no dia do evento.')
+    else if (estado === 410) semAcesso('A área fechou', j.error || 'A área de participantes deste evento já fechou.')
+    else semAcesso('QR code inválido', j.error || 'Peça o QR code atual à organização do evento.')
+  }
+
+  const marca = `<div class="marca"><img src="/logo-letra-branca.png" alt="LC Office Consulting" height="32"><span class="selo"><svg width="12" height="12"><use href="#i-cadeado"/></svg>Participantes</span></div>`
 
   function semAcesso(titulo, texto) {
     app.innerHTML = `<section class="banda ecra"><div class="wrap">${marca}</div><div class="wrap centro">
-        <div class="hero"><div class="ev">Momentos entre Empreendedores</div><h1>${esc(titulo)}</h1><p>${esc(texto)}</p></div>
-        <div class="acoes-ecra"><a class="btn btn-clara" href="/momentos/">Ver o programa do evento</a></div></div></section>`
+        <div class="hero"><div class="ev">${esc(ev ? ev.nome : 'LC Office Consulting')}</div><h1>${esc(titulo)}</h1><p>${esc(texto)}</p></div>
+        ${ev && ev.landing ? `<div class="acoes-ecra"><a class="btn btn-clara" href="${esc(ev.landing)}">Ver a página do evento</a></div>` : ''}</div></section>`
   }
 
   const fotoHtml = (url, nome, cls = '') => url
@@ -339,11 +355,11 @@ label.campo textarea { min-height: 110px; resize: vertical }
   async function carregar(mostrar = true) {
     try {
       dados = await api('GET')
+      conhecer(dados.evento)
       if (mostrar) { aba = dados.eu.partilhar ? 'participantes' : 'perfil'; render() }
     } catch (e) {
       if (e.estado === 401) { guardar(null); token = null; semAcesso('Acesso inválido', 'Volta a ler o QR code do evento para entrares.') }
-      else if (e.estado === 403) semAcesso('Ainda não abriu', 'A área de participantes abre no dia do evento, 24 de outubro.')
-      else if (e.estado === 410) semAcesso('A área fechou', e.message)
+      else if (e.estado === 403 || e.estado === 410) fechado(e.estado, e.dados || {})
       else semAcesso('Não foi possível abrir', e.message)
       throw e
     }
@@ -352,7 +368,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
   // Entrar pela primeira vez: só o nome; o resto do perfil vem a seguir
   function entrada() {
     app.innerHTML = `<section class="banda ecra"><div class="wrap">${marca}</div><div class="wrap centro">
-        <div class="hero"><div class="ev">Momentos entre Empreendedores</div><h1>Bem-<em>vindo</em></h1>
+        <div class="hero"><div class="ev">${esc(ev ? ev.nome : 'Área de participantes')}</div><h1>Bem-<em>vindo</em></h1>
         <p>Em vez de crachás, um perfil no telemóvel. Escreve o teu nome para entrares; o resto preenches a seguir.</p></div>
         <form id="form-entrar" class="perfil" novalidate>
           <label class="campo" for="e-nome">O teu nome<input id="e-nome" maxlength="80" required autocomplete="name"></label>
@@ -376,9 +392,24 @@ label.campo textarea { min-height: 110px; resize: vertical }
     })
   }
 
-  if (token) carregar().catch(() => { if (codigo) entrada() })
-  else if (codigo) entrada()
-  else semAcesso('Área reservada a participantes', 'No dia do evento, lê o QR code à entrada do District Space para entrares.')
+  // Com QR: se o telemóvel já tem acesso a este evento, entra direto; se é de outro evento
+  // (ou o acesso já não vale), pede o nome para este. Sem QR: usa o acesso guardado.
+  async function arrancar() {
+    if (!codigo) {
+      if (token) return carregar().catch(() => {})
+      return semAcesso('Área reservada a participantes', 'No dia do evento, lê o QR code à entrada para entrares.')
+    }
+    const { estado, j } = await eventoDoQR()
+    if (estado !== 200) return fechado(estado, j)
+    const doQR = j.evento
+    if (token) {
+      try { dados = await api('GET') } catch { dados = null }
+      if (dados && dados.evento.id === doQR.id) { conhecer(dados.evento); aba = dados.eu.partilhar ? 'participantes' : 'perfil'; return render() }
+      conhecer(doQR)
+    }
+    entrada()
+  }
+  arrancar().catch(() => semAcesso('Não foi possível abrir', 'Verifica a ligação à internet e tenta de novo.'))
 })()
 </script>
 </body>
