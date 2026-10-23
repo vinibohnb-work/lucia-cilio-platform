@@ -1,6 +1,11 @@
 {
   "redirects": [
     {
+      "source": "/momentos/participantes/",
+      "destination": "/participantes/",
+      "permanent": false
+    },
+    {
       "source": "/momentos/participantes/:path*",
       "destination": "/participantes/",
       "permanent": false
