@@ -177,15 +177,23 @@ section { padding-block: 84px }
 .programa { background: radial-gradient(80% 120% at 10% 0%, #155246 0%, var(--green) 55%, #0A3129 100%); color: var(--on-green); box-shadow: 0 -30px 60px -40px rgba(10,46,39,.5) inset }
 .programa h2, .programa h3 { color: var(--cream) }
 .programa .sec-head p { color: var(--on-green-muted) }
-.timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; counter-reset: passo }
-@media (max-width: 900px) { .timeline { grid-template-columns: 1fr 1fr } }
-@media (max-width: 560px) { .timeline { grid-template-columns: 1fr } }
-.step { position: relative; padding: 28px 22px 10px 0; border-top: 1px solid rgba(243,233,214,.22) }
-.step::before { content: ''; position: absolute; top: -6px; left: 0; width: 11px; height: 11px; border-radius: 50%; background: var(--gold-2); box-shadow: 0 0 0 4px var(--green) }
-.step .hora { font-family: var(--display); font-size: 22px; color: var(--gold-2); line-height: 1 }
-.step .hora small { font-family: var(--body); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--on-green-muted); margin-left: 8px; font-weight: 600 }
-.step h3 { margin-top: 12px; font-size: 18px }
-.step p { margin-top: 8px; color: var(--on-green-muted); font-size: 15px; max-width: 30ch }
+.agenda { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(243,233,214,.18) }
+.agenda li { display: grid; grid-template-columns: 150px 190px 1fr; gap: 6px 24px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid rgba(243,233,214,.12) }
+.agenda .h { font-family: var(--display); font-size: 17px; color: var(--gold-2); font-variant-numeric: tabular-nums; white-space: nowrap }
+.agenda .tipo { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--on-green-muted) }
+.agenda .o { color: var(--cream); font-size: 17px; font-weight: 600; line-height: 1.35 }
+.agenda .o span { display: block; font-weight: 400; font-size: 15px; color: var(--on-green-muted); margin-top: 2px }
+.agenda li.palestra { padding: 20px 0 }
+.agenda li.palestra .tipo { color: var(--gold-2) }
+.agenda li.palestra .o { font-size: 19px }
+.agenda li.pitch .o, .agenda li.leve .o { color: var(--on-green-muted); font-weight: 500 }
+.agenda li.leve { padding: 12px 0 }
+@media (max-width: 760px) {
+  .agenda li { grid-template-columns: 1fr auto; gap: 4px 12px }
+  .agenda .h { grid-column: 1; grid-row: 1 }
+  .agenda .tipo { grid-column: 2; grid-row: 1; text-align: right }
+  .agenda .o { grid-column: 1 / -1 }
+}
 .programa .nota { margin-top: 34px; font-size: 13px; color: var(--on-green-muted) }
 
 /* Oradores */
@@ -399,15 +407,26 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
       <div class="sec-head">
         <span class="eyebrow">Programa</span>
         <h2 id="h-programa">Como vai ser a tarde</h2>
-        <p>Quatro momentos, do primeiro cumprimento ao último brinde.</p>
+        <p>Das 15h00 às 19h30: cinco palestras, apresentações de negócios e um cocktail para fechar a tarde.</p>
       </div>
-      <ol class="timeline" style="margin:0;padding:0;list-style:none">
-        <li class="step"><div class="hora">15h00 <small>Receção</small></div><h3>Chegada e boas-vindas</h3><p>Receção dos participantes no District Space e abertura do encontro.</p></li>
-        <li class="step"><div class="hora">Talks</div><h3>Palestras para empreendedores</h3><p>Lúcia Cilio, Rita Évora dos Santos, Florência Dias, Sollange Binhã, Drielly Jesus e o Prof. Luís Sinate.</p></li>
-        <li class="step"><div class="hora">Pitches</div><h3>Apresentações de negócios</h3><p>Empreendedores apresentam o seu negócio em até cinco minutos.</p></li>
-        <li class="step"><div class="hora">19h30 <small>Fecho</small></div><h3>Cocktail e networking</h3><p>Conversas, contactos e o fecho da tarde.</p></li>
+      <ol class="agenda">
+        <li class="leve"><span class="h">15h00–15h15</span><span class="tipo">Receção</span><span class="o">Receção dos participantes</span></li>
+        <li><span class="h">15h15–15h30</span><span class="tipo">Abertura</span><span class="o">Boas-vindas e abertura<span>Lúcia Cilio</span></span></li>
+        <li class="palestra"><span class="h">15h30–15h55</span><span class="tipo">Palestra</span><span class="o">Finanças sistémicas: da raiz à liberdade<span>Rita Évora</span></span></li>
+        <li class="palestra"><span class="h">16h00–16h25</span><span class="tipo">Palestra</span><span class="o">Comportamentos financeiros<span>Florência Dias</span></span></li>
+        <li class="pitch"><span class="h">16h25–16h30</span><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></li>
+        <li class="pitch"><span class="h">16h30–16h35</span><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></li>
+        <li class="leve"><span class="h">16h35–16h50</span><span class="tipo">Pausa</span><span class="o">Pausa · 15 minutos</span></li>
+        <li class="palestra"><span class="h">16h50–17h15</span><span class="tipo">Palestra</span><span class="o">Comunicação e posicionamento<span>Sollange Binhã</span></span></li>
+        <li class="palestra"><span class="h">17h20–17h45</span><span class="tipo">Palestra</span><span class="o">Liderança<span>Prof. Luís Sinate</span></span></li>
+        <li class="pitch"><span class="h">17h45–17h50</span><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></li>
+        <li class="pitch"><span class="h">17h50–17h55</span><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></li>
+        <li class="pitch"><span class="h">17h55–18h00</span><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></li>
+        <li class="palestra"><span class="h">18h00–18h25</span><span class="tipo">Palestra</span><span class="o">Posicionamento e gestão emocional<span>Drielly Jesus</span></span></li>
+        <li><span class="h">18h25–18h35</span><span class="tipo">Encerramento</span><span class="o">Encerramento e fotografia de grupo</span></li>
+        <li><span class="h">18h35–19h30</span><span class="tipo">Networking</span><span class="o">Cocktail e networking</span></li>
       </ol>
-      <p class="nota">A ordem dos momentos e os horários intermédios são confirmados no dia pela organização.</p>
+      <p class="nota">Os horários podem ter pequenos ajustes no dia.</p>
     </div>
   </section>
 
