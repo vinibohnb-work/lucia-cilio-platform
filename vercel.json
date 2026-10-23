@@ -1,6 +1,43 @@
 {
   "redirects": [
     {
+      "source": "/momentos/participantes/:path*",
+      "destination": "/participantes/",
+      "permanent": false
+    },
+    {
+      "source": "/momentos/participantes",
+      "destination": "/participantes/",
+      "permanent": false
+    },
+    {
+      "source": "/participantes",
+      "destination": "/participantes/",
+      "permanent": true
+    },
+    {
+      "source": "/participantes/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "lucia-cilio-platform.vercel.app"
+        }
+      ],
+      "destination": "https://lcoffice.pt/participantes/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/participantes/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.lcoffice.pt"
+        }
+      ],
+      "destination": "https://lcoffice.pt/participantes/:path*",
+      "permanent": false
+    },
+    {
       "source": "/momentos/:path*",
       "has": [
         {
@@ -45,7 +82,7 @@
       "permanent": true
     },
     {
-      "source": "/:path((?!momentos|api/|favicon\\.svg).*)",
+      "source": "/:path((?!momentos|participantes|api/|favicon\\.svg).*)",
       "has": [
         {
           "type": "host",
@@ -80,11 +117,6 @@
     {
       "source": "/momentos",
       "destination": "/momentos/",
-      "permanent": true
-    },
-    {
-      "source": "/momentos/participantes",
-      "destination": "/momentos/participantes/",
       "permanent": true
     },
     {

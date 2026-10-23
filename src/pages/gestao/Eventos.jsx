@@ -3,58 +3,168 @@ import QRCode from 'qrcode'
 import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
-import { Cartao, Botao, Chip, Vazio, useCampos } from '../../portal/ui'
+import { Cartao, Botao, Chip, Vazio, Janela, Pilulas, useCampos } from '../../portal/ui'
 
-// Eventos (pedido da Lúcia, 20/10): a área de participantes do evento, em vez
-// de crachás. No dia, quem está na sala lê o QR code, escreve o nome, cria o
-// perfil e vê os outros (/momentos/participantes, migração 048, api/evento.js).
-// Aqui a equipa tem o QR para imprimir ou projetar, os dias em que a área está
-// aberta e quem entrou. Trocar o código invalida o QR antigo (se tiver sido
-// partilhado fora da sala, por exemplo).
+// Repositório de eventos da Lúcia (pedido de 22/10; antes servia só o Momentos
+// de 24/10). Cada evento tem a sua landing page (no lcoffice.pt ou externa) e,
+// se ela quiser, uma área de participantes: no dia, quem está na sala lê o QR
+// code, escreve o nome, cria o perfil e vê os outros (/participantes, migração
+// 048 e 050, api/evento.js). Um evento sem código não tem área. Trocar o código
+// invalida o QR antigo (se tiver sido partilhado fora da sala, por exemplo).
 
 const BUCKET = 'eventos'
-// No domínio próprio, o QR aponta para o site (lcoffice.pt/momentos), não para app.lcoffice.pt
+// No domínio próprio, o QR aponta para o site (lcoffice.pt), não para app.lcoffice.pt
 const ORIGEM = typeof window === 'undefined' ? '' : window.location.hostname.endsWith('lcoffice.pt') ? 'https://lcoffice.pt' : window.location.origin
-const linkQR = (codigo) => `${ORIGEM}/momentos/participantes/#c=${codigo}`
+const linkQR = (codigo) => `${ORIGEM}/participantes/#c=${codigo}`
+// Landings que já existem no site, sugeridas no campo
+const LANDINGS = ['https://lcoffice.pt/momentos/']
 const novoCodigo = () => {
   const b = new Uint8Array(12)
   crypto.getRandomValues(b)
   return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
+const novoId = (nome, data) => {
+  const base = String(nome || 'evento').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'evento'
+  return `${base}-${String(data || '').slice(0, 7)}-${crypto.randomUUID().slice(0, 4)}`.replace(/--+/g, '-')
+}
 const primeiroNome = (n) => String(n || '').trim().split(/\s+/)[0] || ''
+const hojeLisboa = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Lisbon' }).format(new Date())
+const ligacaoValida = (v) => {
+  let s = String(v || '').trim()
+  if (!s) return ''
+  if (!/^https?:\/\//i.test(s)) s = 'https://' + s
+  try { const u = new URL(s); return u.hostname.includes('.') ? u.toString() : null } catch { return null }
+}
+
+// Estado da área de participantes de um evento
+function estadoArea(e, hoje) {
+  if (!e.codigo) return { texto: 'Sem área', tom: 'neutro' }
+  if (e.aberto_de && hoje < e.aberto_de) return { texto: `Abre a ${dataCurta(e.aberto_de)}`, tom: 'ouro' }
+  if (e.aberto_ate && hoje > e.aberto_ate) return { texto: 'Fechada', tom: 'neutro' }
+  return { texto: 'Aberta', tom: 'ok' }
+}
+
+// Campo de texto que grava ao sair (não a cada tecla). Quem o usa passa key={valor}
+// para o campo recomeçar quando o valor muda por fora.
+function CampoTexto({ valor, aoGravar, estilo, ...resto }) {
+  const [v, setV] = useState(valor || '')
+  return <input {...resto} value={v} onChange={e => setV(e.target.value)} onBlur={() => { if ((v || '') !== (valor || '')) aoGravar(v) }} style={estilo} />
+}
+
+function NovoEvento({ aoFechar, aoCriar }) {
+  const c = useCampos()
+  const { t } = useTheme()
+  const [f, setF] = useState({ nome: '', data: '', local: '', landing: '', area: true })
+  const [erro, setErro] = useState('')
+  const [aGravar, setAGravar] = useState(false)
+  const muda = (k) => (e) => setF(x => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
+  const sujo = f.nome || f.local || f.landing
+  const fechar = () => { if (!sujo || window.confirm('Fechar sem criar o evento? O que escreveu perde-se.')) aoFechar() }
+  async function criar(e) {
+    e.preventDefault()
+    if (!f.nome.trim() || !f.data) { setErro('Indique o nome e a data do evento.'); return }
+    const landing = ligacaoValida(f.landing)
+    if (landing === null) { setErro('O endereço da landing page não é válido.'); return }
+    setAGravar(true)
+    const ok = await aoCriar({
+      id: novoId(f.nome, f.data), nome: f.nome.trim(), data: f.data, local: f.local.trim() || null, landing_url: landing || null,
+      codigo: f.area ? novoCodigo() : null, aberto_de: f.area ? f.data : null, aberto_ate: f.area ? f.data : null,
+    })
+    setAGravar(false)
+    if (!ok) setErro('Não foi possível criar o evento.')
+  }
+  const rotulo = { ...c.rotulo, display: 'block' }
+  return (
+    <Janela titulo="Novo evento" aoFechar={fechar}>
+      <form onSubmit={criar} style={{ display: 'grid', gap: '12px' }}>
+        <label><span style={rotulo}>Nome</span><input value={f.nome} onChange={muda('nome')} maxLength={120} required autoFocus style={c.input} placeholder="Ex.: Momentos entre Empreendedores" /></label>
+        <label><span style={rotulo}>Data</span><input type="date" value={f.data} onChange={muda('data')} required style={c.input} /></label>
+        <label><span style={rotulo}>Local</span><input value={f.local} onChange={muda('local')} maxLength={160} style={c.input} placeholder="Ex.: District Space, Lisboa" /></label>
+        <label><span style={rotulo}>Landing page</span><input value={f.landing} onChange={muda('landing')} list="landings-site" style={c.input} placeholder="https://lcoffice.pt/… ou o link da Luma" inputMode="url" autoCapitalize="off" /></label>
+        <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '13px', color: t.text, cursor: 'pointer' }}>
+          <input type="checkbox" checked={f.area} onChange={muda('area')} style={{ width: '18px', height: '18px', marginTop: '1px', accentColor: t.accent }} />
+          <span><strong style={{ color: t.heading }}>Criar área de participantes</strong><br /><span style={{ color: t.textMuted }}>Um QR code para os participantes criarem o perfil e se conhecerem. Abre só no dia do evento (pode mudar depois).</span></span>
+        </label>
+        {erro && <div role="alert" style={{ fontSize: '13px', fontWeight: 600, color: t.neg }}>{erro}</div>}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <Botao type="button" onClick={fechar}>Cancelar</Botao>
+          <Botao type="submit" variante="primario" disabled={aGravar}>{aGravar ? 'A criar…' : 'Criar evento'}</Botao>
+        </div>
+      </form>
+    </Janela>
+  )
+}
 
 export default function Eventos() {
   const { t } = useTheme()
   const c = useCampos()
-  const [evento, setEvento] = useState(null)
-  const [pessoas, setPessoas] = useState([])
+  const [eventos, setEventos] = useState([])
+  const [contagem, setContagem] = useState({})
   const [carregando, setCarregando] = useState(true)
+  const [filtro, setFiltro] = useState('proximos')
+  const [selId, setSelId] = useState(null)
+  const [pessoas, setPessoas] = useState([])
   const [qr, setQr] = useState('')
+  const [novo, setNovo] = useState(false)
   const [msg, setMsg] = useState({ tom: '', texto: '' })
   const [aRemover, setARemover] = useState(null)
-  const [trocar, setTrocar] = useState(false)
+  const [confirmar, setConfirmar] = useState('') // 'qr' | 'desligar' | 'eliminar'
+  const hoje = hojeLisboa()
+  const sel = eventos.find(e => e.id === selId) || null
 
   const avisar = (tom, texto) => { setMsg({ tom, texto }); if (tom !== 'erro') setTimeout(() => setMsg({ tom: '', texto: '' }), 3500) }
 
   const carregar = useCallback(async () => {
-    const { data: evs } = await supabase.from('eventos').select('*').order('data', { ascending: false })
-    const ev = (evs || [])[0] || null
-    setEvento(ev)
-    if (ev) {
-      const { data } = await supabase.from('evento_participantes')
-        .select('id, nome, negocio, cargo, localidade, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', ev.id).order('nome')
-      setPessoas(data || [])
-      if (ev.codigo) setQr(await QRCode.toDataURL(linkQR(ev.codigo), { width: 520, margin: 2, color: { dark: '#0E3D33', light: '#FFFFFF' } }))
-    }
+    const [{ data: evs }, { data: ps }] = await Promise.all([
+      supabase.from('eventos').select('*').order('data', { ascending: false }),
+      supabase.from('evento_participantes').select('evento_id'),
+    ])
+    setEventos(evs || [])
+    setContagem((ps || []).reduce((m, p) => ({ ...m, [p.evento_id]: (m[p.evento_id] || 0) + 1 }), {}))
     setCarregando(false)
   }, [])
   useEffect(() => { carregar() }, [carregar])
 
-  async function alterarEvento(patch, ok) {
-    const { error, count } = await supabase.from('eventos').update(patch, { count: 'exact' }).eq('id', evento.id)
-    if (error || count === 0) { avisar('erro', 'Não foi possível guardar.'); return }
-    avisar('ok', ok)
-    carregar()
+  const carregarPessoas = useCallback(async (id) => {
+    const { data } = await supabase.from('evento_participantes')
+      .select('id, nome, negocio, cargo, localidade, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', id).order('nome')
+    setPessoas(data || [])
+  }, [])
+  useEffect(() => { if (selId) carregarPessoas(selId) }, [selId, carregarPessoas])
+  useEffect(() => {
+    let vivo = true
+    if (sel?.codigo) QRCode.toDataURL(linkQR(sel.codigo), { width: 520, margin: 2, color: { dark: '#0E3D33', light: '#FFFFFF' } }).then(u => { if (vivo) setQr(u) })
+    return () => { vivo = false }
+  }, [sel?.codigo])
+
+  async function alterar(patch, ok) {
+    const { error, count } = await supabase.from('eventos').update(patch, { count: 'exact' }).eq('id', sel.id)
+    if (error || count === 0) { avisar('erro', 'Não foi possível guardar.'); return false }
+    setEventos(evs => evs.map(e => e.id === sel.id ? { ...e, ...patch } : e))
+    if (ok) avisar('ok', ok)
+    return true
+  }
+
+  async function criar(ev) {
+    const { error } = await supabase.from('eventos').insert(ev)
+    if (error) return false
+    setNovo(false)
+    await carregar()
+    setSelId(ev.id); setPessoas([])
+    avisar('ok', 'Evento criado.')
+    return true
+  }
+
+  async function eliminar() {
+    // Fotografias primeiro (RGPD); os participantes saem em cascata com o evento
+    const { data: ficheiros } = await supabase.storage.from(BUCKET).list(sel.id, { limit: 1000 })
+    if (ficheiros?.length) await supabase.storage.from(BUCKET).remove(ficheiros.map(f => `${sel.id}/${f.name}`))
+    const { error, count } = await supabase.from('eventos').delete({ count: 'exact' }).eq('id', sel.id)
+    setConfirmar('')
+    if (error || count === 0) { avisar('erro', 'Não foi possível eliminar o evento.'); return }
+    setSelId(null)
+    await carregar()
+    avisar('ok', 'Evento eliminado.')
   }
 
   async function copiar(texto) {
@@ -68,92 +178,197 @@ export default function Eventos() {
     setARemover(null)
     if (error || count === 0) { avisar('erro', 'Não foi possível remover.'); return }
     avisar('ok', `${p.nome} removido da área de participantes.`)
-    carregar()
+    carregarPessoas(sel.id)
+    setContagem(m => ({ ...m, [sel.id]: Math.max(0, (m[sel.id] || 1) - 1) }))
   }
 
   if (carregando) return <div style={{ color: t.subtle, padding: '20px 0' }}>A carregar…</div>
-  if (!evento) return <Vazio>Ainda não há eventos. Falta correr a migração 048 na base de dados.</Vazio>
 
+  const aviso = msg.texto && <div role="status" style={{ fontSize: '13px', fontWeight: 600, color: msg.tom === 'erro' ? t.neg : t.pos }}>{msg.texto}</div>
+  const th = { ...c.th, textTransform: 'uppercase', letterSpacing: '.04em' }
+  const rotulo = { display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.04em', minWidth: 0 }
+  const ligacao = { fontSize: '12.5px', fontWeight: 700, color: t.accentText }
+  const datalist = <datalist id="landings-site">{LANDINGS.map(l => <option key={l} value={l} />)}</datalist>
+
+  // ── Lista de eventos ──────────────────────────────────────────────────────
+  if (!sel) {
+    const lista = eventos
+      .filter(e => filtro === 'todos' || (filtro === 'proximos' ? (e.data || '') >= hoje : (e.data || '') < hoje))
+      .sort((a, b) => filtro === 'proximos' ? (a.data || '').localeCompare(b.data || '') : (b.data || '').localeCompare(a.data || ''))
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <h1 className="so-leitores">Eventos</h1>
+        {datalist}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <Pilulas opcoes={[['proximos', 'Próximos'], ['passados', 'Passados'], ['todos', 'Todos']]} valor={filtro} aoMudar={setFiltro} />
+          <div style={{ flex: 1 }} />
+          <Botao variante="primario" onClick={() => setNovo(true)}>+ Novo evento</Botao>
+        </div>
+        {aviso}
+        <Cartao semPadding>
+          {lista.length === 0
+            ? <div style={{ padding: '0 20px' }}><Vazio>{eventos.length ? 'Nenhum evento neste filtro.' : 'Ainda não há eventos. Crie o primeiro em "+ Novo evento".'}</Vazio></div>
+            : (
+              <div className="table-scroll">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead><tr><th style={th}>Evento</th><th style={th}>Data</th><th style={th}>Landing page</th><th style={th}>Área de participantes</th><th style={{ ...th, textAlign: 'right' }}>Participantes</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
+                  <tbody>
+                    {lista.map(e => {
+                      const est = estadoArea(e, hoje)
+                      return (
+                        <tr key={e.id} onClick={() => setSelId(e.id)} style={{ cursor: 'pointer' }}>
+                          <td style={c.td}><div style={{ fontWeight: 700, color: t.heading }}>{e.nome}</div>{e.local && <div style={{ fontSize: '12px', color: t.subtle }}>{e.local}</div>}</td>
+                          <td style={{ ...c.td, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{e.data ? dataCurta(e.data) : '—'}</td>
+                          <td style={c.td}>{e.landing_url ? <a href={e.landing_url} target="_blank" rel="noopener noreferrer" onClick={ev => ev.stopPropagation()} style={ligacao}>Abrir ↗</a> : <span style={{ color: t.subtle }}>—</span>}</td>
+                          <td style={c.td}><Chip tom={est.tom}>{est.texto}</Chip></td>
+                          <td style={{ ...c.td, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{contagem[e.id] || 0}</td>
+                          <td style={{ ...c.td, textAlign: 'right' }}><Botao onClick={ev => { ev.stopPropagation(); setSelId(e.id) }}>Abrir</Botao></td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+        </Cartao>
+        {novo && <NovoEvento aoFechar={() => setNovo(false)} aoCriar={criar} />}
+      </div>
+    )
+  }
+
+  // ── Um evento ─────────────────────────────────────────────────────────────
   const partilham = pessoas.filter(p => p.partilhar).length
-  const th = { textAlign: 'left', padding: '9px 10px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: t.textMuted, borderBottom: `1px solid ${t.cardBorder}` }
-  const td = { padding: '10px', fontSize: '13px', color: t.text, borderBottom: `1px solid ${t.rowBorder}`, verticalAlign: 'middle' }
-  const rotulo = { display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontWeight: 700, color: t.textMuted, textTransform: 'uppercase', letterSpacing: '.04em' }
+  const est = estadoArea(sel, hoje)
+  const gravarLanding = (v) => {
+    const l = ligacaoValida(v)
+    if (l === null) { avisar('erro', 'O endereço da landing page não é válido.'); return }
+    alterar({ landing_url: l || null }, 'Landing page guardada.')
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <h1 className="so-leitores">Eventos</h1>
+      <h1 className="so-leitores">{sel.nome}</h1>
+      {datalist}
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <Botao variante="fantasma" onClick={() => { setSelId(null); setConfirmar(''); setARemover(null) }}>← Todos os eventos</Botao>
+        <div style={{ flex: 1 }} />
+        <Chip tom={est.tom}>{est.texto === 'Sem área' ? 'Sem área de participantes' : `Área ${est.texto.toLowerCase()}`}</Chip>
+      </div>
+      {aviso}
 
-      <Cartao titulo={`${evento.nome} · ${dataCurta(evento.data)}`}
-        acao={<a href="/momentos/" target="_blank" rel="noopener" style={{ fontSize: '12.5px', fontWeight: 700, color: t.accentText }}>Ver a landing ↗</a>}>
-        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          <div style={{ flex: '0 0 auto', textAlign: 'center' }}>
-            {qr && <img src={qr} alt="QR code da área de participantes" width="220" height="220" style={{ display: 'block', borderRadius: '12px', border: `1px solid ${t.cardBorder}`, background: '#fff' }} />}
-            {qr && <a href={qr} download={`qr-${evento.id}.png`} style={{ display: 'inline-block', marginTop: '8px', fontSize: '12.5px', fontWeight: 700, color: t.accentText }}>Descarregar o QR (PNG)</a>}
-          </div>
-          <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <p style={{ margin: 0, fontSize: '13.5px', color: t.text, lineHeight: 1.5 }}>
-              Imprima ou projete este QR à entrada. Quem o ler escreve o nome, cria o perfil e vê os outros participantes. Sem crachás, sem contas.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-              <label style={rotulo}>Abre a
-                <input type="date" value={evento.aberto_de || ''} onChange={e => alterarEvento({ aberto_de: e.target.value || null }, 'Data de abertura guardada.')} style={{ ...c.input, width: 'auto' }} />
-              </label>
-              <label style={rotulo}>Fecha depois de
-                <input type="date" value={evento.aberto_ate || ''} onChange={e => alterarEvento({ aberto_ate: e.target.value || null }, 'Data de fecho guardada.')} style={{ ...c.input, width: 'auto' }} />
-              </label>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <Botao onClick={() => copiar(linkQR(evento.codigo))}>Copiar o link do QR</Botao>
-              {trocar ? (
-                <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '12px' }}>O QR atual deixa de funcionar. Continuar?</span>
-                  <Botao onClick={() => { setTrocar(false); alterarEvento({ codigo: novoCodigo() }, 'Novo QR gerado. O anterior deixou de funcionar.') }} estilo={{ color: t.neg }}>Gerar novo QR</Botao>
-                  <Botao onClick={() => setTrocar(false)}>Cancelar</Botao>
-                </span>
-              ) : <Botao onClick={() => setTrocar(true)}>Gerar novo QR</Botao>}
-            </div>
-            <div style={{ display: 'flex', gap: '22px', flexWrap: 'wrap', fontSize: '13px', color: t.textMuted }}>
-              <span><strong style={{ fontSize: '20px', color: t.heading }}>{pessoas.length}</strong> entraram</span>
-              <span><strong style={{ fontSize: '20px', color: t.heading }}>{partilham}</strong> partilham o perfil</span>
-            </div>
-            {msg.texto && <div role="status" style={{ fontSize: '13px', fontWeight: 600, color: msg.tom === 'erro' ? t.neg : t.pos }}>{msg.texto}</div>}
-          </div>
+      <Cartao titulo="Evento" acao={sel.landing_url && <a href={sel.landing_url} target="_blank" rel="noopener noreferrer" style={ligacao}>Ver a landing ↗</a>}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '12px' }}>
+          <label style={rotulo}>Nome<CampoTexto key={sel.id + (sel.nome || '')} valor={sel.nome} maxLength={120} aoGravar={v => v.trim() ? alterar({ nome: v.trim() }, 'Nome guardado.') : avisar('erro', 'O evento precisa de um nome.')} estilo={c.input} /></label>
+          <label style={rotulo}>Data<input type="date" value={sel.data || ''} onChange={e => e.target.value && alterar({ data: e.target.value }, 'Data guardada.')} style={c.input} /></label>
+          <label style={rotulo}>Local<CampoTexto key={sel.id + (sel.local || '')} valor={sel.local} maxLength={160} placeholder="Ex.: District Space, Lisboa" aoGravar={v => alterar({ local: v.trim() || null }, 'Local guardado.')} estilo={c.input} /></label>
+          <label style={rotulo}>Landing page<CampoTexto key={sel.id + (sel.landing_url || '')} valor={sel.landing_url} list="landings-site" placeholder="https://lcoffice.pt/… ou o link da Luma" inputMode="url" autoCapitalize="off" aoGravar={gravarLanding} estilo={c.input} /></label>
         </div>
       </Cartao>
 
-      <Cartao titulo="Quem entrou" semPadding>
-        {pessoas.length === 0
-          ? <div style={{ padding: '0 20px 20px' }}><Vazio>Ainda ninguém entrou. A lista enche-se no dia, à medida que as pessoas leem o QR.</Vazio></div>
-          : (
-            <div className="table-scroll">
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr><th style={th}>Nome</th><th style={th}>Empresa · cargo</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
-                <tbody>
-                  {pessoas.map(p => (
-                    <tr key={p.id}>
-                      <td style={{ ...td, fontWeight: 700, color: t.heading }}>{p.nome}</td>
-                      <td style={td}>{[p.negocio, p.cargo].filter(Boolean).join(' · ') || '—'}{p.localidade ? <span style={{ color: t.subtle }}> · {p.localidade}</span> : null}</td>
-                      <td style={td}>{p.partilhar ? <Chip tom="ok">Partilha</Chip> : <Chip>Não partilha</Chip>}</td>
-                      <td style={{ ...td, fontVariantNumeric: 'tabular-nums' }}>{dataCurta(p.created_at.slice(0, 10))}</td>
-                      <td style={{ ...td, whiteSpace: 'nowrap' }}>
-                        {aRemover === p.id ? (
-                          <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-                            <span style={{ fontSize: '12px' }}>Remover {primeiroNome(p.nome)}?</span>
-                            <Botao onClick={() => remover(p)} estilo={{ color: t.neg }}>Remover</Botao>
-                            <Botao onClick={() => setARemover(null)}>Cancelar</Botao>
-                          </span>
-                        ) : <Botao onClick={() => setARemover(p.id)} estilo={{ color: t.neg }}>Remover</Botao>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <Cartao titulo="Área de participantes">
+        {!sel.codigo ? (
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <p style={{ margin: 0, flex: '1 1 320px', fontSize: '13.5px', color: t.text, lineHeight: 1.5 }}>
+              Em vez de crachás, um QR code à entrada: quem o lê escreve o nome, cria o perfil e vê os outros participantes. Sem contas nem palavras-passe. Abre só nos dias que escolher.
+            </p>
+            <Botao variante="primario" onClick={() => alterar({ codigo: novoCodigo(), aberto_de: sel.aberto_de || sel.data, aberto_ate: sel.aberto_ate || sel.data }, 'Área de participantes criada.')}>Criar área de participantes</Botao>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <div style={{ flex: '0 0 auto', textAlign: 'center' }}>
+              {qr && <img src={qr} alt={`QR code da área de participantes de ${sel.nome}`} width="200" height="200" style={{ display: 'block', borderRadius: '12px', border: `1px solid ${t.cardBorder}`, background: '#fff' }} />}
+              {qr && <a href={qr} download={`qr-${sel.id}.png`} style={{ display: 'inline-block', marginTop: '8px', ...ligacao }}>Descarregar o QR (PNG)</a>}
             </div>
-          )}
+            <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <p style={{ margin: 0, fontSize: '13.5px', color: t.text, lineHeight: 1.5 }}>
+                Imprima ou projete este QR à entrada. Quem o ler escreve o nome, cria o perfil e vê os outros participantes.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <label style={rotulo}>Abre a
+                  <input type="date" value={sel.aberto_de || ''} onChange={e => alterar({ aberto_de: e.target.value || null }, 'Data de abertura guardada.')} style={{ ...c.input, width: 'auto' }} />
+                </label>
+                <label style={rotulo}>Fecha depois de
+                  <input type="date" value={sel.aberto_ate || ''} onChange={e => alterar({ aberto_ate: e.target.value || null }, 'Data de fecho guardada.')} style={{ ...c.input, width: 'auto' }} />
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <Botao onClick={() => copiar(linkQR(sel.codigo))}>Copiar o link do QR</Botao>
+                <a href={linkQR(sel.codigo)} target="_blank" rel="noopener noreferrer" style={ligacao}>Abrir a área ↗</a>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {confirmar === 'qr' ? (
+                  <>
+                    <span style={{ fontSize: '12px' }}>O QR atual deixa de funcionar. Continuar?</span>
+                    <Botao variante="perigo" onClick={() => { setConfirmar(''); alterar({ codigo: novoCodigo() }, 'Novo QR gerado. O anterior deixou de funcionar.') }}>Gerar novo QR</Botao>
+                    <Botao onClick={() => setConfirmar('')}>Cancelar</Botao>
+                  </>
+                ) : confirmar === 'desligar' ? (
+                  <>
+                    <span style={{ fontSize: '12px' }}>O QR deixa de funcionar e ninguém entra. Os perfis ficam guardados. Continuar?</span>
+                    <Botao variante="perigo" onClick={() => { setConfirmar(''); alterar({ codigo: null }, 'Área de participantes desligada.') }}>Desligar a área</Botao>
+                    <Botao onClick={() => setConfirmar('')}>Cancelar</Botao>
+                  </>
+                ) : (
+                  <>
+                    <Botao onClick={() => setConfirmar('qr')}>Gerar novo QR</Botao>
+                    <Botao variante="perigo" onClick={() => setConfirmar('desligar')}>Desligar a área</Botao>
+                  </>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '22px', flexWrap: 'wrap', fontSize: '13px', color: t.textMuted }}>
+                <span><strong style={{ fontSize: '20px', color: t.heading }}>{pessoas.length}</strong> entraram</span>
+                <span><strong style={{ fontSize: '20px', color: t.heading }}>{partilham}</strong> partilham o perfil</span>
+              </div>
+            </div>
+          </div>
+        )}
       </Cartao>
-      <p style={{ fontSize: '12px', color: t.subtle, margin: 0 }}>
-        Só aparece aos outros quem marcar "Partilhar". Se alguém entrar sem ser do evento, remova-o aqui; se o QR circular fora da sala, gere um novo.
-      </p>
+
+      {(sel.codigo || pessoas.length > 0) && (
+        <Cartao titulo="Quem entrou" semPadding>
+          {pessoas.length === 0
+            ? <div style={{ padding: '0 20px 20px' }}><Vazio>Ainda ninguém entrou. A lista enche-se no dia, à medida que as pessoas leem o QR.</Vazio></div>
+            : (
+              <div className="table-scroll">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead><tr><th style={th}>Nome</th><th style={th}>Empresa · cargo</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
+                  <tbody>
+                    {pessoas.map(p => (
+                      <tr key={p.id}>
+                        <td style={{ ...c.td, fontWeight: 700, color: t.heading }}>{p.nome}</td>
+                        <td style={c.td}>{[p.negocio, p.cargo].filter(Boolean).join(' · ') || '—'}{p.localidade ? <span style={{ color: t.subtle }}> · {p.localidade}</span> : null}</td>
+                        <td style={c.td}>{p.partilhar ? <Chip tom="ok">Partilha</Chip> : <Chip>Não partilha</Chip>}</td>
+                        <td style={{ ...c.td, fontVariantNumeric: 'tabular-nums' }}>{dataCurta(p.created_at.slice(0, 10))}</td>
+                        <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
+                          {aRemover === p.id ? (
+                            <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                              <span style={{ fontSize: '12px' }}>Remover {primeiroNome(p.nome)}?</span>
+                              <Botao variante="perigo" onClick={() => remover(p)}>Remover</Botao>
+                              <Botao onClick={() => setARemover(null)}>Cancelar</Botao>
+                            </span>
+                          ) : <Botao variante="perigo" onClick={() => setARemover(p.id)}>Remover</Botao>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+        </Cartao>
+      )}
+
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <p style={{ fontSize: '12px', color: t.subtle, margin: 0, flex: '1 1 320px' }}>
+          Só aparece aos outros quem marcar "Partilhar". Se alguém entrar sem ser do evento, remova-o; se o QR circular fora da sala, gere um novo.
+        </p>
+        {confirmar === 'eliminar' ? (
+          <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px' }}>Eliminar o evento, os perfis e as fotografias? Não se pode desfazer.</span>
+            <Botao variante="perigo" onClick={eliminar}>Eliminar</Botao>
+            <Botao onClick={() => setConfirmar('')}>Cancelar</Botao>
+          </span>
+        ) : <Botao variante="perigo" onClick={() => setConfirmar('eliminar')}>Eliminar evento</Botao>}
+      </div>
     </div>
   )
 }
