@@ -9,7 +9,7 @@ import { Cartao, Botao, Chip, Vazio, Janela, Pilulas, useCampos } from '../../po
 // de 24/10). Cada evento tem a sua landing page (no lcoffice.pt ou externa) e,
 // se ela quiser, uma área de participantes: no dia, quem está na sala lê o QR
 // code, escreve o nome, cria o perfil e vê os outros (/participantes, migração
-// 048 e 050, api/evento.js) e, em cada evento, as palestras e as avaliações
+// 048 e 050, api/evento.js) e, em cada evento, as apresentações de negócio e as avaliações
 // delas (NPS, migração 051). Um evento sem código não tem área. Trocar o código
 // invalida o QR antigo (se tiver sido partilhado fora da sala, por exemplo).
 
@@ -107,7 +107,8 @@ const fmtNps = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v)
 const fmtMedia = (v) => v.toLocaleString('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const tomNps = (v) => v >= 50 ? 'ok' : v >= 0 ? 'ouro' : 'erro'
 
-// Palestras do evento e o que os participantes acharam delas (migração 051).
+// Apresentações de negócio do evento e o que os participantes acharam delas (migração 051;
+// as tabelas chamam-se evento_palestras/evento_avaliacoes, mas o que se avalia são os negócios, 23/10).
 // A Lúcia escreve o programa; os participantes avaliam no separador "Avaliar" da
 // área de participantes. Os resultados aparecem sem nomes.
 function PalestrasAvaliacoes({ evento, avisar }) {
@@ -130,8 +131,8 @@ function PalestrasAvaliacoes({ evento, avisar }) {
 
   async function juntar() {
     const ordem = palestras.reduce((m, p) => Math.max(m, p.ordem || 0), 0) + 1
-    const { error } = await supabase.from('evento_palestras').insert({ evento_id: evento.id, ordem, titulo: 'Nova palestra' })
-    if (error) { avisar('erro', 'Não foi possível juntar a palestra.'); return }
+    const { error } = await supabase.from('evento_palestras').insert({ evento_id: evento.id, ordem, titulo: 'Novo negócio' })
+    if (error) { avisar('erro', 'Não foi possível juntar a apresentação.'); return }
     carregar()
   }
   async function alterar(id, patch) {
@@ -161,7 +162,7 @@ function PalestrasAvaliacoes({ evento, avisar }) {
   )
 
   return (
-    <Cartao titulo="Palestras e avaliações" semPadding
+    <Cartao titulo="Apresentações de negócio e avaliações" semPadding
       acao={<Pilulas opcoes={[['programa', 'Programa'], ['ranking', 'Melhor avaliadas']]} valor={vista} aoMudar={setVista} />}>
       <div style={{ padding: '0 20px 14px', display: 'flex', gap: '18px', flexWrap: 'wrap', alignItems: 'center', fontSize: '13px', color: t.textMuted }}>
         <span>O evento:</span>
@@ -173,9 +174,9 @@ function PalestrasAvaliacoes({ evento, avisar }) {
       {aberta === 'evento' && <div style={{ padding: '0 20px 14px' }}>{listaComentarios(comentariosEvento)}</div>}
       <div className="table-scroll">
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr><th style={{ ...th, width: '90px' }}>Hora</th><th style={th}>Palestra</th><th style={th}>Orador</th><th style={{ ...th, textAlign: 'right' }}>Respostas</th><th style={{ ...th, textAlign: 'right' }}>Média</th><th style={{ ...th, textAlign: 'right' }}>NPS</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
+          <thead><tr><th style={{ ...th, width: '90px' }}>Hora</th><th style={th}>Negócio</th><th style={th}>Quem apresenta</th><th style={{ ...th, textAlign: 'right' }}>Respostas</th><th style={{ ...th, textAlign: 'right' }}>Média</th><th style={{ ...th, textAlign: 'right' }}>NPS</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
           <tbody>
-            {linhas.length === 0 && <tr><td colSpan={7} style={c.td}><Vazio>Ainda não há palestras. Junte-as para os participantes as poderem avaliar.</Vazio></td></tr>}
+            {linhas.length === 0 && <tr><td colSpan={7} style={c.td}><Vazio>Ainda não há apresentações. Junte os negócios que se vão apresentar para os participantes os poderem avaliar.</Vazio></td></tr>}
             {linhas.map(p => (
               <PalestraLinha key={p.id} p={p} c={c} t={t} num={num} melhor={melhor && melhor.id === p.id && vista === 'programa'}
                 aberta={aberta === p.id} aoAbrir={() => setAberta(aberta === p.id ? null : p.id)} aoAlterar={alterar} aoRemover={remover} listaComentarios={listaComentarios} />
@@ -184,9 +185,9 @@ function PalestrasAvaliacoes({ evento, avisar }) {
         </table>
       </div>
       <div style={{ padding: '12px 20px 18px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <Botao onClick={juntar}>+ Juntar palestra</Botao>
+        <Botao onClick={juntar}>+ Juntar negócio</Botao>
         <span style={{ fontSize: '12px', color: t.subtle, flex: '1 1 300px' }}>
-          Os participantes avaliam no separador "Avaliar" da área de participantes (0 a 10: "quanto recomendaria…"). NPS = % de notas 9–10 menos % de notas 0–6, de −100 a +100. Os resultados aparecem sem nomes.
+          Os participantes avaliam no separador "Avaliar" da área de participantes (0 a 10: "quanto recomendarias este negócio…"). NPS = % de notas 9–10 menos % de notas 0–6, de −100 a +100. Os resultados aparecem sem nomes.
         </span>
       </div>
     </Cartao>
@@ -198,8 +199,8 @@ function PalestraLinha({ p, c, t, num, melhor, aberta, aoAbrir, aoAlterar, aoRem
     <>
       <tr>
         <td style={c.td}><CampoTexto key={p.id + (p.hora || '')} valor={p.hora} maxLength={20} placeholder="15h30" aria-label="Hora" aoGravar={v => aoAlterar(p.id, { hora: v.trim() || null })} estilo={{ ...c.input, width: '80px' }} /></td>
-        <td style={c.td}><div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><CampoTexto key={p.id + p.titulo} valor={p.titulo} maxLength={160} aria-label="Palestra" aoGravar={v => v.trim() && aoAlterar(p.id, { titulo: v.trim() })} estilo={{ ...c.input, minWidth: '200px' }} />{melhor && <Chip tom="ok">Melhor avaliada</Chip>}</div></td>
-        <td style={c.td}><CampoTexto key={p.id + (p.orador || '')} valor={p.orador} maxLength={120} aria-label="Orador" aoGravar={v => aoAlterar(p.id, { orador: v.trim() || null })} estilo={{ ...c.input, minWidth: '150px' }} /></td>
+        <td style={c.td}><div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><CampoTexto key={p.id + p.titulo} valor={p.titulo} maxLength={160} aria-label="Negócio" aoGravar={v => v.trim() && aoAlterar(p.id, { titulo: v.trim() })} estilo={{ ...c.input, minWidth: '200px' }} />{melhor && <Chip tom="ok">Melhor avaliada</Chip>}</div></td>
+        <td style={c.td}><CampoTexto key={p.id + (p.orador || '')} valor={p.orador} maxLength={120} aria-label="Quem apresenta" aoGravar={v => aoAlterar(p.id, { orador: v.trim() || null })} estilo={{ ...c.input, minWidth: '150px' }} /></td>
         <td style={num}>{p.r ? p.r.n : 0}</td>
         <td style={num}>{p.r ? fmtMedia(p.r.media) : '—'}</td>
         <td style={num}>{p.r ? <Chip tom={tomNps(p.r.nps)} forte>{fmtNps(p.r.nps)}</Chip> : '—'}</td>

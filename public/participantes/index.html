@@ -248,7 +248,8 @@ label.campo textarea { min-height: 110px; resize: vertical }
     </article>`
   }
 
-  // Avaliação das palestras (migração 051): NPS de 0 a 10, comentário opcional, grava ao tocar
+  // Avaliação das apresentações de negócio (migração 051; a tabela chama-se evento_palestras):
+  // NPS de 0 a 10, comentário opcional, grava ao tocar
   const avaliacaoDe = (id) => (dados.avaliacoes || []).find(a => a.palestra === id)
   function blocoAvaliar(item, pergunta) {
     const a = avaliacaoDe(item.id)
@@ -294,8 +295,8 @@ label.campo textarea { min-height: 110px; resize: vertical }
     const cab = `<section class="banda"><div class="wrap">${marca}
       <div class="hero">
         <div class="ev">${esc(nomeEvento)}</div>
-        <h1>${{ perfil: 'O meu <em>perfil</em>', avaliar: 'Avaliar as <em>palestras</em>' }[aba] || 'Conhece quem <em>está aqui</em>'}</h1>
-        <p>${{ perfil: 'Apresenta-te aos outros participantes. Só aparece quem escolhe partilhar.', avaliar: 'Uma pergunta por palestra. Leva menos de um minuto.' }[aba] || 'Uma comunidade de negócios: partilha, ligações e novas oportunidades.'}</p>
+        <h1>${{ perfil: 'O meu <em>perfil</em>', avaliar: 'Avaliar os <em>negócios</em>' }[aba] || 'Conhece quem <em>está aqui</em>'}</h1>
+        <p>${{ perfil: 'Apresenta-te aos outros participantes. Só aparece quem escolhe partilhar.', avaliar: 'Uma pergunta por cada negócio apresentado. Leva menos de um minuto.' }[aba] || 'Uma comunidade de negócios: partilha, ligações e novas oportunidades.'}</p>
       </div>
       <div class="tabs" role="tablist">
         <button role="tab" id="tab-participantes" aria-selected="${aba === 'participantes'}">Participantes</button>
@@ -317,7 +318,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
     } else if (aba === 'avaliar') {
       const palestras = dados.palestras || []
       app.innerHTML = cab + `<div class="wrap conteudo"><div class="lista-aval">
-        ${palestras.length ? palestras.map(p => blocoAvaliar(p, 'De 0 a 10, quanto recomendarias esta palestra a outro empreendedor?')).join('') : '<div class="vazio">O programa ainda não tem palestras para avaliar.</div>'}
+        ${palestras.length ? palestras.map(p => blocoAvaliar(p, 'De 0 a 10, quanto recomendarias este negócio a um amigo ou colega?')).join('') : '<div class="vazio">Ainda não há apresentações de negócio para avaliar.</div>'}
         ${blocoAvaliar({ id: null, titulo: 'O evento', orador: nomeEvento }, `De 0 a 10, quanto recomendarias o ${esc(nomeEvento)} a outro empreendedor?`)}
         <p class="privacidade">As avaliações ajudam a organização a preparar os próximos eventos. Os resultados são vistos sem nomes.</p>
       </div></div>`

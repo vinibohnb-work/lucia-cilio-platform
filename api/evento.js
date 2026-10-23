@@ -20,7 +20,7 @@ import { randomBytes } from 'node:crypto'
 //   POST /api/evento { t, acao: 'foto', imagem }         → data URL (≤ 2 MB)
 //   POST /api/evento { t, acao: 'apagar' }               → apagar o meu perfil
 //   POST /api/evento { t, acao: 'avaliar', palestra, nota, comentario }
-//        → nota 0–10 (NPS) de uma palestra; palestra nula = o evento (migração 051)
+//        → nota 0–10 (NPS) de uma apresentação de negócio; sem ela = o evento (migração 051)
 //
 // O e-mail e o token de cada pessoa nunca saem daqui para os outros.
 // ============================================================================
@@ -132,7 +132,7 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
       .select('id, nome, negocio, cargo, localidade, sobre, instagram, linkedin, site, foto_path')
       .eq('evento_id', eu.evento_id).eq('partilhar', true).neq('id', eu.id).order('nome', { ascending: true })
     const fotos = await fotosAssinadas(db, [eu, ...(outros || [])])
-    // Avaliação das palestras (migração 051): o programa e as minhas notas
+    // Avaliação das apresentações de negócio (migração 051): a lista e as minhas notas
     const { data: palestras } = await db.from('evento_palestras').select('id, ordem, hora, titulo, orador')
       .eq('evento_id', eu.evento_id).order('ordem', { ascending: true })
     const { data: minhas } = await db.from('evento_avaliacoes').select('palestra_id, nota, comentario').eq('participante_id', eu.id)
@@ -176,15 +176,15 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
     return [200, { ok: true }]
   }
 
-  // Avaliar uma palestra (ou o evento, sem palestra): uma nota por pessoa, que pode mudar
+  // Avaliar uma apresentação de negócio (ou o evento, sem ela): uma nota por pessoa, que pode mudar
   if (body.acao === 'avaliar') {
     const nota = body.nota
     if (!Number.isInteger(nota) || nota < 0 || nota > 10) return [400, { error: 'Escolha uma nota de 0 a 10.' }]
     const palestra = body.palestra ?? null
     if (palestra !== null) {
-      if (!uuidValido(palestra)) return [404, { error: 'Palestra não encontrada.' }]
+      if (!uuidValido(palestra)) return [404, { error: 'Apresentação não encontrada.' }]
       const { data: p } = await db.from('evento_palestras').select('id').eq('id', palestra).eq('evento_id', eu.evento_id).maybeSingle()
-      if (!p) return [404, { error: 'Palestra não encontrada.' }]
+      if (!p) return [404, { error: 'Apresentação não encontrada.' }]
     }
     const comentario = corta(body.comentario, LIMITES.comentario) || null
     let q = db.from('evento_avaliacoes').select('id').eq('participante_id', eu.id)
