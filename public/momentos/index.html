@@ -10,7 +10,7 @@
 <meta name="description" content="Encontro de empreendedores em Lisboa, 24 de outubro de 2026, no District Space: palestras, 10 apresentações de negócios, networking e cocktail. Uma iniciativa da LC Office Consulting.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap">
 <link rel="canonical" href="https://lcoffice.pt/momentos/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
@@ -48,7 +48,6 @@
   --on-green-muted: #C9D6CF;
   --display: 'Archivo Black', 'Arial Black', Impact, system-ui, sans-serif;
   --body: 'Archivo', 'Segoe UI', system-ui, sans-serif;
-  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   color-scheme: light;
 }
 * { box-sizing: border-box }
@@ -82,6 +81,8 @@ p { margin: 0 }
 .btn-gold:hover { background: #D4A84A }
 .btn-ghost { background: transparent; color: var(--green); border-color: var(--green) }
 .btn-ghost:hover { background: rgba(14,61,51,.06) }
+[data-area-evento].fechado { opacity: .5; cursor: not-allowed }
+[data-area-evento].fechado:hover { background: transparent }
 .btn-light { background: var(--cream); color: var(--green) }
 .btn .ico { width: 18px; height: 18px; flex: none }
 section { padding-block: 84px }
@@ -178,21 +179,22 @@ section { padding-block: 84px }
 .programa { background: radial-gradient(80% 120% at 10% 0%, #155246 0%, var(--green) 55%, #0A3129 100%); color: var(--on-green); box-shadow: 0 -30px 60px -40px rgba(10,46,39,.5) inset }
 .programa h2, .programa h3 { color: var(--cream) }
 .programa .sec-head p { color: var(--on-green-muted) }
-/* Programa no visual pedido pela Lúcia (23/10): serifa, filete dourado entre horário e conteúdo */
-#h-programa { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; font-size: clamp(38px, 5.6vw, 64px) }
-.agenda { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgba(200,155,60,.38); max-width: 1000px; margin-top: 36px }
-.agenda li { display: grid; grid-template-columns: minmax(150px, 240px) 1fr; align-items: start; padding: 26px 0; border-bottom: 1px solid rgba(200,155,60,.38) }
-.agenda .h { font-family: var(--serif); font-weight: 600; font-size: clamp(22px, 2.5vw, 30px); line-height: 1.15; color: var(--gold-2); font-variant-numeric: lining-nums tabular-nums; padding-right: 24px; white-space: nowrap }
+/* Programa no visual pedido pela Lúcia (23/10): filete dourado entre horário e conteúdo, fontes da landing */
+.programa .sec-head { max-width: none }
+@media (min-width: 900px) { .programa .sec-head p { white-space: nowrap } }
+.agenda { margin: 36px 0 0; padding: 0; list-style: none; border-top: 1px solid rgba(200,155,60,.38); max-width: 1000px }
+.agenda li { display: grid; grid-template-columns: minmax(150px, 240px) 1fr; align-items: center; padding: 24px 0; border-bottom: 1px solid rgba(200,155,60,.38) }
+.agenda .h { font-family: var(--display); font-size: clamp(19px, 2vw, 24px); line-height: 1.15; color: var(--gold-2); font-variant-numeric: tabular-nums; padding-right: 24px; white-space: nowrap }
 .agenda .c { border-left: 1px solid rgba(200,155,60,.5); padding-left: 26px; min-width: 0 }
 .agenda .tipo { display: block; font-size: 12px; font-weight: 700; letter-spacing: .26em; text-transform: uppercase; color: var(--gold-2) }
-.agenda .o { display: block; margin-top: 8px; font-family: var(--serif); font-weight: 500; font-size: clamp(22px, 2.5vw, 30px); line-height: 1.2; color: var(--cream); text-wrap: balance }
-.agenda .q { display: block; margin-top: 8px; font-size: 16px; color: var(--on-green-muted) }
+.agenda .o { display: block; margin-top: 6px; font-size: clamp(19px, 2vw, 23px); font-weight: 600; line-height: 1.25; color: var(--cream); text-wrap: balance }
+.agenda .q { display: block; margin-top: 6px; font-size: 16px; color: var(--on-green-muted) }
 @media (max-width: 760px) {
-  .agenda li { grid-template-columns: auto 1fr; padding: 22px 0 }
-  .agenda .h { font-size: 17px; padding-right: 14px }
+  .agenda li { grid-template-columns: auto 1fr; padding: 20px 0 }
+  .agenda .h { font-size: 15px; padding-right: 14px }
   .agenda .c { padding-left: 16px }
-  .agenda .o { font-size: 20px; margin-top: 6px }
-  .agenda .q { font-size: 15px; margin-top: 6px }
+  .agenda .o { font-size: 18px }
+  .agenda .q { font-size: 15px }
 }
 .programa .nota { margin-top: 34px; font-size: 13px; color: var(--on-green-muted) }
 
@@ -323,7 +325,7 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
       <a href="#bilhete">Bilhete</a>
     </nav>
     <div class="acoes-topo">
-      <a class="btn btn-ghost" href="/momentos/participantes/"><span class="longo">Área de participantes</span><span class="curto">Participantes</span></a>
+      <a class="btn btn-ghost" href="/participantes/" data-area-evento="momentos-2026-10"><span class="longo">Área de participantes</span><span class="curto">Participantes</span></a>
       <a class="btn btn-primary" href="https://luma.com/coz36n2c" target="_blank" rel="noopener">Garantir lugar<svg class="ico"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
@@ -414,14 +416,11 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
         <li><span class="h">15h15–15h30</span><div class="c"><span class="tipo">Abertura</span><span class="o">Boas-vindas e abertura</span><span class="q">Lúcia Cilio</span></div></li>
         <li><span class="h">15h30–15h55</span><div class="c"><span class="tipo">Palestra</span><span class="o">Finanças sistémicas: da raiz à liberdade</span><span class="q">Rita Évora</span></div></li>
         <li><span class="h">16h00–16h25</span><div class="c"><span class="tipo">Palestra</span><span class="o">Comportamentos financeiros</span><span class="q">Florência Dias</span></div></li>
-        <li><span class="h">16h25–16h30</span><div class="c"><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></div></li>
-        <li><span class="h">16h30–16h35</span><div class="c"><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></div></li>
+        <li><span class="h">16h25–16h35</span><div class="c"><span class="tipo">Negócios</span><span class="o">Apresentação de negócios</span></div></li>
         <li><span class="h">16h35–16h50</span><div class="c"><span class="tipo">Pausa</span><span class="o">Pausa · 15 minutos</span></div></li>
         <li><span class="h">16h50–17h15</span><div class="c"><span class="tipo">Palestra</span><span class="o">Comunicação e posicionamento</span><span class="q">Sollange Binhã</span></div></li>
         <li><span class="h">17h20–17h45</span><div class="c"><span class="tipo">Palestra</span><span class="o">Liderança</span><span class="q">Prof. Luís Sinate</span></div></li>
-        <li><span class="h">17h45–17h50</span><div class="c"><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></div></li>
-        <li><span class="h">17h50–17h55</span><div class="c"><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></div></li>
-        <li><span class="h">17h55–18h00</span><div class="c"><span class="tipo">Negócio</span><span class="o">Apresentação de negócio</span></div></li>
+        <li><span class="h">17h45–18h00</span><div class="c"><span class="tipo">Negócios</span><span class="o">Apresentação de negócios</span></div></li>
         <li><span class="h">18h00–18h25</span><div class="c"><span class="tipo">Palestra</span><span class="o">Posicionamento e gestão emocional</span><span class="q">Drielly Jesus</span></div></li>
         <li><span class="h">18h25–18h35</span><div class="c"><span class="tipo">Encerramento</span><span class="o">Encerramento e fotografia de grupo</span></div></li>
         <li><span class="h">18h35–19h30</span><div class="c"><span class="tipo">Networking</span><span class="o">Cocktail e networking</span></div></li>
@@ -568,7 +567,7 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
     </div>
     <div class="fl">
       <a href="https://luma.com/coz36n2c" target="_blank" rel="noopener">Bilhetes</a>
-      <a href="/momentos/participantes/">Área de participantes</a>
+      <a href="/participantes/" data-area-evento="momentos-2026-10">Área de participantes</a>
       <a href="https://www.instagram.com/luciacilio.office/" target="_blank" rel="noopener">Instagram</a>
       <a href="#inicio">Voltar ao topo</a>
     </div>
@@ -644,6 +643,22 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
     rot.textContent = dias === 0 ? 'É hoje. Até já, no District Space.' : dias === 1 ? 'Falta um dia para o encontro' : `Faltam ${dias} dias para o encontro`
   }
   tick(); setInterval(tick, 1000)
+})()
+</script>
+<script>
+// Botão "Área de participantes": funciona como o QR code só no dia do evento (a janela
+// aberto_de/aberto_ate de Gestão → Eventos); antes e depois fica bloqueado.
+(async () => {
+  const ligacoes = document.querySelectorAll('[data-area-evento]')
+  if (!ligacoes.length) return
+  const bloquear = (titulo) => ligacoes.forEach(a => { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); a.classList.add('fechado'); a.title = titulo })
+  bloquear('Disponível no dia do evento')
+  try {
+    const r = await fetch('/api/evento?entrada=' + encodeURIComponent(ligacoes[0].dataset.areaEvento), { cache: 'no-store' })
+    const j = await r.json().catch(() => ({}))
+    if (r.ok && j.c) ligacoes.forEach(a => { a.href = '/participantes/#c=' + encodeURIComponent(j.c); a.removeAttribute('aria-disabled'); a.classList.remove('fechado'); a.removeAttribute('title') })
+    else if (r.status === 410) bloquear('A área de participantes deste evento já fechou')
+  } catch { /* sem rede: fica bloqueado */ }
 })()
 </script>
 </body>

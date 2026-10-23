@@ -14,6 +14,8 @@ import { randomBytes } from 'node:crypto'
 // aberto_ate, datas de Lisboa) nada abre.
 //
 //   GET  /api/evento?c=<codigo do QR>           → nome, data, local e landing do evento
+//   GET  /api/evento?entrada=<id do evento>     → o código do QR, só enquanto a área está aberta
+//        (botão "Área de participantes" da landing, que funciona como o QR no dia do evento)
 //   POST /api/evento { codigo, acao: 'entrar', nome }   → cria-me e devolve { t }
 //   GET  /api/evento?t=<token>                 → o meu perfil + quem partilhou
 //   POST /api/evento { t, acao: 'perfil', perfil }      → guardar o meu perfil
@@ -91,6 +93,14 @@ async function fotosAssinadas(db, linhas) {
 }
 
 export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeLisboa()) {
+  // Botão da landing: dá o código do QR só dentro da janela do evento
+  if (metodo === 'GET' && query.entrada !== undefined) {
+    if (typeof query.entrada !== 'string' || !/^[a-z0-9-]{2,80}$/.test(query.entrada)) return [404, { error: 'Evento não encontrado.' }]
+    const { data: evento } = await db.from('eventos').select('id, nome, data, local, landing_url, codigo, aberto_de, aberto_ate').eq('id', query.entrada).maybeSingle()
+    if (!evento || !evento.codigo) return [404, { error: 'Este evento não tem área de participantes.' }]
+    return janela(evento, hoje) || [200, { c: evento.codigo }]
+  }
+
   // Antes de entrar: o QR só diz o código; a página mostra o nome do evento e se já abriu
   if (metodo === 'GET' && query.c !== undefined && query.t === undefined) {
     if (!codigoValido(query.c)) return [404, { error: 'Este QR code não é válido.' }]
