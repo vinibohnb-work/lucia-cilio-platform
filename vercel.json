@@ -87,7 +87,7 @@
       "permanent": true
     },
     {
-      "source": "/:path((?!momentos|participantes|api/|favicon\\.svg).*)",
+      "source": "/:path((?!momentos|participantes|api/|icons/|logo-letra-branca\\.png|favicon\\.svg).*)",
       "has": [
         {
           "type": "host",
