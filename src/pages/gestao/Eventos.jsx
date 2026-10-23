@@ -9,7 +9,8 @@ import { Cartao, Botao, Chip, Vazio, Janela, Pilulas, useCampos } from '../../po
 // de 24/10). Cada evento tem a sua landing page (no lcoffice.pt ou externa) e,
 // se ela quiser, uma área de participantes: no dia, quem está na sala lê o QR
 // code, escreve o nome, cria o perfil e vê os outros (/participantes, migração
-// 048 e 050, api/evento.js). Um evento sem código não tem área. Trocar o código
+// 048 e 050, api/evento.js) e, em cada evento, as palestras e as avaliações
+// delas (NPS, migração 051). Um evento sem código não tem área. Trocar o código
 // invalida o QR antigo (se tiver sido partilhado fora da sala, por exemplo).
 
 const BUCKET = 'eventos'
@@ -92,6 +93,123 @@ function NovoEvento({ aoFechar, aoCriar }) {
         </div>
       </form>
     </Janela>
+  )
+}
+
+// NPS de uma lista de notas 0–10: % de 9–10 menos % de 0–6 (de −100 a +100)
+function resumoNps(notas) {
+  const n = notas.length
+  if (!n) return null
+  const promotores = notas.filter(x => x >= 9).length, detratores = notas.filter(x => x <= 6).length
+  return { n, nps: Math.round((promotores - detratores) / n * 100), media: notas.reduce((a, b) => a + b, 0) / n }
+}
+const fmtNps = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v)
+const fmtMedia = (v) => v.toLocaleString('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const tomNps = (v) => v >= 50 ? 'ok' : v >= 0 ? 'ouro' : 'erro'
+
+// Palestras do evento e o que os participantes acharam delas (migração 051).
+// A Lúcia escreve o programa; os participantes avaliam no separador "Avaliar" da
+// área de participantes. Os resultados aparecem sem nomes.
+function PalestrasAvaliacoes({ evento, avisar }) {
+  const { t } = useTheme()
+  const c = useCampos()
+  const [palestras, setPalestras] = useState([])
+  const [avs, setAvs] = useState([])
+  const [vista, setVista] = useState('programa')
+  const [aberta, setAberta] = useState(null)
+
+  const carregar = useCallback(async () => {
+    const [{ data: ps }, { data: as }] = await Promise.all([
+      supabase.from('evento_palestras').select('*').eq('evento_id', evento.id).order('ordem'),
+      supabase.from('evento_avaliacoes').select('palestra_id, nota, comentario, updated_at').eq('evento_id', evento.id),
+    ])
+    setPalestras(ps || [])
+    setAvs(as || [])
+  }, [evento.id])
+  useEffect(() => { carregar() }, [carregar])
+
+  async function juntar() {
+    const ordem = palestras.reduce((m, p) => Math.max(m, p.ordem || 0), 0) + 1
+    const { error } = await supabase.from('evento_palestras').insert({ evento_id: evento.id, ordem, titulo: 'Nova palestra' })
+    if (error) { avisar('erro', 'Não foi possível juntar a palestra.'); return }
+    carregar()
+  }
+  async function alterar(id, patch) {
+    const { error, count } = await supabase.from('evento_palestras').update(patch, { count: 'exact' }).eq('id', id)
+    if (error || count === 0) { avisar('erro', 'Não foi possível guardar.'); return }
+    setPalestras(ps => ps.map(p => p.id === id ? { ...p, ...patch } : p))
+  }
+  async function remover(p) {
+    const n = avs.filter(a => a.palestra_id === p.id).length
+    if (!window.confirm(n ? `Remover "${p.titulo}" e as ${n} avaliações dela?` : `Remover "${p.titulo}"?`)) return
+    const { error, count } = await supabase.from('evento_palestras').delete({ count: 'exact' }).eq('id', p.id)
+    if (error || count === 0) { avisar('erro', 'Não foi possível remover.'); return }
+    carregar()
+  }
+
+  const doEvento = resumoNps(avs.filter(a => !a.palestra_id).map(a => a.nota))
+  const linhas = palestras.map(p => ({ ...p, r: resumoNps(avs.filter(a => a.palestra_id === p.id).map(a => a.nota)), comentarios: avs.filter(a => a.palestra_id === p.id && a.comentario) }))
+  if (vista === 'ranking') linhas.sort((a, b) => (b.r ? b.r.nps : -999) - (a.r ? a.r.nps : -999) || (b.r ? b.r.media : 0) - (a.r ? a.r.media : 0))
+  const melhor = linhas.filter(l => l.r).reduce((m, l) => (!m || l.r.nps > m.r.nps || (l.r.nps === m.r.nps && l.r.media > m.r.media)) ? l : m, null)
+  const comentariosEvento = avs.filter(a => !a.palestra_id && a.comentario)
+  const th = { ...c.th, textTransform: 'uppercase', letterSpacing: '.04em' }
+  const num = { ...c.td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }
+  const listaComentarios = (lista) => (
+    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: '8px' }}>
+      {lista.map((a, i) => <li key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '13px', color: t.text }}><Chip tom={a.nota >= 9 ? 'ok' : a.nota <= 6 ? 'erro' : 'ouro'}>{a.nota}</Chip><span style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{a.comentario}</span></li>)}
+    </ul>
+  )
+
+  return (
+    <Cartao titulo="Palestras e avaliações" semPadding
+      acao={<Pilulas opcoes={[['programa', 'Programa'], ['ranking', 'Melhor avaliadas']]} valor={vista} aoMudar={setVista} />}>
+      <div style={{ padding: '0 20px 14px', display: 'flex', gap: '18px', flexWrap: 'wrap', alignItems: 'center', fontSize: '13px', color: t.textMuted }}>
+        <span>O evento:</span>
+        {doEvento
+          ? <><Chip tom={tomNps(doEvento.nps)} forte>NPS {fmtNps(doEvento.nps)}</Chip><span>média <strong style={{ color: t.heading }}>{fmtMedia(doEvento.media)}</strong></span><span><strong style={{ color: t.heading }}>{doEvento.n}</strong> {doEvento.n === 1 ? 'resposta' : 'respostas'}</span>
+            {comentariosEvento.length > 0 && <Botao variante="fantasma" onClick={() => setAberta(aberta === 'evento' ? null : 'evento')}>{aberta === 'evento' ? 'Esconder' : 'Ver'} comentários ({comentariosEvento.length})</Botao>}</>
+          : <span>ainda sem avaliações.</span>}
+      </div>
+      {aberta === 'evento' && <div style={{ padding: '0 20px 14px' }}>{listaComentarios(comentariosEvento)}</div>}
+      <div className="table-scroll">
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead><tr><th style={{ ...th, width: '90px' }}>Hora</th><th style={th}>Palestra</th><th style={th}>Orador</th><th style={{ ...th, textAlign: 'right' }}>Respostas</th><th style={{ ...th, textAlign: 'right' }}>Média</th><th style={{ ...th, textAlign: 'right' }}>NPS</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
+          <tbody>
+            {linhas.length === 0 && <tr><td colSpan={7} style={c.td}><Vazio>Ainda não há palestras. Junte-as para os participantes as poderem avaliar.</Vazio></td></tr>}
+            {linhas.map(p => (
+              <PalestraLinha key={p.id} p={p} c={c} t={t} num={num} melhor={melhor && melhor.id === p.id && vista === 'programa'}
+                aberta={aberta === p.id} aoAbrir={() => setAberta(aberta === p.id ? null : p.id)} aoAlterar={alterar} aoRemover={remover} listaComentarios={listaComentarios} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ padding: '12px 20px 18px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <Botao onClick={juntar}>+ Juntar palestra</Botao>
+        <span style={{ fontSize: '12px', color: t.subtle, flex: '1 1 300px' }}>
+          Os participantes avaliam no separador "Avaliar" da área de participantes (0 a 10: "quanto recomendaria…"). NPS = % de notas 9–10 menos % de notas 0–6, de −100 a +100. Os resultados aparecem sem nomes.
+        </span>
+      </div>
+    </Cartao>
+  )
+}
+
+function PalestraLinha({ p, c, t, num, melhor, aberta, aoAbrir, aoAlterar, aoRemover, listaComentarios }) {
+  return (
+    <>
+      <tr>
+        <td style={c.td}><CampoTexto key={p.id + (p.hora || '')} valor={p.hora} maxLength={20} placeholder="15h30" aria-label="Hora" aoGravar={v => aoAlterar(p.id, { hora: v.trim() || null })} estilo={{ ...c.input, width: '80px' }} /></td>
+        <td style={c.td}><div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><CampoTexto key={p.id + p.titulo} valor={p.titulo} maxLength={160} aria-label="Palestra" aoGravar={v => v.trim() && aoAlterar(p.id, { titulo: v.trim() })} estilo={{ ...c.input, minWidth: '200px' }} />{melhor && <Chip tom="ok">Melhor avaliada</Chip>}</div></td>
+        <td style={c.td}><CampoTexto key={p.id + (p.orador || '')} valor={p.orador} maxLength={120} aria-label="Orador" aoGravar={v => aoAlterar(p.id, { orador: v.trim() || null })} estilo={{ ...c.input, minWidth: '150px' }} /></td>
+        <td style={num}>{p.r ? p.r.n : 0}</td>
+        <td style={num}>{p.r ? fmtMedia(p.r.media) : '—'}</td>
+        <td style={num}>{p.r ? <Chip tom={tomNps(p.r.nps)} forte>{fmtNps(p.r.nps)}</Chip> : '—'}</td>
+        <td style={{ ...c.td, whiteSpace: 'nowrap', textAlign: 'right' }}>
+          {p.comentarios.length > 0 && <Botao variante="fantasma" onClick={aoAbrir}>{aberta ? 'Esconder' : 'Comentários'} ({p.comentarios.length})</Botao>}
+          <Botao variante="perigo" onClick={() => aoRemover(p)} aria-label={`Remover ${p.titulo}`}>Remover</Botao>
+        </td>
+      </tr>
+      {aberta && <tr><td colSpan={7} style={{ ...c.td, background: t.softCardBg }}>{listaComentarios(p.comentarios)}</td></tr>}
+    </>
   )
 }
 
@@ -323,6 +441,8 @@ export default function Eventos() {
           </div>
         )}
       </Cartao>
+
+      <PalestrasAvaliacoes key={sel.id} evento={sel} avisar={avisar} />
 
       {(sel.codigo || pessoas.length > 0) && (
         <Cartao titulo="Quem entrou" semPadding>
