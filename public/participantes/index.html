@@ -120,6 +120,31 @@ label.campo textarea { min-height: 110px; resize: vertical }
 .ecra .hero { padding-top: 0 }
 .ecra form.perfil { text-align: left; margin-top: 26px; width: 100% }
 .acoes-ecra { margin-top: 26px }
+.lista-aval { max-width: 680px; margin-inline: auto; display: grid; gap: 14px }
+.aval { background: var(--papel); border: 1px solid var(--line-ouro); border-radius: 20px; padding: 18px; box-shadow: 0 18px 34px -28px rgba(10,46,39,.5); position: relative; overflow: hidden }
+.aval::before { content: ''; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--green), var(--gold-2)) }
+.aval-cab h3 { margin: 4px 0 0; font-size: 18px; line-height: 1.25; color: var(--green) }
+.aval-cab p { margin: 2px 0 0; color: var(--gold-text); font-size: 14px; font-weight: 600 }
+.aval-hora { font-size: 12px; font-weight: 700; letter-spacing: .1em; color: var(--muted) }
+.perg { margin: 12px 0 10px; font-size: 14px; color: var(--ink) }
+.escala { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px }
+.escala button { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--cream-2); color: var(--green); font-weight: 700; font-size: 15px; cursor: pointer; padding: 0; font-variant-numeric: tabular-nums }
+.escala button[aria-pressed="true"] { background: var(--gold-2); border-color: var(--gold-2); color: var(--green-3); box-shadow: 0 8px 16px -10px rgba(10,46,39,.6) }
+.extremos { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px }
+.coment { margin-top: 12px }
+.coment textarea { min-height: 64px }
+.aval .estado { margin-top: 8px; min-height: 1em }
+.aval-evento { background: var(--green); border-color: rgba(200,155,60,.45) }
+.aval-evento .aval-cab h3, .aval-evento .perg { color: var(--cream) }
+.aval-evento .aval-cab p { color: var(--gold-3) }
+.aval-evento .extremos { color: rgba(243,233,214,.7) }
+.aval-evento .escala button { background: rgba(255,255,255,.08); border-color: rgba(200,155,60,.35); color: var(--cream) }
+.aval-evento .escala button[aria-pressed="true"] { background: var(--gold-2); color: var(--green-3) }
+.aval-evento label.campo { color: var(--cream) }
+.aval-evento label.campo small { color: rgba(243,233,214,.7) }
+.aval-evento .estado.ok { color: var(--gold-3) }
+.aval-evento .estado.erro { color: #F2B8A8 }
+@media (max-width: 560px) { .escala { grid-template-columns: repeat(6, 1fr) } }
 .so-leitores { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
 @media (prefers-reduced-motion: no-preference) {
   .pessoa { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s }
@@ -223,6 +248,43 @@ label.campo textarea { min-height: 110px; resize: vertical }
     </article>`
   }
 
+  // Avaliação das palestras (migração 051): NPS de 0 a 10, comentário opcional, grava ao tocar
+  const avaliacaoDe = (id) => (dados.avaliacoes || []).find(a => a.palestra === id)
+  function blocoAvaliar(item, pergunta) {
+    const a = avaliacaoDe(item.id)
+    const nota = a ? a.nota : null
+    return `<article class="aval${item.id ? '' : ' aval-evento'}" data-p="${esc(item.id || '')}">
+      <div class="aval-cab">${item.hora ? `<span class="aval-hora">${esc(item.hora)}</span>` : ''}<h3>${esc(item.titulo)}</h3>${item.orador ? `<p>${esc(item.orador)}</p>` : ''}</div>
+      <p class="perg">${pergunta}</p>
+      <div class="escala" role="group" aria-label="Nota de 0 a 10">${Array.from({ length: 11 }, (_, n) => `<button type="button" data-n="${n}" aria-pressed="${nota === n}">${n}</button>`).join('')}</div>
+      <div class="extremos" aria-hidden="true"><span>Nada provável</span><span>Muito provável</span></div>
+      <div class="coment"${nota === null ? ' hidden' : ''}><label class="campo">Comentário <small>Opcional. O que gostaste ou o que mudavas.</small><textarea maxlength="500" rows="2">${esc(a ? a.comentario : '')}</textarea></label></div>
+      <div class="estado" role="status"></div>
+    </article>`
+  }
+  async function guardarAvaliacao(el, palestra, nota) {
+    const ta = el.querySelector('textarea'), est = el.querySelector('.estado')
+    est.className = 'estado'; est.textContent = 'A guardar…'
+    try {
+      await api('POST', { acao: 'avaliar', palestra, nota, comentario: ta.value })
+      dados.avaliacoes = (dados.avaliacoes || []).filter(a => a.palestra !== palestra).concat({ palestra, nota, comentario: ta.value })
+      el.querySelectorAll('.escala button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.n) === nota)))
+      el.querySelector('.coment').hidden = false
+      est.className = 'estado ok'; est.textContent = 'Obrigado! Avaliação guardada.'
+    } catch (e) { est.className = 'estado erro'; est.textContent = e.message }
+  }
+  function ligarAvaliar() {
+    app.querySelectorAll('.aval').forEach(el => {
+      const palestra = el.dataset.p || null
+      el.querySelectorAll('.escala button').forEach(b => b.addEventListener('click', () => guardarAvaliacao(el, palestra, Number(b.dataset.n))))
+      const ta = el.querySelector('textarea')
+      ta.addEventListener('blur', () => {
+        const a = avaliacaoDe(palestra)
+        if (a && ta.value !== a.comentario) guardarAvaliacao(el, palestra, a.nota)
+      })
+    })
+  }
+
   function render() {
     const eu = dados.eu
     // O próprio perfil também aparece (primeiro, com "Tu"), para cada um ver como os outros o veem
@@ -232,12 +294,13 @@ label.campo textarea { min-height: 110px; resize: vertical }
     const cab = `<section class="banda"><div class="wrap">${marca}
       <div class="hero">
         <div class="ev">${esc(nomeEvento)}</div>
-        <h1>${aba === 'perfil' ? 'O meu <em>perfil</em>' : 'Conhece quem <em>está aqui</em>'}</h1>
-        <p>${aba === 'perfil' ? 'Apresenta-te aos outros participantes. Só aparece quem escolhe partilhar.' : 'Uma comunidade de negócios: partilha, ligações e novas oportunidades.'}</p>
+        <h1>${{ perfil: 'O meu <em>perfil</em>', avaliar: 'Avaliar as <em>palestras</em>' }[aba] || 'Conhece quem <em>está aqui</em>'}</h1>
+        <p>${{ perfil: 'Apresenta-te aos outros participantes. Só aparece quem escolhe partilhar.', avaliar: 'Uma pergunta por palestra. Leva menos de um minuto.' }[aba] || 'Uma comunidade de negócios: partilha, ligações e novas oportunidades.'}</p>
       </div>
       <div class="tabs" role="tablist">
         <button role="tab" id="tab-participantes" aria-selected="${aba === 'participantes'}">Participantes</button>
         <button role="tab" id="tab-perfil" aria-selected="${aba === 'perfil'}">O meu perfil</button>
+        <button role="tab" id="tab-avaliar" aria-selected="${aba === 'avaliar'}">Avaliar</button>
       </div></div></section>`
 
     if (aba === 'participantes') {
@@ -251,6 +314,14 @@ label.campo textarea { min-height: 110px; resize: vertical }
       const inp = document.getElementById('pesquisa')
       inp.addEventListener('input', () => { filtro = inp.value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); const pos = inp.selectionStart; render(); const n = document.getElementById('pesquisa'); n.focus(); n.setSelectionRange(pos, pos) })
       document.getElementById('ir-perfil')?.addEventListener('click', () => { aba = 'perfil'; render() })
+    } else if (aba === 'avaliar') {
+      const palestras = dados.palestras || []
+      app.innerHTML = cab + `<div class="wrap conteudo"><div class="lista-aval">
+        ${palestras.length ? palestras.map(p => blocoAvaliar(p, 'De 0 a 10, quanto recomendarias esta palestra a outro empreendedor?')).join('') : '<div class="vazio">O programa ainda não tem palestras para avaliar.</div>'}
+        ${blocoAvaliar({ id: null, titulo: 'O evento', orador: nomeEvento }, `De 0 a 10, quanto recomendarias o ${esc(nomeEvento)} a outro empreendedor?`)}
+        <p class="privacidade">As avaliações ajudam a organização a preparar os próximos eventos. Os resultados são vistos sem nomes.</p>
+      </div></div>`
+      ligarAvaliar()
     } else {
       app.innerHTML = cab + `<div class="wrap conteudo">
         <form class="perfil" id="form-perfil" novalidate>
@@ -333,6 +404,7 @@ label.campo textarea { min-height: 110px; resize: vertical }
     }
     document.getElementById('tab-participantes').addEventListener('click', () => { aba = 'participantes'; render() })
     document.getElementById('tab-perfil').addEventListener('click', () => { aba = 'perfil'; render() })
+    document.getElementById('tab-avaliar').addEventListener('click', () => { aba = 'avaliar'; render() })
   }
 
   // Reduz a fotografia no próprio telemóvel (lado maior 640 px, JPEG) antes de enviar

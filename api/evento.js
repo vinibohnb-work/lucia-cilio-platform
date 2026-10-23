@@ -19,6 +19,8 @@ import { randomBytes } from 'node:crypto'
 //   POST /api/evento { t, acao: 'perfil', perfil }      → guardar o meu perfil
 //   POST /api/evento { t, acao: 'foto', imagem }         → data URL (≤ 2 MB)
 //   POST /api/evento { t, acao: 'apagar' }               → apagar o meu perfil
+//   POST /api/evento { t, acao: 'avaliar', palestra, nota, comentario }
+//        → nota 0–10 (NPS) de uma palestra; palestra nula = o evento (migração 051)
 //
 // O e-mail e o token de cada pessoa nunca saem daqui para os outros.
 // ============================================================================
@@ -28,12 +30,13 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const BUCKET = 'eventos'
 const VALIDADE_FOTO = 3600
 
-export const LIMITES = { nome: 80, negocio: 80, cargo: 80, localidade: 60, sobre: 400, instagram: 60, linkedin: 200, site: 200, fotoBytes: 2 * 1024 * 1024 }
+export const LIMITES = { nome: 80, negocio: 80, cargo: 80, localidade: 60, sobre: 400, comentario: 500, instagram: 60, linkedin: 200, site: 200, fotoBytes: 2 * 1024 * 1024 }
 const TIPOS_FOTO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
 const MAX_PARTICIPANTES = 600
 const corta = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '')
 const tokenValido = (t) => typeof t === 'string' && /^[A-Za-z0-9_-]{24,64}$/.test(t)
+const uuidValido = (v) => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v)
 const codigoValido = (c) => typeof c === 'string' && /^[A-Za-z0-9_-]{8,40}$/.test(c)
 export const hojeLisboa = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Lisbon' }).format(new Date())
 const novoToken = () => randomBytes(24).toString('base64url')
@@ -129,10 +132,16 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
       .select('id, nome, negocio, cargo, localidade, sobre, instagram, linkedin, site, foto_path')
       .eq('evento_id', eu.evento_id).eq('partilhar', true).neq('id', eu.id).order('nome', { ascending: true })
     const fotos = await fotosAssinadas(db, [eu, ...(outros || [])])
+    // Avaliação das palestras (migração 051): o programa e as minhas notas
+    const { data: palestras } = await db.from('evento_palestras').select('id, ordem, hora, titulo, orador')
+      .eq('evento_id', eu.evento_id).order('ordem', { ascending: true })
+    const { data: minhas } = await db.from('evento_avaliacoes').select('palestra_id, nota, comentario').eq('participante_id', eu.id)
     return [200, {
       evento: infoEvento(evento),
       eu: { ...publico(eu, fotos[eu.foto_path] || null), partilhar: eu.partilhar },
       participantes: (outros || []).map(l => publico(l, fotos[l.foto_path] || null)),
+      palestras: (palestras || []).map(p => ({ id: p.id, hora: p.hora, titulo: p.titulo, orador: p.orador })),
+      avaliacoes: (minhas || []).map(a => ({ palestra: a.palestra_id || null, nota: a.nota, comentario: a.comentario || '' })),
     }]
   }
 
@@ -164,6 +173,27 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
   if (body.acao === 'apagar') {
     if (eu.foto_path) await db.storage.from(BUCKET).remove([eu.foto_path])
     await db.from('evento_participantes').update({ negocio: null, cargo: null, localidade: null, sobre: null, instagram: null, linkedin: null, site: null, foto_path: null, partilhar: false, updated_at: new Date().toISOString() }).eq('id', eu.id)
+    return [200, { ok: true }]
+  }
+
+  // Avaliar uma palestra (ou o evento, sem palestra): uma nota por pessoa, que pode mudar
+  if (body.acao === 'avaliar') {
+    const nota = body.nota
+    if (!Number.isInteger(nota) || nota < 0 || nota > 10) return [400, { error: 'Escolha uma nota de 0 a 10.' }]
+    const palestra = body.palestra ?? null
+    if (palestra !== null) {
+      if (!uuidValido(palestra)) return [404, { error: 'Palestra não encontrada.' }]
+      const { data: p } = await db.from('evento_palestras').select('id').eq('id', palestra).eq('evento_id', eu.evento_id).maybeSingle()
+      if (!p) return [404, { error: 'Palestra não encontrada.' }]
+    }
+    const comentario = corta(body.comentario, LIMITES.comentario) || null
+    let q = db.from('evento_avaliacoes').select('id').eq('participante_id', eu.id)
+    q = palestra ? q.eq('palestra_id', palestra) : q.is('palestra_id', null)
+    const { data: ja } = await q.maybeSingle()
+    const { error } = ja
+      ? await db.from('evento_avaliacoes').update({ nota, comentario, updated_at: new Date().toISOString() }).eq('id', ja.id)
+      : await db.from('evento_avaliacoes').insert({ evento_id: eu.evento_id, palestra_id: palestra, participante_id: eu.id, nota, comentario })
+    if (error) return [500, { error: 'Não foi possível guardar a avaliação.' }]
     return [200, { ok: true }]
   }
 
