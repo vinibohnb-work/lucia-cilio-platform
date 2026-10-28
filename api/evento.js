@@ -131,7 +131,9 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
 
   const { data: eu } = await db.from('evento_participantes').select('*').eq('token', t).maybeSingle()
   if (!eu) return [401, { error: 'Este acesso já não é válido. Volte a ler o QR code do evento.' }]
-  const { data: evento } = await db.from('eventos').select(CAMPOS_EVENTO + ', fotos_url').eq('id', eu.evento_id).maybeSingle()
+  // Com o link das fotografias (052); se a coluna ainda não existir, a área abre na mesma, sem fotos
+  let { data: evento, error: semFotos } = await db.from('eventos').select(CAMPOS_EVENTO + ', fotos_url').eq('id', eu.evento_id).maybeSingle()
+  if (semFotos) ({ data: evento } = await db.from('eventos').select(CAMPOS_EVENTO).eq('id', eu.evento_id).maybeSingle())
   if (!evento) return [404, { error: 'Evento não encontrado.' }]
   const fechado = janela(evento, hoje)
   if (fechado) return fechado
