@@ -363,6 +363,11 @@ export default function Eventos() {
     if (l === null) { avisar('erro', 'O endereço da landing page não é válido.'); return }
     alterar({ landing_url: l || null }, 'Landing page guardada.')
   }
+  const gravarFotos = (v) => {
+    const l = ligacaoValida(v)
+    if (l === null) { avisar('erro', 'O link das fotografias não é válido.'); return }
+    alterar({ fotos_url: l || null }, l ? 'Link das fotografias guardado. Os participantes já o veem.' : 'Link das fotografias retirado.')
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -381,6 +386,7 @@ export default function Eventos() {
           <label style={rotulo}>Data<input type="date" value={sel.data || ''} onChange={e => e.target.value && alterar({ data: e.target.value }, 'Data guardada.')} style={c.input} /></label>
           <label style={rotulo}>Local<CampoTexto key={sel.id + (sel.local || '')} valor={sel.local} maxLength={160} placeholder="Ex.: District Space, Lisboa" aoGravar={v => alterar({ local: v.trim() || null }, 'Local guardado.')} estilo={c.input} /></label>
           <label style={rotulo}>Landing page<CampoTexto key={sel.id + (sel.landing_url || '')} valor={sel.landing_url} list="landings-site" placeholder="https://lcoffice.pt/… ou o link da Luma" inputMode="url" autoCapitalize="off" aoGravar={gravarLanding} estilo={c.input} /></label>
+          <label style={rotulo}>Fotografias (link)<CampoTexto key={sel.id + (sel.fotos_url || '')} valor={sel.fotos_url} placeholder="Link da pasta (Google Drive…)" inputMode="url" autoCapitalize="off" aoGravar={gravarFotos} estilo={c.input} /><span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: t.subtle }}>Só aparece a quem entrou na área de participantes.</span></label>
         </div>
       </Cartao>
 
