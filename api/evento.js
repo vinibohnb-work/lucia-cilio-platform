@@ -17,7 +17,7 @@ import { randomBytes } from 'node:crypto'
 //   GET  /api/evento?entrada=<id do evento>     → o código do QR, só enquanto a área está aberta
 //        (botão "Área de participantes" da landing, que funciona como o QR no dia do evento)
 //   POST /api/evento { codigo, acao: 'entrar', nome }   → cria-me e devolve { t }
-//   GET  /api/evento?t=<token>                 → o meu perfil + quem partilhou
+//   GET  /api/evento?t=<token>                 → o meu perfil + quem partilhou (+ link das fotografias, migração 052)
 //   POST /api/evento { t, acao: 'perfil', perfil }      → guardar o meu perfil
 //   POST /api/evento { t, acao: 'foto', imagem }         → data URL (≤ 2 MB)
 //   POST /api/evento { t, acao: 'apagar' }               → apagar o meu perfil
@@ -131,7 +131,7 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
 
   const { data: eu } = await db.from('evento_participantes').select('*').eq('token', t).maybeSingle()
   if (!eu) return [401, { error: 'Este acesso já não é válido. Volte a ler o QR code do evento.' }]
-  const { data: evento } = await db.from('eventos').select(CAMPOS_EVENTO).eq('id', eu.evento_id).maybeSingle()
+  const { data: evento } = await db.from('eventos').select(CAMPOS_EVENTO + ', fotos_url').eq('id', eu.evento_id).maybeSingle()
   if (!evento) return [404, { error: 'Evento não encontrado.' }]
   const fechado = janela(evento, hoje)
   if (fechado) return fechado
@@ -148,6 +148,8 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
     const { data: minhas } = await db.from('evento_avaliacoes').select('palestra_id, nota, comentario').eq('participante_id', eu.id)
     return [200, {
       evento: infoEvento(evento),
+      // Fotografias do evento: só para quem entrou com o seu acesso (migração 052)
+      fotos: limparLigacao(evento.fotos_url || '', 500) || null,
       eu: { ...publico(eu, fotos[eu.foto_path] || null), partilhar: eu.partilhar },
       participantes: (outros || []).map(l => publico(l, fotos[l.foto_path] || null)),
       palestras: (palestras || []).map(p => ({ id: p.id, hora: p.hora, titulo: p.titulo, orador: p.orador })),
