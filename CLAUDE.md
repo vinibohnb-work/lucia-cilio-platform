@@ -47,7 +47,7 @@ npm run lint
 
 ## Banco de dados
 
-- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_052.sql` (a próxima é a 053), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
+- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_053.sql` (a próxima é a 054), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
 - Cabeçalho de cada migração: número e título, porquê, o que muda, se apaga dados, e "Executar no Supabase: SQL Editor → New query → colar → Run". Escrever idempotente (`if not exists`, `drop policy if exists` antes do `create policy`).
 - Aplicação é manual no SQL Editor: primeiro no DEV, depois o Vinícius corre na produção. Código que depende de uma migração só vai para a `main` depois de ela estar aplicada.
 - RLS em tudo. Funções `public.is_admin()` e `public.is_equipa()` (admin, comercial, marketing). O cliente só lê o que tem o seu `user_id` ou a sua ficha; anónimo não lê nada; o formulário público grava só via `api/diagnostico.js` (migração 042).
@@ -57,8 +57,9 @@ npm run lint
   - `clients` — clientes **do próprio utilizador** na Contabilidade (não confundir com `clientes`).
   - `fiscal_obligations` — obrigações fiscais (estados, valor, comprovativo; `source` distingue as do cliente).
   - `cash_entries`, `catalog_items`, `recurring_expenses`, `monthly_plans`, `company_settings` — Contabilidade do cliente.
-  - `bank_imports`, `bank_transactions` — extratos importados e conciliação.
-  - `tarefas`, `documentos_cliente`, `mensagens_cliente`, `relatorios_trimestrais`, `notas_cliente`, `horas_cliente`, `client_notices` — portal da Gestão.
+  - `bank_imports`, `bank_transactions` — extratos importados e conciliação (cada movimento pode ter comprovativo em `client-docs/<user_id>/comprovativos/`, 053).
+  - Categorias dos lançamentos: base de saídas em `src/data/expenseCategories.js`, base de entradas e as próprias de cada cliente em `src/lib/categorias.js`; as do cliente vivem em `clientes.categorias` (053) e gravam-se no lançamento como `x:<nome>`.
+  - `tarefas` (também reuniões: `tipo`, `hora`, `duracao_min`, com o botão "Adicionar ao Google Calendar", 053), `documentos_cliente`, `mensagens_cliente`, `relatorios_trimestrais`, `notas_cliente`, `horas_cliente`, `client_notices` — portal da Gestão.
   - `consultorias`, `consulting_notes`, `crm_leads`, `diagnostico_submissoes`, `client_billing`, `billing_payments` — consultoria, CRM e financeiro.
   - `esg_consultorias` (casos ESG; `nivel` e `metodo` jsonb do método da Lúcia, migração 046), `esg_diagnostics`, `esg_materiality`, `esg_projects` (também o plano de ação), `esg_reports`, `esg_interno` (notas internas e opinião por reunião, só admin), `esg_comentarios` (comentário por item, lados equipa/cliente; é a única coisa que o cliente escreve na ESG, migração 047).
   - `marketing_posts`, `marketing_notas` — aba de Marketing.

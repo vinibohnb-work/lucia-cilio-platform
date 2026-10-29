@@ -242,7 +242,7 @@ export default function LivroCaixa() {
     maisLinhas: (n) => `Weitere anzeigen (${n} übrig)`,
     noEntries: 'Noch keine Buchungen. Über „+ Neue Buchung" oben hinzufügen.',
     loading: 'Wird geladen…', total: 'Summe', category: 'Kategorie', catalog: 'Produkt/Leistung',
-    catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', costType: 'Kostenart',
+    catalogNone: '— keine —', catHint: 'Wählen Sie eine Ausgabenkategorie.', catHintEntrada: 'Wählen Sie eine Einnahmenkategorie.', costType: 'Kostenart',
     vat: 'MwSt.', vatExempt: 'befreit', predictedOut: 'Geplante Ausgaben', predictedOutSub: 'wiederkehrend, offen',
   } : lang === 'en' ? {
     remover: 'Remove', confirmDel: (d) => `Remove this entry?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
@@ -256,7 +256,7 @@ export default function LivroCaixa() {
     maisLinhas: (n) => `Show more (${n} left)`,
     noEntries: 'No entries yet. Add one via "+ New Entry" at the top.',
     loading: 'Loading…', total: 'Total', category: 'Category', catalog: 'Product/Service',
-    catalogNone: '— none —', catHint: 'Choose the expense category.', costType: 'Cost type',
+    catalogNone: '— none —', catHint: 'Choose the expense category.', catHintEntrada: 'Choose the income category.', costType: 'Cost type',
     vat: 'VAT', vatExempt: 'exempt', predictedOut: 'Planned expenses', predictedOutSub: 'recurring, to confirm',
   } : {
     remover: 'Remover', confirmDel: (d) => `Remover este lan\u00e7amento?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
@@ -270,7 +270,7 @@ export default function LivroCaixa() {
     maisLinhas: (n) => `Mostrar mais (faltam ${n})`,
     noEntries: 'Ainda não há registos. Adicione em "+ Nova Entrada" no topo.',
     loading: 'A carregar…', total: 'Total', category: 'Categoria', catalog: 'Produto/Serviço',
-    catalogNone: '— nenhum —', catHint: 'Escolha a categoria da despesa.', costType: 'Tipo de custo',
+    catalogNone: '— nenhum —', catHint: 'Escolha a categoria da despesa.', catHintEntrada: 'Escolha a categoria da entrada.', costType: 'Tipo de custo',
     vat: 'IVA', vatExempt: 'isento', predictedOut: 'Saídas previstas', predictedOutSub: 'recorrentes a confirmar',
   }
 
@@ -387,7 +387,7 @@ export default function LivroCaixa() {
             {(form.type === 'saida' || form.type === 'entrada') && fieldWrap(
               L.category,
               <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}>
-                <option value="">{L.catHint}</option>
+                <option value="">{form.type === 'entrada' ? L.catHintEntrada : L.catHint}</option>
                 {opcoesCategorias(form.type, extras, lang).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>,
               '170px',
