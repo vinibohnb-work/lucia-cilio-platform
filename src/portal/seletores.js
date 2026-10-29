@@ -1,3 +1,4 @@
+import { linkGoogleCalendar } from '../lib/googleCalendar'
 // Portal · leituras derivadas do estado — o que o Resumo, a Agenda e as listas
 // mostram é sempre calculado daqui, nunca guardado à parte.
 import { estadoEfetivo, FECHADOS, hojeIso, diasAte } from './regras'
@@ -27,3 +28,11 @@ export const clientePorId = (s, id) => s.clientes.find(c => c.id === id)
 // Regra única para as contagens da equipa (Início, Relatórios, Mensagens):
 // os clientes inativos não contam (13-D, 13/10).
 export const clienteEmCurso = (c) => !!c && c.estado !== 'inativo'
+
+// Link "Adicionar ao Google Calendar" de uma reunião (29/10, opção 1)
+export function linkReuniao(s, x) {
+  if (x.tipo !== 'reuniao') return null
+  const cli = x.clienteId ? clientePorId(s, x.clienteId) : null
+  const detalhes = [cli ? `Cliente: ${cli.nome}` : '', cli?.telefone ? `Telefone: ${cli.telefone}` : '', cli?.email ? `E-mail: ${cli.email}` : '', x.notas || ''].filter(Boolean).join('\n')
+  return linkGoogleCalendar({ titulo: cli ? `${x.titulo} — ${cli.nome}` : x.titulo, data: x.prazo, hora: x.hora, duracaoMin: x.duracaoMin, detalhes })
+}

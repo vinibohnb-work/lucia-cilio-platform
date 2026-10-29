@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
-import { Janela, Campo, Botao, Chip, useCampos, Vazio, Ic } from '../ui'
+import { Janela, Campo, Botao, Chip, useCampos, Vazio, Ic, Pilulas } from '../ui'
 import { RECORRENCIAS, ESTADOS_TAREFA, FECHADOS, fmtData, hojeIso, diasAte } from '../regras'
-import { tarefaAtrasada, lembreteAtivo, clientePorId } from '../seletores'
+import { tarefaAtrasada, lembreteAtivo, clientePorId, linkReuniao } from '../seletores'
 
 // Tarefas internas (documento, secção 4): criadas à mão, repetidas, ligadas a
 // um cliente e a uma obrigação, atribuídas a alguém, fechadas com um check.
@@ -16,21 +16,26 @@ export function FormTarefa({ inicial, aoFechar }) {
   const isMobile = useIsMobile()
   // Responsável por omissão = quem está a criar (se for da equipa); antes era
   // sempre a 1.ª pessoa da lista e a tarefa ficava com a pessoa errada (E7, 13/10).
-  const [f, setF] = useState({ titulo: '', clienteId: '', obrigacaoId: '', responsavel: s.equipa.includes(s.eu) ? s.eu : s.equipa[0], prazo: hojeIso(), recorrencia: 'nenhuma', lembreteDias: 2, notas: '', ...inicial })
+  const [f, setF] = useState({ titulo: '', clienteId: '', obrigacaoId: '', responsavel: s.equipa.includes(s.eu) ? s.eu : s.equipa[0], prazo: hojeIso(), recorrencia: 'nenhuma', lembreteDias: 2, notas: '', tipo: 'tarefa', hora: '', duracaoMin: 60, ...inicial })
+  const reuniao = f.tipo === 'reuniao'
   const set = (k) => (e) => setF(p => ({ ...p, [k]: e.target.value }))
   const obrigs = s.obrigacoes.filter(o => o.clienteId === f.clienteId && (!FECHADOS.includes(o.estado) || o.id === f.obrigacaoId)).sort((a, b) => a.prazo.localeCompare(b.prazo))
 
   function guardar() {
-    if (!f.titulo.trim()) return
-    const dados = { ...f, titulo: f.titulo.trim(), clienteId: f.clienteId || null, obrigacaoId: f.obrigacaoId || null, lembreteDias: Number(f.lembreteDias) || 0 }
+    if (!f.titulo.trim() || (reuniao && !f.hora)) return
+    const dados = { ...f, titulo: f.titulo.trim(), clienteId: f.clienteId || null, obrigacaoId: f.obrigacaoId || null, lembreteDias: Number(f.lembreteDias) || 0,
+      hora: reuniao ? f.hora : '', duracaoMin: Number(f.duracaoMin) || 60, recorrencia: reuniao ? 'nenhuma' : f.recorrencia }
     if (f.id) acoes.atualizarTarefa(f.id, dados); else acoes.criarTarefa(dados)
     aoFechar()
   }
 
   return (
-    <Janela titulo={f.id ? 'Editar tarefa' : 'Adicionar tarefa'} aoFechar={aoFechar}>
+    <Janela titulo={f.id ? (reuniao ? 'Editar reunião' : 'Editar tarefa') : (reuniao ? 'Marcar reunião' : 'Adicionar tarefa')} aoFechar={aoFechar}>
+      <div style={{ marginBottom: '12px' }}>
+        <Pilulas opcoes={[['tarefa', 'Tarefa'], ['reuniao', 'Reunião']]} valor={f.tipo} aoMudar={v => setF(p => ({ ...p, tipo: v, hora: v === 'reuniao' ? (p.hora || '10:00') : p.hora }))} />
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
-        <Campo rotulo="Tarefa" largura="1 / -1"><input autoFocus value={f.titulo} onChange={set('titulo')} placeholder="Ex.: Entregar a declaração de IVA até dia 20" style={c.input} /></Campo>
+        <Campo rotulo={reuniao ? 'Assunto' : 'Tarefa'} largura="1 / -1"><input autoFocus value={f.titulo} onChange={set('titulo')} placeholder={reuniao ? 'Ex.: Reunião de acompanhamento trimestral' : 'Ex.: Entregar a declaração de IVA até dia 20'} style={c.input} /></Campo>
         <Campo rotulo="Cliente">
           <select value={f.clienteId || ''} onChange={e => setF(p => ({ ...p, clienteId: e.target.value, obrigacaoId: '' }))} style={{ ...c.input, cursor: 'pointer' }}>
             <option value="">— Sem cliente (interna) —</option>
@@ -45,11 +50,21 @@ export function FormTarefa({ inicial, aoFechar }) {
           <select value={f.responsavel} onChange={set('responsavel')} style={{ ...c.input, cursor: 'pointer' }}>
             {s.equipa.map(x => <option key={x}>{x}</option>)}
           </select></Campo>
-        <Campo rotulo="Prazo"><input type="date" value={f.prazo} onChange={set('prazo')} style={c.input} /></Campo>
-        <Campo rotulo="Repetir">
-          <select value={f.recorrencia} onChange={set('recorrencia')} style={{ ...c.input, cursor: 'pointer' }}>
-            {RECORRENCIAS.map(([k, r]) => <option key={k} value={k}>{r}</option>)}
-          </select></Campo>
+        <Campo rotulo={reuniao ? 'Dia' : 'Prazo'}><input type="date" value={f.prazo} onChange={set('prazo')} style={c.input} /></Campo>
+        {reuniao ? (
+          <Campo rotulo="Hora e duração">
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input type="time" value={f.hora} onChange={set('hora')} required style={{ ...c.input, flex: 1 }} aria-label="Hora" />
+              <select value={f.duracaoMin} onChange={set('duracaoMin')} style={{ ...c.input, flex: 1, cursor: 'pointer' }} aria-label="Duração">
+                {[15, 30, 45, 60, 90, 120, 180].map(n => <option key={n} value={n}>{n < 60 ? `${n} min` : `${n / 60} h`.replace('.5', ',5')}</option>)}
+              </select>
+            </div></Campo>
+        ) : (
+          <Campo rotulo="Repetir">
+            <select value={f.recorrencia} onChange={set('recorrencia')} style={{ ...c.input, cursor: 'pointer' }}>
+              {RECORRENCIAS.map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+            </select></Campo>
+        )}
         <Campo rotulo="Lembrete automático">
           <select value={f.lembreteDias} onChange={set('lembreteDias')} style={{ ...c.input, cursor: 'pointer' }}>
             {[0, 1, 2, 3, 5, 7, 14].map(n => <option key={n} value={n}>{n === 0 ? 'No próprio dia' : `${n} dia${n > 1 ? 's' : ''} antes`}</option>)}
@@ -57,8 +72,14 @@ export function FormTarefa({ inicial, aoFechar }) {
         <Campo rotulo="Notas" largura="1 / -1"><textarea value={f.notas} onChange={set('notas')} rows={2} style={{ ...c.input, resize: 'vertical' }} /></Campo>
       </div>
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-        <Botao variante="primario" onClick={guardar} disabled={!f.titulo.trim()}>Guardar tarefa</Botao>
+        <Botao variante="primario" onClick={guardar} disabled={!f.titulo.trim() || (reuniao && !f.hora)}>{reuniao ? 'Guardar reunião' : 'Guardar tarefa'}</Botao>
         <Botao onClick={aoFechar}>Cancelar</Botao>
+        {reuniao && f.hora && (
+          <a href={linkReuniao(s, { ...f, duracaoMin: Number(f.duracaoMin) || 60 })} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', minHeight: '38px', padding: '0 14px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, color: c.input.color, border: '1px solid currentColor', textDecoration: 'none', opacity: .85 }}>
+            Adicionar ao Google Calendar ↗
+          </a>
+        )}
         {f.id && <Botao variante="perigo" estilo={{ marginLeft: 'auto' }} onClick={() => { if (window.confirm('Eliminar esta tarefa?')) { acoes.removerTarefa(f.id); aoFechar() } }}>Eliminar</Botao>}
       </div>
     </Janela>
@@ -97,6 +118,8 @@ export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não h�
                 <td style={c.td}>
                   <div style={{ fontWeight: 700, color: t.heading, textDecoration: feita ? 'line-through' : 'none' }}>{x.titulo}</div>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '11.5px', color: t.subtle, marginTop: '2px' }}>
+                    {x.tipo === 'reuniao' && <span style={{ fontWeight: 700, color: t.heading }}>Reunião · {x.hora}</span>}
+                    {x.tipo === 'reuniao' && !feita && <a href={linkReuniao(s, x)} target="_blank" rel="noopener noreferrer" style={{ color: t.accentText, fontWeight: 700, textDecoration: 'none' }}>Google Calendar ↗</a>}
                     {obr && <span>↳ {obr.nome} · {obr.periodo}</span>}
                     {x.recorrencia !== 'nenhuma' && <span title="Repete-se">↻ {x.recorrencia}</span>}
                     {lembreteAtivo(x, hoje) && !atraso && <span style={{ color: t.accentText, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}><Ic.sino size={12} />lembrete</span>}

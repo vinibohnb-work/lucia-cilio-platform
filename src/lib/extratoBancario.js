@@ -422,7 +422,7 @@ export function conciliar(movimentos, entries) {
 
 // Um movimento do extrato que não existe no Livro de Caixa vira lançamento.
 // O valor do extrato é bruto: o IVA sai da taxa escolhida (R-A3 — antes ia sempre a 0).
-// A categoria só vale para saídas (como no Livro de Caixa).
+// A categoria vale para entradas e saídas (29/10: as entradas também se categorizam).
 export function movimentoParaLancamento(m, taxa = 0, categoria = '') {
   return {
     entry_date: m.data,
@@ -435,7 +435,7 @@ export function movimentoParaLancamento(m, taxa = 0, categoria = '') {
     vat_amount: taxa > 0 ? Math.round(m.valor * taxa / (100 + taxa) * 100) / 100 : 0,
     quantity: 1,
     private: false,
-    category: m.tipo === 'saida' ? (categoria || null) : null,
+    category: categoria || null,
   }
 }
 

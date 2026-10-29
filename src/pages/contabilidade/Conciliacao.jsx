@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { parseCSV, extrairMovimentos, conciliar, movimentoParaLancamento, sugerirCategoria } from '../../lib/extratoBancario'
-import { EXPENSE_CATEGORIES } from '../../data/expenseCategories'
+import { opcoesCategorias, useCategoriasExtra } from '../../lib/categorias'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 
 // Conciliação caixa/banco a partir do extrato.
@@ -16,6 +16,11 @@ import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 // O princípio que guia o ecrã: a máquina propõe, a pessoa decide. Só o que é
 // inequívoco (mesmo valor, mesmo dia, sem outro candidato igual) se concilia
 // sozinho — tudo o resto passa pelas mãos dela.
+
+// Ícone de clipe do comprovativo (SVG, não emoji)
+function IconClipe() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21.4 11.1l-8.5 8.5a6 6 0 0 1-8.5-8.5l8.5-8.5a4 4 0 0 1 5.7 5.7l-8.5 8.5a2 2 0 0 1-2.8-2.8l7.8-7.8" /></svg>
+}
 
 export default function Conciliacao() {
   const { lang } = useLang()
@@ -34,10 +39,13 @@ export default function Conciliacao() {
   // Taxa de IVA para "Criar lançamento": por omissão a da empresa (0 se isenta)
   const [settings, setSettings] = useState(null)
   const [taxas, setTaxas] = useState({})   // tx.id -> taxa escolhida
-  // Categoria da despesa a criar: por omissão, a proposta a partir da coluna de
-  // categoria do extrato (raw.categoria); a pessoa confirma ou troca no seletor
+  // Categoria do lançamento a criar (entradas e saídas, 29/10): nas saídas, por
+  // omissão, a proposta a partir da coluna de categoria do extrato; a pessoa
+  // confirma ou troca. As opções juntam a base às categorias do cliente (ficha).
   const [categorias, setCategorias] = useState({})   // tx.id -> chave escolhida
-  const categoriaDe = (tx) => categorias[tx.id] ?? sugerirCategoria(tx.raw?.categoria)
+  const categoriaDe = (tx) => categorias[tx.id] ?? (tx.type === 'saida' ? sugerirCategoria(tx.raw?.categoria) : '')
+  const extras = useCategoriasExtra(eid)
+  const [aAnexar, setAAnexar] = useState(null)   // tx.id a enviar comprovativo
   useEffect(() => { if (eid) getCompanySettings(eid).then(setSettings) }, [eid])
   const taxaEmpresa = settings ? (settings.vat_regime === 'exempt' ? 0 : Number(settings.vat_default_rate) || 0) : 0
   const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
@@ -59,6 +67,7 @@ export default function Conciliacao() {
     importados: 'Importierte Kontoauszüge', abrirFicheiro: 'Öffnen', semFicheiro: 'ohne Datei',
     verComo: 'Im Ansichtsmodus nicht möglich.',
     semCategoria: '— ohne Kategorie —', categoriaTitulo: 'Kategorie der neuen Buchung', categoriaExtrato: 'Kategorie im Auszug',
+    anexar: 'Beleg anhängen', trocar: 'Ersetzen', retirar: 'Entfernen', aEnviar: 'Wird hochgeladen…', erroAnexo: 'Beleg konnte nicht hochgeladen werden.', tipoAnexo: 'PDF, JPEG, PNG oder WebP bis 10 MB.',
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
     subtitle: 'Import a bank statement (CSV or Excel) and match it against the cash book.',
@@ -74,6 +83,7 @@ export default function Conciliacao() {
     importados: 'Imported statements', abrirFicheiro: 'Open', semFicheiro: 'no file',
     verComo: 'Not available in view-as mode.',
     semCategoria: '— no category —', categoriaTitulo: 'Category of the new entry', categoriaExtrato: 'Category in the statement',
+    anexar: 'Attach receipt', trocar: 'Replace', retirar: 'Remove', aEnviar: 'Uploading…', erroAnexo: 'Could not upload the receipt.', tipoAnexo: 'PDF, JPEG, PNG or WebP up to 10 MB.',
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
     subtitle: 'Importa o extrato bancário (CSV ou Excel) e cruza-o com o Livro de Caixa.',
@@ -89,6 +99,7 @@ export default function Conciliacao() {
     verComo: 'Não disponível no modo "ver como".',
     importados: 'Extratos importados', abrirFicheiro: 'Abrir', semFicheiro: 'sem ficheiro',
     semCategoria: '— sem categoria —', categoriaTitulo: 'Categoria do lançamento a criar', categoriaExtrato: 'Categoria no extrato',
+    anexar: 'Anexar comprovativo', trocar: 'Trocar', retirar: 'Retirar', aEnviar: 'A enviar…', erroAnexo: 'Não foi possível enviar o comprovativo.', tipoAnexo: 'PDF, JPEG, PNG ou WebP até 10 MB.',
   }
 
   const fmt = (v) => (Number(v) || 0).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -226,6 +237,30 @@ export default function Conciliacao() {
     if (error) { setErro(error.message); return }
     setEntries(prev => [...prev, data])
     await conciliarCom(tx, data.id)
+  }
+
+  // Comprovativo de um movimento (29/10): vai para a pasta privada do cliente em
+  // client-docs, onde ele pode enviar mas não apagar. Trocar envia outro ficheiro;
+  // retirar só desliga o ficheiro do movimento (o documento entregue não desaparece).
+  async function anexarComprovativo(tx, ficheiro) {
+    if (isViewing || !ficheiro) return
+    if (!/^(application\/pdf|image\/(jpeg|png|webp))$/.test(ficheiro.type) || ficheiro.size > 10 * 1024 * 1024) { setErro(L.tipoAnexo); return }
+    setAAnexar(tx.id); setErro('')
+    const ext = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[ficheiro.type]
+    const caminho = `${eid}/comprovativos/${tx.id}-${crypto.randomUUID().slice(0, 8)}.${ext}`
+    const up = await supabase.storage.from('client-docs').upload(caminho, ficheiro, { contentType: ficheiro.type })
+    if (up.error) { setAAnexar(null); setErro(L.erroAnexo); return }
+    const nome = String(ficheiro.name || 'comprovativo').slice(0, 120)
+    const { error, count } = await supabase.from('bank_transactions').update({ comprovativo_path: caminho, comprovativo_nome: nome }, { count: 'exact' }).eq('id', tx.id)
+    setAAnexar(null)
+    if (error || count === 0) { setErro(L.erroAnexo); return }
+    setTxs(prev => prev.map(x => x.id === tx.id ? { ...x, comprovativo_path: caminho, comprovativo_nome: nome } : x))
+  }
+  async function retirarComprovativo(tx) {
+    if (isViewing) return
+    const { error, count } = await supabase.from('bank_transactions').update({ comprovativo_path: null, comprovativo_nome: null }, { count: 'exact' }).eq('id', tx.id)
+    if (error || count === 0) { setErro(L.erroAnexo); return }
+    setTxs(prev => prev.map(x => x.id === tx.id ? { ...x, comprovativo_path: null, comprovativo_nome: null } : x))
   }
 
   // Concilia de uma vez tudo o que é inequívoco
@@ -377,6 +412,26 @@ export default function Conciliacao() {
                       </span>
                     </div>
 
+                    {/* Comprovativo do movimento (29/10) */}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginTop: '6px' }}>
+                      {tx.comprovativo_path ? (
+                        <>
+                          <button onClick={() => abrirExtrato(tx.comprovativo_path)} style={{ ...btn, padding: '2px 0', background: 'none', color: t.accentText, display: 'inline-flex', alignItems: 'center', gap: '5px' }} title={tx.comprovativo_nome || ''}>
+                            <IconClipe /> <span style={{ maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.comprovativo_nome || L.anexar}</span>
+                          </button>
+                          {!isViewing && <label style={{ ...btn, padding: '2px 0', background: 'none', color: t.subtle, textDecoration: 'underline', cursor: 'pointer' }}>
+                            {L.trocar}<input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; anexarComprovativo(tx, f) }} />
+                          </label>}
+                          {!isViewing && <button onClick={() => retirarComprovativo(tx)} style={{ ...btn, padding: '2px 0', background: 'none', color: t.subtle, textDecoration: 'underline' }}>{L.retirar}</button>}
+                        </>
+                      ) : !isViewing && (
+                        <label style={{ ...btn, padding: '2px 0', background: 'none', color: t.subtle, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }} title={L.tipoAnexo}>
+                          <IconClipe /> {aAnexar === tx.id ? L.aEnviar : L.anexar}
+                          <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" style={{ display: 'none' }} disabled={aAnexar === tx.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; anexarComprovativo(tx, f) }} />
+                        </label>
+                      )}
+                    </div>
+
                     {/* Já conciliado: mostra com quê */}
                     {tx.status === 'conciliado' && (
                       <div style={{ display: 'flex', gap: '9px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
@@ -397,7 +452,7 @@ export default function Conciliacao() {
                             {s.ambiguo && <div style={{ fontSize: '11px', color: t.dueSoon.ink, marginTop: '4px', fontWeight: 600 }}>⚠ {L.ambiguo}</div>}
                           </div>
                         )}
-                        {tx.type === 'saida' && tx.raw?.categoria && (
+                        {tx.raw?.categoria && (
                           <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '7px' }}>{L.categoriaExtrato}: {tx.raw.categoria}</div>
                         )}
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
@@ -407,15 +462,13 @@ export default function Conciliacao() {
                             style={{ ...btn, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                             {vatOptions.map(r => <option key={r} value={r}>{(lang === 'de' ? 'USt ' : lang === 'en' ? 'VAT ' : 'IVA ') + r + '%'}</option>)}
                           </select>
-                          {tx.type === 'saida' && (
-                            <select value={categoriaDe(tx)} onChange={e => setCategorias(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing}
-                              aria-label={L.categoriaTitulo}
-                              title={tx.raw?.categoria ? `${L.categoriaExtrato}: ${tx.raw.categoria}` : L.categoriaTitulo}
-                              style={{ ...btn, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
-                              <option value="">{L.semCategoria}</option>
-                              {EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang]?.label || c.pt.label}</option>)}
-                            </select>
-                          )}
+                          <select value={categoriaDe(tx)} onChange={e => setCategorias(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing}
+                            aria-label={L.categoriaTitulo}
+                            title={tx.raw?.categoria ? `${L.categoriaExtrato}: ${tx.raw.categoria}` : L.categoriaTitulo}
+                            style={{ ...btn, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                            <option value="">{L.semCategoria}</option>
+                            {opcoesCategorias(tx.type, extras, lang).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
                           <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btn, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
                           <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btn, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
                         </div>

@@ -8,6 +8,7 @@ import { dataCurta } from '../../lib/formato'
 import { useEffectiveUserId } from '../../context/ViewAsContext'
 import { getCompanySettings } from '../../lib/companySettings'
 import { getCategory } from '../../data/expenseCategories'
+import { ehExtra, rotuloCategoria } from '../../lib/categorias'
 import { calcularEUR, liquidoDe } from '../../lib/eurCalc'
 
 // Relatório EÜR (Einnahmen-Überschuss-Rechnung) — o apuramento fiscal alemão,
@@ -109,11 +110,11 @@ export default function RelatorioEUR() {
   const fmt = (v) => (Number(v) || 0).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
   const dataFmt = (d) => dataCurta(d, lang)
   const nomeDe = (l) => l.categoria
-    ? (getCategory(l.categoria)?.de?.label || l.categoria)
+    ? (getCategory(l.categoria)?.de?.label || (ehExtra(l.categoria) ? rotuloCategoria(l.categoria) : l.categoria))
     : (NOME_LINHA[l.key] || l.key)
   const kontoDe = (e) => {
     if (e.type === 'entrada') return e.vat_rate > 0 ? `Erlöse ${e.vat_rate}% USt` : 'Erlöse'
-    return getCategory(e.category)?.de?.label || 'Sonstige Ausgaben'
+    return getCategory(e.category)?.de?.label || (ehExtra(e.category) ? rotuloCategoria(e.category) : 'Sonstige Ausgaben')
   }
 
   // ── Impressão: folha própria, como nos outros relatórios ──

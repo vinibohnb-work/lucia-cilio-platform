@@ -33,7 +33,7 @@ export default function Agenda() {
   const passaFiltros = (resp) => !f.responsavel || resp === f.responsavel
   const itensDe = (dia) => [
     ...s.tarefas.filter(x => x.prazo === dia && (f.feitas || x.estado !== 'concluida') && passaFiltros(x.responsavel))
-      .map(x => ({ tipo: 'tarefa', id: x.id, x, titulo: x.titulo, cid: x.clienteId, atraso: tarefaAtrasada(x, hoje), feita: x.estado === 'concluida' })),
+      .map(x => ({ tipo: 'tarefa', id: x.id, x, titulo: x.tipo === 'reuniao' && x.hora ? `${x.hora} · ${x.titulo}` : x.titulo, cid: x.clienteId, atraso: tarefaAtrasada(x, hoje), feita: x.estado === 'concluida' })),
     ...(f.obrigacoes ? s.obrigacoes.filter(o => o.prazo === dia && (f.feitas || !FECHADOS.includes(o.estado)) && passaFiltros(clientePorId(s, o.clienteId)?.responsavel))
       .map(o => ({ tipo: 'obrig', id: o.id, titulo: `${o.nome} · ${o.periodo}`, cid: o.clienteId, atraso: estadoEfetivo(o, hoje) === 'em_atraso', feita: FECHADOS.includes(o.estado) })) : []),
   ]
