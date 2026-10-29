@@ -116,12 +116,13 @@ const deTarefa = (r) => ({
   id: r.id, titulo: r.titulo, clienteId: r.cliente_id, obrigacaoId: r.obrigacao_id, responsavel: r.responsavel || '',
   prazo: r.prazo, estado: r.estado, recorrencia: r.recorrencia, lembreteDias: r.lembrete_dias, notas: r.notas || '',
   origem: r.origem, concluidaEm: r.concluida_em,
+  tipo: r.tipo || 'tarefa', hora: r.hora ? String(r.hora).slice(0, 5) : '', duracaoMin: r.duracao_min || 60,
 })
 function paraTarefa(p) {
-  const m = { clienteId: 'cliente_id', obrigacaoId: 'obrigacao_id', lembreteDias: 'lembrete_dias', concluidaEm: 'concluida_em' }
+  const m = { clienteId: 'cliente_id', obrigacaoId: 'obrigacao_id', lembreteDias: 'lembrete_dias', concluidaEm: 'concluida_em', duracaoMin: 'duracao_min' }
   const out = {}
   for (const [k, v] of Object.entries(p)) {
-    if (!['id', 'titulo', 'clienteId', 'obrigacaoId', 'responsavel', 'prazo', 'estado', 'recorrencia', 'lembreteDias', 'notas', 'origem', 'concluidaEm'].includes(k)) continue
+    if (!['id', 'titulo', 'clienteId', 'obrigacaoId', 'responsavel', 'prazo', 'estado', 'recorrencia', 'lembreteDias', 'notas', 'origem', 'concluidaEm', 'tipo', 'hora', 'duracaoMin'].includes(k)) continue
     out[m[k] || k] = v === '' ? null : v
   }
   return out
