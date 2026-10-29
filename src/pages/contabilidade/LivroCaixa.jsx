@@ -5,13 +5,14 @@ import { useLang } from '../../context/LangContext'
 import CabecalhoPagina from '../../components/CabecalhoPagina'
 import { t as traduzir } from '../../i18n/translations'
 import { supabase } from '../../lib/supabase'
-import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
+import { COST_TYPE, getCategory } from '../../data/expenseCategories'
 import InfoTooltip from '../../components/InfoTooltip'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 import { useTheme } from '../../context/ThemeContext'
 import { entryTypeLabel } from '../../lib/cashEntry'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { opcoesCategorias, rotuloCategoria, useCategoriasExtra } from '../../lib/categorias'
 import { devidoNoPeriodo } from '../../lib/periodicidade'
 import { BRAND } from '../../theme'
 
@@ -39,7 +40,7 @@ function exportCSV(entries, lang) {
     const inc = e.type === 'entrada' ? Number(e.amount).toFixed(2) : ''
     const exp = e.type === 'saida'   ? Number(e.amount).toFixed(2) : ''
     const dest = lang === 'de' ? (e.destination === 'caixa' ? 'Kasse' : 'Bank') : lang === 'en' ? (e.destination === 'caixa' ? 'Cash' : 'Bank') : (e.destination === 'caixa' ? 'Caixa' : 'Banco')
-    const cat = e.category ? (getCategory(e.category)?.[lang]?.label || '') : ''
+    const cat = rotuloCategoria(e.category, lang)
     const vr = e.vat_rate != null ? `${e.vat_rate}%` : ''
     const va = e.vat_amount != null ? Number(e.vat_amount).toFixed(2) : ''
     const qty = e.quantity != null ? e.quantity : 1
@@ -64,6 +65,7 @@ export default function LivroCaixa() {
   const G = t.heading, GOLD = t.accent, BG = t.softCardBg
   const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
+  const extras = useCategoriasExtra(eid)
   const { isViewing } = useViewAs()
   const [searchParams, setSearchParams] = useSearchParams()
   const [entries, setEntries] = useState([])
@@ -191,7 +193,7 @@ export default function LivroCaixa() {
       amount: gross,
       quantity: parseFloat(String(form.quantity).replace(',', '.')) || 1,
       destination: form.destination,
-      category: !isPriv && baseType === 'saida' ? (form.category || null) : null,
+      category: !isPriv ? (form.category || null) : null,
       catalog_item_id: isPriv ? null : (form.catalog_item_id || null),
       vat_rate: rate,
       vat_amount: Number(vatFromGross(gross, rate).toFixed(2)),
@@ -354,7 +356,7 @@ export default function LivroCaixa() {
             {fieldWrap(L.doc, <input value={form.doc} onChange={e=>setForm(f=>({...f,doc:e.target.value}))} placeholder="001" style={inputStyle} />, '80px')}
             {fieldWrap(L.desc, <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={lang==='de'?'Beschreibung…':'Descrição…'} style={inputStyle} />, '180px')}
             {fieldWrap(L.type, (
-              <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value, category: e.target.value!=='saida' ? '' : f.category}))} style={selectStyle}>
+              <select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value, category: e.target.value === f.type ? f.category : ''}))} style={selectStyle}>
                 <option value="entrada">{L.entrada}</option>
                 <option value="saida">{L.saida}</option>
                 <option value="einlage">{L.einlage}</option>
@@ -381,12 +383,12 @@ export default function LivroCaixa() {
               </select>
             ), '150px')}
 
-            {/* Categoria — só para saídas */}
-            {form.type === 'saida' && fieldWrap(
+            {/* Categoria — entradas e saídas (29/10), com as categorias do cliente */}
+            {(form.type === 'saida' || form.type === 'entrada') && fieldWrap(
               L.category,
               <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}>
                 <option value="">{L.catHint}</option>
-                {EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang].label}</option>)}
+                {opcoesCategorias(form.type, extras, lang).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>,
               '170px',
               selCat ? <InfoTooltip text={selCat[lang].explain} badge={`${L.costType}: ${COST_TYPE[selCat.costType][lang]}`} /> : null
@@ -426,7 +428,7 @@ export default function LivroCaixa() {
               <div style={{ fontSize: '11px', color: t.subtle }}>{e.doc}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#1a2e1a' }}>{e.description}</div>
-                {(cat || linked || e.vat_amount > 0 || Number(e.quantity) > 1) && (
+                {(e.category || linked || e.vat_amount > 0 || Number(e.quantity) > 1) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
                     {Number(e.quantity) > 1 && (
                       <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#f1f5f9', color: '#475569' }}>
@@ -437,6 +439,11 @@ export default function LivroCaixa() {
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: COST_TYPE[cat.costType].bg, color: COST_TYPE[cat.costType].color }}>
                         {cat[lang].label}
                         <InfoTooltip text={cat[lang].explain} badge={`${L.costType}: ${COST_TYPE[cat.costType][lang]}`} />
+                      </span>
+                    )}
+                    {!cat && e.category && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: t.segBg, color: t.textMuted }}>
+                        {rotuloCategoria(e.category, lang)}
                       </span>
                     )}
                     {e.vat_amount > 0 && (

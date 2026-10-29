@@ -6,11 +6,49 @@ import { acoes, usePortal } from '../../dados'
 import { exportarCliente } from '../../../lib/adminApi'
 import { urlLogo } from '../../../lib/logos'
 import { Cartao, Campo, Chip, Botao, useCampos, usePerfil, pode, Ic } from '../../ui'
+import { limparCategorias, INCOME_CATEGORIES, MAX_NOME } from '../../../lib/categorias'
+import { EXPENSE_CATEGORIES } from '../../../data/expenseCategories'
 import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
 
 // Dados do cliente — os campos do cabeçalho do documento (secção 1) e o perfil
 // fiscal que decide o calendário (secção 3). Estes dados são mantidos pela
 // equipa: o cliente vê-os, não os altera.
+
+// Categorias próprias do cliente (reunião de 29/10): juntam-se às categorias base
+// nos seletores do Livro de Caixa, da conciliação e das despesas recorrentes da
+// conta dele. Grava logo ao juntar ou retirar.
+function ListaCategorias({ titulo, base, lista, aoMudar }) {
+  const { t } = useTheme()
+  const c = useCampos()
+  const [nova, setNova] = useState('')
+  const juntar = () => {
+    const nome = nova.trim()
+    if (!nome) return
+    if (!lista.some(x => x.toLowerCase() === nome.toLowerCase())) aoMudar([...lista, nome])
+    setNova('')
+  }
+  return (
+    <div style={{ minWidth: 0 }}>
+      <span style={c.rotulo}>{titulo}</span>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+        {lista.length === 0 && <span style={{ fontSize: '12.5px', color: t.subtle }}>Só as categorias base.</span>}
+        {lista.map(nome => (
+          <span key={nome} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 4px 3px 10px', borderRadius: '20px', background: t.softCardBg, border: `1px solid ${t.cardBorder}`, fontSize: '12.5px', fontWeight: 600, color: t.heading }}>
+            {nome}
+            <button onClick={() => aoMudar(lista.filter(x => x !== nome))} aria-label={`Retirar ${nome}`} className="lc-compacto"
+              style={{ width: '22px', height: '22px', borderRadius: '50%', border: 'none', background: 'transparent', color: t.textMuted, cursor: 'pointer', fontSize: '13px', lineHeight: 1 }}>✕</button>
+          </span>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        <input value={nova} onChange={e => setNova(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); juntar() } }}
+          maxLength={MAX_NOME} placeholder="Nova categoria" aria-label={`Nova categoria de ${titulo.toLowerCase()}`} style={{ ...c.input, flex: 1 }} />
+        <Botao onClick={juntar} disabled={!nova.trim()}>Juntar</Botao>
+      </div>
+      <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '6px' }}>Base: {base}</div>
+    </div>
+  )
+}
 
 export default function Dados({ cliente, modoCliente, equipa }) {
   const { t } = useTheme()
@@ -107,6 +145,18 @@ export default function Dados({ cliente, modoCliente, equipa }) {
           </div>
         </div>
         <div style={{ fontSize: '12px', color: t.subtle, marginTop: '12px' }}>País, forma jurídica, regime, periodicidade, trabalhadores e serviços decidem o calendário fiscal. Depois de mudar, gere o ano outra vez em Obrigações fiscais — não duplica o que já existe.</div>
+      </Cartao>
+
+      <Cartao titulo="Categorias dos lançamentos" icone={<Ic.doc size={17} />}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '18px' }}>
+          <ListaCategorias titulo="Entradas" lista={limparCategorias(cliente.categorias).entradas}
+            base={INCOME_CATEGORIES.map(x => x.pt.label).join(', ')}
+            aoMudar={entradas => up({ categorias: { ...limparCategorias(cliente.categorias), entradas } })} />
+          <ListaCategorias titulo="Saídas" lista={limparCategorias(cliente.categorias).saidas}
+            base={`${EXPENSE_CATEGORIES.length} categorias de despesa (material, automóvel, renda…)`}
+            aoMudar={saidas => up({ categorias: { ...limparCategorias(cliente.categorias), saidas } })} />
+        </div>
+        <div style={{ fontSize: '12px', color: t.subtle, marginTop: '12px' }}>Aparecem nos seletores de categoria da conta do cliente (Livro de Caixa, conciliação bancária e despesas recorrentes), além das categorias base. Ex.: doações e dízimos, para uma igreja.{!cliente.userId ? ' Este cliente ainda não tem conta na plataforma.' : ''}</div>
       </Cartao>
 
       <Cartao titulo="Gestão interna" icone={<Ic.cadeado size={17} />} area="interna">

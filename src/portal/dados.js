@@ -60,6 +60,7 @@ function deCliente(r, contrato) {
     software: r.software || '', estado: r.estado, responsavel: r.responsavel || '',
     horasIncluidas: Number(r.horas_incluidas || 0), cliente_desde: r.cliente_desde, notas: r.notas || '',
     userId: r.user_id || null, logo: r.logo || null,
+    categorias: r.categorias || {},
     // A avença vive no Financeiro (client_billing); aqui só se lê.
     contratoId: contrato?.id || null,
     avenca: contrato ? Number(contrato.amount) : null,

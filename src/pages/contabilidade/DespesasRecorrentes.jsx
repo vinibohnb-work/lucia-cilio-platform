@@ -5,8 +5,9 @@ import { useLang } from '../../context/LangContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
-import { EXPENSE_CATEGORIES, COST_TYPE, getCategory } from '../../data/expenseCategories'
+import { COST_TYPE, getCategory } from '../../data/expenseCategories'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
+import { opcoesCategorias, rotuloCategoria, useCategoriasExtra } from '../../lib/categorias'
 import { devidoNoPeriodo, mesAtual } from '../../lib/periodicidade'
 import { getCompanySettings, VAT_RATES } from '../../lib/companySettings'
 import { BRAND } from '../../theme'
@@ -104,7 +105,8 @@ export default function DespesasRecorrentes() {
     startM: 'Início', endM: 'Fim', validity: 'Vigência', noEnd: 'sem fim', endHint: 'vazio = sem fim', since: 'desde',
   }
 
-  const catLabel = (key) => getCategory(key)?.[lang]?.label || '—'
+  const catLabel = (key) => rotuloCategoria(key, lang) || '—'
+  const extras = useCategoriasExtra(eid)
   const confirmedByTpl = Object.fromEntries(confirmed.map(c => [c.recurring_expense_id, c]))
 
   // IVA: a taxa do modelo; sem taxa, a da empresa (0 se isenta). Antes as saídas
@@ -227,7 +229,7 @@ export default function DespesasRecorrentes() {
                 <div style={{ flex: 1, minWidth: '160px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: G }}>{t.description}</div>
                   <div style={{ fontSize: '11px', color: t.textMuted, marginTop: '2px' }}>
-                    {cat && <span style={{ color: COST_TYPE[cat.costType].color, fontWeight: 600 }}>{catLabel(t.category)}</span>}
+                    {t.category && <span style={{ color: cat ? COST_TYPE[cat.costType].color : undefined, fontWeight: 600 }}>{catLabel(t.category)}</span>}
                     <span style={{ marginLeft: cat ? '8px' : 0 }}>{L.predicted}: <strong>€ {fmt(t.amount)}</strong></span>
                   </div>
                 </div>
@@ -270,7 +272,7 @@ export default function DespesasRecorrentes() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
             {[
               [L.desc, '180px', <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder={L.desc} style={inputStyle} />],
-              [L.category, '160px', <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}><option value="">{L.selectCat}</option>{EXPENSE_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c[lang].label}</option>)}</select>],
+              [L.category, '160px', <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selectStyle}><option value="">{L.selectCat}</option>{opcoesCategorias('saida', extras, lang).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>],
               [L.amount, '110px', <input type="number" step="0.01" min="0" value={form.amount} onChange={e=>setForm(f=>({...f,amount:e.target.value}))} placeholder="0.00" style={inputStyle} />],
               [L.vat, '110px', <select value={form.vat_rate} onChange={e=>setForm(f=>({...f,vat_rate:e.target.value}))} style={selectStyle}><option value="">{`${L.vatDefault} (${taxaEmpresa}%)`}</option>{vatOptions.map(r => <option key={r} value={r}>{r}%</option>)}</select>],
               [L.period_, '130px', <select value={form.periodicity} onChange={e=>setForm(f=>({...f,periodicity:e.target.value}))} style={selectStyle}><option value="monthly">{L.monthly}</option><option value="quarterly">{L.quarterly}</option><option value="annual">{L.annual}</option></select>],
