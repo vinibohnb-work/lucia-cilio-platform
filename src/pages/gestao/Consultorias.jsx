@@ -4,7 +4,7 @@ import { useLang } from '../../context/LangContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { BLOCOS, progressoTotal, progressoBloco } from '../../data/consultoriaBlocos'
+import { BLOCOS, BLOCOS_PERCURSO, progressoTotal, progressoBloco } from '../../data/consultoriaBlocos'
 import ListaCasos from '../../components/gestao/ListaCasos'
 
 // Lista de consultorias. A Lúcia trabalha aqui como administradora e regista o
@@ -16,7 +16,7 @@ const EMPTY = { nome: '', empresa: '', tipo: 'implementacao' }
 
 // O bloco atual é calculado (o primeiro por acabar), como a fase na ESG — antes
 // ficava gravado o último bloco em que se clicou, mesmo só para espreitar.
-const blocoAtual = (c) => (BLOCOS.find(b => progressoBloco(b.n, c).pct < 100) || BLOCOS[BLOCOS.length - 1]).n
+const blocoAtual = (c) => (BLOCOS_PERCURSO.find(b => progressoBloco(b.n, c).pct < 100) || BLOCOS_PERCURSO[BLOCOS_PERCURSO.length - 1]).n
 
 const IconPasta = () => (
   <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="17" height="12.5" rx="2" /><path d="M9 7V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2M3.5 12.5h17" /></svg>

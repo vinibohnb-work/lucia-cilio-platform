@@ -153,7 +153,7 @@ export function descrever(c, lang) {
   if (c.notas_cliente?.trim()) out.push(`\n## Nas palavras do cliente\n  ${c.notas_cliente.trim()}`)
 
   // Blocos 1 e 2 — as respostas às perguntas
-  for (const b of BLOCOS) {
+  for (const b of BLOCOS.filter(x => !x.opcional)) {   // o bloco 5 (marketing) não entra no dossiê para o banco
     for (const sec of b.seccoes || []) {
       if (!sec.perguntas?.length) continue
       const respondidas = sec.perguntas

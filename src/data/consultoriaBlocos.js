@@ -143,7 +143,64 @@ export const BLOCOS = [
         notaEn: 'Shows whether cash is available at all times — consider seasonality, advances and customer payment behaviour.' },
     ],
   },
+  // ── Bloco 5 · Consultoria de marketing (pedido da Letícia, 05/11) ──
+  // Opcional: não entra no progresso total, não decide o "bloco atual" e não
+  // aparece em "Por responder" no relatório do plano de negócio. Usa-se só nas
+  // consultorias de marketing. Chaves com prefixo mk_ para não colidir.
+  {
+    n: 5, key: 'marketing', opcional: true,
+    pt: 'Marketing', de: 'Marketing', en: 'Marketing',
+    subPt: 'Consultoria de marketing · diagnóstico da presença do negócio e próximos passos',
+    subDe: 'Marketing-Beratung · Diagnose der Präsenz des Unternehmens und nächste Schritte',
+    subEn: 'Marketing consultancy · diagnosis of the business presence and next steps',
+    seccoes: [
+      {
+        key: 'mk_negocio', num: '5.1',
+        pt: 'O negócio hoje', de: 'Das Unternehmen heute', en: 'The business today',
+        perguntas: [
+          { key: 'mk_oferta',       pt: 'O que vendo hoje e qual é o meu produto ou serviço principal?', de: 'Was verkaufe ich heute und was ist mein Hauptprodukt bzw. meine Hauptdienstleistung?', en: 'What do I sell today and what is my main product or service?' },
+          { key: 'mk_cliente',      pt: 'Quem é o meu cliente ideal e que problema lhe resolvo?', de: 'Wer ist mein idealer Kunde und welches Problem löse ich für ihn?', en: 'Who is my ideal customer and what problem do I solve for them?' },
+          { key: 'mk_diferencial',  pt: 'Porque é que os clientes me escolhem a mim e não a outro?', de: 'Warum wählen Kunden mich und nicht jemand anderen?', en: 'Why do customers choose me and not someone else?' },
+          { key: 'mk_como_chegam',  pt: 'Como chegam hoje os clientes até mim? (indicação, Instagram, Google, eventos…)', de: 'Wie kommen Kunden heute zu mir? (Empfehlung, Instagram, Google, Events…)', en: 'How do customers find me today? (referral, Instagram, Google, events…)' },
+        ],
+      },
+      {
+        key: 'mk_presenca', num: '5.2',
+        pt: 'Presença nas redes sociais', de: 'Präsenz in den sozialen Medien', en: 'Social media presence',
+        perguntas: [
+          { key: 'mk_redes',        pt: 'Em que redes estou e quais são os perfis? (Instagram, LinkedIn, Facebook, TikTok, site)', de: 'In welchen Netzwerken bin ich und wie heißen die Profile? (Instagram, LinkedIn, Facebook, TikTok, Website)', en: 'Which networks am I on and what are the profiles? (Instagram, LinkedIn, Facebook, TikTok, website)' },
+          { key: 'mk_frequencia',   pt: 'Com que frequência publico e quem cria o conteúdo?', de: 'Wie oft veröffentliche ich und wer erstellt die Inhalte?', en: 'How often do I post and who creates the content?' },
+          { key: 'mk_conteudo',     pt: 'Que tipo de conteúdo publico hoje e qual funciona melhor?', de: 'Welche Art von Inhalten veröffentliche ich und was funktioniert am besten?', en: 'What kind of content do I post and what works best?' },
+          { key: 'mk_numeros',      pt: 'Como estão os números? (seguidores, alcance, mensagens e pedidos que chegam)', de: 'Wie sind die Zahlen? (Follower, Reichweite, eingehende Nachrichten und Anfragen)', en: 'What do the numbers look like? (followers, reach, incoming messages and requests)' },
+          { key: 'mk_identidade',   pt: 'Tenho identidade visual definida? (logótipo, cores, fotografias)', de: 'Habe ich eine definierte visuelle Identität? (Logo, Farben, Fotos)', en: 'Do I have a defined visual identity? (logo, colours, photos)' },
+          { key: 'mk_referencias',  pt: 'Que perfis ou concorrentes admiro e porquê?', de: 'Welche Profile oder Mitbewerber bewundere ich und warum?', en: 'Which profiles or competitors do I admire, and why?' },
+        ],
+      },
+      {
+        key: 'mk_objetivos', num: '5.3',
+        pt: 'Dificuldades e objetivos', de: 'Schwierigkeiten und Ziele', en: 'Difficulties and goals',
+        perguntas: [
+          { key: 'mk_dificuldades', pt: 'Quais são hoje as minhas maiores dificuldades no marketing?', de: 'Was sind heute meine größten Schwierigkeiten im Marketing?', en: 'What are my biggest marketing difficulties today?' },
+          { key: 'mk_recursos',     pt: 'Quanto tempo e que orçamento posso dedicar ao marketing por mês?', de: 'Wie viel Zeit und Budget kann ich monatlich für Marketing aufwenden?', en: 'How much time and budget can I dedicate to marketing each month?' },
+          { key: 'mk_metas',        pt: 'O que quero alcançar nos próximos 3 a 6 meses?', de: 'Was möchte ich in den nächsten 3 bis 6 Monaten erreichen?', en: 'What do I want to achieve in the next 3 to 6 months?' },
+          { key: 'mk_medir',        pt: 'Como vou saber que o marketing está a funcionar?', de: 'Woran erkenne ich, dass das Marketing funktioniert?', en: 'How will I know the marketing is working?' },
+        ],
+      },
+      {
+        key: 'mk_diagnostico', num: '5.4',
+        pt: 'Diagnóstico e próximos passos', de: 'Diagnose und nächste Schritte', en: 'Diagnosis and next steps',
+        perguntas: [
+          { key: 'mk_melhorar',     pt: 'O que podemos melhorar já? (perfil, biografia, destaques, conteúdo, frequência)', de: 'Was können wir sofort verbessern? (Profil, Bio, Highlights, Inhalte, Frequenz)', en: 'What can we improve right away? (profile, bio, highlights, content, frequency)' },
+          { key: 'mk_prioridades',  pt: 'Quais são as 3 prioridades para as próximas semanas?', de: 'Was sind die 3 Prioritäten für die nächsten Wochen?', en: 'What are the 3 priorities for the coming weeks?' },
+          { key: 'mk_proximos',     pt: 'Próximos passos: quem faz o quê e até quando?', de: 'Nächste Schritte: wer macht was bis wann?', en: 'Next steps: who does what, and by when?' },
+        ],
+      },
+    ],
+  },
 ]
+
+// Blocos que contam para o percurso do plano de negócio (o 5, marketing, é opcional)
+export const BLOCOS_PERCURSO = BLOCOS.filter(b => !b.opcional)
 
 // Tabelas que contam para o progresso de cada bloco de números
 export const TABELAS_POR_BLOCO = {

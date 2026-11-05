@@ -6,7 +6,7 @@ import { useSidebar } from '../../context/SidebarContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { supabase } from '../../lib/supabase'
-import { BLOCOS, SWOT_QUADRANTES, TOWS_CELULAS, progressoBloco } from '../../data/consultoriaBlocos'
+import { BLOCOS, BLOCOS_PERCURSO, SWOT_QUADRANTES, TOWS_CELULAS, progressoBloco } from '../../data/consultoriaBlocos'
 import { Privadas, Capital, Financiamento, Projecao, Liquidez } from '../../components/consultoria/TabelasNumeros'
 import BlocoEnquadramento from '../../components/consultoria/BlocoEnquadramento'
 import { criarLeadDeContacto } from '../../lib/leadsCrm'
@@ -22,7 +22,8 @@ const CHAVE_APRESENTACAO = 'lc-consultoria-apresentacao'
 
 // 13-D (13/10): o bloco atual é calculado — o primeiro por acabar, como a fase
 // na ESG. Antes, clicar num bloco só para espreitar gravava-o como o atual.
-const blocoAtualDe = (c) => (BLOCOS.find(b => progressoBloco(b.n, c).pct < 100) || BLOCOS[BLOCOS.length - 1]).n
+// O bloco 5 (marketing) é opcional: não conta para o bloco atual.
+const blocoAtualDe = (c) => (BLOCOS_PERCURSO.find(b => progressoBloco(b.n, c).pct < 100) || BLOCOS_PERCURSO[BLOCOS_PERCURSO.length - 1]).n
 
 const IconLapis = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></svg>

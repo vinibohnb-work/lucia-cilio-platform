@@ -163,7 +163,7 @@ export function construirHTML({ c, lang = 'pt' }) {
   const banda = Math.min(5, Math.max(1, Number(rel.posicao?.banda) || 3))
 
   // ── Por responder (determinista: sai da ficha, não da IA) ──
-  const porResponder = BLOCOS.flatMap(b => (b.seccoes || []).flatMap(s => (s.perguntas || [])))
+  const porResponder = BLOCOS.filter(b => !b.opcional).flatMap(b => (b.seccoes || []).flatMap(s => (s.perguntas || [])))
     .filter(q => !(c.respostas?.[q.key] || '').trim())
     .map(q => q[lang] || q.pt)
 
