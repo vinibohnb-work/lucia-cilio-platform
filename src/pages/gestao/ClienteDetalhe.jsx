@@ -59,7 +59,7 @@ export default function ClienteDetalhe({ userId }) {
     titleL: 'Titel', body: 'Inhalt', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Speichern', del: 'Löschen', open: 'Öffnen ↗', loading: 'Wird geladen…',
     emptyNotes: 'Noch keine Einträge für diesen Mandanten.', notFound: 'Mandant nicht gefunden.',
-    confirmDel: 'Eintrag wirklich löschen?', saveErr: 'Speichern fehlgeschlagen (Migration 017/018 nötig).',
+    confirmDel: 'Eintrag wirklich löschen?', saveErr: 'Speichern fehlgeschlagen (Migration 017/018 nötig).', clientSees: 'Der Mandant sieht, was du hier schreibst.',
   } : lang === 'en' ? {
     platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG', active: 'active', pending: 'pending',
     summary: 'Overview', revenue: 'Revenue (year)', balance: 'Balance',
@@ -70,7 +70,7 @@ export default function ClienteDetalhe({ userId }) {
     titleL: 'Title', body: 'Content', link: 'Link (optional)', linkPh: 'https://…',
     save: 'Save', del: 'Delete', open: 'Open ↗', loading: 'Loading…',
     emptyNotes: 'No entries for this client yet.', notFound: 'Client not found.',
-    confirmDel: 'Delete this entry?', saveErr: 'Save failed (migration 017/018 required).',
+    confirmDel: 'Delete this entry?', saveErr: 'Save failed (migration 017/018 required).', clientSees: 'The client sees what you write here.',
   } : {
     platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG', active: 'ativo', pending: 'pendente',
     summary: 'Resumo', revenue: 'Receita (ano)', balance: 'Saldo',
@@ -81,7 +81,7 @@ export default function ClienteDetalhe({ userId }) {
     titleL: 'Título', body: 'Conteúdo', link: 'Ligação (opcional)', linkPh: 'https://…',
     save: 'Guardar', del: 'Eliminar', open: 'Abrir ↗', loading: 'A carregar…',
     emptyNotes: 'Ainda não há registos para este cliente.', notFound: 'Cliente não encontrado.',
-    confirmDel: 'Eliminar este registo?', saveErr: 'Falha ao guardar (é necessária a migração 017/018).',
+    confirmDel: 'Eliminar este registo?', saveErr: 'Falha ao guardar (é necessária a migração 017/018).', clientSees: 'O cliente vê o que escreves aqui.',
   }
   const kindLabel = { note: L.note, meeting: L.meeting, recommendation: L.recommendation, report: L.report }
 
@@ -238,6 +238,8 @@ export default function ClienteDetalhe({ userId }) {
         <button onClick={() => { setShowForm(v => !v); setForm(EMPTY) }} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 700, fontSize: '12.5px', cursor: 'pointer' }}>{L.new}</button>
       </div>
 
+      {/* 12-C (R-C5): o histórico de consultoria aparece ao cliente no portal */}
+      <div style={{ background: t.dueSoon.bg, color: t.dueSoon.ink, borderRadius: '10px', padding: '9px 13px', fontSize: '12.5px', fontWeight: 600, marginBottom: '12px' }}>👁 {L.clientSees}</div>
       {err && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '12px' }}>{err}</div>}
 
       {showForm && (
