@@ -135,6 +135,10 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
   let { data: evento, error: semFotos } = await db.from('eventos').select(CAMPOS_EVENTO + ', fotos_url').eq('id', eu.evento_id).maybeSingle()
   if (semFotos) ({ data: evento } = await db.from('eventos').select(CAMPOS_EVENTO).eq('id', eu.evento_id).maybeSingle())
   if (!evento) return [404, { error: 'Evento não encontrado.' }]
+  // Decisão de 04/11: depois do fecho, quem entrou no dia continua a entrar com o seu acesso
+  // (vê as fotografias e os perfis partilhados). Gente nova não entra: o QR, o botão da
+  // landing e o 'entrar' continuam a respeitar a janela inteira. Aqui só vale o "ainda não abriu".
+  evento = { ...evento, aberto_ate: null }
   const fechado = janela(evento, hoje)
   if (fechado) return fechado
 

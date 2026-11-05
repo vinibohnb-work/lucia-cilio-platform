@@ -659,7 +659,13 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
     const r = await fetch('/api/evento?entrada=' + encodeURIComponent(ligacoes[0].dataset.areaEvento), { cache: 'no-store' })
     const j = await r.json().catch(() => ({}))
     if (r.ok && j.c) ligacoes.forEach(a => { a.href = '/participantes/#c=' + encodeURIComponent(j.c); a.removeAttribute('aria-disabled'); a.classList.remove('fechado'); a.removeAttribute('title') })
-    else if (r.status === 410) bloquear('A área de participantes deste evento já fechou')
+    else if (r.status === 410) {
+      // Decisão de 04/11: quem entrou no dia (acesso guardado neste telemóvel) continua a entrar
+      let jaEntrou = false
+      try { jaEntrou = !!localStorage.getItem('momentos-participante') } catch { /* sem armazenamento */ }
+      if (jaEntrou) ligacoes.forEach(a => { a.href = '/participantes/'; a.removeAttribute('aria-disabled'); a.classList.remove('fechado'); a.removeAttribute('title') })
+      else bloquear('A área de participantes deste evento já fechou')
+    }
   } catch { /* sem rede: fica bloqueado */ }
 })()
 </script>
