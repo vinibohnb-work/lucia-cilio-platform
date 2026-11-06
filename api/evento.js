@@ -138,6 +138,12 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
   // Decisão de 04/11: depois do fecho, quem entrou no dia continua a entrar com o seu acesso
   // (vê as fotografias e os perfis partilhados). Gente nova não entra: o QR, o botão da
   // landing e o 'entrar' continuam a respeitar a janela inteira. Aqui só vale o "ainda não abriu".
+  // Segurança (revisão de 06/11): "quem entrou no dia" é verificado aqui, pela data em que o
+  // acesso foi criado, para não depender só de o aberto_ate estar bem configurado na Gestão.
+  if (evento.aberto_ate && eu.created_at) {
+    const entrouEm = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Lisbon' }).format(new Date(eu.created_at))
+    if (entrouEm > evento.aberto_ate) return [410, { error: 'A área de participantes deste evento já fechou.', evento: infoEvento(evento) }]
+  }
   evento = { ...evento, aberto_ate: null }
   const fechado = janela(evento, hoje)
   if (fechado) return fechado
@@ -226,6 +232,7 @@ export default async function handler(req, res) {
     const [estado, corpo] = await tratar(db, { metodo: req.method, query: req.query || {}, body: req.body || {} })
     return res.status(estado).json(corpo)
   } catch (e) {
-    return res.status(500).json({ error: e.message || 'Erro inesperado.' })
+    console.error('api/evento', e)
+    return res.status(500).json({ error: 'Erro inesperado. Tente de novo.' })
   }
 }
