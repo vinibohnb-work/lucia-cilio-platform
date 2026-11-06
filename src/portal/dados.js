@@ -301,6 +301,11 @@ export const acoes = {
   // cascade): calendário da equipa, tarefas, pedidos de documentos, relatórios,
   // notas, horas, registo de mensagens. A conta na plataforma, se existir, fica.
   async apagarCliente(id) {
+    // Imagens do Marketing do cliente (migração 055): as linhas vão em cascata,
+    // os ficheiros não. Sem a 055 aplicada a consulta falha e não há nada a apagar.
+    const { data: mkt } = await supabase.from('marketing_posts').select('imagem_path').eq('cliente_id', id).not('imagem_path', 'is', null)
+    const imagens = (mkt || []).map(x => x.imagem_path).filter(Boolean)
+    if (imagens.length) await supabase.storage.from('client-docs').remove(imagens)
     mudar(s => {
       s.clientes = s.clientes.filter(c => c.id !== id)
       for (const k of ['obrigacoes', 'tarefas', 'documentos', 'mensagens', 'relatorios', 'notas', 'horas', 'pagamentos']) s[k] = s[k].filter(x => x.clienteId !== id)

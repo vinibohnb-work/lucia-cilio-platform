@@ -47,7 +47,7 @@ npm run lint
 
 ## Banco de dados
 
-- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_054.sql` (a próxima é a 055), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
+- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_055.sql` (a próxima é a 056), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
 - Cabeçalho de cada migração: número e título, porquê, o que muda, se apaga dados, e "Executar no Supabase: SQL Editor → New query → colar → Run". Escrever idempotente (`if not exists`, `drop policy if exists` antes do `create policy`).
 - Aplicação é manual no SQL Editor: primeiro no DEV, depois o Vinícius corre na produção. Código que depende de uma migração só vai para a `main` depois de ela estar aplicada.
 - RLS em tudo. Funções `public.is_admin()` e `public.is_equipa()` (admin, comercial, marketing). O cliente só lê o que tem o seu `user_id` ou a sua ficha; anónimo não lê nada; o formulário público grava só via `api/diagnostico.js` (migração 042).
@@ -62,7 +62,7 @@ npm run lint
   - `tarefas` (também reuniões: `tipo`, `hora`, `duracao_min`, com o botão "Adicionar ao Google Calendar", 053), `documentos_cliente`, `mensagens_cliente`, `relatorios_trimestrais`, `notas_cliente`, `horas_cliente`, `client_notices` — portal da Gestão.
   - `consultorias`, `consulting_notes`, `crm_leads`, `diagnostico_submissoes`, `client_billing`, `billing_payments` — consultoria, CRM e financeiro.
   - `esg_consultorias` (casos ESG; `nivel` e `metodo` jsonb do método da Lúcia, migração 046), `esg_diagnostics`, `esg_materiality`, `esg_projects` (também o plano de ação), `esg_reports`, `esg_interno` (notas internas e opinião por reunião, só admin), `esg_comentarios` (comentário por item, lados equipa/cliente; é a única coisa que o cliente escreve na ESG, migração 047).
-  - `marketing_posts`, `marketing_notas` — aba de Marketing.
+  - `marketing_posts`, `marketing_notas` — aba de Marketing. Com `cliente_id` (055) é o planeamento de um cliente com o serviço Marketing (aba Marketing da ficha, só equipa; imagens em `client-docs/marketing/<cliente_id>/`); nulo = o Instagram da própria LC Office.
   - `eventos`, `evento_participantes` (+ bucket privado `eventos`) — repositório de eventos da Lúcia (Gestão → Eventos): cada evento tem local, landing (`landing_url`) e, se tiver `codigo`, uma área de participantes com QR (migrações 048, 049 cargo e 050) e, opcionalmente, o link das fotografias (`fotos_url`, 052), que a API só entrega a quem entrou com o seu acesso; `evento_palestras` e `evento_avaliacoes` guardam as apresentações de negócio do evento e a nota de 0 a 10 (NPS) que cada participante dá a cada negócio e ao evento (051; apesar do nome da tabela, desde 23/10 o que se avalia são as apresentações de negócio, não as palestras; na Gestão os resultados aparecem sem nomes). Só admin pela app; os participantes não têm conta e passam sempre por `api/evento.js`, que confere o código do QR e o link pessoal (token).
 
 ## Mapa do código

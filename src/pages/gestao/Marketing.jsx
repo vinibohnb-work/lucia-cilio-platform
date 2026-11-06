@@ -16,6 +16,12 @@ import { Cartao, Botao, Chip, Janela, Vazio, Pilulas, Ic, useCampos, Campo } fro
 // Cada publicação tem data e hora, formato, estado, imagem, legenda (com
 // contagem para o limite do Instagram), hashtags e notas internas.
 // A integração com as métricas da Meta/Google continua um item à parte.
+//
+// Marketing por cliente (06/11, migração 055): o mesmo ecrã aparece na ficha
+// dos clientes com o serviço Marketing, com `clienteId`. Cada planeamento só
+// lê e grava o seu (cliente_id nulo = o Instagram da própria LC Office). Só a
+// equipa o vê; as imagens do cliente ficam em marketing/<cliente_id>/, fora da
+// pasta a que o cliente chega no bucket.
 
 const BUCKET = 'client-docs'
 const LIMITE_LEGENDA = 2200
@@ -35,7 +41,7 @@ const hoje = () => isoDe(new Date())
 const fmtData = (s) => { if (!s) return 'sem data'; const [y, m, d] = s.split('-'); return `${d}/${m}/${y}` }
 const VAZIO = { id: null, data: '', hora: '', formato: 'post', estado: 'ideia', titulo: '', legenda: '', hashtags: '', imagem_path: null, notas: '' }
 
-export default function Marketing() {
+export default function Marketing({ clienteId = null }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const { user } = useAuth()
@@ -65,18 +71,20 @@ export default function Marketing() {
   const [novaNota, setNovaNota] = useState('')
 
   const ler = useCallback(async () => {
+    // Só o planeamento deste dono: o cliente da ficha, ou a LC Office (cliente_id nulo)
+    const doDono = (q) => clienteId ? q.eq('cliente_id', clienteId) : q.is('cliente_id', null)
     const [{ data: p, error: e1 }, { data: n, error: e2 }] = await Promise.all([
-      supabase.from('marketing_posts').select('*').order('data', { ascending: false, nullsFirst: true }),
-      supabase.from('marketing_notas').select('*').order('created_at', { ascending: false }),
+      doDono(supabase.from('marketing_posts').select('*')).order('data', { ascending: false, nullsFirst: true }),
+      doDono(supabase.from('marketing_notas').select('*')).order('created_at', { ascending: false }),
     ])
-    if (e1 || e2) setErro('Não foi possível ler o planeamento (a migração 043 já foi aplicada?).')
+    if (e1 || e2) setErro('Não foi possível ler o planeamento (as migrações 043 e 055 já foram aplicadas?).')
     setPosts(p || []); setNotas(n || []); setCarregado(true)
     const caminhos = (p || []).map(x => x.imagem_path).filter(Boolean)
     if (caminhos.length) {
       const { data } = await supabase.storage.from(BUCKET).createSignedUrls(caminhos, 3600)
       setUrls(Object.fromEntries((data || []).filter(x => x.signedUrl).map(x => [x.path, x.signedUrl])))
     }
-  }, [])
+  }, [clienteId])
   useEffect(() => { ler() }, [ler])
 
   async function guardar(p, ficheiro) {
@@ -85,7 +93,7 @@ export default function Marketing() {
     const id = p.id || crypto.randomUUID()
     if (ficheiro) {
       const nome = ficheiro.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_').slice(-60)
-      const caminho = `marketing/${id}/${Date.now().toString(36)}-${nome}`
+      const caminho = `marketing/${clienteId ? `${clienteId}/` : ''}${id}/${Date.now().toString(36)}-${nome}`
       const { error } = await supabase.storage.from(BUCKET).upload(caminho, ficheiro, { upsert: false })
       if (error) { setErro('A imagem não foi carregada.'); return false }
       imagem_path = caminho
@@ -93,7 +101,7 @@ export default function Marketing() {
     const linha = {
       id, data: p.data || null, hora: p.hora || null, formato: p.formato, estado: p.estado,
       titulo: p.titulo?.trim() || null, legenda: p.legenda || null, hashtags: p.hashtags?.trim() || null,
-      imagem_path, notas: p.notas || null, autor: p.autor || eu, updated_at: new Date().toISOString(),
+      imagem_path, notas: p.notas || null, autor: p.autor || eu, cliente_id: clienteId, updated_at: new Date().toISOString(),
     }
     const { error } = await supabase.from('marketing_posts').upsert(linha)
     if (error) { setErro('Não foi possível guardar a publicação.'); return false }
@@ -108,7 +116,7 @@ export default function Marketing() {
   }
   async function juntarNota() {
     if (!novaNota.trim()) return
-    const { error } = await supabase.from('marketing_notas').insert({ texto: novaNota.trim(), autor: eu })
+    const { error } = await supabase.from('marketing_notas').insert({ texto: novaNota.trim(), autor: eu, cliente_id: clienteId })
     if (error) { setErro('Não foi possível guardar a anotação.'); return }
     setNovaNota(''); ler()
   }
@@ -129,7 +137,7 @@ export default function Marketing() {
 
   return (
     <div style={{ width: '100%', fontFamily: t.fontBody }}>
-      <h1 className="so-leitores">Marketing</h1>
+      {!clienteId && <h1 className="so-leitores">Marketing</h1>}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
         <Pilulas opcoes={[['feed', 'Feed'], ['calendario', 'Calendário'], ['lista', 'Lista'], ['notas', `Anotações${notas.filter(n => !n.feita).length ? ` (${notas.filter(n => !n.feita).length})` : ''}`]]} valor={vista} aoMudar={setVista} />
