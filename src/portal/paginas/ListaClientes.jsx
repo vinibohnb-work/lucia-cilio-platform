@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
 import { Titulo, Botao, Chip, Campo, useCampos, Cartao, Ic } from '../ui'
-import { PAISES, FORMAS, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, REGIMES, rotuloServico, fmtData, estadoEfetivo, ESTADOS_OBRIG } from '../regras'
+import { PAISES, FORMAS, SERVICOS, periodicidadesPara, SEM_ACOMPANHAMENTO, ESTADOS_CLIENTE, REGIMES, rotuloServico, fmtData, estadoEfetivo, ESTADOS_OBRIG } from '../regras'
 import { proximaObrigacao, docsEmFalta, naoLidas, tarefaAtrasada } from '../seletores'
 
 // A lista geral de clientes — a mesma do print delas (Nome · País · Setor ·
@@ -17,7 +17,7 @@ import { proximaObrigacao, docsEmFalta, naoLidas, tarefaAtrasada } from '../sele
 // omissão (filtro Estado).
 
 // O cliente nasce sempre em "Onboarding" e o setor preenche-se depois em Dados (13-D, 13/10).
-const VAZIO = { nome: '', pais: '', servico: 'contabilidade', forma: '', periodicidade: 'trimestral', regime: '' }
+const VAZIO = { nome: '', pais: '', servicos: ['contabilidade'], forma: '', periodicidade: 'trimestral', regime: '' }
 const SEM_INATIVOS = 'sem_inativos'
 
 export default function ListaClientes() {
@@ -34,14 +34,22 @@ export default function ListaClientes() {
     (!f.nome || (x.nome + ' ' + (x.pessoa || '') + ' ' + (x.setor || '')).toLowerCase().includes(f.nome.toLowerCase())) &&
     (!f.pais || x.pais === f.pais) && (!f.servico || x.servicos.includes(f.servico)) && passaEstado(x))
 
-  // Forma, regime e periodicidade só contam para a Contabilidade: é o único
-  // serviço para o qual se gera calendário fiscal (gerarCalendario).
-  const fiscal = novo?.servico === 'contabilidade'
+  // Forma e regime só contam para a Contabilidade: é o único serviço para o qual
+  // se gera calendário fiscal (gerarCalendario). Vários serviços por cliente
+  // (Letícia, 06/11); sem Contabilidade a periodicidade pode ser "Sem acompanhamento".
+  const fiscal = !!novo?.servicos.includes('contabilidade')
+  const alternarServico = (k) => setNovo(p => {
+    const servicos = p.servicos.includes(k) ? p.servicos.filter(x => x !== k) : [...p.servicos, k]
+    const comCont = servicos.includes('contabilidade')
+    // Ao ligar a Contabilidade, "sem acompanhamento" deixa de valer; ao desligá-la, passa a ser o habitual
+    const periodicidade = comCont && p.periodicidade === SEM_ACOMPANHAMENTO ? 'trimestral' : !comCont && p.servicos.includes('contabilidade') ? SEM_ACOMPANHAMENTO : p.periodicidade
+    return { ...p, servicos, periodicidade }
+  })
 
   function criar() {
-    if (!novo.nome.trim() || !novo.pais) return
+    if (!novo.nome.trim() || !novo.pais || !novo.servicos.length) return
     const id = acoes.criarCliente({
-      nome: novo.nome.trim(), pais: novo.pais, setor: '', servicos: [novo.servico], estado: 'onboarding',
+      nome: novo.nome.trim(), pais: novo.pais, setor: '', servicos: novo.servicos, estado: 'onboarding',
       forma: novo.forma || FORMAS[novo.pais][0], periodicidade: novo.periodicidade,
       regime: novo.regime || REGIMES[novo.pais][0][0], software: novo.pais === 'PT' ? 'TOConline' : 'Lexware', responsavel: s.eu,
     })
@@ -68,13 +76,26 @@ export default function ListaClientes() {
               <select value={novo.pais} onChange={e => setNovo(p => ({ ...p, pais: e.target.value, forma: '', regime: '' }))} style={{ ...c.input, cursor: 'pointer' }}>
                 <option value="">— Selecionar país —</option>{Object.entries(PAISES).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </select></Campo>
-            <Campo rotulo="Serviço">
-              <select value={novo.servico} onChange={e => setNovo(p => ({ ...p, servico: e.target.value }))} style={{ ...c.input, cursor: 'pointer' }}>
-                {SERVICOS.map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+            <Campo rotulo="Periodicidade do acompanhamento">
+              <select value={novo.periodicidade} onChange={e => setNovo(p => ({ ...p, periodicidade: e.target.value }))} style={{ ...c.input, cursor: 'pointer' }}>
+                {periodicidadesPara(novo.servicos).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
               </select></Campo>
           </div>
+          <div style={{ marginBottom: '12px' }}>
+            <span style={c.rotulo}>Serviços</span>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {SERVICOS.map(([k, r]) => {
+                const on = novo.servicos.includes(k)
+                return (
+                  <label key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '7px 12px', borderRadius: '9px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg, color: t.heading }}>
+                    <input type="checkbox" checked={on} onChange={() => alternarServico(k)} style={{ accentColor: t.btnBg }} />{r}
+                  </label>
+                )
+              })}
+            </div>
+          </div>
           {novo.pais && fiscal && (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
               <Campo rotulo="Forma jurídica">
                 <select value={novo.forma} onChange={e => setNovo(p => ({ ...p, forma: e.target.value }))} style={{ ...c.input, cursor: 'pointer' }}>
                   {FORMAS[novo.pais].map(x => <option key={x}>{x}</option>)}
@@ -83,14 +104,10 @@ export default function ListaClientes() {
                 <select value={novo.regime} onChange={e => setNovo(p => ({ ...p, regime: e.target.value }))} style={{ ...c.input, cursor: 'pointer' }}>
                   {REGIMES[novo.pais].map(([k, r]) => <option key={k} value={k}>{r}</option>)}
                 </select></Campo>
-              <Campo rotulo="Periodicidade">
-                <select value={novo.periodicidade} onChange={e => setNovo(p => ({ ...p, periodicidade: e.target.value }))} style={{ ...c.input, cursor: 'pointer' }}>
-                  {PERIODICIDADES.map(([k, r]) => <option key={k} value={k}>{r}</option>)}
-                </select></Campo>
             </div>
           )}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Botao variante="primario" onClick={criar} disabled={!novo.nome.trim() || !novo.pais}>Guardar e abrir</Botao>
+            <Botao variante="primario" onClick={criar} disabled={!novo.nome.trim() || !novo.pais || !novo.servicos.length}>Guardar e abrir</Botao>
             <Botao onClick={() => setNovo(null)}>Cancelar</Botao>
             {fiscal && <span style={{ fontSize: '12px', color: t.subtle }}>O calendário fiscal do ano é gerado logo a partir do país, forma e regime.</span>}
           </div>
