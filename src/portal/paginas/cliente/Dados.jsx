@@ -8,7 +8,7 @@ import { urlLogo } from '../../../lib/logos'
 import { Cartao, Campo, Chip, Botao, useCampos, usePerfil, pode, Ic } from '../../ui'
 import { limparCategorias, INCOME_CATEGORIES, MAX_NOME } from '../../../lib/categorias'
 import { EXPENSE_CATEGORIES } from '../../../data/expenseCategories'
-import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, PERIODICIDADES, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
+import { fmtEur, PAISES, FORMAS, REGIMES, SOFTWARE, SERVICOS, periodicidadesPara, SEM_ACOMPANHAMENTO, ESTADOS_CLIENTE, rotuloRegime, rotuloServico, rotuloPeriodicidade } from '../../regras'
 
 // Dados do cliente — os campos do cabeçalho do documento (secção 1) e o perfil
 // fiscal que decide o calendário (secção 3). Estes dados são mantidos pela
@@ -124,7 +124,7 @@ export default function Dados({ cliente, modoCliente, equipa }) {
             </select></Campo>
           <Campo rotulo="Forma jurídica">{sel('forma', (FORMAS[cliente.pais] || []).map(x => [x, x]))}</Campo>
           <Campo rotulo="Regime fiscal">{sel('regime', REGIMES[cliente.pais] || [])}</Campo>
-          <Campo rotulo="Periodicidade do acompanhamento">{sel('periodicidade', PERIODICIDADES)}</Campo>
+          <Campo rotulo="Periodicidade do acompanhamento">{sel('periodicidade', periodicidadesPara(cliente.servicos))}</Campo>
           <Campo rotulo="Software contabilístico">{sel('software', SOFTWARE.map(x => [x, x]))}</Campo>
           <Campo rotulo="Trabalhadores">
             <select value={String(!!cliente.trabalhadores)} onChange={e => up({ trabalhadores: e.target.value === 'true' })} style={{ ...c.input, cursor: 'pointer' }}>
@@ -138,7 +138,11 @@ export default function Dados({ cliente, modoCliente, equipa }) {
               const on = cliente.servicos.includes(k)
               return (
                 <label key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '7px 12px', borderRadius: '9px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, border: `1px solid ${on ? t.accent : t.cardBorder}`, background: on ? t.softCardBg : t.cardBg, color: t.heading }}>
-                  <input type="checkbox" checked={on} onChange={() => up({ servicos: on ? cliente.servicos.filter(x => x !== k) : [...cliente.servicos, k] })} style={{ accentColor: t.btnBg }} />{r}
+                  <input type="checkbox" checked={on} onChange={() => {
+                    const servicos = on ? cliente.servicos.filter(x => x !== k) : [...cliente.servicos, k]
+                    // Com Contabilidade a periodicidade decide o calendário fiscal: "sem acompanhamento" não vale
+                    up(servicos.includes('contabilidade') && cliente.periodicidade === SEM_ACOMPANHAMENTO ? { servicos, periodicidade: 'trimestral' } : { servicos })
+                  }} style={{ accentColor: t.btnBg }} />{r}
                 </label>
               )
             })}

@@ -47,13 +47,13 @@ npm run lint
 
 ## Banco de dados
 
-- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_053.sql` (a próxima é a 054), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
+- SQL em `supabase/`: `schema.sql` (base), `migration_002.sql` … `migration_054.sql` (a próxima é a 055), `SETUP_COMPLETO.sql` (consolida até à 031, idempotente) e `DEV_SETUP_2026-10-06.sql` (base nova até à 039; depois aplicar 040+ pela ordem).
 - Cabeçalho de cada migração: número e título, porquê, o que muda, se apaga dados, e "Executar no Supabase: SQL Editor → New query → colar → Run". Escrever idempotente (`if not exists`, `drop policy if exists` antes do `create policy`).
 - Aplicação é manual no SQL Editor: primeiro no DEV, depois o Vinícius corre na produção. Código que depende de uma migração só vai para a `main` depois de ela estar aplicada.
 - RLS em tudo. Funções `public.is_admin()` e `public.is_equipa()` (admin, comercial, marketing). O cliente só lê o que tem o seu `user_id` ou a sua ficha; anónimo não lê nada; o formulário público grava só via `api/diagnostico.js` (migração 042).
 - Tabelas centrais:
   - `profiles` — papel e plataforma de cada conta.
-  - `clientes` — a ficha do cliente na Gestão (com ou sem conta; `user_id` liga à conta).
+  - `clientes` — a ficha do cliente na Gestão (com ou sem conta; `user_id` liga à conta). `servicos` é uma lista (contabilidade, esg, consultoria, organizacao, marketing); `periodicidade` aceita 'nenhuma' só para quem não tem Contabilidade (054), porque com Contabilidade decide o calendário fiscal.
   - `clients` — clientes **do próprio utilizador** na Contabilidade (não confundir com `clientes`).
   - `fiscal_obligations` — obrigações fiscais (estados, valor, comprovativo; `source` distingue as do cliente).
   - `cash_entries`, `catalog_items`, `recurring_expenses`, `monthly_plans`, `company_settings` — Contabilidade do cliente.

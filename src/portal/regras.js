@@ -28,11 +28,17 @@ export const SOFTWARE = ['TOConline', 'Lexware', 'DATEV', 'sevDesk', 'Outro']
 
 export const SERVICOS = [
   ['contabilidade', 'Contabilidade'], ['esg', 'ESG'], ['consultoria', 'Consultoria'], ['organizacao', 'Organização administrativa'],
+  ['marketing', 'Marketing'],   // pedido da Letícia (06/11)
 ]
 export const rotuloServico = (k) => SERVICOS.find(([x]) => x === k)?.[1] || k
 
 export const PERIODICIDADES = [['mensal', 'Mensal'], ['trimestral', 'Trimestral'], ['anual', 'Anual']]
-export const rotuloPeriodicidade = (k) => PERIODICIDADES.find(([x]) => x === k)?.[1] || k
+// "Sem acompanhamento" (Lúcia, 06/11): para quem não tem Contabilidade (ex.: só Marketing).
+// Com Contabilidade a periodicidade decide o calendário fiscal, por isso não se oferece.
+export const SEM_ACOMPANHAMENTO = 'nenhuma'
+export const PERIODICIDADES_TODAS = [...PERIODICIDADES, [SEM_ACOMPANHAMENTO, 'Sem acompanhamento']]
+export const periodicidadesPara = (servicos) => (servicos || []).includes('contabilidade') ? PERIODICIDADES : PERIODICIDADES_TODAS
+export const rotuloPeriodicidade = (k) => PERIODICIDADES_TODAS.find(([x]) => x === k)?.[1] || k || ''
 
 export const ESTADOS_CLIENTE = {
   ativo:      { rotulo: 'Ativo',      tom: 'ok' },

@@ -64,7 +64,7 @@ export default function PaginaCliente({ idFixo }) {
   // Uma linha de perfil só com o que está preenchido (sem rótulos vazios)
   const perfil = [
     cliente.setor,
-    [cliente.servicos.map(rotuloServico).join(' + '), rotuloPeriodicidade(cliente.periodicidade).toLowerCase()].filter(Boolean).join(' '),
+    [cliente.servicos.map(rotuloServico).join(' + '), cliente.periodicidade === 'nenhuma' ? '' : rotuloPeriodicidade(cliente.periodicidade).toLowerCase()].filter(Boolean).join(' '),
     cliente.forma,
     cliente.regime && rotuloRegime(cliente),
   ].filter(x => x && String(x).trim() && x !== '—').join(' · ')
