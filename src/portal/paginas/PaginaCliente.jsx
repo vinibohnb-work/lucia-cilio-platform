@@ -19,6 +19,8 @@ import AreaInterna from './cliente/AreaInterna'
 
 // A ficha da conta (números, onboarding, avisos, pasta, histórico de consultoria).
 const ContaPlataforma = lazy(() => import('../../pages/gestao/ClienteDetalhe'))
+// Marketing por cliente (06/11, migração 055): só a equipa, só com o serviço Marketing
+const MarketingCliente = lazy(() => import('../../pages/gestao/Marketing'))
 
 // Página individual do cliente (documento, secção 1), com o cabeçalho e os
 // separadores do mockup. A mesma página serve a equipa e o cliente: no perfil
@@ -47,12 +49,14 @@ export default function PaginaCliente({ idFixo }) {
   if (!cliente) return <Navigate to="/gestao/clientes" replace />
   const base = modoCliente ? '/v2/portal' : `/gestao/clientes/${id}`
   const porLer = naoLidas(s, id).length
+  const temMarketing = (cliente.servicos || []).includes('marketing')
 
   const separadores = [
     // As Tarefas vivem no Resumo (simplificação de 12/10)
     ['resumo', 'Resumo'], ['obrigacoes', 'Obrigações fiscais'],
     ['documentos', 'Documentos'], ['relatorios', 'Relatórios'],
     ['mensagens', 'Mensagens', !modoCliente && porLer], ['dados', modoCliente ? 'Os meus dados' : 'Dados do cliente'],
+    ...(!modoCliente && temMarketing ? [['marketing', 'Marketing', null, true]] : []),
     ...(modoCliente ? [] : [['notas', 'Notas internas', null, true]]),
     // Só a administradora: a ficha da conta usa a lista de contas, que é dela.
     ...(!modoCliente && papel === 'admin' && cliente?.userId ? [['conta', 'Conta na plataforma', null, true]] : []),
@@ -170,6 +174,7 @@ export default function PaginaCliente({ idFixo }) {
         </Cartao>
       )}
       {sep === 'dados' && <Dados cliente={cliente} modoCliente={modoCliente} equipa={s.equipa} />}
+      {sep === 'marketing' && !modoCliente && temMarketing && <Suspense fallback={null}><MarketingCliente key={cliente.id} clienteId={cliente.id} /></Suspense>}
       {sep === 'notas' && <AreaInterna cliente={cliente} />}
       {sep === 'conta' && <Suspense fallback={null}><ContaPlataforma key={cliente.userId} userId={cliente.userId} embutido /></Suspense>}
 
