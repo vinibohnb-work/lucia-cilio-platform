@@ -320,7 +320,14 @@ export const acoes = {
   // tinha passam a aparecer aqui, e as daqui passam a aparecer-lhe.
   async ligarConta(id, userId) {
     mudar(s => { s.clientes.find(c => c.id === id).userId = userId || null })
-    if (!await gravar(supabase.from('clientes').update({ user_id: userId || null }).eq('id', id))) return
+    if (userId) {
+      // Só liga uma ficha ainda sem conta; se outra pessoa a ligou entretanto, pára antes das obrigações e do contrato (Iara, 07/11)
+      const { data: lig, error } = await supabase.from('clientes').update({ user_id: userId }).eq('id', id).is('user_id', null).select('id')
+      if (error || (lig || []).length !== 1) {
+        estado = { ...estado, erro: error ? `A ligação não foi gravada (${error.message}).` : 'Esta ficha foi entretanto ligada a outra conta. Nada foi alterado.' }
+        avisar(); recarregar(); return
+      }
+    } else if (!await gravar(supabase.from('clientes').update({ user_id: null }).eq('id', id))) return
     if (userId) {
       await gravar(supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
       await gravar(supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))

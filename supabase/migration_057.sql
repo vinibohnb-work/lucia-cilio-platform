@@ -25,4 +25,4 @@ commit;
 
 -- Verificação: deve mostrar a lista com 'portal'
 select pg_get_constraintdef(oid) from pg_constraint
- where conrelid = 'public.profiles'::regclass and conname = 'profiles_platform_check';
+ where conrelid = 'public.profiles'::regclass and conname = 'profiles_platform_chk';

@@ -74,6 +74,9 @@ export default function AdminHome() {
     ficha: 'Mandantenakte', fichaNova: '+ Neue Akte mit diesem Namen anlegen', fichaNenhuma: 'Ohne Akte (nur das Konto)',
     fichaHint: 'Das Konto wird mit der Akte verknüpft: Fristen, Dokumente und Vertrag erscheinen dem Mandanten ohne weiteren Schritt.',
     fichaErro: 'Konto erstellt, aber nicht mit der Akte verknüpft. Unter Mandanten > Daten verknüpfen',
+    fichaJaLigada: 'Diese Akte wurde inzwischen mit einem anderen Konto verknüpft',
+    fichaVaiLigar: (n) => `Wird mit der Akte „${n}" verknüpft, weil die E-Mail übereinstimmt.`,
+    fichaVarias: (n) => `Es gibt ${n} Akten mit dieser E-Mail. Bitte wählen Sie eine.`,
   } : lang === 'en' ? {
     title: 'User Management',
     new: '+ New User', email: 'Email', name: 'Display name',
@@ -95,6 +98,9 @@ export default function AdminHome() {
     ficha: 'Client record', fichaNova: '+ Create a new record with this name', fichaNenhuma: 'No record (account only)',
     fichaHint: 'The account is linked to the record: deadlines, documents and contract show up for the client with no extra step.',
     fichaErro: 'Account created, but not linked to the record. Link it in Clients > Details',
+    fichaJaLigada: 'This record was meanwhile linked to another account',
+    fichaVaiLigar: (n) => `It will be linked to the record "${n}" because the email matches.`,
+    fichaVarias: (n) => `There are ${n} records with this email. Choose one.`,
   } : {
     title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
@@ -116,6 +122,9 @@ export default function AdminHome() {
     ficha: 'Ficha do cliente', fichaNova: '+ Criar ficha nova com este nome', fichaNenhuma: 'Sem ficha (só a conta)',
     fichaHint: 'A conta fica ligada à ficha: prazos, documentos e contrato aparecem ao cliente sem mais nenhum passo.',
     fichaErro: 'Conta criada, mas não ficou ligada à ficha. Ligue em Clientes > Dados',
+    fichaJaLigada: 'Esta ficha foi entretanto ligada a outra conta',
+    fichaVaiLigar: (n) => `Vai ficar ligada à ficha «${n}» porque o e-mail coincide.`,
+    fichaVarias: (n) => `Há ${n} fichas com este e-mail. Escolha qual.`,
   }
 
   // Fichas de clientes que ainda não têm conta (12-A): é a elas que um acesso novo se liga
@@ -123,8 +132,14 @@ export default function AdminHome() {
   const [fichaTocada, setFichaTocada] = useState(false)
   // Ficha com o mesmo e-mail fica escolhida sozinha, até a administradora mudar à mão
   const mailForm = form.email.trim().toLowerCase()
-  const fichaMesmoMail = mailForm ? fichas.find(f => (f.email || '').trim().toLowerCase() === mailForm) : null
-  const fichaEscolhida = fichaTocada ? form.fichaId : (fichaMesmoMail ? fichaMesmoMail.id : 'nova')
+  // Só pré-seleciona com EXATAMENTE uma ficha com o e-mail (Iara, 07/11). Com duas ou mais, fica vazio e o gravar desligado até a admin escolher.
+  const fichasMesmoMail = mailForm ? fichas.filter(f => (f.email || '').trim().toLowerCase() === mailForm) : []
+  const fichaMesmoMail = fichasMesmoMail.length === 1 ? fichasMesmoMail[0] : null
+  const fichaAmbigua = !fichaTocada && fichasMesmoMail.length > 1
+  const fichaPreSel = !fichaTocada && fichaMesmoMail ? fichaMesmoMail : null
+  const fichaEscolhida = fichaTocada ? form.fichaId : (fichaMesmoMail ? fichaMesmoMail.id : fichaAmbigua ? '' : 'nova')
+  // '' = ainda por escolher (e-mail ambíguo): o Criar conta fica desligado
+  const fichaPorEscolher = form.role === 'user' && editingId === 'new' && fichaEscolhida === ''
 
   const load = useCallback(async () => {
     setLoading(true); setErr('')
@@ -175,7 +190,7 @@ export default function AdminHome() {
   // 12-A (R-C1): o acesso nasce ligado a uma ficha. Faz o mesmo que "Ligar conta"
   // em Clientes > Dados: obrigações nos dois sentidos e o contrato da ficha (12-B).
   async function ligarFicha(userId) {
-    if (!userId || form.role !== 'user' || !fichaEscolhida) return
+    if (!userId || form.role !== 'user' || !fichaEscolhida || fichaEscolhida === 'sem') return
     const ok = ({ error }) => { if (error) throw error }
     if (fichaEscolhida === 'nova') {
       const servicos = form.platform === 'esg' ? ['esg'] : form.platform === 'both' ? ['contabilidade', 'esg'] : ['contabilidade']
@@ -187,7 +202,10 @@ export default function AdminHome() {
       return
     }
     const id = fichaEscolhida
-    ok(await supabase.from('clientes').update({ user_id: userId }).eq('id', id))
+    // Só liga se a ficha ainda não tiver conta; se outra admin a ligou entretanto, pára antes de mexer em prazos e contrato (Iara, 07/11)
+    const lig = await supabase.from('clientes').update({ user_id: userId }).eq('id', id).is('user_id', null).select('id')
+    ok(lig)
+    if ((lig.data || []).length !== 1) throw new Error(L.fichaJaLigada)
     ok(await supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
     ok(await supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
     ok(await supabase.from('client_billing').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
@@ -287,7 +305,7 @@ export default function AdminHome() {
               <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option><option value="comercial">{L.roleComercial}</option><option value="marketing">{L.roleMarketing}</option></select>
             </div>
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={submit} disabled={saving} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.createBtn : L.save)}</button>
+              <button onClick={submit} disabled={saving || fichaPorEscolher} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: saving ? 'wait' : fichaPorEscolher ? 'not-allowed' : 'pointer', opacity: fichaPorEscolher ? 0.5 : 1, whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.createBtn : L.save)}</button>
               <button onClick={closeForm} style={{ padding: '9px 12px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>{L.cancel}</button>
             </div>
           </div>
@@ -304,10 +322,13 @@ export default function AdminHome() {
             <div style={{ marginTop: '14px', maxWidth: '520px' }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.ficha}</div>
               <select value={fichaEscolhida} onChange={e => { setFichaTocada(true); setForm(f => ({ ...f, fichaId: e.target.value })) }} style={selectStyle}>
+                {fichaAmbigua && <option value="" disabled>—</option>}
                 <option value="nova">{L.fichaNova}</option>
                 {fichas.map(f => <option key={f.id} value={f.id}>{f.nome}{f.email ? ` (${f.email})` : ''}</option>)}
-                <option value="">{L.fichaNenhuma}</option>
+                <option value="sem">{L.fichaNenhuma}</option>
               </select>
+              {fichaPreSel && <div style={{ fontSize: '12px', fontWeight: 600, color: t.heading, marginTop: '8px' }}>{L.fichaVaiLigar(fichaPreSel.nome)}</div>}
+              {fichaAmbigua && <div style={{ fontSize: '12px', fontWeight: 600, color: t.dueSoon.ink, marginTop: '8px' }}>{L.fichaVarias(fichasMesmoMail.length)}</div>}
               <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '8px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.fichaHint}</span></div>
             </div>
           )}
