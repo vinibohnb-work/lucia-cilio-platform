@@ -4,6 +4,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
 import { Titulo, Botao, Cartao, Campo, Vazio, Ic, useCampos, usePerfil } from '../ui'
 import { ATIVIDADES, MESES_LONGOS, hojeIso, somaDias, dataDe, fmtData } from '../regras'
+import RelatorioHoras from '../partes/RelatorioHoras'
 
 // Horas da equipa (pedido da Letícia, 09/10): quanto tempo foi dedicado a cada
 // cliente e a cada atividade (marketing, interno…). Regista-se só a quantidade
@@ -32,6 +33,7 @@ export default function Horas() {
   const [aviso, setAviso] = useState('')
   const [quem, setQuem] = useState(s.eu)            // '' = toda a equipa
   const [mes, setMes] = useState(hoje.slice(0, 7))  // AAAA-MM
+  const [relatorio, setRelatorio] = useState(false) // janela "Relatório de horas" (06/11)
   const set = (k) => (e) => setNovo(p => ({ ...p, [k]: e.target.value }))
 
   const nomeCliente = Object.fromEntries(s.clientes.map(x => [x.id, x.nome]))
@@ -123,7 +125,14 @@ export default function Horas() {
           Hoje <strong style={{ color: t.heading }}>{fmtH(totHoje)}</strong>
           {' · '}<span title={`${fmtData(semana0)} – ${fmtData(somaDias(semana0, 6))}`}>Semana <strong style={{ color: t.heading }}>{fmtH(totSemana)}</strong></span>
         </span>
+        <div style={{ flex: 1 }} />
+        {/* Relatório de horas (pedido da Letícia, 06/11): período, pessoa e cliente → PDF ou Excel */}
+        <Botao onClick={() => setRelatorio(true)}><Ic.lista size={15} />Relatório</Botao>
       </div>
+      {relatorio && (
+        <RelatorioHoras horas={s.horas} clientes={s.clientes} equipa={s.equipa} eu={s.eu}
+          mesInicial={mes} pessoaInicial={quem} aoFechar={() => setRelatorio(false)} />
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr) minmax(0, 1.25fr)', gap: '16px', alignItems: 'start' }}>
         {/* ── Por cliente / atividade ── */}
