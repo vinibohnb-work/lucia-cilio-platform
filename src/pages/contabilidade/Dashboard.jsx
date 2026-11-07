@@ -200,6 +200,7 @@ export default function Dashboard() {
     predictedFixed: 'Geplante Fixkosten (offen)', predictedCta: 'Bestätigen →', predicted: 'Geplant',
     ivaTitle: 'MwSt.', ivaLiq: 'MwSt. (Verkäufe)', ivaDed: 'Vorsteuer (Einkäufe)', ivaPay: 'MwSt.-Zahllast', ivaRec: 'MwSt.-Guthaben',
     irTitle: 'Steuerrücklage', irBase: 'Ergebnis (Basis)', irReserve: 'Zurückzulegen', irHint: 'auf das Periodenergebnis', irNoResult: 'Kein positives Ergebnis — nichts zurückzulegen.',
+    irPending: (v) => `Nur gebuchte Beträge, wie bei Rücklagen und EÜR: ${v} an geplanten Fixkosten (noch offen) sind nicht enthalten.`,
     famvWarn: (pct, limit) => `Achtung: Ihr Monatsgewinn liegt bei ${pct}% der Familienversicherungs-Grenze (${limit} €/Monat).`,
     famvCta: 'Details ansehen →',
   } : lang === 'en' ? {
@@ -223,6 +224,7 @@ export default function Dashboard() {
     predictedFixed: 'Planned fixed costs (open)', predictedCta: 'Confirm →', predicted: 'Planned',
     ivaTitle: 'VAT', ivaLiq: 'VAT charged (sales)', ivaDed: 'Deductible VAT (purchases)', ivaPay: 'VAT payable', ivaRec: 'VAT refundable',
     irTitle: 'Income tax reserve', irBase: 'Result (base)', irReserve: 'To reserve', irHint: 'on the period result', irNoResult: 'No positive result — nothing to reserve.',
+    irPending: (v) => `Booked entries only, as in Reserves and EÜR: ${v} of planned fixed costs (still open) are not included.`,
     famvWarn: (pct, limit) => `Warning: your monthly profit is at ${pct}% of the family insurance limit (€${limit}/month).`,
     famvCta: 'View details →',
     product: 'Product', service: 'Service',
@@ -247,6 +249,7 @@ export default function Dashboard() {
     predictedFixed: 'Custos fixos previstos (por confirmar)', predictedCta: 'Confirmar →', predicted: 'Previsto',
     ivaTitle: 'IVA', ivaLiq: 'IVA liquidado (vendas)', ivaDed: 'IVA dedutível (compras)', ivaPay: 'IVA a entregar', ivaRec: 'IVA a recuperar',
     irTitle: 'Reserva para IR', irBase: 'Resultado (base)', irReserve: 'A reservar', irHint: 'sobre o resultado do período', irNoResult: 'Sem resultado positivo — nada a reservar.',
+    irPending: (v) => `Só os lançamentos registados, como nas Reservas e no EÜR: não inclui ${v} de custos fixos previstos por confirmar.`,
     famvWarn: (pct, limit) => `Atenção: o teu lucro mensal está em ${pct}% do limite da Familienversicherung (${limit} €/mês).`,
     famvCta: 'Ver detalhes →',
     product: 'Produto', service: 'Serviço',
@@ -259,7 +262,10 @@ export default function Dashboard() {
   const ssBase = revenue * 0.70
   // Reserva de IR: % da empresa sobre o resultado positivo do período
   const irPct = settings?.ir_reserve_pct != null ? Number(settings.ir_reserve_pct) : 25
-  const irBase = Math.max(0, yearNet)
+  // A reserva usa só o que está lançado (sem as recorrentes por confirmar), a mesma
+  // base das Reservas e do EÜR — antes o Painel dava outra reserva para o mesmo ano.
+  const netLancado = revenue - (fixedC + otherC + varC)
+  const irBase = Math.max(0, netLancado)
   const irReserve = irBase * irPct / 100
   const ssEst  = ssBase * 0.214
 
@@ -385,7 +391,7 @@ export default function Dashboard() {
               {[
                 { label: L.irBase, value: irBase, color: G, bg: BG },
                 { label: `${L.irReserve} (${irPct}%)`, value: irReserve, color: t.dueSoon.ink, bg: t.dueSoon.bg, strong: true },
-                { label: L.afterReserve, value: yearNet - irReserve, color: (yearNet - irReserve) >= 0 ? t.dueOk.ink : RED, bg: t.dueOk.bg },
+                { label: L.afterReserve, value: netLancado - irReserve, color: (netLancado - irReserve) >= 0 ? t.dueOk.ink : RED, bg: t.dueOk.bg },
               ].map(c => (
                 <div key={c.label} style={{ background: c.bg, borderRadius: '10px', padding: '14px 16px', border: `1px solid ${t.cardBorder}` }}>
                   <div style={{ fontSize: '11px', color: t.textMuted, fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
@@ -395,6 +401,15 @@ export default function Dashboard() {
             </div>
           ) : (
             <div style={{ fontSize: '13px', color: t.subtle }}>{L.irNoResult}</div>
+          )}
+          {predictedAteHoje > 0 && (
+            <div style={{ fontSize: '11.5px', color: t.subtle, marginTop: '10px', lineHeight: 1.45 }}>
+              {L.irPending(fmt2(predictedAteHoje))}{' '}
+              <button onClick={() => navigate('/contabilidade/recorrentes')}
+                style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: t.accentText, fontWeight: 700, fontSize: '11.5px' }}>
+                {L.predictedCta}
+              </button>
+            </div>
           )}
         </div>
       )}
