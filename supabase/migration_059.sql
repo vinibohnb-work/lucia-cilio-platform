@@ -29,11 +29,21 @@ begin
   if exists (select 1 from pg_proc where proname = 'is_equipa_leitura' and pronamespace = 'public'::regnamespace) is not true then
     raise exception 'Aplicar a migração 056 antes da 059';
   end if;
+  -- A 056 pode estar aplicada só em parte: is_equipa() tem de ser só admin.
+  if pg_get_functiondef('public.is_equipa()'::regprocedure) ilike '%comercial%'
+     or pg_get_functiondef('public.is_equipa()'::regprocedure) ilike '%marketing%' then
+    raise exception 'is_equipa() ainda inclui comercial/marketing: 056 incompleta';
+  end if;
 end $$;
 
 -- 1. Autor
+-- Em duas instruções de propósito (Iara, 07/11): com o default no "add column", o
+-- Postgres preencheria TODAS as linhas antigas com auth.uid() de quem corre a
+-- migração (numa sessão com JWT), violando a decisão de deixá-las sem autor.
 alter table public.horas_cliente
-  add column if not exists autor_id uuid references auth.users(id) on delete set null default auth.uid();
+  add column if not exists autor_id uuid references auth.users(id) on delete set null;
+alter table public.horas_cliente
+  alter column autor_id set default auth.uid();
 create index if not exists horas_cliente_autor_idx on public.horas_cliente (autor_id);
 
 -- 2. Gatilho
@@ -70,7 +80,8 @@ create policy "horas_atividade_regista" on public.horas_cliente for insert to au
 
 create policy "horas_atividade_edita" on public.horas_cliente for update to authenticated
   using      (cliente_id is null and autor_id = auth.uid() and public.is_equipa_leitura())
-  with check (cliente_id is null and autor_id = auth.uid() and nullif(trim(atividade), '') is not null);
+  with check (cliente_id is null and autor_id = auth.uid() and nullif(trim(atividade), '') is not null
+              and public.is_equipa_leitura());
 
 -- Sem delete para não-admin; horas_cliente_equipa (admin) cobre ler/corrigir/apagar.
 commit;
