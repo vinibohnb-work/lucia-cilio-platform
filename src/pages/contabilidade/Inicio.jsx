@@ -91,7 +91,12 @@ export default function Inicio() {
     const [{ data: av }, { data: ob }, { data: cb }, cs] = await Promise.all([
       supabase.from('client_notices').select('*').eq('user_id', eid).order('created_at', { ascending: false }).limit(5),
       supabase.from('fiscal_obligations').select('*').eq('user_id', eid).eq('status', 'pending').order('deadline', { ascending: true }).limit(20),   // a mais antiga primeiro: uma em atraso aparece aqui (R-B3)
-      supabase.from('client_billing').select('*').eq('user_id', eid).eq('active', true).limit(1),
+      // Migração 058: o cliente lê o contrato pela vista só-dele, sem as notas internas.
+      // Em "ver como", a administradora lê a tabela (a vista filtra por quem está ligado).
+      (isViewing
+        ? supabase.from('client_billing').select('id,service,amount,periodicity,start_month,active,contract_name,contract_path').eq('user_id', eid)
+        : supabase.from('portal_meu_contrato').select('id,service,amount,periodicity,start_month,active,contract_name,contract_path')
+      ).eq('active', true).limit(1),
       getCompanySettings(eid),
     ])
     setAvisos(av || [])
@@ -99,7 +104,7 @@ export default function Inicio() {
     setContrato((cb || [])[0] || null)
     setSettings(cs)
     setLoading(false)
-  }, [eid])
+  }, [eid, isViewing])
   useEffect(() => { load() }, [load])
 
   // O contrato vive no bucket privado: abre-se com uma ligação temporária.
