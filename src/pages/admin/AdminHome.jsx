@@ -75,6 +75,7 @@ export default function AdminHome() {
     fichaHint: 'Das Konto wird mit der Akte verknüpft: Fristen, Dokumente und Vertrag erscheinen dem Mandanten ohne weiteren Schritt.',
     fichaErro: 'Konto erstellt, aber nicht mit der Akte verknüpft. Unter Mandanten > Daten verknüpfen',
     fichaJaLigada: 'Diese Akte wurde inzwischen mit einem anderen Konto verknüpft',
+    contaJaLigada: 'Dieses Konto ist bereits mit einer anderen Akte verknüpft. Es wurde nichts geändert',
     fichaVaiLigar: (n) => `Wird mit der Akte „${n}" verknüpft, weil die E-Mail übereinstimmt.`,
     fichaVarias: (n) => `Es gibt ${n} Akten mit dieser E-Mail. Bitte wählen Sie eine.`,
   } : lang === 'en' ? {
@@ -99,6 +100,7 @@ export default function AdminHome() {
     fichaHint: 'The account is linked to the record: deadlines, documents and contract show up for the client with no extra step.',
     fichaErro: 'Account created, but not linked to the record. Link it in Clients > Details',
     fichaJaLigada: 'This record was meanwhile linked to another account',
+    contaJaLigada: 'This account is already linked to another record. Nothing was changed',
     fichaVaiLigar: (n) => `It will be linked to the record "${n}" because the email matches.`,
     fichaVarias: (n) => `There are ${n} records with this email. Choose one.`,
   } : {
@@ -123,6 +125,7 @@ export default function AdminHome() {
     fichaHint: 'A conta fica ligada à ficha: prazos, documentos e contrato aparecem ao cliente sem mais nenhum passo.',
     fichaErro: 'Conta criada, mas não ficou ligada à ficha. Ligue em Clientes > Dados',
     fichaJaLigada: 'Esta ficha foi entretanto ligada a outra conta',
+    contaJaLigada: 'Esta conta já está ligada a outra ficha. Nada foi alterado',
     fichaVaiLigar: (n) => `Vai ficar ligada à ficha «${n}» porque o e-mail coincide.`,
     fichaVarias: (n) => `Há ${n} fichas com este e-mail. Escolha qual.`,
   }
@@ -203,12 +206,13 @@ export default function AdminHome() {
     }
     const id = fichaEscolhida
     // Só liga se a ficha ainda não tiver conta; se outra admin a ligou entretanto, pára antes de mexer em prazos e contrato (Iara, 07/11)
-    const lig = await supabase.from('clientes').update({ user_id: userId }).eq('id', id).is('user_id', null).select('id')
-    ok(lig)
-    if ((lig.data || []).length !== 1) throw new Error(L.fichaJaLigada)
-    ok(await supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
-    ok(await supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
-    ok(await supabase.from('client_billing').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+    // Numa operação só no banco (migração 060, Iara A4): liga a ficha, as obrigações nos dois sentidos e o contrato, ou nada
+    const { error: erroLig } = await supabase.rpc('ligar_conta_ficha', { p_cliente: id, p_user: userId })
+    if (erroLig) throw (erroLig.code === 'P0001' ? new Error(L.fichaJaLigada) : erroLig.code === 'P0002' ? new Error(L.contaJaLigada) : erroLig)
+    // Já não há updates soltos aqui: a função 060 faz obrigações e contrato na mesma transação
+
+
+
   }
 
   // O país vive em company_settings porque é ele que decide as regras fiscais
