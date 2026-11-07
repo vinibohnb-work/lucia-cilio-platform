@@ -324,6 +324,8 @@ export const acoes = {
     if (userId) {
       await gravar(supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
       await gravar(supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+      // 12-B (R-C8): o contrato gravado na ficha antes de haver conta ficava com user_id vazio e o Início do cliente (lê por user_id) não o via.
+      await gravar(supabase.from('client_billing').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
     }
     recarregar()
   },
