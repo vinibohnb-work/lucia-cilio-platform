@@ -152,7 +152,14 @@ const paraRelatorio = (p) => ({
 })
 
 const deNota = (r) => ({ id: r.id, clienteId: r.cliente_id, tipo: r.tipo, texto: r.texto, com: r.com, autor: r.autor, resolvido: r.resolvido, data: r.data })
-const deHoras = (r) => ({ id: r.id, clienteId: r.cliente_id, atividade: r.atividade || '', data: r.data, horas: Number(r.horas), descricao: r.descricao, pessoa: r.pessoa })
+// 059: quem lançou é a conta (autor_id); o texto "pessoa" fica só como registo antigo.
+// Horas antigas sem autor (só a admin as vê) aparecem como "Sem autor".
+const SEM_AUTOR = 'Sem autor'
+const deHoras = (r, nomeConta = {}, eu = '', meuId = null) => ({
+  id: r.id, clienteId: r.cliente_id, atividade: r.atividade || '', data: r.data, horas: Number(r.horas), descricao: r.descricao,
+  autorId: r.autor_id || null,
+  pessoa: !r.autor_id ? SEM_AUTOR : r.autor_id === meuId ? eu : (nomeConta[r.autor_id] || r.pessoa || '—'),
+})
 
 // As mensagens são duas fontes numa só conversa: o que a equipa escreveu na
 // plataforma do cliente (client_notices — é o que ele vê no Início) e o registo
@@ -209,18 +216,20 @@ async function ler() {
 
     // Contas da plataforma (para ligar uma ficha a uma conta) e nomes da equipa:
     // só a administradora os consegue listar; para as outras fica o que as fichas dizem.
-    let contas = [], equipa = []
+    let contas = [], equipa = []; const nomeConta = {}
+    const meuId = (await supabase.auth.getSession()).data?.session?.user?.id || null
     if (quem.admin) {
       try {
         const users = await listUsers()
         contas = users.filter(u => u.role === 'user').map(u => ({ id: u.id, nome: u.display_name || u.email, email: u.email, ativo: !!u.last_sign_in_at /* as contas nascem com o e-mail confirmado: só o acesso conta (R-B11) */, platform: u.platform }))
         equipa = users.filter(u => ['admin', 'comercial', 'marketing'].includes(u.role)).map(u => u.display_name || u.email.split('@')[0])
+        users.forEach(u => { nomeConta[u.id] = u.display_name || (u.email || '').split('@')[0] })
       } catch (e) { console.warn('[portal] contas', e) }
     }
     const nomes = new Set([...equipa, quem.eu, ...clientes.map(c => c.responsavel), ...tarefas.map(t => t.responsavel)].filter(Boolean))
 
     estado = {
-      carregado: true, erro: '', eu: quem.eu, admin: quem.admin,
+      carregado: true, erro: '', eu: quem.eu, admin: quem.admin, meuId,
       equipa: [...nomes].sort((a, b) => a.localeCompare(b, 'pt')),
       contas,
       clientes: clientes.map(c => deCliente(c, contratoDe[c.id])),
@@ -233,7 +242,7 @@ async function ler() {
       ].sort((a, b) => a.data.localeCompare(b.data)),
       relatorios: rels.map(deRelatorio),
       notas: notas.map(deNota),
-      horas: horas.map(deHoras),
+      horas: horas.map(h => deHoras(h, nomeConta, quem.eu, meuId)),
       pagamentos: pagamentos.filter(p => clientePorBilling[p.billing_id]).map(p => ({ id: p.id, clienteId: clientePorBilling[p.billing_id], billingId: p.billing_id, periodo: p.period, valor: Number(p.amount), data: p.paid_at })),
     }
   } catch (e) {
@@ -514,9 +523,14 @@ export const acoes = {
   // Horas da equipa: para um cliente (clienteId) ou para uma atividade
   // (atividade: marketing, interno…) — migração 041.
   registarHoras(dados) {
-    const h = { id: novoId(), data: hojeIso(), pessoa: estado.eu, clienteId: null, atividade: '', ...dados }
+    const h = { id: novoId(), data: hojeIso(), clienteId: null, atividade: '', ...dados, pessoa: estado.eu, autorId: estado.meuId } // 059: sempre a conta logada
     mudar(s => { s.horas.push(h) })
     gravar(supabase.from('horas_cliente').insert({ id: h.id, cliente_id: h.clienteId || null, atividade: h.clienteId ? null : h.atividade, data: h.data, horas: h.horas, descricao: h.descricao, pessoa: h.pessoa }))
+  },
+  // Corrigir uma hora (059: comercial e marketing só as próprias de atividade; a admin todas).
+  editarHoras(id, { data, horas, descricao, clienteId = null, atividade = '' }) {
+    mudar(s => { Object.assign(s.horas.find(h => h.id === id), { data, horas, descricao, clienteId, atividade: clienteId ? '' : atividade }) })
+    gravar(supabase.from('horas_cliente').update({ data, horas, descricao, cliente_id: clienteId || null, atividade: clienteId ? null : atividade }).eq('id', id))
   },
   apagarHoras(id) {
     mudar(s => { s.horas = s.horas.filter(h => h.id !== id) })

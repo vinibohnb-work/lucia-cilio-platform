@@ -30,6 +30,7 @@ export default function Horas() {
   const vazio = { data: hoje, pessoa: s.eu, destino: '', outra: '', horas: '', descricao: '' }
   const [novo, setNovo] = useState(vazio)
   const [aviso, setAviso] = useState('')
+  const [editando, setEditando] = useState(null)   // id da hora a corrigir (059: corrigir em vez de apagar)
   const [quem, setQuem] = useState(s.eu)            // '' = toda a equipa
   const [mes, setMes] = useState(hoje.slice(0, 7))  // AAAA-MM
   const set = (k) => (e) => setNovo(p => ({ ...p, [k]: e.target.value }))
@@ -44,7 +45,9 @@ export default function Horas() {
     const clienteId = novo.destino.startsWith('c:') ? novo.destino.slice(2) : null
     if (!clienteId && !atividade) { setAviso('Escolha o cliente ou a atividade.'); return }
     if (!(horas > 0) || horas > 24) { setAviso('Indique as horas: mais de 0 e no máximo 24.'); return }
-    acoes.registarHoras({ data: novo.data || hoje, pessoa: novo.pessoa || s.eu, clienteId, atividade, horas, descricao: novo.descricao.trim() || null })
+    const dados = { data: novo.data || hoje, clienteId, atividade, horas, descricao: novo.descricao.trim() || null }
+    if (editando) { acoes.editarHoras(editando, dados); setEditando(null); setAviso(''); setNovo(vazio); return }
+    acoes.registarHoras(dados)
     setAviso('')
     // Fica a data, a pessoa e o destino: é comum registar várias linhas seguidas.
     setNovo(p => ({ ...p, horas: '', descricao: '' }))
@@ -73,6 +76,13 @@ export default function Horas() {
   const quemTxt = quem ? (quem === s.eu ? 'As minhas horas' : `Horas de ${quem}`) : 'Toda a equipa'
   // Só a administradora apaga (056: comercial e marketing não têm delete; o clique apagava na tela e a hora voltava ao recarregar — Iara A2)
   const podeApagar = () => papel === 'admin'
+  // 059: comercial e marketing corrigem só as próprias horas de atividade; a admin corrige todas.
+  const podeEditar = (h) => papel === 'admin' || (!!h.autorId && h.autorId === s.meuId && !h.clienteId)
+  function editar(h) {
+    setEditando(h.id); setAviso('')
+    setNovo({ data: h.data, pessoa: h.pessoa, destino: h.clienteId ? `c:${h.clienteId}` : `a:${h.atividade}`, outra: '', horas: String(h.horas), descricao: h.descricao || '' })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const sel = { ...c.input, cursor: 'pointer' }
 
@@ -81,13 +91,13 @@ export default function Horas() {
       <Titulo titulo="Horas" />
 
       {/* ── Registar ── */}
-      <Cartao titulo="Registar horas" icone={<Ic.relogio />} estilo={{ marginBottom: '16px' }}>
+      <Cartao titulo={editando ? 'Corrigir horas' : 'Registar horas'} icone={<Ic.relogio />} estilo={{ marginBottom: '16px' }}>
         {/* Quebra em linhas conforme a largura: nunca empurra o botão para fora do cartão. */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 140px' }}><Campo rotulo="Dia"><input type="date" value={novo.data} max={hoje} onChange={set('data')} style={c.input} /></Campo></div>
           <div style={{ flex: '1 1 160px' }}><Campo rotulo="Quem">
-            <select value={novo.pessoa} onChange={set('pessoa')} style={sel}>
-              {[...new Set([s.eu, ...s.equipa])].filter(Boolean).map(p => <option key={p} value={p}>{p}</option>)}
+            <select value={novo.pessoa} disabled title="Quem lança é a conta com que entrou" style={{ ...sel, cursor: 'default' }}>
+              <option value={novo.pessoa}>{novo.pessoa}</option>
             </select>
           </Campo></div>
           <div style={{ flex: '2 1 240px' }}><Campo rotulo="Cliente ou atividade">
@@ -107,15 +117,16 @@ export default function Horas() {
           )}
           <div style={{ flex: '0 1 110px' }}><Campo rotulo="Horas"><input type="number" inputMode="decimal" min="0.25" max="24" step="0.25" placeholder="ex.: 1,5" value={novo.horas} onChange={set('horas')} onKeyDown={e => { if (e.key === 'Enter') registar() }} style={c.input} /></Campo></div>
           <div style={{ flex: '2 1 200px' }}><Campo rotulo="O que foi feito (opcional)"><input value={novo.descricao} onChange={set('descricao')} onKeyDown={e => { if (e.key === 'Enter') registar() }} placeholder="ex.: fecho do trimestre" style={c.input} /></Campo></div>
-          <Botao variante="primario" onClick={registar}><Ic.mais size={15} />Registar</Botao>
+          <Botao variante="primario" onClick={registar}>{editando ? 'Guardar correção' : <><Ic.mais size={15} />Registar</>}</Botao>
+          {editando && <Botao onClick={() => { setEditando(null); setAviso(''); setNovo(vazio) }}>Cancelar</Botao>}
         </div>
         {aviso && <div role="alert" style={{ marginTop: '10px', fontSize: '12.5px', fontWeight: 700, color: t.dueLate.ink }}>{aviso}</div>}
       </Cartao>
 
       {/* ── Totais ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
-        <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.textMuted }}>Ver:</span>
-        <select value={quem} onChange={e => setQuem(e.target.value)} style={{ ...sel, width: 'auto' }} aria-label="Pessoa">
+        <span style={{ fontSize: '12.5px', fontWeight: 700, color: t.textMuted, display: papel === 'admin' ? undefined : 'none' }}>Ver:</span>
+        <select value={quem} onChange={e => setQuem(e.target.value)} style={{ ...sel, width: 'auto', display: papel === 'admin' ? undefined : 'none' }} aria-label="Pessoa">
           <option value={s.eu}>As minhas horas</option>
           {s.equipa.filter(p => p !== s.eu).map(p => <option key={p} value={p}>{p}</option>)}
           <option value="">Toda a equipa</option>
@@ -173,6 +184,8 @@ export default function Horas() {
                     <td style={c.td}><div style={{ fontWeight: 600, color: t.heading }}>{destinoDe(h)}</div>{h.descricao && <div style={{ fontSize: '11.5px', color: t.subtle }}>{h.descricao}</div>}</td>
                     <td style={{ ...c.td, whiteSpace: 'nowrap', fontWeight: 700 }}>{fmtH(h.horas)}</td>
                     <td style={{ ...c.td, textAlign: 'right' }}>
+                      {podeEditar(h) && <button onClick={() => editar(h)} aria-label="Corrigir registo" title="Corrigir"
+                        style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '14px', padding: '6px' }}>✎</button>}
                       {podeApagar(h) && <button onClick={() => { if (window.confirm('Apagar este registo de horas?')) acoes.apagarHoras(h.id) }} aria-label="Apagar registo"
                         style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '14px', padding: '6px' }}>✕</button>}
                     </td>
