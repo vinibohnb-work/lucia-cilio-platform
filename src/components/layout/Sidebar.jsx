@@ -113,9 +113,9 @@ const NAV = {
       { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
       { to: '/gestao/agenda',     Icon: IconCalendario, labelKey: 'nav_agenda',          roles: STAFF },
       { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },
-      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
+      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: ['admin'] },   // 056: mensagens só da administradora
       { to: '/gestao/horas',      Icon: IconHoras,      labelKey: 'nav_horas',           roles: STAFF },
-      { to: '/gestao/relatorios', Icon: IconBarras,     labelKey: 'nav_relatorios_trim', roles: STAFF },
+      { to: '/gestao/relatorios', Icon: IconBarras,     labelKey: 'nav_relatorios_trim', roles: ['admin'] },   // 056: relatórios só da administradora
     ]},
     { key: 'section_comercial', items: [
       { to: '/gestao/crm',          Icon: IconFunil,      labelKey: 'nav_crm',          roles: ['admin', 'comercial'] },

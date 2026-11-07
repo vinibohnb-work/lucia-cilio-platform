@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
-import { Janela, Campo, Botao, Chip, useCampos, Vazio, Ic, Pilulas } from '../ui'
+import { Janela, Campo, Botao, Chip, useCampos, Vazio, Ic, Pilulas, usePerfil } from '../ui'
 import { RECORRENCIAS, ESTADOS_TAREFA, FECHADOS, fmtData, hojeIso, diasAte } from '../regras'
 import { tarefaAtrasada, lembreteAtivo, clientePorId, linkReuniao } from '../seletores'
 
@@ -93,6 +93,7 @@ export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não h�
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const [editar, setEditar] = useState(null)
+  const leitura = usePerfil().papel === 'leitura'   // comercial e marketing (056): agenda só para ver
   const hoje = hojeIso()
 
   if (!tarefas.length) return <Vazio>{vazio}</Vazio>
@@ -112,7 +113,7 @@ export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não h�
             return (
               <tr key={x.id} style={{ opacity: feita ? 0.55 : 1 }}>
                 <td style={{ ...c.td, width: '34px' }}>
-                  <input type="checkbox" checked={feita} onChange={() => acoes.alternarTarefa(x.id)} aria-label="Concluída"
+                  <input type="checkbox" checked={feita} disabled={leitura} onChange={() => { if (!leitura) acoes.alternarTarefa(x.id) }} aria-label="Concluída"
                     style={{ width: '18px', height: '18px', accentColor: '#1f6b45', cursor: 'pointer' }} />
                 </td>
                 <td style={c.td}>
@@ -137,14 +138,14 @@ export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não h�
                   {!feita && <div style={{ fontSize: '11px', color: atraso ? t.neg : t.subtle }}>{atraso ? `${-d} dia${d < -1 ? 's' : ''} em atraso` : d === 0 ? 'hoje' : `daqui a ${d} dia${d > 1 ? 's' : ''}`}</div>}
                 </td>
                 <td style={c.td}>
-                  {atraso ? <Chip tom="erro">Em atraso</Chip> : feita ? <Chip tom="ok">Concluída</Chip> : (
+                  {atraso ? <Chip tom="erro">Em atraso</Chip> : feita ? <Chip tom="ok">Concluída</Chip> : leitura ? <Chip>{ESTADOS_TAREFA[x.estado]?.rotulo || x.estado}</Chip> : (
                     <select value={x.estado} onChange={e => acoes.atualizarTarefa(x.id, { estado: e.target.value })}
                       style={{ border: 'none', borderRadius: '20px', padding: '3px 8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: x.estado === 'em_curso' ? t.dueSoon.bg : t.segBg, color: x.estado === 'em_curso' ? t.dueSoon.ink : t.textMuted }}>
                       {['pendente', 'em_curso'].map(k => <option key={k} value={k}>{ESTADOS_TAREFA[k].rotulo}</option>)}
                     </select>
                   )}
                 </td>
-                <td style={{ ...c.td, textAlign: 'right' }}><button onClick={() => setEditar(x)} style={{ background: 'none', border: 'none', color: t.accentText, fontWeight: 700, cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit' }}>Editar</button></td>
+                <td style={{ ...c.td, textAlign: 'right' }}>{!leitura && <button onClick={() => setEditar(x)} style={{ background: 'none', border: 'none', color: t.accentText, fontWeight: 700, cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit' }}>Editar</button>}</td>
               </tr>
             )
           })}

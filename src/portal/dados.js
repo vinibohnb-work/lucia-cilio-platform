@@ -182,20 +182,25 @@ export function recarregar() { return carregar(quem) }
 
 async function ler() {
   const q = (p) => p.then(({ data, error }) => { if (error) throw error; return data || [] })
+  // Migração 056: comercial e marketing leem a ficha básica e a agenda pelas vistas só de
+  // leitura; obrigações, documentos, mensagens, notas, relatórios e avença são só da
+  // administradora e, para elas, ficam vazios em vez de dar erro.
+  const admin = quem.admin
+  const soAdmin = (p) => admin ? q(p) : Promise.resolve([])
   try {
     const [clientes, obrig, tarefas, docs, msgs, avisos, rels, notas, horas, contratos, pagamentos] = await Promise.all([
-      q(supabase.from('clientes').select('*').order('nome')),
-      q(supabase.from('fiscal_obligations').select('*').not('cliente_id', 'is', null)),
-      q(supabase.from('tarefas').select('*')),
-      q(supabase.from('documentos_cliente').select('*')),
-      q(supabase.from('mensagens_cliente').select('*')),
-      q(supabase.from('client_notices').select('*').order('created_at')),
-      q(supabase.from('relatorios_trimestrais').select('*')),
-      q(supabase.from('notas_cliente').select('*').order('created_at')),
+      q(supabase.from(admin ? 'clientes' : 'gestao_clientes_basico').select('*').order('nome')),
+      soAdmin(supabase.from('fiscal_obligations').select('*').not('cliente_id', 'is', null)),
+      q(supabase.from(admin ? 'tarefas' : 'gestao_agenda').select('*')),
+      soAdmin(supabase.from('documentos_cliente').select('*')),
+      soAdmin(supabase.from('mensagens_cliente').select('*')),
+      soAdmin(supabase.from('client_notices').select('*').order('created_at')),
+      soAdmin(supabase.from('relatorios_trimestrais').select('*')),
+      soAdmin(supabase.from('notas_cliente').select('*').order('created_at')),
       q(supabase.from('horas_cliente').select('*')),
       // A avença é da administradora: para a restante equipa as políticas devolvem vazio.
-      q(supabase.from('client_billing').select('id,cliente_id,amount,periodicity,start_month,active,created_at').not('cliente_id', 'is', null).order('created_at')),
-      q(supabase.from('billing_payments').select('*')),
+      soAdmin(supabase.from('client_billing').select('id,cliente_id,amount,periodicity,start_month,active,created_at').not('cliente_id', 'is', null).order('created_at')),
+      soAdmin(supabase.from('billing_payments').select('*')),
     ])
     const contratoDe = {}
     contratos.filter(b => b.active).forEach(b => { if (!contratoDe[b.cliente_id]) contratoDe[b.cliente_id] = b })
@@ -322,17 +327,18 @@ export const acoes = {
     mudar(s => { s.clientes.find(c => c.id === id).userId = userId || null })
     if (userId) {
       // Só liga uma ficha ainda sem conta; se outra pessoa a ligou entretanto, pára antes das obrigações e do contrato (Iara, 07/11)
-      const { data: lig, error } = await supabase.from('clientes').update({ user_id: userId }).eq('id', id).is('user_id', null).select('id')
-      if (error || (lig || []).length !== 1) {
-        estado = { ...estado, erro: error ? `A ligação não foi gravada (${error.message}).` : 'Esta ficha foi entretanto ligada a outra conta. Nada foi alterado.' }
+      // Migração 060 (Iara A4): ficha, obrigações e contrato numa só transação no banco — ou liga tudo, ou nada
+      const { error } = await supabase.rpc('ligar_conta_ficha', { p_cliente: id, p_user: userId })
+      if (error) {
+        estado = { ...estado, erro: `A ligação não foi gravada (${error.message}).` }
         avisar(); recarregar(); return
       }
-    } else if (!await gravar(supabase.from('clientes').update({ user_id: null }).eq('id', id))) return
+    } else if (!await gravar(supabase.rpc('desligar_conta_ficha', { p_cliente: id }))) return // 060: limpa ficha, prazos e contrato numa transação
     if (userId) {
-      await gravar(supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
-      await gravar(supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+      // Obrigações e contrato já foram ligados pela função ligar_conta_ficha (060), na mesma transação
+
       // 12-B (R-C8): o contrato gravado na ficha antes de haver conta ficava com user_id vazio e o Início do cliente (lê por user_id) não o via.
-      await gravar(supabase.from('client_billing').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+
     }
     recarregar()
   },

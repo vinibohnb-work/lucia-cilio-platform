@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../../context/ThemeContext'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { usePortal } from '../../dados'
-import { Cartao, Chip, Ic, Vazio, useCampos, Botao } from '../../ui'
+import { Cartao, Chip, Ic, Vazio, useCampos, Botao, usePerfil } from '../../ui'
 import { ESTADOS_OBRIG, estadoEfetivo, fmtData, fmtEur } from '../../regras'
 import { obrigacoesDe, abertas, entregues } from '../../seletores'
 import { TabelaTarefas } from '../../partes/Tarefas'
@@ -27,6 +27,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
   const navigate = useNavigate()
   const [verConcluidas, setVerConcluidas] = useState(false)
   const cid = cliente.id
+  const leitura = usePerfil().papel === 'leitura'   // comercial e marketing (056): sem obrigações, só a agenda
 
   const lista = abertas(obrigacoesDe(s, cid)).slice(0, 6)
   const doCliente = s.tarefas.filter(x => x.clienteId === cid)
@@ -39,7 +40,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', alignItems: 'start' }}>
-      <Cartao titulo="Obrigações em aberto" icone={<Ic.agenda />}
+      {!leitura && <Cartao titulo="Obrigações em aberto" icone={<Ic.agenda />}
         acao={<Botao variante="fantasma" onClick={() => navigate(`${base}/obrigacoes`)}>Ver todas →</Botao>}>
         {lista.length === 0 ? <Vazio>Sem obrigações em aberto.</Vazio> : (
           <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -56,6 +57,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
         )}
       </Cartao>
 
+      }
       {!modoCliente && (
         <Cartao titulo="Tarefas" icone={<Ic.lista />} area="interna" semPadding
           acao={concluidas > 0 && <Botao variante="fantasma" onClick={() => setVerConcluidas(v => !v)}>{verConcluidas ? 'Esconder concluídas' : `Ver concluídas (${concluidas})`}</Botao>}>

@@ -51,7 +51,9 @@ export default function PaginaCliente({ idFixo }) {
   const porLer = naoLidas(s, id).length
   const temMarketing = (cliente.servicos || []).includes('marketing')
 
-  const separadores = [
+  // Comercial e marketing (056): só a ficha básica — cabeçalho, agenda no Resumo e Marketing.
+  const leitura = papel === 'leitura'
+  const separadores = leitura ? [['resumo', 'Resumo'], ...(temMarketing ? [['marketing', 'Marketing', null, true]] : [])] : [
     // As Tarefas vivem no Resumo (simplificação de 12/10)
     ['resumo', 'Resumo'], ['obrigacoes', 'Obrigações fiscais'],
     ['documentos', 'Documentos'], ['relatorios', 'Relatórios'],
@@ -103,7 +105,7 @@ export default function PaginaCliente({ idFixo }) {
           <div style={{ ...caixaLogo, background: '#fff', padding: '8px' }}>
             <img src={urlLogo(cliente.logo)} alt={`Logótipo de ${cliente.nome}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
           </div>
-        ) : !modoCliente && (
+        ) : !modoCliente && !leitura && (
           <label title="Carregar o logótipo do cliente (PNG, JPEG ou WebP, até 2 MB)"
             style={{ ...caixaLogo, border: `1.5px dashed ${t.inputBorder}`, cursor: 'pointer', flexDirection: 'column', gap: '4px', color: t.subtle, fontSize: '11.5px', fontWeight: 700, textAlign: 'center' }}>
             <Ic.mais size={18} />Logótipo
@@ -141,8 +143,8 @@ export default function PaginaCliente({ idFixo }) {
               {papel === 'admin' && <Botao onClick={verComoCliente} disabled={!cliente.userId}
                 title={cliente.userId ? 'Abre a plataforma exatamente como o cliente a vê (só leitura)' : 'Este cliente ainda não tem conta na plataforma'}><Ic.olho size={15} />Ver como o cliente</Botao>}
               {/* O único sítio da ficha para escrever um WhatsApp (12/10) */}
-              <Botao variante="whats" onClick={() => setWhats(true)}><Ic.whats />WhatsApp</Botao>
-              <Botao variante="ouro" onClick={() => setTarefa(true)}><Ic.mais />Adicionar tarefa</Botao>
+              {!leitura && <Botao variante="whats" onClick={() => setWhats(true)}><Ic.whats />WhatsApp</Botao>}
+              {!leitura && <Botao variante="ouro" onClick={() => setTarefa(true)}><Ic.mais />Adicionar tarefa</Botao>}
             </>
           )}
         </div>

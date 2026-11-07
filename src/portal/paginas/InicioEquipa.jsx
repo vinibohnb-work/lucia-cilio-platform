@@ -95,7 +95,7 @@ export default function InicioEquipa() {
             // Como na tabela das Tarefas: a caixa conclui, o título abre para editar (13-D, 13/10).
             return (
               <div key={x.id} style={{ ...linha, borderTop: i ? linha.borderTop : 'none' }}>
-                <input type="checkbox" checked={false} onChange={() => acoes.alternarTarefa(x.id)} aria-label={`Concluir: ${x.titulo}`}
+                <input type="checkbox" checked={false} disabled={!s.admin} onChange={() => { if (s.admin) acoes.alternarTarefa(x.id) }} aria-label={`Concluir: ${x.titulo}`}
                   style={{ width: '18px', height: '18px', accentColor: '#1f6b45', cursor: 'pointer', flex: 'none' }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <button onClick={() => setEditar(x)} style={linkBtn}>{x.titulo}</button>

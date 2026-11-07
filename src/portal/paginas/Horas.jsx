@@ -71,7 +71,8 @@ export default function Horas() {
   })])].sort().reverse()
   const nomeMes = (k) => `${MESES_LONGOS[Number(k.slice(5, 7)) - 1]} ${k.slice(0, 4)}`
   const quemTxt = quem ? (quem === s.eu ? 'As minhas horas' : `Horas de ${quem}`) : 'Toda a equipa'
-  const podeApagar = (h) => papel === 'admin' || h.pessoa === s.eu
+  // Só a administradora apaga (056: comercial e marketing não têm delete; o clique apagava na tela e a hora voltava ao recarregar — Iara A2)
+  const podeApagar = () => papel === 'admin'
 
   const sel = { ...c.input, cursor: 'pointer' }
 
@@ -93,7 +94,7 @@ export default function Horas() {
             <select value={novo.destino} onChange={set('destino')} style={sel}>
               <option value="">— Escolher —</option>
               <optgroup label="Clientes">
-                {s.clientes.filter(x => x.estado !== 'inativo').map(x => <option key={x.id} value={`c:${x.id}`}>{x.nome}</option>)}
+                {s.clientes.filter(x => papel === 'admin' && x.estado !== 'inativo').map(x => <option key={x.id} value={`c:${x.id}`}>{x.nome}</option>)}
               </optgroup>
               <optgroup label="Atividades">
                 {[...ATIVIDADES, ...atividadesUsadas].map(a => <option key={a} value={`a:${a}`}>{a}</option>)}
