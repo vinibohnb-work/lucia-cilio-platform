@@ -10,6 +10,7 @@ import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { useAuth } from '../../context/AuthContext'
 import { usePedidosDocumentos, useUltimoRelatorio, ESTADO_PEDIDO } from '../../lib/pedidosDocumentos'
 import { getCompanySettings } from '../../lib/companySettings'
+import { isPortal } from '../../lib/platformHome'
 
 // Início — a primeira coisa que o cliente vê.
 //
@@ -25,9 +26,11 @@ export default function Inicio() {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const eid = useEffectiveUserId()
-  const { user, displayName = '' } = useAuth()
+  const { user, displayName = '', platform } = useAuth()
   const isViewing = !!user && eid !== user.id
   const { viewAs } = useViewAs()
+  // Só consulta (item 13): sem os atalhos para a Empresa (dados e envio de documentos), que esta conta não abre
+  const soConsulta = isPortal(isViewing ? viewAs?.platform : platform)
 
   const [avisos, setAvisos] = useState([])
   const [obrigacoes, setObrigacoes] = useState([])
@@ -144,7 +147,7 @@ export default function Inicio() {
       <h1 className="so-leitores">{L.ola}{quem ? `, ${quem}` : ''}</h1>
 
       {/* Falta o país: sem ele as regras fiscais saem erradas */}
-      {!settings?.country && (
+      {!settings?.country && !soConsulta && (
         <div style={{ background: t.dueSoon.bg, border: `1px solid ${t.dueSoon.ink}44`, borderRadius: '12px', padding: '13px 16px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ flex: 1, minWidth: '220px', fontSize: '13px', fontWeight: 600, color: t.dueSoon.ink }}>{L.completaPais}</span>
           <button onClick={() => navigate('/contabilidade/empresa')}
@@ -206,7 +209,7 @@ export default function Inicio() {
             </div>
           )}
           {pedidos.length > 0 && <div style={{ fontSize: '12px', color: emFalta.length ? t.dueSoon.ink : t.subtle, marginTop: '6px', fontWeight: emFalta.length ? 700 : 400 }}>{emFalta.length ? L.emFalta(emFalta.length) : L.tudoEntregue}</div>}
-          <button onClick={() => navigate('/contabilidade/empresa')} style={link}>{L.docsCta}</button>
+          {!soConsulta && <button onClick={() => navigate('/contabilidade/empresa')} style={link}>{L.docsCta}</button>}
         </div>
 
         <div style={card}>
@@ -225,7 +228,7 @@ export default function Inicio() {
           {pendencias.length ? (
             <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13.5px', lineHeight: 1.7, color: t.heading }}>
               {pendencias.map(p => (
-                <li key={p.k}>{p.ir
+                <li key={p.k}>{p.ir && !soConsulta
                   ? <button onClick={() => navigate(p.ir)} style={{ ...link, marginTop: 0, fontSize: '13.5px', fontWeight: 600, color: t.heading, textAlign: 'left' }}>{p.txt} →</button>
                   : p.txt}</li>
               ))}

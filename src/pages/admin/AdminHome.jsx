@@ -58,6 +58,7 @@ export default function AdminHome() {
     new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
     pais: 'Land', semServico: '\u2014 keine \u2014',
     platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG',
+    platPortal: 'Nur Ansicht', platPortalHint: 'Für Mandanten, die die Buchhaltung nicht nutzen: sehen nur die Übersicht und die Fristen, ohne Beträge und ohne etwas zu ändern.',
     platLite: 'Buchhaltung Lite', platLiteHint: 'Nur der Bereich „Buchhaltung" (ohne Preise, Planung, Mandanten, Firma und Beratung).',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer',
     roleComercial: 'Vertrieb (nur CRM)', roleMarketing: 'Marketing (nur Marketing)',
@@ -78,6 +79,7 @@ export default function AdminHome() {
     new: '+ New User', email: 'Email', name: 'Display name',
     pais: 'Country', semServico: '\u2014 none \u2014',
     platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG',
+    platPortal: 'View only', platPortalHint: "For clients who don't use the accounting: they only see the overview and the deadlines, with no amounts and without changing anything.",
     platLite: 'Accounting Lite', platLiteHint: 'Only the "Accounting" section (no pricing, planning, clients, company or consulting).',
     role: 'Role', admin: 'Administrator', userRole: 'User',
     roleComercial: 'Sales (CRM only)', roleMarketing: 'Marketing (Marketing only)',
@@ -98,6 +100,7 @@ export default function AdminHome() {
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
     pais: 'Pa\u00eds', semServico: '\u2014 nenhum \u2014',
     platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG',
+    platPortal: 'Só consulta', platPortalHint: 'Para clientes que não usam a contabilidade (ex.: trabalhadores independentes): veem só o Início e os prazos, sem valores e sem alterar nada.',
     platLite: 'Contabilidade Lite', platLiteHint: 'Apenas a secção "Contabilidade" (sem preços, planeamento, clientes, empresa e consultoria).',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador',
     roleComercial: 'Comercial (só CRM)', roleMarketing: 'Marketing (só Marketing)',
@@ -232,8 +235,8 @@ export default function AdminHome() {
     marketing: t.toneOrange,
   }
   const roleLabel = (r) => r === 'admin' ? L.admin : r === 'comercial' ? L.roleComercial : r === 'marketing' ? L.roleMarketing : L.userRole
-  const platLabel = (p) => p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : p === 'accounting_lite' ? L.platLite : L.platAcc
-  const platChip = (p) => p === 'esg' ? t.toneBlue : p === 'both' ? t.toneOrange : p === 'accounting_lite' ? { bg: t.segBg, ink: t.textMuted } : t.dueOk
+  const platLabel = (p) => p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : p === 'accounting_lite' ? L.platLite : p === 'portal' ? L.platPortal : L.platAcc
+  const platChip = (p) => p === 'esg' ? t.toneBlue : p === 'both' ? t.toneOrange : p === 'accounting_lite' || p === 'portal' ? { bg: t.segBg, ink: t.textMuted } : t.dueOk
   // Sem a coluna "Criado" (13-D, 13/10): o "Último acesso" diz o que interessa
   const GRID = '1.1fr 0.9fr 158px 108px 100px 188px'
   // Equipa (3–4 contas) e clientes em secções separadas, em vez de misturados
@@ -267,7 +270,7 @@ export default function AdminHome() {
                 Utilizador (cliente) (13-D, 13/10). */}
             {eCliente && (
               <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.platform}</div>
-                <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="accounting_lite">{L.platLite}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
+                <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="accounting_lite">{L.platLite}</option><option value="portal">{L.platPortal}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
               </div>
             )}
             {eCliente && (
@@ -291,6 +294,9 @@ export default function AdminHome() {
 
           {eCliente && form.platform === 'accounting_lite' && (
             <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '10px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.platLiteHint}</span></div>
+          )}
+          {eCliente && form.platform === 'portal' && (
+            <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '10px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.platPortalHint}</span></div>
           )}
 
           {/* Ficha do cliente (12-A): só na criação de contas de clientes */}

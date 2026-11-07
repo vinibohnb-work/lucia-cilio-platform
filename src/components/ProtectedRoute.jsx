@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { isLite, liteAllows } from '../lib/platformHome'
+import { isLite, liteAllows, isPortal, portalAllows } from '../lib/platformHome'
 import VerificarMfa from './VerificarMfa'
 
 export default function ProtectedRoute({ children }) {
@@ -35,6 +35,9 @@ export default function ProtectedRoute({ children }) {
   if (role !== 'admin' && isLite(platform) && !liteAllows(pathname)) {
     return <Navigate to="/contabilidade/dashboard" replace />
   }
+
+  // Só consulta (item 13): Início e prazos; o resto devolve ao Início.
+  if (role !== 'admin' && isPortal(platform) && !portalAllows(pathname)) return <Navigate to="/contabilidade/inicio" replace />
 
   return children
 }

@@ -9,6 +9,8 @@ import { useTheme } from '../../context/ThemeContext'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import EstimateNote from '../../components/EstimateNote'
 import { BRAND } from '../../theme'
+import { useAuth } from '../../context/AuthContext'
+import { isPortal } from '../../lib/platformHome'
 
 const G = BRAND.green
 const GOLD = BRAND.gold
@@ -41,7 +43,11 @@ export default function ObrigacoesFiscais() {
   const [showForm, setShowForm] = useState(false)
 
   const eid = useEffectiveUserId()
-  const { isViewing } = useViewAs()
+  const { platform } = useAuth()
+  const { isViewing: aVerComo, viewAs } = useViewAs()
+  // Só consulta (item 13): o cliente vê os prazos e o estado, sem criar, marcar nem apagar —
+  // as mesmas travas do "ver como".
+  const isViewing = aVerComo || isPortal(aVerComo ? viewAs?.platform : platform)
   const countryOptions = useMemo(() => getCountryOptions(lang), [lang])
 
   const load = useCallback(async () => {

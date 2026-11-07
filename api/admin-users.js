@@ -44,7 +44,8 @@ export default async function handler(req, res) {
   })
 
   // Plataformas válidas ('both' = acesso a Contabilidade + ESG)
-  const sanePlatform = (p) => (['accounting', 'accounting_lite', 'esg', 'both'].includes(p) ? p : 'accounting')
+  // 'portal' = só consulta (item 13): Início e prazos, sem valores nem edição
+  const sanePlatform = (p) => (['accounting', 'accounting_lite', 'esg', 'both', 'portal'].includes(p) ? p : 'accounting')
   // Papéis válidos ('comercial' = só CRM · 'marketing' = só Marketing)
   const saneRole = (r) => (['user', 'admin', 'comercial', 'marketing'].includes(r) ? r : 'user')
 
