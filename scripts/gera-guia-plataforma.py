@@ -32,6 +32,9 @@ DATA = date(2026, 10, 1)
 
 # (data, o que mudou na plataforma, o que mudou neste guia) — mais recente primeiro
 REGISTO = [
+    ("07/11/2026", "A reserva de IR do Painel passa a usar só os lançamentos registados, como Reservas e EÜR: o mesmo ano dá a mesma reserva. "
+     "As despesas recorrentes por confirmar continuam no cartão Custos fixos e no Resultado do ano, e uma linha na reserva diz quanto ficou de fora.",
+     "Painel, legenda 6."),
     ("01/10/2026", "Simplificação, fase 1 (com a migração 038): o cliente só altera as obrigações que não são da equipa (R-A1); "
      "regras antigas da ESG retiradas (R-A2); IVA nas despesas recorrentes e nos lançamentos criados do extrato (R-A3); a consultoria "
      "deixa de perder edições, lê \"1.500\" e mantém a origem das estratégias ao apagar pontos da SWOT (R-A6); ano livre no Painel, "
@@ -586,7 +589,9 @@ S += ecra(K, "Painel", "Menu Painel · /contabilidade/dashboard",
     (3, "Custos Variáveis", "Saídas de categorias variáveis (material, marketing…)."),
     (4, "Resultado do ano", "Receita − (fixos + variáveis)."),
     (5, "IVA", "Liquidado (IVA das entradas) − dedutível (IVA das saídas) = a entregar ou a recuperar."),
-    (6, "Reserva para IR", "Resultado (mín. 0) × % de reserva da Empresa (25% se não houver). O 3.º cartão é o \"Resultado após reserva\"."),
+    (6, "Reserva para IR", "Resultado <b>só dos lançamentos registados</b> (mín. 0) × % de reserva da Empresa (25% se não houver) — a mesma base de "
+     "Reservas e do EÜR, por isso dá o mesmo valor para o mesmo ano. As recorrentes por confirmar não entram; quando existem, uma linha diz quanto ficou de fora. "
+     "O 3.º cartão é o \"Resultado após reserva\" (base − reserva)."),
     (7, "Aviso Familienversicherung", "Só Alemanha: lucro médio mensal real do ano ÷ limite (Reservas); aparece a partir de 80%."),
     (8, "Fluxo de caixa por mês", "Entradas e saídas brutas por mês; por cima, o previsto das recorrentes."),
     (9, "Break-even", "Margem de contribuição = (receita − variáveis) ÷ receita; ponto de equilíbrio = fixos ÷ margem."),
