@@ -9,11 +9,13 @@ import { generatePassword } from '../../lib/passwordPolicy'
 import { supabase } from '../../lib/supabase'
 import BoasVindas from '../../components/BoasVindas'
 import SegurancaMfa from '../../components/SegurancaMfa'
+import { SEM_ACOMPANHAMENTO } from '../../portal/regras'
 
 // O campo Serviço saiu deste formulário (13-D, 13/10): só era escrito e lido
 // aqui, e o serviço vive na ficha do cliente. A coluna company_settings.service
 // fica na base de dados, sem perda — simplesmente deixa de ser editada aqui.
-const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting', password: '', country: '' }
+// fichaId (12-A, R-C1): '' = sem ficha, 'nova' = cria a ficha, ou o id de uma ficha que ainda não tem conta. Assim o acesso nasce já ligado ao cliente e os prazos aparecem-lhe sem passo manual em Clientes > Dados.
+const EMPTY = { email: '', display_name: '', role: 'user', platform: 'accounting', password: '', country: '', fichaId: 'nova' }
 
 // Ícones pequenos (substituem 🔑 ℹ️ ↻ ⧉; regra do QA de 10/10)
 const svgBase = { width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, style: { flex: 'none', verticalAlign: '-0.15em' } }
@@ -68,6 +70,9 @@ export default function AdminHome() {
     pwHint: 'Die Person meldet sich damit an und muss beim ersten Zugriff ein eigenes Passwort festlegen.',
     createBtn: 'Konto erstellen', cancel: 'Abbrechen',
     equipa: 'Team', clientes: 'Mandanten',
+    ficha: 'Mandantenakte', fichaNova: '+ Neue Akte mit diesem Namen anlegen', fichaNenhuma: 'Ohne Akte (nur das Konto)',
+    fichaHint: 'Das Konto wird mit der Akte verknüpft: Fristen, Dokumente und Vertrag erscheinen dem Mandanten ohne weiteren Schritt.',
+    fichaErro: 'Konto erstellt, aber nicht mit der Akte verknüpft. Unter Mandanten > Daten verknüpfen',
   } : lang === 'en' ? {
     title: 'User Management',
     new: '+ New User', email: 'Email', name: 'Display name',
@@ -85,6 +90,9 @@ export default function AdminHome() {
     pwHint: 'The person signs in with this and must set their own password on first access.',
     createBtn: 'Create account', cancel: 'Cancel',
     equipa: 'Team', clientes: 'Clients',
+    ficha: 'Client record', fichaNova: '+ Create a new record with this name', fichaNenhuma: 'No record (account only)',
+    fichaHint: 'The account is linked to the record: deadlines, documents and contract show up for the client with no extra step.',
+    fichaErro: 'Account created, but not linked to the record. Link it in Clients > Details',
   } : {
     title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
@@ -102,11 +110,24 @@ export default function AdminHome() {
     pwHint: 'A pessoa entra com esta palavra-passe e é obrigada a definir a sua no primeiro acesso.',
     createBtn: 'Criar conta', cancel: 'Cancelar',
     equipa: 'Equipa', clientes: 'Clientes',
+    ficha: 'Ficha do cliente', fichaNova: '+ Criar ficha nova com este nome', fichaNenhuma: 'Sem ficha (só a conta)',
+    fichaHint: 'A conta fica ligada à ficha: prazos, documentos e contrato aparecem ao cliente sem mais nenhum passo.',
+    fichaErro: 'Conta criada, mas não ficou ligada à ficha. Ligue em Clientes > Dados',
   }
+
+  // Fichas de clientes que ainda não têm conta (12-A): é a elas que um acesso novo se liga
+  const [fichas, setFichas] = useState([])
+  const [fichaTocada, setFichaTocada] = useState(false)
+  // Ficha com o mesmo e-mail fica escolhida sozinha, até a administradora mudar à mão
+  const mailForm = form.email.trim().toLowerCase()
+  const fichaMesmoMail = mailForm ? fichas.find(f => (f.email || '').trim().toLowerCase() === mailForm) : null
+  const fichaEscolhida = fichaTocada ? form.fichaId : (fichaMesmoMail ? fichaMesmoMail.id : 'nova')
 
   const load = useCallback(async () => {
     setLoading(true); setErr('')
     try { setUsers(await listUsers()) } catch (e) { setErr(e.message) }
+    const { data: semConta } = await supabase.from('clientes').select('id,nome,email,user_id').is('user_id', null).order('nome')
+    setFichas(semConta || [])
     setLoading(false)
   }, [])
   useEffect(() => { load() }, [load])
@@ -115,7 +136,7 @@ export default function AdminHome() {
     if (location.state?.novoAcesso) navigate(location.pathname, { replace: true, state: null })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function openCreate() { setForm({ ...EMPTY, password: generatePassword() }); setEditingId('new'); setBillingPendente(null); setErr(''); setBoasVindas(null) }
+  function openCreate() { setForm({ ...EMPTY, password: generatePassword() }); setEditingId('new'); setFichaTocada(false); setBillingPendente(null); setErr(''); setBoasVindas(null) }
   async function openEdit(u) {
     setForm({ email: u.email, display_name: u.display_name, role: u.role, platform: u.platform || 'accounting', password: '', country: '' })
     setEditingId(u.id); setErr('')
@@ -130,6 +151,8 @@ export default function AdminHome() {
       if (editingId === 'new') {
         const criado = await createUser({ email: form.email, display_name: form.display_name, role: form.role, platform: form.platform, password: form.password })
         await guardarPerfilEmpresa(criado?.id)
+        // A conta já existe: se a ficha falhar, avisa-se, e a mensagem de boas-vindas aparece na mesma
+        try { await ligarFicha(criado?.id) } catch (e) { setErr(`${L.fichaErro} (${e.message})`) }
         // Vindo do CRM com contrato já criado: o contrato passa a apontar para a
         // conta, para o cliente ver o próximo pagamento (o que o CRM fazia).
         if (billingPendente && criado?.id) {
@@ -146,6 +169,27 @@ export default function AdminHome() {
     } catch (e) { setErr(e.message) }
     setSaving(false)
   }
+  // 12-A (R-C1): o acesso nasce ligado a uma ficha. Faz o mesmo que "Ligar conta"
+  // em Clientes > Dados: obrigações nos dois sentidos e o contrato da ficha (12-B).
+  async function ligarFicha(userId) {
+    if (!userId || form.role !== 'user' || !fichaEscolhida) return
+    const ok = ({ error }) => { if (error) throw error }
+    if (fichaEscolhida === 'nova') {
+      const servicos = form.platform === 'esg' ? ['esg'] : form.platform === 'both' ? ['contabilidade', 'esg'] : ['contabilidade']
+      ok(await supabase.from('clientes').insert({
+        nome: (form.display_name || form.email).trim(), email: form.email.trim(), pais: form.country || 'PT',
+        servicos, estado: 'onboarding', periodicidade: servicos.includes('contabilidade') ? 'trimestral' : SEM_ACOMPANHAMENTO,
+        trabalhadores: false, horas_incluidas: 0, cliente_desde: new Date().toISOString().slice(0, 10), user_id: userId,
+      }))
+      return
+    }
+    const id = fichaEscolhida
+    ok(await supabase.from('clientes').update({ user_id: userId }).eq('id', id))
+    ok(await supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
+    ok(await supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+    ok(await supabase.from('client_billing').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+  }
+
   // O país vive em company_settings porque é ele que decide as regras fiscais
   // da conta. Só se aplica a contas de clientes (perfil Utilizador).
   async function guardarPerfilEmpresa(userId) {
@@ -247,6 +291,19 @@ export default function AdminHome() {
 
           {eCliente && form.platform === 'accounting_lite' && (
             <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '10px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.platLiteHint}</span></div>
+          )}
+
+          {/* Ficha do cliente (12-A): só na criação de contas de clientes */}
+          {eCliente && editingId === 'new' && (
+            <div style={{ marginTop: '14px', maxWidth: '520px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.ficha}</div>
+              <select value={fichaEscolhida} onChange={e => { setFichaTocada(true); setForm(f => ({ ...f, fichaId: e.target.value })) }} style={selectStyle}>
+                <option value="nova">{L.fichaNova}</option>
+                {fichas.map(f => <option key={f.id} value={f.id}>{f.nome}{f.email ? ` (${f.email})` : ''}</option>)}
+                <option value="">{L.fichaNenhuma}</option>
+              </select>
+              <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '8px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.fichaHint}</span></div>
+            </div>
           )}
 
           {/* Palavra-passe temporária (só na criação) */}
