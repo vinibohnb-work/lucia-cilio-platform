@@ -277,7 +277,7 @@ export default function Dashboard() {
   const famvLimit = Number(settings?.de_famv_limit) || 0
   const famvMonthly = entries
     .filter(e => e.entry_date?.slice(0, 4) === nowYear)
-    .reduce((s, e) => s + (e.type === 'entrada' ? 1 : -1) * Number(e.amount || 0), 0) / (new Date().getMonth() + 1)
+    .reduce((s, e) => s + (e.type === 'entrada' ? 1 : -1) * (Number(e.amount || 0) - (settings?.vat_regime === 'exempt' ? 0 : Number(e.vat_amount || 0))), 0) / (new Date().getMonth() + 1)
   const famvRatio = famvLimit > 0 ? famvMonthly / famvLimit : 0
   const showFamvWarn = settings?.country === 'DE' && famvLimit > 0 && famvRatio >= 0.8
 

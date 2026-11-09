@@ -228,8 +228,8 @@ export default function LivroCaixa() {
     if (!apagados || apagados.length === 0) { setErro(L.delFalhou); load(); return }
 
     if (tx?.id) {
-      await supabase.from('bank_transactions')
-        .update({ status: 'pendente', matched_at: null }).eq('id', tx.id)
+      const { error: errTx } = await supabase.from('bank_transactions')
+        .update({ status: 'pendente', matched_at: null }).eq('id', tx.id); if (errTx) setErro(L.txNaoVoltou)
     }
     load()
   }
@@ -237,6 +237,7 @@ export default function LivroCaixa() {
   const L = lang === 'de' ? {
     remover: 'Entfernen', confirmDel: (d) => `Buchung entfernen?${d ? NL2 + '\u201e' + d + '\u201c' : ''}`,
     delFalhou: 'Die Buchung konnte nicht entfernt werden. Bitte Seite neu laden und erneut versuchen.',
+    txNaoVoltou: 'Die Buchung wurde entfernt, aber die zugehörige Bankbewegung konnte nicht wieder auf „offen" gesetzt werden. Bitte in der Bankabstimmung prüfen.',
     export: 'CSV exportieren', balance: 'Kassenbestand', income: 'Einnahmen', expense: 'Ausgaben',
     cash: 'Kasse', bank: 'Bank', date: 'Datum', doc: 'Belegnr.', desc: 'Beschreibung', type: 'Art',
     amount: 'Betrag (€)', qty: 'Menge', dest: 'Konto', running: 'Bestand', entrada: 'Einnahme', saida: 'Ausgabe',
@@ -251,6 +252,7 @@ export default function LivroCaixa() {
   } : lang === 'en' ? {
     remover: 'Remove', confirmDel: (d) => `Remove this entry?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
     delFalhou: 'The entry could not be removed. Please reload the page and try again.',
+    txNaoVoltou: 'The entry was removed, but its bank movement could not be set back to "to reconcile". Please check it in Bank reconciliation.',
     export: 'Export CSV', balance: 'Current Balance', income: 'Total Income', expense: 'Total Expenses',
     cash: 'In Cash', bank: 'In Bank', date: 'Date', doc: 'Doc.', desc: 'Description', type: 'Type',
     amount: 'Amount (€)', qty: 'Qty.', dest: 'Account', running: 'Balance', entrada: 'Income', saida: 'Expense',
@@ -265,6 +267,7 @@ export default function LivroCaixa() {
   } : {
     remover: 'Remover', confirmDel: (d) => `Remover este lan\u00e7amento?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
     delFalhou: 'N\u00e3o foi poss\u00edvel remover o lan\u00e7amento. Recarrega a p\u00e1gina e tenta outra vez.',
+    txNaoVoltou: 'O lançamento foi removido, mas o movimento do banco ligado a ele não voltou a "por conciliar". Confere na Conciliação bancária.',
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
     amount: 'Valor (€)', qty: 'Qtd.', dest: 'Destino', running: 'Saldo', entrada: 'Entrada', saida: 'Saída',
