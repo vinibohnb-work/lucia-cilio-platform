@@ -264,7 +264,9 @@ export default function Dashboard() {
   const irPct = settings?.ir_reserve_pct != null ? Number(settings.ir_reserve_pct) : 25
   // A reserva usa só o que está lançado (sem as recorrentes por confirmar), a mesma
   // base das Reservas e do EÜR — antes o Painel dava outra reserva para o mesmo ano.
-  const netLancado = revenue - (fixedC + otherC + varC)
+  // Base sem IVA (R-B5, decisão de 15/10): com IVA, sai o IVA a entregar; isento, o IVA pago é custo.
+  const ivaNaBase = settings?.vat_regime === 'exempt' ? 0 : (ivaLiquidado - ivaDedutivel)
+  const netLancado = revenue - (fixedC + otherC + varC) - ivaNaBase
   const irBase = Math.max(0, netLancado)
   const irReserve = irBase * irPct / 100
   const ssEst  = ssBase * 0.214

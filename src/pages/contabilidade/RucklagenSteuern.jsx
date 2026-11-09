@@ -111,7 +111,9 @@ export default function RucklagenSteuern() {
     ovUst: 'Voraussichtliche USt-Zahllast', ovUstSub: 'An Finanzamt',
     ovVorsorge: 'Monatliche Vorsorge (gesamt)', ovVorsorgeSub: 'Für Versicherungen und Rücklagen',
     glance: 'Auf einen Blick', glanceSub: 'Dieser Betrag ist nicht frei verfügbar.',
-    forTax: 'Für Steuern reserviert', forVorsorge: 'Für Vorsorge (monatlich)', total: 'Gesamt (aktuell)',
+    forTax: 'Für Steuern reserviert', forVorsorge: 'Für Vorsorge (monatlich)', total: 'Gesamt (Jahr bis heute)',
+    totalSub: (m) => `Steuern des Jahres + ${m} ${m === 1 ? 'Monat' : 'Monate'} Vorsorge`,
+    gewinnNet: '(Einnahmen − Ausgaben, ohne USt)', gewinnKlein: '(Einnahmen − Ausgaben; gezahlte USt zählt als Kosten)',
     tip: 'Tipp', tipText: 'Passe deine Rücklagen regelmäßig an deine tatsächliche Situation und deinen Gewinn an.',
     famvTitle: 'Familienversicherung – Check', famvLimitL: 'Grenze pro Monat', famvProfit: 'Monatsgewinn',
     famvSrcPlan: 'aus Monatsplanung', famvSrcReal: 'Ø aus Kassenbuch (laufendes Jahr)',
@@ -147,7 +149,9 @@ export default function RucklagenSteuern() {
     ovUst: 'Estimated VAT payable', ovUstSub: 'To the Finanzamt',
     ovVorsorge: 'Monthly provision (total)', ovVorsorgeSub: 'For insurance and reserves',
     glance: 'At a glance', glanceSub: 'This amount is not free to use.',
-    forTax: 'Reserved for taxes', forVorsorge: 'For provision (monthly)', total: 'Total (current)',
+    forTax: 'Reserved for taxes', forVorsorge: 'For provision (monthly)', total: 'Total (year to date)',
+    totalSub: (m) => `taxes for the year + ${m} ${m === 1 ? 'month' : 'months'} of provision`,
+    gewinnNet: '(Income − Expenses, excl. VAT)', gewinnKlein: '(Income − Expenses; VAT paid counts as a cost)',
     tip: 'Tip', tipText: 'Adjust your reserves regularly to your real situation and profit.',
     famvTitle: 'Family Insurance – Check', famvLimitL: 'Limit per month', famvProfit: 'Monthly profit',
     famvSrcPlan: 'from Monthly Plan', famvSrcReal: 'real average from Cash Book (current year)',
@@ -183,7 +187,9 @@ export default function RucklagenSteuern() {
     ovUst: 'IVA previsto a pagar', ovUstSub: 'Ao Finanzamt',
     ovVorsorge: 'Previdência mensal (total)', ovVorsorgeSub: 'Para seguros e reservas',
     glance: 'Em resumo', glanceSub: 'Este montante não está livre para uso.',
-    forTax: 'Reservado para impostos', forVorsorge: 'Para previdência (mensal)', total: 'Total (atual)',
+    forTax: 'Reservado para impostos', forVorsorge: 'Para previdência (mensal)', total: 'Total (ano até hoje)',
+    totalSub: (m) => `impostos do ano + ${m} ${m === 1 ? 'mês' : 'meses'} de previdência`,
+    gewinnNet: '(Receitas − Despesas, sem IVA)', gewinnKlein: '(Receitas − Despesas; o IVA pago conta como custo)',
     tip: 'Dica', tipText: 'Ajusta as tuas reservas regularmente à tua situação real e ao teu lucro.',
     famvTitle: 'Familienversicherung – Verificação', famvLimitL: 'Limite por mês', famvProfit: 'Lucro mensal',
     famvSrcPlan: 'do Planeamento Mensal', famvSrcReal: 'média real do Livro de Caixa (ano corrente)',
@@ -198,7 +204,10 @@ export default function RucklagenSteuern() {
   }
 
   // ── Cálculos ──
-  const gewinn = einnahmen - ausgaben
+  const comIva = (settings?.vat_regime || 'normal') !== 'exempt'
+  // Base da reserva de IR sem IVA (R-B5, decisão de 15/10): com IVA, receitas e despesas
+  // líquidas; isento de IVA, o IVA pago nas despesas é custo, por isso fica tudo em bruto.
+  const gewinn = comIva ? (einnahmen - ustEin) - (ausgaben - vorsteuer) : einnahmen - ausgaben
   const gewinnPos = Math.max(0, gewinn)
   const steuerRuecklage = gewinnPos * pct / 100
   const isRegel = (settings?.vat_regime || 'normal') !== 'exempt'
@@ -206,7 +215,10 @@ export default function RucklagenSteuern() {
   const zahllastPos = Math.max(0, zahllast)
   const vorsorge = num(kranken) + num(renten) + num(sonstige)
   const fuerSteuer = steuerRuecklage + (isRegel ? zahllastPos : 0)
-  const gesamt = fuerSteuer + vorsorge
+  // Total no mesmo período (decisão de 15/10): impostos do ano até hoje + a previdência
+  // dos meses já passados — antes somava a reserva do ano com a previdência de um mês.
+  const mesesAno = year === new Date().getFullYear() ? new Date().getMonth() + 1 : 12
+  const gesamt = fuerSteuer + vorsorge * mesesAno
 
   // ── Familienversicherung: lucro mensal (plano, senão média real) vs limite ──
   const planTotals = plan?.items?.length
@@ -282,7 +294,7 @@ export default function RucklagenSteuern() {
                 <div>
                   <div style={capLabel}>{L.gewinn}</div>
                   <div style={money(t.heading)}>{fmt2(gewinn)}</div>
-                  <div style={sub}>{L.gewinnSub}</div>
+                  <div style={sub}>{isRegel ? L.gewinnNet : L.gewinnKlein}</div>
                 </div>
                 <div>
                   <div style={capLabel}>{L.pctLabel}</div>
@@ -473,6 +485,7 @@ export default function RucklagenSteuern() {
               <div style={{ borderTop: `1px solid ${t.cardBorder}`, paddingTop: '12px' }}>
                 <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{L.total}</div>
                 <div style={{ ...money(t.heading), fontSize: '24px' }}>{fmt2(gesamt)}</div>
+                <div style={sub}>{L.totalSub(mesesAno)}</div>
               </div>
               {savingMsg && <div style={{ fontSize: '11.5px', fontWeight: 700, color: savingMsg === L.saved ? tone.green.ink : t.neg, marginTop: '10px' }}>{savingMsg}</div>}
             </div>
