@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { localeDe } from '../../lib/formato'
 import { useLang } from '../../context/LangContext'
 import CabecalhoPagina from '../../components/CabecalhoPagina'
@@ -79,6 +79,7 @@ export default function LivroCaixa() {
   const [filterMonth, setFilterMonth] = useState('all')
   const [filterYear, setFilterYear] = useState(new Date().getFullYear())
   const [erro, setErro] = useState('')
+  const [movPorEntry, setMovPorEntry] = useState({})   // cash_entry id -> movimento do banco ligado (vínculo, fase 2)
   // Um ano inteiro pode ter centenas de linhas: mostra-se aos poucos (os totais contam todas).
   const [limite, setLimite] = useState(POR_PAGINA)
   useEffect(() => { setLimite(POR_PAGINA) }, [filterYear, filterMonth])
@@ -101,6 +102,9 @@ export default function LivroCaixa() {
       getCompanySettings(eid),
     ])
     setEntries(ce || [])
+    const { data: mv } = await supabase.from('bank_transactions').select('id,cash_entry_id,tx_date,description,amount,type')
+      .eq('user_id', eid).eq('status', 'conciliado').not('cash_entry_id', 'is', null)
+    setMovPorEntry(Object.fromEntries((mv || []).map(m => [m.cash_entry_id, m])))
     setCatalog(ci || [])
     setRecurring(re || [])
     setSettings(cs)
@@ -428,8 +432,20 @@ export default function LivroCaixa() {
               <div style={{ fontSize: '11px', color: t.subtle }}>{e.doc}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: '#1a2e1a' }}>{e.description}</div>
-                {(e.category || linked || e.vat_amount > 0 || Number(e.quantity) > 1) && (
+                {(e.category || linked || e.vat_amount > 0 || Number(e.quantity) > 1 || movPorEntry[e.id]) && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                    {movPorEntry[e.id] && (() => {
+                      const m = movPorEntry[e.id]
+                      const rot = lang === 'de' ? 'Mit Bank abgestimmt' : lang === 'en' ? 'Matched with bank' : 'Ligado ao banco'
+                      const det = `${m.tx_date.split('-').reverse().join('/')} · ${m.description} · ${m.type === 'entrada' ? '+' : '−'}€ ${fmt(m.amount)}`
+                      return (
+                        <Link to="/contabilidade/conciliacao" title={`${rot}: ${det}`}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', maxWidth: '100%', padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#e0f2fe', color: '#075985', textDecoration: 'none' }}>
+                          <span>🏦 ✓ {rot}</span>
+                          <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '220px' }}>· {det}</span>
+                        </Link>
+                      )
+                    })()}
                     {Number(e.quantity) > 1 && (
                       <span style={{ padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#f1f5f9', color: '#475569' }}>
                         × {Number(e.quantity) % 1 === 0 ? Number(e.quantity) : fmt(e.quantity)}
