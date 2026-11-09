@@ -133,6 +133,26 @@ export default function Conciliacao() {
 
   const entryById = useMemo(() => Object.fromEntries(entries.map(e => [e.id, e])), [entries])
 
+  // Escolha à mão (29/10): para um movimento sem par, os lançamentos do caixa
+  // ainda livres do mesmo tipo. Primeiro os de valor igual com data a até 45
+  // dias (os candidatos), depois os outros, por proximidade de data.
+  // O índice único da 030 garante que um lançamento só liga a um movimento.
+  const [escolhas, setEscolhas] = useState({})   // tx.id -> cash_entry id escolhido à mão
+  const livresPorTipo = useMemo(() => {
+    const usados = new Set(txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id))
+    const r = { entrada: [], saida: [] }
+    for (const e of entries) if (!usados.has(e.id) && r[e.type]) r[e.type].push(e)
+    return r
+  }, [txs, entries])
+  const candidatosDe = (tx) => {
+    const dias = (e) => Math.abs((new Date(e.entry_date) - new Date(tx.tx_date)) / 86400000)
+    const igual = (e) => Math.abs(Number(e.amount) - Number(tx.amount)) < 0.005
+    const todos = [...(livresPorTipo[tx.type] || [])].sort((a, b) => dias(a) - dias(b))
+    const candidatos = todos.filter(e => igual(e) && dias(e) <= 45)
+    const ids = new Set(candidatos.map(e => e.id))
+    return { candidatos, outros: todos.filter(e => !ids.has(e.id)) }
+  }
+
   // ── Ler o ficheiro (no browser; nada sobe sem ela confirmar) ──
   async function lerFicheiro(file) {
     if (!file) return
@@ -455,6 +475,33 @@ export default function Conciliacao() {
                         {tx.raw?.categoria && (
                           <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '7px' }}>{L.categoriaExtrato}: {tx.raw.categoria}</div>
                         )}
+                        {(() => {
+                          const { candidatos, outros } = candidatosDe(tx)
+                          if (!candidatos.length && !outros.length) return null
+                          const LM = lang === 'de'
+                            ? { rot: 'Kassenbuchung selbst wählen', esc: '— Buchung wählen —', cand: 'Gleicher Betrag, nahes Datum', outros: 'Andere offene Buchungen', ligar: 'Verknüpfen', nenhum: 'Keine Buchung mit gleichem Betrag — wähle aus den anderen oder lege eine neue an.' }
+                            : lang === 'en'
+                              ? { rot: 'Pick the cash book entry yourself', esc: '— choose an entry —', cand: 'Same amount, close date', outros: 'Other open entries', ligar: 'Link', nenhum: 'No entry with the same amount — pick from the others or create a new one.' }
+                              : { rot: 'Escolher o lançamento do Livro de Caixa', esc: '— escolher lançamento —', cand: 'Mesmo valor, data próxima', outros: 'Outros lançamentos sem par', ligar: 'Ligar', nenhum: 'Nenhum lançamento com o mesmo valor — escolhe entre os outros ou cria um novo.' }
+                          const opcao = (e) => <option key={e.id} value={e.id}>{dataFmt(e.entry_date)} · {e.description} · {fmt(e.amount)}</option>
+                          const escolhido = escolhas[tx.id] && entryById[escolhas[tx.id]] ? escolhas[tx.id] : ''
+                          return (
+                            <div style={{ marginBottom: '8px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '4px' }}>{LM.rot}</div>
+                              <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                <select value={escolhido} onChange={e => setEscolhas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label={LM.rot}
+                                  style={{ ...btn, flex: '1 1 240px', maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                                  <option value="">{LM.esc}</option>
+                                  {!!candidatos.length && <optgroup label={LM.cand}>{candidatos.map(opcao)}</optgroup>}
+                                  {!!outros.length && <optgroup label={LM.outros}>{outros.map(opcao)}</optgroup>}
+                                </select>
+                                <button onClick={() => conciliarCom(tx, escolhido)} disabled={isViewing || !escolhido}
+                                  style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing || !escolhido ? .55 : 1 }}>{LM.ligar}</button>
+                              </div>
+                              {!candidatos.length && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '4px' }}>{LM.nenhum}</div>}
+                            </div>
+                          )
+                        })()}
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
                           {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
                           <select value={taxas[tx.id] ?? taxaEmpresa} onChange={e => setTaxas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label="IVA"
