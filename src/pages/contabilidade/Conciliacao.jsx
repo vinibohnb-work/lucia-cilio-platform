@@ -67,6 +67,7 @@ export default function Conciliacao() {
     importados: 'Importierte Kontoauszüge', abrirFicheiro: 'Öffnen', semFicheiro: 'ohne Datei',
     verComo: 'Im Ansichtsmodus nicht möglich.',
     semCategoria: '— ohne Kategorie —', categoriaTitulo: 'Kategorie der neuen Buchung', categoriaExtrato: 'Kategorie im Auszug',
+    jaLigado: 'Diese Kassenbuchung ist bereits mit einer anderen Bankbewegung verknüpft. Die Liste wurde aktualisiert — bitte eine andere wählen.',
     anexar: 'Beleg anhängen', trocar: 'Ersetzen', retirar: 'Entfernen', aEnviar: 'Wird hochgeladen…', erroAnexo: 'Beleg konnte nicht hochgeladen werden.', tipoAnexo: 'PDF, JPEG, PNG oder WebP bis 10 MB.',
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
@@ -83,6 +84,7 @@ export default function Conciliacao() {
     importados: 'Imported statements', abrirFicheiro: 'Open', semFicheiro: 'no file',
     verComo: 'Not available in view-as mode.',
     semCategoria: '— no category —', categoriaTitulo: 'Category of the new entry', categoriaExtrato: 'Category in the statement',
+    jaLigado: 'This cash book entry is already linked to another bank movement. The list was refreshed — please pick another one.',
     anexar: 'Attach receipt', trocar: 'Replace', retirar: 'Remove', aEnviar: 'Uploading…', erroAnexo: 'Could not upload the receipt.', tipoAnexo: 'PDF, JPEG, PNG or WebP up to 10 MB.',
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
@@ -99,6 +101,7 @@ export default function Conciliacao() {
     verComo: 'Não disponível no modo "ver como".',
     importados: 'Extratos importados', abrirFicheiro: 'Abrir', semFicheiro: 'sem ficheiro',
     semCategoria: '— sem categoria —', categoriaTitulo: 'Categoria do lançamento a criar', categoriaExtrato: 'Categoria no extrato',
+    jaLigado: 'Este lançamento do Livro de Caixa já está ligado a outro movimento do banco. A lista foi atualizada — escolhe outro.',
     anexar: 'Anexar comprovativo', trocar: 'Trocar', retirar: 'Retirar', aEnviar: 'A enviar…', erroAnexo: 'Não foi possível enviar o comprovativo.', tipoAnexo: 'PDF, JPEG, PNG ou WebP até 10 MB.',
   }
 
@@ -241,6 +244,9 @@ export default function Conciliacao() {
     setTxs(prev => prev.map(x => x.id === tx.id ? { ...x, status: 'conciliado', cash_entry_id: entryId } : x))
     const { error } = await supabase.from('bank_transactions')
       .update({ status: 'conciliado', cash_entry_id: entryId, matched_at: new Date().toISOString() }).eq('id', tx.id)
+      // 23505 = índice único uq_bank_tx_one_entry (030): o lançamento já está ligado a outro
+      // movimento (ex.: noutro separador). O banco recusa; a tela explica e recarrega (B1).
+      .then(r => (r.error?.code === '23505' ? { ...r, error: { ...r.error, message: L.jaLigado } } : r))
     if (error) { setErro(error.message); load() }
   }
   async function marcar(tx, status) {
@@ -456,7 +462,7 @@ export default function Conciliacao() {
                     {tx.status === 'conciliado' && (
                       <div style={{ display: 'flex', gap: '9px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
                         <span style={{ fontSize: '11.5px', color: t.dueOk.ink, fontWeight: 700 }}>✓ {ligado ? `${dataFmt(ligado.entry_date)} · ${ligado.description}` : '—'}</span>
-                        {!isViewing && <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, marginLeft: 'auto', background: 'none', color: t.subtle, textDecoration: 'underline', padding: 0 }}>{L.desfazer}</button>}
+                        {!isViewing && <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, marginLeft: 'auto', minHeight: '36px', padding: '0 14px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted }}>{L.desfazer}</button>}
                       </div>
                     )}
 
@@ -488,15 +494,15 @@ export default function Conciliacao() {
                           return (
                             <div style={{ marginBottom: '8px' }}>
                               <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '4px' }}>{LM.rot}</div>
-                              <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', gap: '7px', flexWrap: 'nowrap', alignItems: 'center' }}>
                                 <select value={escolhido} onChange={e => setEscolhas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label={LM.rot}
-                                  style={{ ...btn, flex: '1 1 240px', maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                                  style={{ ...btn, flex: '1 1 0', minWidth: 0, minHeight: '36px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                                   <option value="">{LM.esc}</option>
                                   {!!candidatos.length && <optgroup label={LM.cand}>{candidatos.map(opcao)}</optgroup>}
                                   {!!outros.length && <optgroup label={LM.outros}>{outros.map(opcao)}</optgroup>}
                                 </select>
                                 <button onClick={() => conciliarCom(tx, escolhido)} disabled={isViewing || !escolhido}
-                                  style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing || !escolhido ? .55 : 1 }}>{LM.ligar}</button>
+                                  style={{ ...btn, flex: 'none', minHeight: '36px', padding: '0 16px', background: t.btnBg, color: t.btnInk, opacity: isViewing || !escolhido ? .55 : 1 }}>{LM.ligar}</button>
                               </div>
                               {!candidatos.length && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '4px' }}>{LM.nenhum}</div>}
                             </div>
@@ -524,7 +530,7 @@ export default function Conciliacao() {
 
                     {tx.status === 'ignorado' && !isViewing && (
                       <div style={{ marginTop: '7px' }}>
-                        <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, background: 'none', color: t.subtle, textDecoration: 'underline', padding: 0 }}>{L.desfazer}</button>
+                        <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, minHeight: '36px', padding: '0 14px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted }}>{L.desfazer}</button>
                       </div>
                     )}
                   </div>

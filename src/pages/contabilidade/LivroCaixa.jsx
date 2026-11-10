@@ -219,7 +219,7 @@ export default function LivroCaixa() {
     setErro('')
 
     const { data: tx } = await supabase.from('bank_transactions')
-      .select('id').eq('cash_entry_id', e.id).maybeSingle()
+      .select('id').eq('cash_entry_id', e.id).limit(1).maybeSingle()   // limit(1): o índice único da 030 já garante um só; assim não falha nunca (B2)
 
     const { data: apagados, error } = await supabase.from('cash_entries')
       .delete().eq('id', e.id).select('id')
@@ -229,7 +229,7 @@ export default function LivroCaixa() {
 
     if (tx?.id) {
       const { error: errTx } = await supabase.from('bank_transactions')
-        .update({ status: 'pendente', matched_at: null }).eq('id', tx.id); if (errTx) setErro(L.txNaoVoltou)
+        .update({ status: 'pendente', cash_entry_id: null, matched_at: null }).eq('id', tx.id); if (errTx) setErro(L.txNaoVoltou)   // cash_entry_id já fica nulo pela FK (on delete set null, 030); aqui explícito (B3)
     }
     load()
   }
