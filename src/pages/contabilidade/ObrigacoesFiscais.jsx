@@ -134,7 +134,12 @@ export default function ObrigacoesFiscais() {
 
   const inputStyle = { padding: '8px 10px', borderRadius: '7px', border: `1px solid ${t.cardBorder}`, fontSize: '13px', background: t.cardBg, outline: 'none', width: '100%', boxSizing: 'border-box' }
   const selectStyle = { ...inputStyle, cursor: 'pointer' }
-  const GRID = '2fr 1fr 140px 120px 110px 90px'
+  // Só consulta: sem a coluna Cliente (é sempre ele) nem a coluna do ✕ (não apaga).
+  const GRID = isViewing ? '2fr 140px 120px 110px' : '2fr 1fr 140px 120px 110px 90px'
+  const emptyText = isViewing
+    ? (lang === 'de' ? 'Noch keine Termine.' : lang === 'en' ? 'No obligations yet.' : 'Ainda não há obrigações.')
+    : L.empty
+  const statusTitle = (o) => daEquipa(o) ? L.equipaHint : isViewing ? undefined : L.markDone
 
   return (
     <div style={{ width: '100%' }}>
@@ -201,15 +206,15 @@ export default function ObrigacoesFiscais() {
 
       {/* List */}
       <div className="table-scroll">
-      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden', minWidth: isMobile ? '720px' : 'auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
-          {[L.type, L.client, L.country, L.deadline, L.status, ''].map((h,i) => (
+      <div style={{ background: t.cardBg, borderRadius: '14px', border: `1px solid ${t.cardBorder}`, overflow: 'hidden' }}>
+        <div style={{ display: isMobile ? 'none' : 'grid', gridTemplateColumns: GRID, padding: '12px 20px', background: BG, borderBottom: `1px solid ${t.cardBorder}`, gap: '8px' }}>
+          {(isViewing ? [L.type, L.country, L.deadline, L.status] : [L.type, L.client, L.country, L.deadline, L.status, '']).map((h,i) => (
             <div key={i} style={{ fontSize: '11px', fontWeight: 800, color: t.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase' }}>{h}</div>
           ))}
         </div>
 
         {loading && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.loading}</div>}
-        {!loading && visible.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{L.empty}</div>}
+        {!loading && visible.length === 0 && <div style={{ padding: '32px', textAlign: 'center', color: t.subtle, fontSize: '13px' }}>{emptyText}</div>}
 
         {!loading && visible.map((o, i) => {
           const st = STATUS_STYLE[o.status] || {}
@@ -217,13 +222,15 @@ export default function ObrigacoesFiscais() {
           const isDone = o.status === 'done'
           const dateColor = isDone ? '#64748b' : days < 0 ? '#991b1b' : days <= 14 ? '#e53e3e' : G
           return (
-            <div key={o.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px' }}>
+            <div key={o.id} style={isMobile
+              ? { display: 'grid', gridTemplateColumns: '1fr auto', padding: '14px 16px', borderBottom: i < visible.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '6px 10px' }
+              : { display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', borderBottom: i < visible.length-1 ? `1px solid ${t.rowBorder}` : 'none', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#1a2e1a', lineHeight: 1.4 }}>
                 {o.obligation_type}
                 {daEquipa(o) && <span title={L.equipaHint} style={{ marginLeft: '7px', fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#eaf5ee', color: '#0a7a3e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.equipa}</span>}
                 {!daEquipa(o) && o.source === 'auto' && <span style={{ marginLeft: '7px', fontSize: '11px', fontWeight: 700, padding: '1px 6px', borderRadius: '20px', background: '#ede9fe', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.auto}</span>}
               </div>
-              <div style={{ fontSize: '12px', color: t.text, fontWeight: 500 }}>{o.client || '—'}</div>
+              {!isViewing && !isMobile && <div style={{ fontSize: '12px', color: t.text, fontWeight: 500 }}>{o.client || '—'}</div>}
               <div style={{ fontSize: '12px', color: t.text }}>{countryName(o.country, lang) || '—'}</div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: dateColor }}>{o.deadline.split('-').reverse().join('/')}</div>
@@ -234,11 +241,11 @@ export default function ObrigacoesFiscais() {
                 )}
               </div>
               <div>
-                <button onClick={() => toggleStatus(o)} disabled={isViewing || daEquipa(o)} title={daEquipa(o) ? L.equipaHint : L.markDone} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: isViewing || daEquipa(o) ? 'default' : 'pointer' }}>
+                <button onClick={() => toggleStatus(o)} disabled={isViewing || daEquipa(o)} title={statusTitle(o)} style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: isViewing || daEquipa(o) ? 'default' : 'pointer' }}>
                   {isDone ? `✓ ${L.done}` : L.pending}
                 </button>
               </div>
-              {!isViewing && !daEquipa(o) && <button onClick={() => removeItem(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1, justifySelf: 'start' }} title="Remover">✕</button>}
+              {!isViewing && !isMobile && (daEquipa(o) ? <div /> : <button onClick={() => removeItem(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#cbd5e1', padding: '2px', lineHeight: 1, justifySelf: 'start' }} title="Remover">✕</button>)}
             </div>
           )
         })}

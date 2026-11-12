@@ -53,7 +53,7 @@ export default function Inicio() {
     hoje: 'heute', amanha: 'morgen', emDias: (n) => `in ${n} Tagen`, atrasado: (n) => `${n} Tage überfällig`,
     completaPais: 'Für korrekte Steuerregeln fehlt noch das Land Ihres Unternehmens.',
     completaCta: 'Jetzt ergänzen →', lido: 'Gelesen', marcarLido: 'Als gelesen markieren',
-    verContrato: 'Vertrag ansehen →',
+    verContrato: 'Vertrag ansehen →', envieEquipa: 'Bitte per WhatsApp oder E-Mail an Lúcias Team senden.',
     emFalta: (n) => n === 1 ? '1 Beleg fehlt noch.' : `${n} Belege fehlen noch.`, tudoEntregue: 'Alles eingereicht ✓',
   } : lang === 'en' ? {
     eyebrow: 'Overview', ola: 'Welcome back', semNome: 'Your company',
@@ -67,7 +67,7 @@ export default function Inicio() {
     hoje: 'today', amanha: 'tomorrow', emDias: (n) => `in ${n} days`, atrasado: (n) => `${n} days overdue`,
     completaPais: 'Your company country is missing — the tax rules depend on it.',
     completaCta: 'Complete now →', lido: 'Read', marcarLido: 'Mark as read',
-    verContrato: 'See contract →',
+    verContrato: 'See contract →', envieEquipa: "Please send them to Lúcia's team by WhatsApp or email.",
     emFalta: (n) => n === 1 ? '1 document still missing.' : `${n} documents still missing.`, tudoEntregue: 'All sent ✓',
   } : {
     eyebrow: 'Resumo', ola: 'Olá', semNome: 'A sua empresa',   // neutro: a saudação leva o nome da pessoa (teste de 05/10)
@@ -81,7 +81,7 @@ export default function Inicio() {
     hoje: 'hoje', amanha: 'amanhã', emDias: (n) => `daqui a ${n} dias`, atrasado: (n) => `${n} dias em atraso`,
     completaPais: 'Falta o país da sua empresa — é ele que determina as regras fiscais.',
     completaCta: 'Completar agora →', lido: 'Lido', marcarLido: 'Marcar como lido',
-    verContrato: 'Ver contrato →',
+    verContrato: 'Ver contrato →', envieEquipa: 'Envie-os à equipa da Lúcia por WhatsApp ou e-mail.',
     emFalta: (n) => n === 1 ? 'Falta 1 documento.' : `Faltam ${n} documentos.`, tudoEntregue: 'Tudo entregue ✓',
   }
 
@@ -94,8 +94,8 @@ export default function Inicio() {
       // Migração 058: o cliente lê o contrato pela vista só-dele, sem as notas internas.
       // Em "ver como", a administradora lê a tabela (a vista filtra por quem está ligado).
       (isViewing
-        ? supabase.from('client_billing').select('id,service,amount,periodicity,start_month,active,contract_name,contract_path').eq('user_id', eid)
-        : supabase.from('portal_meu_contrato').select('id,service,amount,periodicity,start_month,active,contract_name,contract_path')
+        ? supabase.from('client_billing').select('id,service,periodicity,start_month,active,contract_name,contract_path').eq('user_id', eid)
+        : supabase.from('portal_meu_contrato').select('id,service,periodicity,start_month,active,contract_name,contract_path')
       ).eq('active', true).limit(1),
       getCompanySettings(eid),
     ])
@@ -138,8 +138,8 @@ export default function Inicio() {
   const porLer = avisos.filter(a => !a.lido_em).length
   // Pendências do lado do cliente: o que a equipa está à espera que ele faça.
   const pendencias = [
-    ...(emFalta.length ? [{ k: 'docs', txt: L.pendDocs(emFalta.length), ir: '/contabilidade/empresa' }] : []),
-    ...obrigacoes.filter(o => o.estado === 'aguardar_docs').map(o => ({ k: o.id, txt: L.pendObr(o.obligation_type), ir: '/contabilidade/empresa' })),
+    ...(emFalta.length ? [{ k: 'docs', txt: soConsulta ? `${L.emFalta(emFalta.length)} ${L.envieEquipa}` : L.pendDocs(emFalta.length), ir: '/contabilidade/empresa' }] : []),
+    ...obrigacoes.filter(o => o.estado === 'aguardar_docs').map(o => ({ k: o.id, txt: soConsulta ? `${L.pendObr(o.obligation_type)}: ${L.envieEquipa}` : L.pendObr(o.obligation_type), ir: '/contabilidade/empresa' })),
     ...(porLer ? [{ k: 'msg', txt: L.pendMsg(porLer) }] : []),
   ]
   const link = { marginTop: '10px', background: 'none', border: 'none', padding: 0, color: t.accentText, fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
@@ -214,7 +214,9 @@ export default function Inicio() {
             </div>
           )}
           {pedidos.length > 0 && <div style={{ fontSize: '12px', color: emFalta.length ? t.dueSoon.ink : t.subtle, marginTop: '6px', fontWeight: emFalta.length ? 700 : 400 }}>{emFalta.length ? L.emFalta(emFalta.length) : L.tudoEntregue}</div>}
-          {!soConsulta && <button onClick={() => navigate('/contabilidade/empresa')} style={link}>{L.docsCta}</button>}
+          {soConsulta
+            ? (emFalta.length > 0 && <div style={{ fontSize: '12px', color: t.textMuted, marginTop: '8px' }}>{L.envieEquipa}</div>)
+            : <button onClick={() => navigate('/contabilidade/empresa')} style={link}>{L.docsCta}</button>}
         </div>
 
         <div style={card}>
@@ -225,7 +227,7 @@ export default function Inicio() {
               {ultimoRel.enviado_em && <div style={{ fontSize: '12.5px', color: t.textMuted, marginTop: '2px' }}>{L.enviadoA(dataFmt(ultimoRel.enviado_em))}</div>}
             </>
           ) : <div style={{ fontSize: '13px', color: t.subtle }}>{L.semRel}</div>}
-          {contrato?.contract_path && <div><button onClick={() => abrirContrato(contrato.contract_path)} style={link}>{L.verContrato}</button></div>}
+          {contrato?.contract_path && !soConsulta && <div><button onClick={() => abrirContrato(contrato.contract_path)} style={link}>{L.verContrato}</button></div>}
         </div>
 
         <div style={card}>

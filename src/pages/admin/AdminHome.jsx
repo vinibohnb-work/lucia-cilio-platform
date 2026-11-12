@@ -48,7 +48,7 @@ export default function AdminHome() {
   const [boasVindas, setBoasVindas] = useState(null)   // mensagem pronta a enviar ao cliente (ponto 16)
   const [saving, setSaving] = useState(false)
   const [form, setForm]     = useState(() => prefill
-    ? { ...EMPTY, email: prefill.email || '', display_name: prefill.display_name || '', password: generatePassword() }
+    ? { ...EMPTY, email: prefill.email || '', display_name: prefill.display_name || '', password: generatePassword(), platform: prefill.platform || EMPTY.platform, country: prefill.country || '', fichaId: prefill.fichaId || EMPTY.fichaId }
     : EMPTY)
   const [editingId, setEditingId] = useState(() => (prefill ? 'new' : null))
   const [busyId, setBusyId] = useState(null)
@@ -132,7 +132,7 @@ export default function AdminHome() {
 
   // Fichas de clientes que ainda não têm conta (12-A): é a elas que um acesso novo se liga
   const [fichas, setFichas] = useState([])
-  const [fichaTocada, setFichaTocada] = useState(false)
+  const [fichaTocada, setFichaTocada] = useState(() => !!prefill?.fichaId)
   // Ficha com o mesmo e-mail fica escolhida sozinha, até a administradora mudar à mão
   const mailForm = form.email.trim().toLowerCase()
   // Só pré-seleciona com EXATAMENTE uma ficha com o e-mail (Iara, 07/11). Com duas ou mais, fica vazio e o gravar desligado até a admin escolher.
