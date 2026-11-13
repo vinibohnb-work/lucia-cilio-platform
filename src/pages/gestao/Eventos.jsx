@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
 import { Cartao, Botao, Chip, Vazio, Janela, Pilulas, useCampos } from '../../portal/ui'
+import FeedbackEvento from './FeedbackEvento'
 
 // Repositório de eventos da Lúcia (pedido de 22/10; antes servia só o Momentos
 // de 24/10). Cada evento tem a sua landing page (no lcoffice.pt ou externa) e,
@@ -450,6 +451,9 @@ export default function Eventos() {
       </Cartao>
 
       <PalestrasAvaliacoes key={sel.id} evento={sel} avisar={avisar} />
+
+      {/* Formulário de feedback (pedido da Letícia, 13/11; migração 062) */}
+      <FeedbackEvento key={'fb-' + sel.id} evento={sel} alterar={alterar} avisar={avisar} />
 
       {(sel.codigo || pessoas.length > 0) && (
         <Cartao titulo="Quem entrou" semPadding>

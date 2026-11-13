@@ -43,6 +43,33 @@
       "permanent": false
     },
     {
+      "source": "/feedback",
+      "destination": "/feedback/",
+      "permanent": true
+    },
+    {
+      "source": "/feedback/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "lucia-cilio-platform.vercel.app"
+        }
+      ],
+      "destination": "https://lcoffice.pt/feedback/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/feedback/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "app.lcoffice.pt"
+        }
+      ],
+      "destination": "https://lcoffice.pt/feedback/:path*",
+      "permanent": false
+    },
+    {
       "source": "/momentos/:path*",
       "has": [
         {
@@ -87,7 +114,7 @@
       "permanent": true
     },
     {
-      "source": "/:path((?!momentos|participantes|api/|icons/|logo-letra-branca\\.png|favicon\\.svg).*)",
+      "source": "/:path((?!momentos|participantes|feedback|api/|icons/|logo-letra-branca\\.png|favicon\\.svg).*)",
       "has": [
         {
           "type": "host",
