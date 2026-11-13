@@ -24,6 +24,13 @@ import { randomBytes } from 'node:crypto'
 //   POST /api/evento { t, acao: 'avaliar', palestra, nota, comentario }
 //        → nota 0–10 (NPS) de uma apresentação de negócio; sem ela = o evento (migração 051)
 //
+// Formulário de feedback (migração 062), sem token: anónimo, para quem tem o link
+// (lcoffice.pt/feedback/#e=<id>) ou vem da landing. Só enquanto feedback_aberto.
+//   GET  /api/evento?feedback=<id do evento>  → nome, data e landing (ou 404/410)
+//   POST /api/evento { acao: 'feedback', evento, respostas, comentario, aberto, site_web }
+//        → respostas = { gostou: true|false, … }; aberto (quando a página abriu) e
+//          site_web (campo escondido) apanham robôs sem os avisar
+//
 // O e-mail e o token de cada pessoa nunca saem daqui para os outros.
 // ============================================================================
 
@@ -36,6 +43,11 @@ export const LIMITES = { nome: 80, negocio: 80, cargo: 80, localidade: 60, sobre
 const TIPOS_FOTO = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
 const MAX_PARTICIPANTES = 600
+// Feedback (migração 062): as perguntas Sim/Não do formulário, iguais em todos os eventos.
+// Os textos estão em public/feedback/index.html e em src/data/feedbackEvento.js.
+export const PERGUNTAS_FEEDBACK = ['gostou', 'temas', 'palestras', 'networking', 'voltaria', 'recomendaria']
+export const LIMITES_FEEDBACK = { comentario: 1000, porHora: 200, total: 3000, tempoMinimoMs: 3000 }
+const idEventoValido = (v) => typeof v === 'string' && /^[a-z0-9-]{2,80}$/.test(v)
 const corta = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '')
 const tokenValido = (t) => typeof t === 'string' && /^[A-Za-z0-9_-]{24,64}$/.test(t)
 const uuidValido = (v) => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v)
@@ -99,6 +111,39 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
     const { data: evento } = await db.from('eventos').select('id, nome, data, local, landing_url, codigo, aberto_de, aberto_ate').eq('id', query.entrada).maybeSingle()
     if (!evento || !evento.codigo) return [404, { error: 'Este evento não tem área de participantes.' }]
     return janela(evento, hoje) || [200, { c: evento.codigo }]
+  }
+
+  // Formulário de feedback (062): a página pergunta se está aberto e de que evento é
+  if (metodo === 'GET' && query.feedback !== undefined) {
+    if (!idEventoValido(query.feedback)) return [404, { error: 'Este formulário não existe.' }]
+    const { data: evento } = await db.from('eventos').select('id, nome, data, local, landing_url, feedback_aberto').eq('id', query.feedback).maybeSingle()
+    if (!evento) return [404, { error: 'Este formulário não existe.' }]
+    if (!evento.feedback_aberto) return [410, { error: 'O formulário de feedback deste evento está fechado.', evento: infoEvento(evento) }]
+    return [200, { evento: infoEvento(evento) }]
+  }
+
+  if (metodo === 'POST' && body.acao === 'feedback') {
+    if (!idEventoValido(body.evento)) return [404, { error: 'Este formulário não existe.' }]
+    // Robôs: o campo escondido preenchido ou o envio rápido demais recebem "ok" e nada se grava
+    const aberto = Number(body.aberto)
+    if (corta(body.site_web, 200) || !aberto || Date.now() - aberto < LIMITES_FEEDBACK.tempoMinimoMs) return [200, { ok: true }]
+    const { data: evento } = await db.from('eventos').select('id, feedback_aberto').eq('id', body.evento).maybeSingle()
+    if (!evento) return [404, { error: 'Este formulário não existe.' }]
+    if (!evento.feedback_aberto) return [410, { error: 'O formulário de feedback deste evento está fechado.' }]
+    const respostas = {}
+    const r = body.respostas && typeof body.respostas === 'object' ? body.respostas : {}
+    for (const k of PERGUNTAS_FEEDBACK) if (typeof r[k] === 'boolean') respostas[k] = r[k]
+    const comentario = corta(body.comentario, LIMITES_FEEDBACK.comentario) || null
+    if (!Object.keys(respostas).length && !comentario) return [400, { error: 'Responda a pelo menos uma pergunta.' }]
+    const desde = new Date(Date.now() - 3600 * 1000).toISOString()
+    const [{ count: naHora }, { count: total }] = await Promise.all([
+      db.from('evento_feedback').select('id', { count: 'exact', head: true }).eq('evento_id', evento.id).gte('created_at', desde),
+      db.from('evento_feedback').select('id', { count: 'exact', head: true }).eq('evento_id', evento.id),
+    ])
+    if ((naHora || 0) >= LIMITES_FEEDBACK.porHora || (total || 0) >= LIMITES_FEEDBACK.total) return [429, { error: 'Recebemos muitas respostas agora. Tente de novo mais tarde.' }]
+    const { error } = await db.from('evento_feedback').insert({ evento_id: evento.id, respostas, comentario })
+    if (error) return [500, { error: 'Não foi possível enviar. Tente de novo.' }]
+    return [200, { ok: true }]
   }
 
   // Antes de entrar: o QR só diz o código; a página mostra o nome do evento e se já abriu
