@@ -247,7 +247,7 @@ export default function Eventos() {
 
   const carregarPessoas = useCallback(async (id) => {
     const { data } = await supabase.from('evento_participantes')
-      .select('id, nome, negocio, cargo, localidade, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', id).order('nome')
+      .select('id, nome, negocio, cargo, localidade, instagram, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', id).order('nome')
     setPessoas(data || [])
   }, [])
   useEffect(() => { if (selId) carregarPessoas(selId) }, [selId, carregarPessoas])
@@ -462,12 +462,16 @@ export default function Eventos() {
             : (
               <div className="table-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead><tr><th style={th}>Nome</th><th style={th}>Empresa · cargo</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
+                  <thead><tr><th style={th}>Nome</th><th style={th}>Empresa · cargo</th><th style={th}>Instagram</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
                   <tbody>
                     {pessoas.map(p => (
                       <tr key={p.id}>
                         <td style={{ ...c.td, fontWeight: 700, color: t.heading }}>{p.nome}</td>
                         <td style={c.td}>{[p.negocio, p.cargo].filter(Boolean).join(' · ') || '—'}{p.localidade ? <span style={{ color: t.subtle }}> · {p.localidade}</span> : null}</td>
+                        {/* Só a equipa vê (14/11): a api/evento.js já o limpa para o @ do perfil, por isso o link é seguro */}
+                        <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{p.instagram
+                          ? <a href={`https://www.instagram.com/${encodeURIComponent(p.instagram)}/`} target="_blank" rel="noopener noreferrer" style={{ color: t.accentText, fontWeight: 700, textDecoration: 'none' }}>@{p.instagram}</a>
+                          : <span style={{ color: t.subtle }}>—</span>}</td>
                         <td style={c.td}>{p.partilhar ? <Chip tom="ok">Partilha</Chip> : <Chip>Não partilha</Chip>}</td>
                         <td style={{ ...c.td, fontVariantNumeric: 'tabular-nums' }}>{dataCurta(p.created_at.slice(0, 10))}</td>
                         <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
@@ -490,7 +494,7 @@ export default function Eventos() {
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
         <p style={{ fontSize: '12px', color: t.subtle, margin: 0, flex: '1 1 320px' }}>
-          Só aparece aos outros quem marcar "Partilhar". Se alguém entrar sem ser do evento, remova-o; se o QR circular fora da sala, gere um novo.
+          Só aparece aos outros quem marcar "Partilhar". O Instagram desta lista é só para uso interno da equipa. Se alguém entrar sem ser do evento, remova-o; se o QR circular fora da sala, gere um novo.
         </p>
         {confirmar === 'eliminar' ? (
           <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
