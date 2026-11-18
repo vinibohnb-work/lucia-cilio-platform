@@ -174,10 +174,27 @@ with (security_barrier = true, security_invoker = false) as
 revoke all on public.gestao_clientes_basico from public, anon, authenticated;
 grant select on public.gestao_clientes_basico to authenticated;
 
+-- 7. Armazenamento (achado de 17/11, Aurora): a 061 não cobria os ficheiros e a
+--    conta só consulta ainda conseguia enviar para a própria pasta (client-docs,
+--    client_docs_write_own da 032) e trocar o logótipo (logos_cliente_* da 045).
+--    Restritivas (AND com as regras que existem): quem só consulta não envia,
+--    não substitui nem apaga ficheiro em nenhum bucket. Leitura não muda; equipa
+--    e clientes completos continuam como antes. Requer a 061 (is_portal).
+drop policy if exists portal_sem_insert on storage.objects;
+drop policy if exists portal_sem_update on storage.objects;
+drop policy if exists portal_sem_delete on storage.objects;
+create policy portal_sem_insert on storage.objects as restrictive for insert to authenticated
+  with check (not public.is_portal());
+create policy portal_sem_update on storage.objects as restrictive for update to authenticated
+  using (not public.is_portal()) with check (not public.is_portal());
+create policy portal_sem_delete on storage.objects as restrictive for delete to authenticated
+  using (not public.is_portal());
+
 commit;
 
--- 7. Pós-aplicação: as duas primeiras dão 0; a terceira tem as contagens das linhas com conteúdo antes
+-- 8. Pós-aplicação: as duas primeiras dão 0; a terceira tem as contagens das linhas com conteúdo antes; a última lista 3 políticas portal_sem_* no armazenamento
 select count(*) fichas_por_limpar from public.clientes where notas is not null or responsavel is not null or coalesce(horas_incluidas,0) <> 0;
 select count(*) obrigacoes_por_limpar from public.fiscal_obligations where notas is not null or coalesce(checklist,'{}'::jsonb) <> '{}'::jsonb;
 select (select count(*) from public.clientes_interno) fichas, (select count(*) from public.obrigacoes_interno) obrigacoes;
 select tablename from pg_publication_tables where pubname = 'supabase_realtime' and tablename in ('clientes_interno','obrigacoes_interno'); -- esperado: nenhuma linha
+select policyname, cmd from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname like 'portal_sem_%'; -- esperado: 3 linhas
