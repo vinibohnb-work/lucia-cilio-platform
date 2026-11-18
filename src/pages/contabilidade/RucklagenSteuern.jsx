@@ -122,7 +122,7 @@ export default function RucklagenSteuern() {
     famvNote: 'Für Selbständige zählt grundsätzlich der regelmäßige Gewinn, nicht der Umsatz. Die Krankenkasse entscheidet im Einzelfall — Angaben prüfen lassen.',
     goal: 'Ziel dieses Moduls',
     goalText: 'Wir zeigen, wie viel Geld du reservieren solltest, damit du liquide bleibst und keine Überraschungen erlebst.',
-    avail: 'Verfügbar', availSub: '(frei nutzbar)', resFin: 'Reserviert für Finanzamt', resVor: 'Reserviert für Vorsorge',
+    saldo: 'Kontostand', avail: 'Verfügbar', availSub: '(frei nutzbar)', resFin: 'Reserviert für Finanzamt', resVor: 'Reserviert für Vorsorge',
     disclaimer: 'Alle Werte sind Schätzungen und dienen zur besseren Planung. Keine Steuerberatung.',
     saved: 'Gespeichert ✓', saveErr: 'Speichern fehlgeschlagen (Migration 009 nötig).', loading: 'Wird geladen…',
   } : lang === 'en' ? {
@@ -160,7 +160,7 @@ export default function RucklagenSteuern() {
     famvNote: 'For the self-employed, regular profit counts, not revenue. The Krankenkasse (health insurer) decides case by case — have the figures confirmed.',
     goal: 'Purpose of this module',
     goalText: 'We show how much money you should set aside to stay liquid and avoid surprises.',
-    avail: 'Available', availSub: '(free to use)', resFin: 'Reserved for Finanzamt', resVor: 'Reserved for provision',
+    saldo: 'Account balance', avail: 'Available', availSub: '(free to use)', resFin: 'Reserved for Finanzamt', resVor: 'Reserved for provision',
     disclaimer: 'All values are estimates and serve for better planning. Not tax advice.',
     saved: 'Saved ✓', saveErr: 'Save failed (migration 009 required).', loading: 'Loading…',
   } : {
@@ -198,7 +198,7 @@ export default function RucklagenSteuern() {
     famvNote: 'Para independentes conta o lucro regular, não a faturação. A Krankenkasse (seguradora de saúde) decide caso a caso — confirmar os valores.',
     goal: 'Objetivo deste módulo',
     goalText: 'Mostramos quanto dinheiro deves reservar para te manteres líquido e não teres surpresas.',
-    avail: 'Disponível', availSub: '(uso livre)', resFin: 'Reservado p/ Finanzamt', resVor: 'Reservado p/ previdência',
+    saldo: 'Saldo da conta', avail: 'Disponível', availSub: '(uso livre)', resFin: 'Reservado p/ Finanzamt', resVor: 'Reservado p/ previdência',
     disclaimer: 'Todos os valores são estimativas e servem para melhor planeamento. Não é aconselhamento fiscal.',
     saved: 'Guardado ✓', saveErr: 'Falha ao guardar (é necessária a migração 009).', loading: 'A carregar…',
   }
@@ -423,12 +423,14 @@ export default function RucklagenSteuern() {
                 </div>
                 <p style={{ margin: 0, fontSize: '12.5px', color: t.textMuted, lineHeight: 1.55 }}>{L.goalText}</p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: t.textMuted, textAlign: 'center' }}>
-                <div><div style={{ fontSize: '22px' }}>👛</div><div style={{ marginTop: '3px' }}>{L.avail}<br/><span style={{ color: t.subtle }}>{L.availSub}</span></div></div>
-                <span style={{ fontSize: '18px', color: t.subtle }}>=</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: t.textMuted, textAlign: 'center', flexWrap: 'wrap' }}>
+                <div><div style={{ fontSize: '22px' }}>🏦</div><div style={{ marginTop: '3px' }}>{L.saldo}</div></div>
+                <span style={{ fontSize: '18px', color: t.subtle }}>−</span>
                 <div><div style={{ fontSize: '22px' }}>🏛️</div><div style={{ marginTop: '3px' }}>{L.resFin}</div></div>
                 <span style={{ fontSize: '18px', color: t.subtle }}>−</span>
                 <div><div style={{ fontSize: '22px' }}>🛡️</div><div style={{ marginTop: '3px' }}>{L.resVor}</div></div>
+                <span style={{ fontSize: '18px', color: t.subtle }}>=</span>
+                <div><div style={{ fontSize: '22px' }}>👛</div><div style={{ marginTop: '3px' }}>{L.avail}<br/><span style={{ color: t.subtle }}>{L.availSub}</span></div></div>
               </div>
             </div>
           </div>
@@ -467,7 +469,7 @@ export default function RucklagenSteuern() {
                 <div style={{ ...money(tone.blue.ink), fontSize: '21px', marginTop: '3px' }}>{fmt2(vorsorge)}</div>
                 <div style={sub}>{L.ovVorsorgeSub}</div>
               </div>
-              <Ring pct={0.75} color={tone.blue.ink} track={tone.blue.soft} />
+              {/* Sem anel: era fixo em 75% e não media nada (QA Nina 18/11) */}
             </div>
 
             {/* Auf einen Blick */}
