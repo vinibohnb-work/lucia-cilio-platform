@@ -141,6 +141,7 @@ export default function Conciliacao() {
   // dias (os candidatos), depois os outros, por proximidade de data.
   // O índice único da 030 garante que um lançamento só liga a um movimento.
   const [escolhas, setEscolhas] = useState({})   // tx.id -> cash_entry id escolhido à mão
+  const [erroTx, setErroTx] = useState({})       // tx.id -> mensagem de erro do "Ligar"/"Conciliar", mostrada no card
   const livresPorTipo = useMemo(() => {
     const usados = new Set(txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id))
     const r = { entrada: [], saida: [] }
@@ -241,12 +242,16 @@ export default function Conciliacao() {
   // ── Ações sobre um movimento ──
   async function conciliarCom(tx, entryId) {
     if (isViewing) return
+    setErro(''); setErroTx(p => { if (!p[tx.id]) return p; const n = { ...p }; delete n[tx.id]; return n })
     setTxs(prev => prev.map(x => x.id === tx.id ? { ...x, status: 'conciliado', cash_entry_id: entryId } : x))
     const { error } = await supabase.from('bank_transactions')
       .update({ status: 'conciliado', cash_entry_id: entryId, matched_at: new Date().toISOString() }).eq('id', tx.id)
       // 23505 = índice único uq_bank_tx_one_entry (030): o lançamento já está ligado a outro
       // movimento (ex.: noutro separador). O banco recusa; a tela explica e recarrega (B1).
       .then(r => (r.error?.code === '23505' ? { ...r, error: { ...r.error, message: L.jaLigado } } : r))
+    // B2 do QA: a mensagem fica no próprio card (no telemóvel o topo não se vê);
+    // B1: a escolha à mão é limpa, para o "Ligar" não repetir o mesmo erro.
+    if (error) { setErroTx(p => ({ ...p, [tx.id]: error.message })); setEscolhas(p => { const n = { ...p }; delete n[tx.id]; return n }); load(); return }
     if (error) { setErro(error.message); load() }
   }
   async function marcar(tx, status) {
@@ -438,6 +443,10 @@ export default function Conciliacao() {
                       </span>
                     </div>
 
+                    {erroTx[tx.id] && (
+                      <div role="alert" style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '9px', padding: '9px 11px', fontSize: '12.5px', fontWeight: 600, marginTop: '8px' }}>{erroTx[tx.id]}</div>
+                    )}
+
                     {/* Comprovativo do movimento (29/10) */}
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginTop: '6px' }}>
                       {tx.comprovativo_path ? (
@@ -490,19 +499,19 @@ export default function Conciliacao() {
                               ? { rot: 'Pick the cash book entry yourself', esc: '— choose an entry —', cand: 'Same amount, close date', outros: 'Other open entries', ligar: 'Link', nenhum: 'No entry with the same amount — pick from the others or create a new one.' }
                               : { rot: 'Escolher o lançamento do Livro de Caixa', esc: '— escolher lançamento —', cand: 'Mesmo valor, data próxima', outros: 'Outros lançamentos sem par', ligar: 'Ligar', nenhum: 'Nenhum lançamento com o mesmo valor — escolhe entre os outros ou cria um novo.' }
                           const opcao = (e) => <option key={e.id} value={e.id}>{dataFmt(e.entry_date)} · {e.description} · {fmt(e.amount)}</option>
-                          const escolhido = escolhas[tx.id] && entryById[escolhas[tx.id]] ? escolhas[tx.id] : ''
+                          const escolhido = escolhas[tx.id] && (livresPorTipo[tx.type] || []).some(e => e.id === escolhas[tx.id]) ? escolhas[tx.id] : ''
                           return (
                             <div style={{ marginBottom: '8px' }}>
                               <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '4px' }}>{LM.rot}</div>
                               <div style={{ display: 'flex', gap: '7px', flexWrap: 'nowrap', alignItems: 'center' }}>
                                 <select value={escolhido} onChange={e => setEscolhas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label={LM.rot}
-                                  style={{ ...btn, flex: '1 1 0', minWidth: 0, minHeight: '36px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                                  style={{ ...btn, fontSize: '16px', fontWeight: 600, flex: '1 1 0', minWidth: 0, minHeight: '44px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                                   <option value="">{LM.esc}</option>
                                   {!!candidatos.length && <optgroup label={LM.cand}>{candidatos.map(opcao)}</optgroup>}
                                   {!!outros.length && <optgroup label={LM.outros}>{outros.map(opcao)}</optgroup>}
                                 </select>
                                 <button onClick={() => conciliarCom(tx, escolhido)} disabled={isViewing || !escolhido}
-                                  style={{ ...btn, flex: 'none', minHeight: '36px', padding: '0 16px', background: t.btnBg, color: t.btnInk, opacity: isViewing || !escolhido ? .55 : 1 }}>{LM.ligar}</button>
+                                  style={{ ...btn, flex: 'none', minHeight: '44px', padding: '0 16px', background: t.btnBg, color: t.btnInk, opacity: isViewing || !escolhido ? .55 : 1 }}>{LM.ligar}</button>
                               </div>
                               {!candidatos.length && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '4px' }}>{LM.nenhum}</div>}
                             </div>
