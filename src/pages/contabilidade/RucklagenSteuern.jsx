@@ -111,7 +111,7 @@ export default function RucklagenSteuern() {
     ovUst: 'Voraussichtliche USt-Zahllast', ovUstSub: 'An Finanzamt',
     ovVorsorge: 'Monatliche Vorsorge (gesamt)', ovVorsorgeSub: 'Für Versicherungen und Rücklagen',
     glance: 'Auf einen Blick', glanceSub: 'Dieser Betrag ist nicht frei verfügbar.',
-    forTax: 'Für Steuern reserviert', forVorsorge: 'Für Vorsorge (monatlich)', total: 'Gesamt (Jahr bis heute)', totalAno: 'Gesamt (Jahr)',
+    forTax: 'Für Steuern reserviert', forVorsorge: 'Für Vorsorge (Jahr bis heute)', forVorsorgeAno: 'Für Vorsorge (Jahr)', total: 'Gesamt (Jahr bis heute)', totalAno: 'Gesamt (Jahr)',
     totalSub: (m) => `Steuern des Jahres + ${m} ${m === 1 ? 'Monat' : 'Monate'} Vorsorge`,
     gewinnNet: '(Einnahmen − Ausgaben, ohne USt)', gewinnKlein: '(Einnahmen − Ausgaben; gezahlte USt zählt als Kosten)',
     tip: 'Tipp', tipText: 'Passe deine Rücklagen regelmäßig an deine tatsächliche Situation und deinen Gewinn an.',
@@ -149,7 +149,7 @@ export default function RucklagenSteuern() {
     ovUst: 'Estimated VAT payable', ovUstSub: 'To the Finanzamt',
     ovVorsorge: 'Monthly provision (total)', ovVorsorgeSub: 'For insurance and reserves',
     glance: 'At a glance', glanceSub: 'This amount is not free to use.',
-    forTax: 'Reserved for taxes', forVorsorge: 'For provision (monthly)', total: 'Total (year to date)', totalAno: 'Total for the year',
+    forTax: 'Reserved for taxes', forVorsorge: 'For provision (year to date)', forVorsorgeAno: 'For provision (year)', total: 'Total (year to date)', totalAno: 'Total for the year',
     totalSub: (m) => `taxes for the year + ${m} ${m === 1 ? 'month' : 'months'} of provision`,
     gewinnNet: '(Income − Expenses, excl. VAT)', gewinnKlein: '(Income − Expenses; VAT paid counts as a cost)',
     tip: 'Tip', tipText: 'Adjust your reserves regularly to your real situation and profit.',
@@ -187,7 +187,7 @@ export default function RucklagenSteuern() {
     ovUst: 'IVA previsto a pagar', ovUstSub: 'Ao Finanzamt',
     ovVorsorge: 'Previdência mensal (total)', ovVorsorgeSub: 'Para seguros e reservas',
     glance: 'Em resumo', glanceSub: 'Este montante não está livre para uso.',
-    forTax: 'Reservado para impostos', forVorsorge: 'Para previdência (mensal)', total: 'Total (ano até hoje)', totalAno: 'Total do ano',
+    forTax: 'Reservado para impostos', forVorsorge: 'Para previdência (ano até hoje)', forVorsorgeAno: 'Para previdência (ano)', total: 'Total (ano até hoje)', totalAno: 'Total do ano',
     totalSub: (m) => `impostos do ano + ${m} ${m === 1 ? 'mês' : 'meses'} de previdência`,
     gewinnNet: '(Receitas − Despesas, sem IVA)', gewinnKlein: '(Receitas − Despesas; o IVA pago conta como custo)',
     tip: 'Dica', tipText: 'Ajusta as tuas reservas regularmente à tua situação real e ao teu lucro.',
@@ -479,8 +479,8 @@ export default function RucklagenSteuern() {
                 <div style={{ ...money(tone.green.ink), fontSize: '20px' }}>{fmt2(fuerSteuer)}</div>
               </div>
               <div style={{ marginBottom: '13px' }}>
-                <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{L.forVorsorge}</div>
-                <div style={{ ...money(tone.blue.ink), fontSize: '20px' }}>{fmt2(vorsorge)}</div>
+                <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{Number(year) === new Date().getFullYear() ? L.forVorsorge : L.forVorsorgeAno}</div>
+                <div style={{ ...money(tone.blue.ink), fontSize: '20px' }}>{fmt2(vorsorge * mesesAno)}</div>
               </div>
               <div style={{ borderTop: `1px solid ${t.cardBorder}`, paddingTop: '12px' }}>
                 <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{Number(year) === new Date().getFullYear() ? L.total : L.totalAno}</div>
