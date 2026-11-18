@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal } from '../dados'
-import { Titulo, Botao, Cartao, useCampos, Ic, Pilulas } from '../ui'
+import { Titulo, Botao, Cartao, useCampos, Ic, Pilulas, usePerfil } from '../ui'
 import { hojeIso, somaDias } from '../regras'
 import { tarefaAtrasada } from '../seletores'
 import { FormTarefa, TabelaTarefas } from '../partes/Tarefas'
@@ -14,6 +14,7 @@ import { FormTarefa, TabelaTarefas } from '../partes/Tarefas'
 // e na Agenda) e os filtros Cliente e País (a visão de um cliente é a ficha).
 
 export default function Tarefas() {
+  const podeEditar = usePerfil().papel === 'admin'   // 056: comercial e marketing só veem
   const isMobile = useIsMobile()
   const s = usePortal()
   const c = useCampos()
@@ -55,7 +56,7 @@ export default function Tarefas() {
           <select value={f.responsavel} onChange={set('responsavel')} style={{ ...c.input, cursor: 'pointer' }} aria-label="Responsável"><option value="">Toda a equipa</option>{s.equipa.map(x => <option key={x}>{x}</option>)}</select>
           {/* Estado: fica como está até a Lúcia decidir se "Em curso" é usado (⏳). */}
           <select value={f.estado} onChange={set('estado')} style={{ ...c.input, cursor: 'pointer' }} aria-label="Estado"><option value="abertas">Por fazer</option><option value="pendente">Pendentes</option><option value="em_curso">Em curso</option><option value="concluida">Concluídas</option><option value="todas">Todas</option></select>
-          <Botao variante="primario" onClick={() => setNova(true)} estilo={isMobile ? { gridColumn: '1 / -1', justifyContent: 'center' } : undefined}><Ic.mais size={16} />Nova tarefa</Botao>
+          {podeEditar && <Botao variante="primario" onClick={() => setNova(true)} estilo={isMobile ? { gridColumn: '1 / -1', justifyContent: 'center' } : undefined}><Ic.mais size={16} />Nova tarefa</Botao>}
         </div>
       </div>
 

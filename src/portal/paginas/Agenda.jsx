@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
-import { Titulo, Botao, Pilulas, useCampos, Ic } from '../ui'
+import { Titulo, Botao, Pilulas, useCampos, Ic, usePerfil } from '../ui'
 import { hojeIso, somaDias, somaMeses, dataDe, iso, fmtData, MESES_LONGOS, FECHADOS, estadoEfetivo } from '../regras'
 import { tarefaAtrasada, clientePorId } from '../seletores'
 import { FormTarefa } from '../partes/Tarefas'
@@ -18,6 +18,7 @@ const DIAS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom']
 const inicioSemana = (s) => { const d = dataDe(s); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return iso(d) }
 
 export default function Agenda() {
+  const podeEditar = usePerfil().papel === 'admin'   // 056: comercial e marketing veem a agenda sem alterar
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const s = usePortal()
@@ -52,7 +53,7 @@ export default function Agenda() {
       <div onClick={() => it.tipo === 'tarefa' ? setNova(it.x) : navigate(`/gestao/clientes/${it.cid}/obrigacoes`)}
         title={`${cli ? cli.nome + ' — ' : ''}${it.titulo}`}
         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: compacto ? '2px 6px' : '8px 10px', borderRadius: '7px', background: cor.bg, color: cor.ink, fontSize: compacto ? '11px' : '13px', cursor: 'pointer', opacity: it.feita ? 0.5 : 1, overflow: 'hidden', whiteSpace: compacto ? 'nowrap' : 'normal', marginBottom: '3px', border: it.tipo === 'obrig' ? `1px solid ${t.accent}55` : 'none' }}>
-        {it.tipo === 'tarefa' && !compacto && <input type="checkbox" checked={it.feita} onClick={e => e.stopPropagation()} onChange={() => acoes.alternarTarefa(it.id)} style={{ accentColor: '#1f6b45', flex: 'none' }} />}
+        {it.tipo === 'tarefa' && !compacto && podeEditar && <input type="checkbox" checked={it.feita} onClick={e => e.stopPropagation()} onChange={() => acoes.alternarTarefa(it.id)} style={{ accentColor: '#1f6b45', flex: 'none' }} />}
         {it.tipo === 'obrig' ? <Ic.agenda size={compacto ? 12 : 15} /> : <Ic.tarefas size={compacto ? 12 : 15} />}
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{compacto && cli ? `${cli.nome.split(' ')[0]} · ` : ''}{it.titulo}{!compacto && cli ? <span style={{ opacity: .7 }}> — {cli.nome}</span> : ''}</span>
       </div>
@@ -103,7 +104,7 @@ export default function Agenda() {
         <strong style={{ fontSize: '16px', color: t.heading, textTransform: 'capitalize' }}>{tituloPeriodo}</strong>
         <span style={{ flex: 1 }} />
         <Botao onClick={() => setPrazosAT(true)} title="Conferir os prazos de Portugal com os quadros oficiais da AT">Prazos da AT</Botao>
-        <Botao variante="primario" onClick={() => setNova({ prazo: ref })}><Ic.mais size={16} />Nova tarefa</Botao>
+        {podeEditar && <Botao variante="primario" onClick={() => setNova({ prazo: ref })}><Ic.mais size={16} />Nova tarefa</Botao>}
       </div>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
         <select value={f.responsavel} onChange={e => setF(p => ({ ...p, responsavel: e.target.value }))} style={{ ...c.input, width: 'auto', cursor: 'pointer' }} aria-label="Responsável"><option value="">Toda a equipa</option>{s.equipa.map(x => <option key={x}>{x}</option>)}</select>
