@@ -184,9 +184,11 @@ async function ler() {
   const q = (p) => p.then(({ data, error }) => { if (error) throw error; return data || [] })
   try {
     const [clientes, obrig, tarefas, docs, msgs, avisos, rels, notas, horas, contratos, pagamentos] = await Promise.all([
-      q(supabase.from('clientes').select('*').order('nome')),
+      // Comercial e marketing (056) leem a ficha básica e a agenda pelas vistas só de
+      // leitura; as outras tabelas devolvem-lhes vazio pelas políticas.
+      q(supabase.from(quem.admin ? 'clientes' : 'gestao_clientes_basico').select('*').order('nome')),
       q(supabase.from('fiscal_obligations').select('*').not('cliente_id', 'is', null)),
-      q(supabase.from('tarefas').select('*')),
+      q(supabase.from(quem.admin ? 'tarefas' : 'gestao_agenda').select('*')),
       q(supabase.from('documentos_cliente').select('*')),
       q(supabase.from('mensagens_cliente').select('*')),
       q(supabase.from('client_notices').select('*').order('created_at')),
