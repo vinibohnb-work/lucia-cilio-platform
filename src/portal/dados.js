@@ -52,7 +52,21 @@ async function gravar(pedido) {
 // ── Conversões base de dados ⇄ portal ──────────────────────────────────────
 const PER_DB = { monthly: 'mensal', quarterly: 'trimestral', annual: 'anual', once: 'unico' }
 
+// Migração 063: notas, responsável e horas incluídas da ficha, e notas e checklist
+// das obrigações, vivem em tabelas só da equipa (clientes_interno, obrigacoes_interno).
+// A administradora lê-as embutidas; comercial e marketing recebem o responsável pela vista.
+const INTERNO_CLIENTE = { notas: 'notas', responsavel: 'responsavel', horasIncluidas: 'horas_incluidas' }
+const INTERNO_OBRIGACAO = { notas: 'notas', checklist: 'checklist' }
+function separar(patch, chaves) {
+  const interno = {}, resto = {}
+  for (const [k, v] of Object.entries(patch)) (k in chaves ? interno : resto)[k] = v
+  return [interno, resto]
+}
+const temChaves = (o) => Object.keys(o).length > 0
+
 function deCliente(r, contrato) {
+  const int = r.clientes_interno || {}
+  r = { ...r, notas: int.notas ?? r.notas, responsavel: int.responsavel ?? r.responsavel, horas_incluidas: int.horas_incluidas ?? r.horas_incluidas }
   return {
     id: r.id, nome: r.nome, pessoa: r.pessoa || '', email: r.email || '', telefone: r.telefone || '',
     pais: r.pais || 'PT', forma: r.forma || '', setor: r.setor || '', servicos: r.servicos || [],
@@ -91,6 +105,8 @@ function periodoDe(r) {
 }
 
 function deObrigacao(r) {
+  const int = r.obrigacoes_interno || {}
+  r = { ...r, notas: int.notas ?? r.notas, checklist: int.checklist ?? r.checklist }
   return {
     id: r.id, clienteId: r.cliente_id, codigo: r.code || `MANUAL-${r.id}`, nome: r.obligation_type,
     periodo: periodoDe(r), prazo: r.deadline, estado: r.estado || (r.status === 'done' ? 'entregue' : 'por_preparar'),
@@ -196,8 +212,10 @@ async function ler() {
   const soAdmin = (p) => admin ? q(p) : Promise.resolve([])
   try {
     const [clientes, obrig, tarefas, docs, msgs, avisos, rels, notas, horas, contratos, pagamentos] = await Promise.all([
-      q(supabase.from(admin ? 'clientes' : 'gestao_clientes_basico').select('*').order('nome')),
-      soAdmin(supabase.from('fiscal_obligations').select('*').not('cliente_id', 'is', null)),
+      q(admin
+        ? supabase.from('clientes').select('*, clientes_interno(notas,responsavel,horas_incluidas)').order('nome')
+        : supabase.from('gestao_clientes_basico').select('*').order('nome')),
+      soAdmin(supabase.from('fiscal_obligations').select('*, obrigacoes_interno(notas,checklist)').not('cliente_id', 'is', null)),
       q(supabase.from(admin ? 'tarefas' : 'gestao_agenda').select('*')),
       soAdmin(supabase.from('documentos_cliente').select('*')),
       soAdmin(supabase.from('mensagens_cliente').select('*')),
@@ -328,7 +346,15 @@ export const acoes = {
   },
   atualizarCliente(id, patch) {
     mudar(s => { Object.assign(s.clientes.find(c => c.id === id), patch) })
-    gravar(supabase.from('clientes').update({ ...paraCliente(patch), updated_at: new Date().toISOString() }).eq('id', id))
+    const agora = new Date().toISOString()
+    const [interno, resto] = separar(patch, INTERNO_CLIENTE)
+    if (temChaves(interno)) {
+      // 063: direto na interna, para dar para limpar o texto ou pôr as horas a 0
+      const linha = { cliente_id: id, updated_at: agora }
+      for (const [k, v] of Object.entries(interno)) linha[INTERNO_CLIENTE[k]] = k === 'horasIncluidas' ? Number(v || 0) : (v === '' ? null : v)
+      gravar(supabase.from('clientes_interno').upsert(linha, { onConflict: 'cliente_id' }))
+    }
+    if (temChaves(resto)) gravar(supabase.from('clientes').update({ ...paraCliente(resto), updated_at: agora }).eq('id', id))
   },
   // Ligar a ficha a uma conta da plataforma: as obrigações que o cliente já
   // tinha passam a aparecer aqui, e as daqui passam a aparecer-lhe.
@@ -379,7 +405,15 @@ export const acoes = {
   },
   atualizarObrigacao(id, patch) {
     mudar(s => { Object.assign(s.obrigacoes.find(o => o.id === id), patch) })
-    gravar(supabase.from('fiscal_obligations').update(paraObrigacao(patch)).eq('id', id))
+    const [interno, resto] = separar(patch, INTERNO_OBRIGACAO)
+    if (temChaves(interno)) {
+      // 063: notas e checklist só da equipa, na tabela interna
+      const linha = { obrigacao_id: id, updated_at: new Date().toISOString() }
+      if ('notas' in interno) linha.notas = interno.notas || null
+      if ('checklist' in interno) linha.checklist = interno.checklist || {}
+      gravar(supabase.from('obrigacoes_interno').upsert(linha, { onConflict: 'obrigacao_id' }))
+    }
+    if (temChaves(resto)) gravar(supabase.from('fiscal_obligations').update(paraObrigacao(resto)).eq('id', id))
   },
   alternarChecklist(id, chave) {
     const o = estado.obrigacoes.find(x => x.id === id)
