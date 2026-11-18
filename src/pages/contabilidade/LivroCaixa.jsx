@@ -215,7 +215,10 @@ export default function LivroCaixa() {
   //     movimento volta a "por conciliar" em vez de ficar conciliado com nada.
   async function removeEntry(e) {
     if (isViewing) return
-    if (!window.confirm(L.confirmDel(e.description || ''))) return
+    // Ligado a um movimento do banco: o aviso diz isso antes de confirmar (QA Nina 18/11, fluxo 3)
+    const mLig = movPorEntry[e.id]
+    const aviso = L.confirmDel(e.description || '') + (mLig ? NL2 + L.avisoLigado(mLig.tx_date.split('-').reverse().join('/'), `€ ${fmt(mLig.amount)}`) : '')
+    if (!window.confirm(aviso)) return
     setErro('')
 
     const { data: tx } = await supabase.from('bank_transactions')
@@ -236,6 +239,7 @@ export default function LivroCaixa() {
 
   const L = lang === 'de' ? {
     remover: 'Entfernen', confirmDel: (d) => `Buchung entfernen?${d ? NL2 + '\u201e' + d + '\u201c' : ''}`,
+    avisoLigado: (d, v) => `Diese Buchung ist mit der Bankbewegung vom ${d} (${v}) abgestimmt. Die Bankbewegung wird wieder „offen".`,
     delFalhou: 'Die Buchung konnte nicht entfernt werden. Bitte Seite neu laden und erneut versuchen.',
     txNaoVoltou: 'Die Buchung wurde entfernt, aber die zugehörige Bankbewegung konnte nicht wieder auf „offen" gesetzt werden. Bitte in der Bankabstimmung prüfen.',
     export: 'CSV exportieren', balance: 'Kassenbestand', income: 'Einnahmen', expense: 'Ausgaben',
@@ -251,6 +255,7 @@ export default function LivroCaixa() {
     vat: 'MwSt.', vatExempt: 'befreit', predictedOut: 'Geplante Ausgaben', predictedOutSub: 'wiederkehrend, offen',
   } : lang === 'en' ? {
     remover: 'Remove', confirmDel: (d) => `Remove this entry?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
+    avisoLigado: (d, v) => `This entry is matched with the bank movement of ${d} (${v}). That movement goes back to "to reconcile".`,
     delFalhou: 'The entry could not be removed. Please reload the page and try again.',
     txNaoVoltou: 'The entry was removed, but its bank movement could not be set back to "to reconcile". Please check it in Bank reconciliation.',
     export: 'Export CSV', balance: 'Current Balance', income: 'Total Income', expense: 'Total Expenses',
@@ -267,6 +272,7 @@ export default function LivroCaixa() {
   } : {
     remover: 'Remover', confirmDel: (d) => `Remover este lan\u00e7amento?${d ? NL2 + '\u201c' + d + '\u201d' : ''}`,
     delFalhou: 'N\u00e3o foi poss\u00edvel remover o lan\u00e7amento. Recarrega a p\u00e1gina e tenta outra vez.',
+    avisoLigado: (d, v) => `Está ligado ao movimento do banco de ${d} (${v}). Esse movimento volta a "Por conciliar".`,
     txNaoVoltou: 'O lançamento foi removido, mas o movimento do banco ligado a ele não voltou a "por conciliar". Confere na Conciliação bancária.',
     export: 'Exportar CSV', balance: 'Saldo Atual', income: 'Total Entradas', expense: 'Total Saídas',
     cash: 'Em Caixa', bank: 'No Banco', date: 'Data', doc: 'Doc.', desc: 'Descrição', type: 'Tipo',
@@ -442,7 +448,7 @@ export default function LivroCaixa() {
                       const rot = lang === 'de' ? 'Mit Bank abgestimmt' : lang === 'en' ? 'Matched with bank' : 'Ligado ao banco'
                       const det = `${m.tx_date.split('-').reverse().join('/')} · ${m.description} · ${m.type === 'entrada' ? '+' : '−'}€ ${fmt(m.amount)}`
                       return (
-                        <Link to="/contabilidade/conciliacao" title={`${rot}: ${det}`}
+                        <Link to="/contabilidade/conciliacao?aba=conciliado" title={`${rot}: ${det}`}
                           style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', maxWidth: '100%', padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#e0f2fe', color: '#075985', textDecoration: 'none' }}>
                           <span>🏦 ✓ {rot}</span>
                           <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '220px' }}>· {det}</span>

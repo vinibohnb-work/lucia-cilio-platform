@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { IconFicheiro, IconRaio } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
@@ -50,7 +51,9 @@ export default function Conciliacao() {
   const taxaEmpresa = settings ? (settings.vat_regime === 'exempt' ? 0 : Number(settings.vat_default_rate) || 0) : 0
   const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
   const [aviso, setAviso] = useState('')
-  const [aba, setAba] = useState('pendente')
+  // ?aba=conciliado (vindo da marca "Ligado ao banco" do Livro de Caixa) abre já na aba certa (QA Nina 18/11)
+  const [searchParams] = useSearchParams()
+  const [aba, setAba] = useState(() => { const a = searchParams.get('aba'); return ['pendente', 'conciliado', 'ignorado', 'semExtrato'].includes(a) ? a : 'pendente' })
 
   const L = lang === 'de' ? {
     eyebrow: 'Buchhaltung', title: 'Abstimmung Kasse/Bank',
@@ -309,6 +312,9 @@ export default function Conciliacao() {
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const btn = { padding: '6px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: 'none' }
+  // Ações do movimento pendente: área de toque de 44px; seletores com 16px para o iPhone não dar zoom (QA Nina 18/11)
+  const btnToque = { ...btn, minHeight: '44px', padding: '0 14px' }
+  const selToque = { ...btnToque, fontSize: '16px', fontWeight: 600 }
 
   if (loading) return <EsqueletoPagina />
 
@@ -518,21 +524,21 @@ export default function Conciliacao() {
                           )
                         })()}
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
-                          {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
+                          {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btnToque, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
                           <select value={taxas[tx.id] ?? taxaEmpresa} onChange={e => setTaxas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label="IVA"
                             title={lang === 'de' ? 'USt für die neue Buchung' : lang === 'en' ? 'VAT for the new entry' : 'IVA do lançamento a criar'}
-                            style={{ ...btn, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                            style={{ ...selToque, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                             {vatOptions.map(r => <option key={r} value={r}>{(lang === 'de' ? 'USt ' : lang === 'en' ? 'VAT ' : 'IVA ') + r + '%'}</option>)}
                           </select>
                           <select value={categoriaDe(tx)} onChange={e => setCategorias(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing}
                             aria-label={L.categoriaTitulo}
                             title={tx.raw?.categoria ? `${L.categoriaExtrato}: ${tx.raw.categoria}` : L.categoriaTitulo}
-                            style={{ ...btn, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                            style={{ ...selToque, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                             <option value="">{L.semCategoria}</option>
                             {opcoesCategorias(tx.type, extras, lang).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </select>
-                          <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btn, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
-                          <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btn, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
+                          <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btnToque, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
+                          <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btnToque, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
                         </div>
                       </div>
                     )}
