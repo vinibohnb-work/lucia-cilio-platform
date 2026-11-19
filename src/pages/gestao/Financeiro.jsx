@@ -97,15 +97,18 @@ export default function Financeiro() {
   const load = useCallback(async () => {
     setLoading(true); setErr('')
     try {
-      const [{ data: b, error: e1 }, { data: p, error: e2 }, us, { data: fx }] = await Promise.all([
+      const [{ data: b, error: e1 }, { data: p, error: e2 }, us, { data: fx }, { data: bi }] = await Promise.all([
         supabase.from('client_billing').select('*').order('created_at', { ascending: true }),
         supabase.from('billing_payments').select('*').eq('period', period),
         listUsers().catch(() => []),
         supabase.from('clientes').select('id,nome,user_id').order('nome'),
+        // Notas dos contratos: só da administradora (064), fora da linha que a cliente lê.
+        supabase.from('client_billing_interno').select('billing_id,notes'),
       ])
       setFichas(fx || [])
       if (e1 || e2) throw (e1 || e2)
-      setBilling(b || []); setPayments(p || []); setUsers((us || []).filter(u => u.role !== 'admin'))
+      const notaDe = Object.fromEntries((bi || []).map(x => [x.billing_id, x.notes]))
+      setBilling((b || []).map(x => ({ ...x, notes: notaDe[x.id] ?? x.notes }))); setPayments(p || []); setUsers((us || []).filter(u => u.role !== 'admin'))
     } catch { setErr(L.saveErr) }
     setLoading(false)
   }, [period]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -142,12 +145,15 @@ export default function Financeiro() {
       user_id: ficha?.user_id || form.user_id || null,
       cliente_id: ficha?.id || null,
       service: form.service || null, amount: parseFloat(form.amount) || 0,
-      periodicity: form.periodicity, start_month: form.start_month || null, notes: form.notes || null,
+      periodicity: form.periodicity, start_month: form.start_month || null,
     }
-    const { error } = editingId
-      ? await supabase.from('client_billing').update(payload).eq('id', editingId)
-      : await supabase.from('client_billing').insert({ ...payload, active: true })
+    const { data: gravado, error } = editingId
+      ? await supabase.from('client_billing').update(payload).eq('id', editingId).select('id').single()
+      : await supabase.from('client_billing').insert({ ...payload, active: true }).select('id').single()
     if (error) { setErr(L.saveErr); return }
+    // A nota é só da administradora (064): grava fora da linha que a cliente lê.
+    const { error: eNota } = await supabase.from('client_billing_interno').upsert({ billing_id: gravado?.id || editingId, notes: form.notes || null, updated_at: new Date().toISOString() })
+    if (eNota) { setErr(L.saveErr); return }
     setForm(EMPTY); setShowForm(false); setEditingId(null); load()
   }
   // O ✕ vivia na linha, a 4 px do ✎; passou para dentro da edição (13-D, 13/10)

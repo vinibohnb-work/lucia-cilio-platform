@@ -88,7 +88,7 @@ export default function Inicio() {
     const [{ data: av }, { data: ob }, { data: cb }, cs] = await Promise.all([
       supabase.from('client_notices').select('*').eq('user_id', eid).order('created_at', { ascending: false }).limit(5),
       supabase.from('fiscal_obligations').select('*').eq('user_id', eid).eq('status', 'pending').order('deadline', { ascending: true }).limit(20),   // a mais antiga primeiro: uma em atraso aparece aqui (R-B3)
-      supabase.from('client_billing').select('*').eq('user_id', eid).eq('active', true).limit(1),
+      supabase.from('client_billing').select('id,contract_path,contract_name').eq('user_id', eid).eq('active', true).limit(1),   // só o que o Início usa: nada de notas internas (064)
       getCompanySettings(eid),
     ])
     setAvisos(av || [])

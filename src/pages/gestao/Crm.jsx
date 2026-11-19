@@ -253,9 +253,11 @@ export default function Crm() {
       service: lead.pain || null,
       amount: value, periodicity: 'monthly',
       start_month: new Date().toISOString().slice(0, 7),
-      notes: `CRM: ${lead.name}${lead.contact ? ' · ' + lead.contact : ''}`,
+
     }).select('id').single()
     if (error || !data) { setErr(L.saveErr); return }
+    // A nota do contrato é só da administradora (064): a cliente lê a linha do contrato.
+    await supabase.from('client_billing_interno').upsert({ billing_id: data.id, notes: `CRM: ${lead.name}${lead.contact ? ' · ' + lead.contact : ''}` })
     const patch = { converted_billing_id: data.id, deal_value: value, updated_at: new Date().toISOString() }
     setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, ...patch } : l))
     await supabase.from('crm_leads').update(patch).eq('id', lead.id)

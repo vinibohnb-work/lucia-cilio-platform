@@ -52,13 +52,30 @@ async function gravar(pedido) {
 // ── Conversões base de dados ⇄ portal ──────────────────────────────────────
 const PER_DB = { monthly: 'mensal', quarterly: 'trimestral', annual: 'anual', once: 'unico' }
 
-function deCliente(r, contrato) {
+// Notas, responsável e horas incluídas da ficha, e notas e checklist de cada obrigação, vivem em tabelas só da equipa (migração 064):
+// a cliente lê a sua ficha e as suas obrigações pela API e não pode ler anotações internas sobre ela (auditoria da Iara, 04/11).
+// Para a cliente estas tabelas vêm vazias.
+const CLIENTE_INTERNO = { notas: 'notas', responsavel: 'responsavel', horasIncluidas: 'horas_incluidas' }
+const OBRIGACAO_INTERNA = ['notas', 'checklist']
+const ouNada = (o) => Object.keys(o).length ? o : null
+function paraClienteInterno(p) {
+  const out = {}
+  for (const [k, col] of Object.entries(CLIENTE_INTERNO)) if (k in p) out[col] = k === 'horasIncluidas' ? (p[k] === '' ? 0 : p[k]) : (p[k] || null)
+  return ouNada(out)
+}
+function paraObrigacaoInterna(p) {
+  const out = {}
+  for (const k of OBRIGACAO_INTERNA) if (k in p) out[k] = k === 'checklist' ? (p[k] || {}) : (p[k] || null)
+  return ouNada(out)
+}
+
+function deCliente(r, contrato, int = {}) {
   return {
     id: r.id, nome: r.nome, pessoa: r.pessoa || '', email: r.email || '', telefone: r.telefone || '',
     pais: r.pais || 'PT', forma: r.forma || '', setor: r.setor || '', servicos: r.servicos || [],
     periodicidade: r.periodicidade, regime: r.regime || '', trabalhadores: !!r.trabalhadores,
-    software: r.software || '', estado: r.estado, responsavel: r.responsavel || '',
-    horasIncluidas: Number(r.horas_incluidas || 0), cliente_desde: r.cliente_desde, notas: r.notas || '',
+    software: r.software || '', estado: r.estado, responsavel: (int.responsavel ?? r.responsavel) || '',
+    horasIncluidas: Number(int.horas_incluidas ?? r.horas_incluidas ?? 0), cliente_desde: r.cliente_desde, notas: (int.notas ?? r.notas) || '',
     userId: r.user_id || null, logo: r.logo || null,
     categorias: r.categorias || {},
     // A avença vive no Financeiro (client_billing); aqui só se lê.
@@ -72,7 +89,7 @@ function paraCliente(p) {
   const m = { horasIncluidas: 'horas_incluidas', userId: 'user_id' }
   const out = {}
   for (const [k, v] of Object.entries(p)) {
-    if (['id', 'contratoId', 'avenca', 'avencaPeriodicidade', 'contrato'].includes(k)) continue
+    if (['id', 'contratoId', 'avenca', 'avencaPeriodicidade', 'contrato', ...Object.keys(CLIENTE_INTERNO)].includes(k)) continue
     out[m[k] || k] = v === '' && ['cliente_desde', 'userId'].includes(k) ? null : v === '' && k === 'horasIncluidas' ? 0 : v
   }
   return out
@@ -90,13 +107,13 @@ function periodoDe(r) {
   return String(r.deadline || '').slice(0, 4)
 }
 
-function deObrigacao(r) {
+function deObrigacao(r, int = {}) {
   return {
     id: r.id, clienteId: r.cliente_id, codigo: r.code || `MANUAL-${r.id}`, nome: r.obligation_type,
     periodo: periodoDe(r), prazo: r.deadline, estado: r.estado || (r.status === 'done' ? 'entregue' : 'por_preparar'),
     valor: r.valor_tipo ? { tipo: r.valor_tipo, montante: r.valor == null ? '' : Number(r.valor) } : null,
     comprovativo: r.comprovativo_nome ? { nome: r.comprovativo_nome, caminho: r.comprovativo_path, data: r.comprovativo_data } : null,
-    checklist: r.checklist || {}, notas: r.notas || '', origem: r.source,
+    checklist: int.checklist ?? r.checklist ?? {}, notas: (int.notas ?? r.notas) || '', origem: r.source,
   }
 }
 function paraObrigacao(p) {
@@ -107,7 +124,7 @@ function paraObrigacao(p) {
     else if (k === 'codigo') out.code = v
     else if (k === 'valor') { out.valor_tipo = v?.tipo || null; out.valor = v?.tipo && v.montante !== '' && v.montante != null ? Number(v.montante) : null }
     else if (k === 'comprovativo') { out.comprovativo_nome = v?.nome || null; out.comprovativo_path = v?.caminho || null; out.comprovativo_data = v?.data || null }
-    else if (['periodo', 'estado', 'checklist', 'notas'].includes(k)) out[k] = v
+    else if (['periodo', 'estado'].includes(k)) out[k] = v
   }
   return out
 }
@@ -183,7 +200,7 @@ export function recarregar() { return carregar(quem) }
 async function ler() {
   const q = (p) => p.then(({ data, error }) => { if (error) throw error; return data || [] })
   try {
-    const [clientes, obrig, tarefas, docs, msgs, avisos, rels, notas, horas, contratos, pagamentos] = await Promise.all([
+    const [clientes, obrig, tarefas, docs, msgs, avisos, rels, notas, horas, contratos, pagamentos, clientesInt, obrigInt] = await Promise.all([
       q(supabase.from('clientes').select('*').order('nome')),
       q(supabase.from('fiscal_obligations').select('*').not('cliente_id', 'is', null)),
       q(supabase.from('tarefas').select('*')),
@@ -196,7 +213,12 @@ async function ler() {
       // A avença é da administradora: para a restante equipa as políticas devolvem vazio.
       q(supabase.from('client_billing').select('id,cliente_id,amount,periodicity,start_month,active,created_at').not('cliente_id', 'is', null).order('created_at')),
       q(supabase.from('billing_payments').select('*')),
+      // Só da equipa (064): para a cliente vêm vazias.
+      q(supabase.from('clientes_interno').select('cliente_id,notas,responsavel,horas_incluidas')),
+      q(supabase.from('fiscal_obligations_interno').select('obrigacao_id,notas,checklist')),
     ])
+    const intCliente = Object.fromEntries(clientesInt.map(x => [x.cliente_id, x]))
+    const intObrig = Object.fromEntries(obrigInt.map(x => [x.obrigacao_id, x]))
     const contratoDe = {}
     contratos.filter(b => b.active).forEach(b => { if (!contratoDe[b.cliente_id]) contratoDe[b.cliente_id] = b })
     const clientePorBilling = Object.fromEntries(contratos.map(b => [b.id, b.cliente_id]))
@@ -212,14 +234,14 @@ async function ler() {
         equipa = users.filter(u => ['admin', 'comercial', 'marketing'].includes(u.role)).map(u => u.display_name || u.email.split('@')[0])
       } catch (e) { console.warn('[portal] contas', e) }
     }
-    const nomes = new Set([...equipa, quem.eu, ...clientes.map(c => c.responsavel), ...tarefas.map(t => t.responsavel)].filter(Boolean))
+    const nomes = new Set([...equipa, quem.eu, ...clientesInt.map(c => c.responsavel), ...tarefas.map(t => t.responsavel)].filter(Boolean))
 
     estado = {
       carregado: true, erro: '', eu: quem.eu, admin: quem.admin,
       equipa: [...nomes].sort((a, b) => a.localeCompare(b, 'pt')),
       contas,
-      clientes: clientes.map(c => deCliente(c, contratoDe[c.id])),
-      obrigacoes: obrig.map(deObrigacao),
+      clientes: clientes.map(c => deCliente(c, contratoDe[c.id], intCliente[c.id])),
+      obrigacoes: obrig.map(o => deObrigacao(o, intObrig[o.id])),
       tarefas: tarefas.map(deTarefa),
       documentos: docs.map(deDocumento),
       mensagens: [
@@ -294,7 +316,9 @@ export const acoes = {
     }
     mudar(s => { s.clientes.push({ ...c, contratoId: null, avenca: null, avencaPeriodicidade: null, contrato: null }); s.clientes.sort((a, b) => a.nome.localeCompare(b.nome, 'pt')) })
     // O id vai no insert: é o que o calendário gerado a seguir referencia (teste de 05/10).
-    fichasAGravar[id] = gravar(supabase.from('clientes').insert({ id, ...paraCliente(c) })).finally(() => { delete fichasAGravar[id] })
+    fichasAGravar[id] = gravar(supabase.from('clientes').insert({ id, ...paraCliente(c) }))
+      .then(ok => ok && gravar(supabase.from('clientes_interno').upsert({ cliente_id: id, ...paraClienteInterno(c) })))
+      .finally(() => { delete fichasAGravar[id] })
     return id
   },
   // Apagar a ficha leva tudo o que lhe pertence (as tabelas da 037 têm on delete
@@ -314,7 +338,10 @@ export const acoes = {
   },
   atualizarCliente(id, patch) {
     mudar(s => { Object.assign(s.clientes.find(c => c.id === id), patch) })
-    gravar(supabase.from('clientes').update({ ...paraCliente(patch), updated_at: new Date().toISOString() }).eq('id', id))
+    const agora = new Date().toISOString()
+    const int = paraClienteInterno(patch)
+    if (int) gravar(supabase.from('clientes_interno').upsert({ cliente_id: id, ...int, updated_at: agora }))
+    if (Object.keys(paraCliente(patch)).length || !int) gravar(supabase.from('clientes').update({ ...paraCliente(patch), updated_at: agora }).eq('id', id))
   },
   // Ligar a ficha a uma conta da plataforma: as obrigações que o cliente já
   // tinha passam a aparecer aqui, e as daqui passam a aparecer-lhe.
@@ -353,11 +380,15 @@ export const acoes = {
     mudar(s => { s.obrigacoes.push(o) })
     const linha = { id: o.id, cliente_id: o.clienteId, user_id: c?.userId || null, country: c?.pais || 'PT', client: c?.nome, source: 'manual', status: 'pending', ...paraObrigacao(o) }
     delete linha.code   // manuais não têm código (o índice único é só para o calendário)
+    const int = paraObrigacaoInterna(o)
     gravar(supabase.from('fiscal_obligations').insert(linha))
+      .then(ok => ok && (int.notas || Object.keys(int.checklist).length) && gravar(supabase.from('fiscal_obligations_interno').upsert({ obrigacao_id: o.id, ...int })))
   },
   atualizarObrigacao(id, patch) {
     mudar(s => { Object.assign(s.obrigacoes.find(o => o.id === id), patch) })
-    gravar(supabase.from('fiscal_obligations').update(paraObrigacao(patch)).eq('id', id))
+    const int = paraObrigacaoInterna(patch)
+    if (int) gravar(supabase.from('fiscal_obligations_interno').upsert({ obrigacao_id: id, ...int, updated_at: new Date().toISOString() }))
+    if (Object.keys(paraObrigacao(patch)).length) gravar(supabase.from('fiscal_obligations').update(paraObrigacao(patch)).eq('id', id))
   },
   alternarChecklist(id, chave) {
     const o = estado.obrigacoes.find(x => x.id === id)
