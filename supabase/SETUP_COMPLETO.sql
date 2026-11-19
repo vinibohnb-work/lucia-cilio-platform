@@ -1,3 +1,17 @@
+-- ############################################################################
+-- ⛔ NÃO EXECUTAR — ficheiro histórico (aviso de 16/11/2026)
+--
+-- Este script é a base antiga e já não corresponde à base em produção. Correr
+-- este ficheiro (ou partes dele) num projeto existente ANULA correções de
+-- segurança: a policy "own obligations" (FOR ALL em fiscal_obligations) volta a
+-- deixar o cliente gravar obrigações com o cliente_id de outra ficha, porque as
+-- policies permissivas somam-se às das migrações 038 e 044.
+--
+-- A fonte da verdade são as migrações supabase/migration_NNN.sql, aplicadas pela
+-- ordem (base nova: DEV_SETUP_2026-10-06.sql e depois 040+). Origem do aviso:
+-- auditoria da Iara, 04/11/2026, ponto 2.
+-- ############################################################################
+
 -- ============================================================================
 -- LC OFFICE CONSULTING — SETUP COMPLETO (consolida schema + migrações 002–016)
 -- Corre TUDO de uma vez. É idempotente: seguro de correr numa base nova OU numa
