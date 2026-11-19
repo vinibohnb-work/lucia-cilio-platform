@@ -34,6 +34,7 @@ export default function Horas() {
   const [quem, setQuem] = useState(s.eu)            // '' = toda a equipa
   const [mes, setMes] = useState(hoje.slice(0, 7))  // AAAA-MM
   const [relatorio, setRelatorio] = useState(false) // janela "Relatório de horas" (06/11)
+  const [editando, setEditando] = useState(null)    // id do registo a editar no formulário de cima (059)
   const set = (k) => (e) => setNovo(p => ({ ...p, [k]: e.target.value }))
 
   const nomeCliente = Object.fromEntries(s.clientes.map(x => [x.id, x.nome]))
@@ -46,7 +47,8 @@ export default function Horas() {
     const clienteId = novo.destino.startsWith('c:') ? novo.destino.slice(2) : null
     if (!clienteId && !atividade) { setAviso('Escolha o cliente ou a atividade.'); return }
     if (!(horas > 0) || horas > 24) { setAviso('Indique as horas: mais de 0 e no máximo 24.'); return }
-    acoes.registarHoras({ data: novo.data || hoje, pessoa: novo.pessoa || s.eu, clienteId, atividade, horas, descricao: novo.descricao.trim() || null })
+    if (editando) { acoes.atualizarHoras(editando, { data: novo.data || hoje, clienteId, atividade, horas, descricao: novo.descricao.trim() || null }); setEditando(null); setAviso(''); setNovo(vazio); return }
+    acoes.registarHoras({ data: novo.data || hoje, clienteId, atividade, horas, descricao: novo.descricao.trim() || null })
     setAviso('')
     // Fica a data, a pessoa e o destino: é comum registar várias linhas seguidas.
     setNovo(p => ({ ...p, horas: '', descricao: '' }))
@@ -75,6 +77,14 @@ export default function Horas() {
   const quemTxt = quem ? (quem === s.eu ? 'As minhas horas' : `Horas de ${quem}`) : 'Toda a equipa'
   // Só a administradora apaga (056: comercial e marketing não têm delete; o clique apagava na tela e a hora voltava ao recarregar — Iara A2)
   const podeApagar = () => papel === 'admin'
+  // 059: comercial e marketing editam só as horas que lançaram; a admin edita todas.
+  const podeEditar = (h) => papel === 'admin' || (!!h.autorId && h.autorId === s.euId)
+  function editar(h) {
+    setEditando(h.id); setAviso('')
+    setNovo({ data: h.data, pessoa: h.pessoa, destino: h.clienteId ? `c:${h.clienteId}` : `a:${h.atividade}`, outra: '', horas: String(h.horas), descricao: h.descricao || '' })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  const cancelarEdicao = () => { setEditando(null); setAviso(''); setNovo(vazio) }
 
   const sel = { ...c.input, cursor: 'pointer' }
 
@@ -83,13 +93,13 @@ export default function Horas() {
       <Titulo titulo="Horas" />
 
       {/* ── Registar ── */}
-      <Cartao titulo="Registar horas" icone={<Ic.relogio />} estilo={{ marginBottom: '16px' }}>
+      <Cartao titulo={editando ? 'Editar registo de horas' : 'Registar horas'} icone={<Ic.relogio />} estilo={{ marginBottom: '16px' }}>
         {/* Quebra em linhas conforme a largura: nunca empurra o botão para fora do cartão. */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 140px' }}><Campo rotulo="Dia"><input type="date" value={novo.data} max={hoje} onChange={set('data')} style={c.input} /></Campo></div>
           <div style={{ flex: '1 1 160px' }}><Campo rotulo="Quem">
-            <select value={novo.pessoa} onChange={set('pessoa')} style={sel}>
-              {[...new Set([s.eu, ...s.equipa])].filter(Boolean).map(p => <option key={p} value={p}>{p}</option>)}
+            <select value={editando ? novo.pessoa : s.eu} disabled aria-label="Quem (a conta ligada)" style={{ ...sel, cursor: 'default', opacity: 0.75 }}><option value={editando ? novo.pessoa : s.eu}>{editando ? novo.pessoa : s.eu}</option>
+              {/* 059: quem lança é sempre a conta ligada; o campo deixou de ser editável. */}
             </select>
           </Campo></div>
           <div style={{ flex: '2 1 240px' }}><Campo rotulo="Cliente ou atividade">
@@ -109,7 +119,9 @@ export default function Horas() {
           )}
           <div style={{ flex: '0 1 110px' }}><Campo rotulo="Horas"><input type="number" inputMode="decimal" min="0.25" max="24" step="0.25" placeholder="ex.: 1,5" value={novo.horas} onChange={set('horas')} onKeyDown={e => { if (e.key === 'Enter') registar() }} style={c.input} /></Campo></div>
           <div style={{ flex: '2 1 200px' }}><Campo rotulo="O que foi feito (opcional)"><input value={novo.descricao} onChange={set('descricao')} onKeyDown={e => { if (e.key === 'Enter') registar() }} placeholder="ex.: fecho do trimestre" style={c.input} /></Campo></div>
-          <Botao variante="primario" onClick={registar}><Ic.mais size={15} />Registar</Botao>
+          {editando
+            ? <><Botao variante="primario" onClick={registar}>Guardar alterações</Botao><Botao onClick={cancelarEdicao}>Cancelar</Botao></>
+            : <Botao variante="primario" onClick={registar}><Ic.mais size={15} />Registar</Botao>}
         </div>
         {aviso && <div role="alert" style={{ marginTop: '10px', fontSize: '12.5px', fontWeight: 700, color: t.dueLate.ink }}>{aviso}</div>}
       </Cartao>
@@ -181,7 +193,7 @@ export default function Horas() {
                     {!quem && <td style={c.td}>{h.pessoa || '—'}</td>}
                     <td style={c.td}><div style={{ fontWeight: 600, color: t.heading }}>{destinoDe(h)}</div>{h.descricao && <div style={{ fontSize: '11.5px', color: t.subtle }}>{h.descricao}</div>}</td>
                     <td style={{ ...c.td, whiteSpace: 'nowrap', fontWeight: 700 }}>{fmtH(h.horas)}</td>
-                    <td style={{ ...c.td, textAlign: 'right' }}>
+                    <td style={{ ...c.td, textAlign: 'right', whiteSpace: 'nowrap' }}>{podeEditar(h) && <button onClick={() => editar(h)} aria-label="Editar registo" title="Editar" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '14px', padding: '6px', minWidth: '32px', minHeight: '32px' }}>✎</button>}
                       {podeApagar(h) && <button onClick={() => { if (window.confirm('Apagar este registo de horas?')) acoes.apagarHoras(h.id) }} aria-label="Apagar registo"
                         style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '14px', padding: '6px' }}>✕</button>}
                     </td>
