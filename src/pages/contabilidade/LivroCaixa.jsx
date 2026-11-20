@@ -104,7 +104,14 @@ export default function LivroCaixa() {
     setEntries(ce || [])
     const { data: mv } = await supabase.from('bank_transactions').select('id,cash_entry_id,tx_date,description,amount,type')
       .eq('user_id', eid).eq('status', 'conciliado').not('cash_entry_id', 'is', null)
-    setMovPorEntry(Object.fromEntries((mv || []).map(m => [m.cash_entry_id, m])))
+    // Um movimento pode cobrir vários lançamentos (LUC-243, 066): os adicionais
+    // ganham a mesma marca "Ligado ao banco". Sem a migração, segue só o principal.
+    const { data: ex, error: exErr } = await supabase.from('bank_transaction_entries').select('bank_transaction_id,cash_entry_id').eq('user_id', eid)
+    const mvPorId = Object.fromEntries((mv || []).map(m => [m.id, m]))
+    setMovPorEntry({
+      ...Object.fromEntries((mv || []).map(m => [m.cash_entry_id, m])),
+      ...Object.fromEntries((exErr ? [] : ex || []).filter(x => mvPorId[x.bank_transaction_id]).map(x => [x.cash_entry_id, mvPorId[x.bank_transaction_id]])),
+    })
     setCatalog(ci || [])
     setRecurring(re || [])
     setSettings(cs)
@@ -221,8 +228,12 @@ export default function LivroCaixa() {
     if (!window.confirm(aviso)) return
     setErro('')
 
-    const { data: tx } = await supabase.from('bank_transactions')
+    // O movimento ligado: o principal procura-se no banco; o de um lançamento
+    // adicional (066) vem do mapa já carregado. Em ambos, o movimento volta a
+    // "por conciliar" (os outros lançamentos dele soltam-se pelo gatilho da 066).
+    const { data: txPrincipal } = await supabase.from('bank_transactions')
       .select('id').eq('cash_entry_id', e.id).limit(1).maybeSingle()   // limit(1): o índice único da 030 já garante um só; assim não falha nunca (B2)
+    const tx = txPrincipal || (mLig ? { id: mLig.id } : null)
 
     const { data: apagados, error } = await supabase.from('cash_entries')
       .delete().eq('id', e.id).select('id')
