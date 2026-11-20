@@ -164,6 +164,14 @@
   ],
   "rewrites": [
     {
+      "source": "/momentos/e/:id",
+      "destination": "/api/momentos-partilha?e=:id"
+    },
+    {
+      "source": "/momentos/e",
+      "destination": "/api/momentos-partilha"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/"
     }

@@ -20,7 +20,7 @@ const novoId = () => crypto.randomUUID()
 const BUCKET = 'client-docs'
 
 const VAZIO = {
-  carregado: false, erro: '', eu: '', euId: '', admin: false,
+  carregado: false, erro: '', eu: '', admin: false,
   equipa: [], contas: [],
   clientes: [], obrigacoes: [], tarefas: [], documentos: [], mensagens: [], relatorios: [], notas: [], horas: [], pagamentos: [],
 }
@@ -52,7 +52,21 @@ async function gravar(pedido) {
 // ── Conversões base de dados ⇄ portal ──────────────────────────────────────
 const PER_DB = { monthly: 'mensal', quarterly: 'trimestral', annual: 'anual', once: 'unico' }
 
+// Migração 063: notas, responsável e horas incluídas da ficha, e notas e checklist
+// das obrigações, vivem em tabelas só da equipa (clientes_interno, obrigacoes_interno).
+// A administradora lê-as embutidas; comercial e marketing recebem o responsável pela vista.
+const INTERNO_CLIENTE = { notas: 'notas', responsavel: 'responsavel', horasIncluidas: 'horas_incluidas' }
+const INTERNO_OBRIGACAO = { notas: 'notas', checklist: 'checklist' }
+function separar(patch, chaves) {
+  const interno = {}, resto = {}
+  for (const [k, v] of Object.entries(patch)) (k in chaves ? interno : resto)[k] = v
+  return [interno, resto]
+}
+const temChaves = (o) => Object.keys(o).length > 0
+
 function deCliente(r, contrato) {
+  const int = r.clientes_interno || {}
+  r = { ...r, notas: int.notas ?? r.notas, responsavel: int.responsavel ?? r.responsavel, horas_incluidas: int.horas_incluidas ?? r.horas_incluidas }
   return {
     id: r.id, nome: r.nome, pessoa: r.pessoa || '', email: r.email || '', telefone: r.telefone || '',
     pais: r.pais || 'PT', forma: r.forma || '', setor: r.setor || '', servicos: r.servicos || [],
@@ -91,6 +105,8 @@ function periodoDe(r) {
 }
 
 function deObrigacao(r) {
+  const int = r.obrigacoes_interno || {}
+  r = { ...r, notas: int.notas ?? r.notas, checklist: int.checklist ?? r.checklist }
   return {
     id: r.id, clienteId: r.cliente_id, codigo: r.code || `MANUAL-${r.id}`, nome: r.obligation_type,
     periodo: periodoDe(r), prazo: r.deadline, estado: r.estado || (r.status === 'done' ? 'entregue' : 'por_preparar'),
@@ -152,8 +168,14 @@ const paraRelatorio = (p) => ({
 })
 
 const deNota = (r) => ({ id: r.id, clienteId: r.cliente_id, tipo: r.tipo, texto: r.texto, com: r.com, autor: r.autor, resolvido: r.resolvido, data: r.data })
-// 059: a fonte de verdade de quem lançou é autor_id (a conta); "pessoa" é o texto antigo, só de exibição.
-const deHoras = (r) => ({ id: r.id, clienteId: r.cliente_id, atividade: r.atividade || '', data: r.data, horas: Number(r.horas), descricao: r.descricao, pessoa: r.pessoa, pessoaTexto: r.pessoa || '', autorId: r.autor_id || null })
+// 059: quem lançou é a conta (autor_id); o texto "pessoa" fica só como registo antigo.
+// Horas antigas sem autor (só a admin as vê) aparecem como "Sem autor".
+const SEM_AUTOR = 'Sem autor'
+const deHoras = (r, nomeConta = {}, eu = '', meuId = null) => ({
+  id: r.id, clienteId: r.cliente_id, atividade: r.atividade || '', data: r.data, horas: Number(r.horas), descricao: r.descricao,
+  autorId: r.autor_id || null,
+  pessoa: !r.autor_id ? SEM_AUTOR : r.autor_id === meuId ? eu : (nomeConta[r.autor_id] || r.pessoa || '—'),
+})
 
 // As mensagens são duas fontes numa só conversa: o que a equipa escreveu na
 // plataforma do cliente (client_notices — é o que ele vê no Início) e o registo
@@ -183,22 +205,27 @@ export function recarregar() { return carregar(quem) }
 
 async function ler() {
   const q = (p) => p.then(({ data, error }) => { if (error) throw error; return data || [] })
+  // Migração 056: comercial e marketing leem a ficha básica e a agenda pelas vistas só de
+  // leitura; obrigações, documentos, mensagens, notas, relatórios e avença são só da
+  // administradora e, para elas, ficam vazios em vez de dar erro.
+  const admin = quem.admin
+  const soAdmin = (p) => admin ? q(p) : Promise.resolve([])
   try {
     const [clientes, obrig, tarefas, docs, msgs, avisos, rels, notas, horas, contratos, pagamentos] = await Promise.all([
-      // Comercial e marketing (056) leem a ficha básica e a agenda pelas vistas só de
-      // leitura; as outras tabelas devolvem-lhes vazio pelas políticas.
-      q(supabase.from(quem.admin ? 'clientes' : 'gestao_clientes_basico').select('*').order('nome')),
-      q(supabase.from('fiscal_obligations').select('*').not('cliente_id', 'is', null)),
-      q(supabase.from(quem.admin ? 'tarefas' : 'gestao_agenda').select('*')),
-      q(supabase.from('documentos_cliente').select('*')),
-      q(supabase.from('mensagens_cliente').select('*')),
-      q(supabase.from('client_notices').select('*').order('created_at')),
-      q(supabase.from('relatorios_trimestrais').select('*')),
-      q(supabase.from('notas_cliente').select('*').order('created_at')),
+      q(admin
+        ? supabase.from('clientes').select('*, clientes_interno(notas,responsavel,horas_incluidas)').order('nome')
+        : supabase.from('gestao_clientes_basico').select('*').order('nome')),
+      soAdmin(supabase.from('fiscal_obligations').select('*, obrigacoes_interno(notas,checklist)').not('cliente_id', 'is', null)),
+      q(supabase.from(admin ? 'tarefas' : 'gestao_agenda').select('*')),
+      soAdmin(supabase.from('documentos_cliente').select('*')),
+      soAdmin(supabase.from('mensagens_cliente').select('*')),
+      soAdmin(supabase.from('client_notices').select('*').order('created_at')),
+      soAdmin(supabase.from('relatorios_trimestrais').select('*')),
+      soAdmin(supabase.from('notas_cliente').select('*').order('created_at')),
       q(supabase.from('horas_cliente').select('*')),
       // A avença é da administradora: para a restante equipa as políticas devolvem vazio.
-      q(supabase.from('client_billing').select('id,cliente_id,amount,periodicity,start_month,active,created_at').not('cliente_id', 'is', null).order('created_at')),
-      q(supabase.from('billing_payments').select('*')),
+      soAdmin(supabase.from('client_billing').select('id,cliente_id,amount,periodicity,start_month,active,created_at').not('cliente_id', 'is', null).order('created_at')),
+      soAdmin(supabase.from('billing_payments').select('*')),
     ])
     const contratoDe = {}
     contratos.filter(b => b.active).forEach(b => { if (!contratoDe[b.cliente_id]) contratoDe[b.cliente_id] = b })
@@ -207,21 +234,20 @@ async function ler() {
 
     // Contas da plataforma (para ligar uma ficha a uma conta) e nomes da equipa:
     // só a administradora os consegue listar; para as outras fica o que as fichas dizem.
-    let contas = [], equipa = [], nomeDaConta = {}
-    const { data: sessao } = await supabase.auth.getSession()
-    const euId = sessao?.session?.user?.id || ''
+    let contas = [], equipa = []; const nomeConta = {}
+    const meuId = (await supabase.auth.getSession()).data?.session?.user?.id || null
     if (quem.admin) {
       try {
         const users = await listUsers()
         contas = users.filter(u => u.role === 'user').map(u => ({ id: u.id, nome: u.display_name || u.email, email: u.email, ativo: !!u.last_sign_in_at /* as contas nascem com o e-mail confirmado: só o acesso conta (R-B11) */, platform: u.platform }))
         equipa = users.filter(u => ['admin', 'comercial', 'marketing'].includes(u.role)).map(u => u.display_name || u.email.split('@')[0])
-        users.forEach(u => { nomeDaConta[u.id] = u.display_name || (u.email || '').split('@')[0] })
+        users.forEach(u => { nomeConta[u.id] = u.display_name || (u.email || '').split('@')[0] })
       } catch (e) { console.warn('[portal] contas', e) }
     }
     const nomes = new Set([...equipa, quem.eu, ...clientes.map(c => c.responsavel), ...tarefas.map(t => t.responsavel)].filter(Boolean))
 
     estado = {
-      carregado: true, erro: '', eu: quem.eu, euId, admin: quem.admin,
+      carregado: true, erro: '', eu: quem.eu, admin: quem.admin, meuId,
       equipa: [...nomes].sort((a, b) => a.localeCompare(b, 'pt')),
       contas,
       clientes: clientes.map(c => deCliente(c, contratoDe[c.id])),
@@ -234,8 +260,7 @@ async function ler() {
       ].sort((a, b) => a.data.localeCompare(b.data)),
       relatorios: rels.map(deRelatorio),
       notas: notas.map(deNota),
-      // Nome de quem lançou vem da conta (059); horas antigas sem autor (só a admin as vê) ficam "sem autor".
-      horas: horas.map(deHoras).map(h => ({ ...h, pessoa: !h.autorId ? 'sem autor' : (h.autorId === euId ? quem.eu : nomeDaConta[h.autorId] || 'Conta removida') })),
+      horas: horas.map(h => deHoras(h, nomeConta, quem.eu, meuId)),
       pagamentos: pagamentos.filter(p => clientePorBilling[p.billing_id]).map(p => ({ id: p.id, clienteId: clientePorBilling[p.billing_id], billingId: p.billing_id, periodo: p.period, valor: Number(p.amount), data: p.paid_at })),
     }
   } catch (e) {
@@ -321,18 +346,34 @@ export const acoes = {
   },
   atualizarCliente(id, patch) {
     mudar(s => { Object.assign(s.clientes.find(c => c.id === id), patch) })
-    gravar(supabase.from('clientes').update({ ...paraCliente(patch), updated_at: new Date().toISOString() }).eq('id', id))
+    const agora = new Date().toISOString()
+    const [interno, resto] = separar(patch, INTERNO_CLIENTE)
+    if (temChaves(interno)) {
+      // 063: direto na interna, para dar para limpar o texto ou pôr as horas a 0
+      const linha = { cliente_id: id, updated_at: agora }
+      for (const [k, v] of Object.entries(interno)) linha[INTERNO_CLIENTE[k]] = k === 'horasIncluidas' ? Number(v || 0) : (v === '' ? null : v)
+      gravar(supabase.from('clientes_interno').upsert(linha, { onConflict: 'cliente_id' }))
+    }
+    if (temChaves(resto)) gravar(supabase.from('clientes').update({ ...paraCliente(resto), updated_at: agora }).eq('id', id))
   },
   // Ligar a ficha a uma conta da plataforma: as obrigações que o cliente já
   // tinha passam a aparecer aqui, e as daqui passam a aparecer-lhe.
   async ligarConta(id, userId) {
     mudar(s => { s.clientes.find(c => c.id === id).userId = userId || null })
-    if (!await gravar(supabase.from('clientes').update({ user_id: userId || null }).eq('id', id))) return
     if (userId) {
-      await gravar(supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
-      await gravar(supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+      // Só liga uma ficha ainda sem conta; se outra pessoa a ligou entretanto, pára antes das obrigações e do contrato (Iara, 07/11)
+      // Migração 060 (Iara A4): ficha, obrigações e contrato numa só transação no banco — ou liga tudo, ou nada
+      const { error } = await supabase.rpc('ligar_conta_ficha', { p_cliente: id, p_user: userId })
+      if (error) {
+        estado = { ...estado, erro: `A ligação não foi gravada (${error.message}).` }
+        avisar(); recarregar(); return
+      }
+    } else if (!await gravar(supabase.rpc('desligar_conta_ficha', { p_cliente: id }))) return // 060: limpa ficha, prazos e contrato numa transação
+    if (userId) {
+      // Obrigações e contrato já foram ligados pela função ligar_conta_ficha (060), na mesma transação
+
       // 12-B (R-C8): o contrato gravado na ficha antes de haver conta ficava com user_id vazio e o Início do cliente (lê por user_id) não o via.
-      await gravar(supabase.from('client_billing').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+
     }
     recarregar()
   },
@@ -364,7 +405,15 @@ export const acoes = {
   },
   atualizarObrigacao(id, patch) {
     mudar(s => { Object.assign(s.obrigacoes.find(o => o.id === id), patch) })
-    gravar(supabase.from('fiscal_obligations').update(paraObrigacao(patch)).eq('id', id))
+    const [interno, resto] = separar(patch, INTERNO_OBRIGACAO)
+    if (temChaves(interno)) {
+      // 063: notas e checklist só da equipa, na tabela interna
+      const linha = { obrigacao_id: id, updated_at: new Date().toISOString() }
+      if ('notas' in interno) linha.notas = interno.notas || null
+      if ('checklist' in interno) linha.checklist = interno.checklist || {}
+      gravar(supabase.from('obrigacoes_interno').upsert(linha, { onConflict: 'obrigacao_id' }))
+    }
+    if (temChaves(resto)) gravar(supabase.from('fiscal_obligations').update(paraObrigacao(resto)).eq('id', id))
   },
   alternarChecklist(id, chave) {
     const o = estado.obrigacoes.find(x => x.id === id)
@@ -508,20 +557,14 @@ export const acoes = {
   // Horas da equipa: para um cliente (clienteId) ou para uma atividade
   // (atividade: marketing, interno…) — migração 041.
   registarHoras(dados) {
-    // Quem lança é sempre a conta ligada (059: o gatilho grava autor_id sozinho).
-    const h = { id: novoId(), data: hojeIso(), clienteId: null, atividade: '', ...dados, pessoa: estado.eu, autorId: estado.euId || null }
+    const h = { id: novoId(), data: hojeIso(), clienteId: null, atividade: '', ...dados, pessoa: estado.eu, autorId: estado.meuId } // 059: sempre a conta logada
     mudar(s => { s.horas.push(h) })
     gravar(supabase.from('horas_cliente').insert({ id: h.id, cliente_id: h.clienteId || null, atividade: h.clienteId ? null : h.atividade, data: h.data, horas: h.horas, descricao: h.descricao, pessoa: h.pessoa }))
   },
-  // Editar um registo (comercial e marketing: só os seus, pela 059; a admin: todos).
-  atualizarHoras(id, patch) {
-    mudar(s => { Object.assign(s.horas.find(h => h.id === id), patch) })
-    const out = {}
-    if ('data' in patch) out.data = patch.data
-    if ('horas' in patch) out.horas = patch.horas
-    if ('descricao' in patch) out.descricao = patch.descricao
-    if ('clienteId' in patch || 'atividade' in patch) { out.cliente_id = patch.clienteId || null; out.atividade = patch.clienteId ? null : patch.atividade }
-    gravar(supabase.from('horas_cliente').update(out).eq('id', id))
+  // Corrigir uma hora (059: comercial e marketing só as próprias de atividade; a admin todas).
+  editarHoras(id, { data, horas, descricao, clienteId = null, atividade = '' }) {
+    mudar(s => { Object.assign(s.horas.find(h => h.id === id), { data, horas, descricao, clienteId, atividade: clienteId ? '' : atividade }) })
+    gravar(supabase.from('horas_cliente').update({ data, horas, descricao, cliente_id: clienteId || null, atividade: clienteId ? null : atividade }).eq('id', id))
   },
   apagarHoras(id) {
     mudar(s => { s.horas = s.horas.filter(h => h.id !== id) })

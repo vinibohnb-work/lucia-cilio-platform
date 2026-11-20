@@ -93,6 +93,7 @@ export function TabelaTarefas({ tarefas, mostrarCliente = true, vazio = 'Não h�
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const [editar, setEditar] = useState(null)
+  const leitura = usePerfil().papel === 'leitura'   // comercial e marketing (056): agenda só para ver
   const hoje = hojeIso()
 
   if (!tarefas.length) return <Vazio>{vazio}</Vazio>

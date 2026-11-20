@@ -28,6 +28,7 @@ export default function Resumo({ cliente, base, modoCliente }) {
   const navigate = useNavigate()
   const [verConcluidas, setVerConcluidas] = useState(false)
   const cid = cliente.id
+  const leitura = usePerfil().papel === 'leitura'   // comercial e marketing (056): sem obrigações, só a agenda
 
   const lista = abertas(obrigacoesDe(s, cid)).slice(0, 6)
   const doCliente = s.tarefas.filter(x => x.clienteId === cid)

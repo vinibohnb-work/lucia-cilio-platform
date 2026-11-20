@@ -48,7 +48,7 @@ export default function AdminHome() {
   const [boasVindas, setBoasVindas] = useState(null)   // mensagem pronta a enviar ao cliente (ponto 16)
   const [saving, setSaving] = useState(false)
   const [form, setForm]     = useState(() => prefill
-    ? { ...EMPTY, email: prefill.email || '', display_name: prefill.display_name || '', password: generatePassword() }
+    ? { ...EMPTY, email: prefill.email || '', display_name: prefill.display_name || '', password: generatePassword(), platform: prefill.platform || EMPTY.platform, country: prefill.country || '', fichaId: prefill.fichaId || EMPTY.fichaId }
     : EMPTY)
   const [editingId, setEditingId] = useState(() => (prefill ? 'new' : null))
   const [busyId, setBusyId] = useState(null)
@@ -58,6 +58,7 @@ export default function AdminHome() {
     new: '+ Neuer Benutzer', email: 'E-Mail', name: 'Anzeigename',
     pais: 'Land', semServico: '\u2014 keine \u2014',
     platform: 'Plattform', platAcc: 'Buchhaltung', platEsg: 'ESG', platBoth: 'Buchhaltung + ESG',
+    platPortal: 'Nur Ansicht', platPortalHint: 'Für Mandanten, die die Buchhaltung nicht nutzen: sehen nur die Übersicht und die Fristen, ohne Beträge und ohne etwas zu ändern.',
     platLite: 'Buchhaltung Lite', platLiteHint: 'Nur der Bereich „Buchhaltung" (ohne Preise, Planung, Mandanten, Firma und Beratung).',
     role: 'Rolle', admin: 'Administrator', userRole: 'Benutzer',
     roleComercial: 'Vertrieb (nur CRM)', roleMarketing: 'Marketing (nur Marketing)',
@@ -73,11 +74,16 @@ export default function AdminHome() {
     ficha: 'Mandantenakte', fichaNova: '+ Neue Akte mit diesem Namen anlegen', fichaNenhuma: 'Ohne Akte (nur das Konto)',
     fichaHint: 'Das Konto wird mit der Akte verknüpft: Fristen, Dokumente und Vertrag erscheinen dem Mandanten ohne weiteren Schritt.',
     fichaErro: 'Konto erstellt, aber nicht mit der Akte verknüpft. Unter Mandanten > Daten verknüpfen',
+    fichaJaLigada: 'Diese Akte wurde inzwischen mit einem anderen Konto verknüpft',
+    contaJaLigada: 'Dieses Konto ist bereits mit einer anderen Akte verknüpft. Es wurde nichts geändert',
+    fichaVaiLigar: (n) => `Wird mit der Akte „${n}" verknüpft, weil die E-Mail übereinstimmt.`,
+    fichaVarias: (n) => `Es gibt ${n} Akten mit dieser E-Mail. Bitte wählen Sie eine.`,
   } : lang === 'en' ? {
     title: 'User Management',
     new: '+ New User', email: 'Email', name: 'Display name',
     pais: 'Country', semServico: '\u2014 none \u2014',
     platform: 'Platform', platAcc: 'Accounting', platEsg: 'ESG', platBoth: 'Accounting + ESG',
+    platPortal: 'View only', platPortalHint: "For clients who don't use the accounting: they only see the overview and the deadlines, with no amounts and without changing anything.",
     platLite: 'Accounting Lite', platLiteHint: 'Only the "Accounting" section (no pricing, planning, clients, company or consulting).',
     role: 'Role', admin: 'Administrator', userRole: 'User',
     roleComercial: 'Sales (CRM only)', roleMarketing: 'Marketing (Marketing only)',
@@ -93,11 +99,16 @@ export default function AdminHome() {
     ficha: 'Client record', fichaNova: '+ Create a new record with this name', fichaNenhuma: 'No record (account only)',
     fichaHint: 'The account is linked to the record: deadlines, documents and contract show up for the client with no extra step.',
     fichaErro: 'Account created, but not linked to the record. Link it in Clients > Details',
+    fichaJaLigada: 'This record was meanwhile linked to another account',
+    contaJaLigada: 'This account is already linked to another record. Nothing was changed',
+    fichaVaiLigar: (n) => `It will be linked to the record "${n}" because the email matches.`,
+    fichaVarias: (n) => `There are ${n} records with this email. Choose one.`,
   } : {
     title: 'Gestão de Utilizadores',
     new: '+ Novo Utilizador', email: 'E-mail', name: 'Nome de exibição',
     pais: 'Pa\u00eds', semServico: '\u2014 nenhum \u2014',
     platform: 'Plataforma', platAcc: 'Contabilidade', platEsg: 'ESG', platBoth: 'Contabilidade + ESG',
+    platPortal: 'Só consulta', platPortalHint: 'Para clientes que não usam a contabilidade (ex.: trabalhadores independentes): veem só o Início e os prazos, sem valores e sem alterar nada.',
     platLite: 'Contabilidade Lite', platLiteHint: 'Apenas a secção "Contabilidade" (sem preços, planeamento, clientes, empresa e consultoria).',
     role: 'Perfil', admin: 'Administrador', userRole: 'Utilizador',
     roleComercial: 'Comercial (só CRM)', roleMarketing: 'Marketing (só Marketing)',
@@ -113,15 +124,25 @@ export default function AdminHome() {
     ficha: 'Ficha do cliente', fichaNova: '+ Criar ficha nova com este nome', fichaNenhuma: 'Sem ficha (só a conta)',
     fichaHint: 'A conta fica ligada à ficha: prazos, documentos e contrato aparecem ao cliente sem mais nenhum passo.',
     fichaErro: 'Conta criada, mas não ficou ligada à ficha. Ligue em Clientes > Dados',
+    fichaJaLigada: 'Esta ficha foi entretanto ligada a outra conta',
+    contaJaLigada: 'Esta conta já está ligada a outra ficha. Nada foi alterado',
+    fichaVaiLigar: (n) => `Vai ficar ligada à ficha «${n}» porque o e-mail coincide.`,
+    fichaVarias: (n) => `Há ${n} fichas com este e-mail. Escolha qual.`,
   }
 
   // Fichas de clientes que ainda não têm conta (12-A): é a elas que um acesso novo se liga
   const [fichas, setFichas] = useState([])
-  const [fichaTocada, setFichaTocada] = useState(false)
+  const [fichaTocada, setFichaTocada] = useState(() => !!prefill?.fichaId)
   // Ficha com o mesmo e-mail fica escolhida sozinha, até a administradora mudar à mão
   const mailForm = form.email.trim().toLowerCase()
-  const fichaMesmoMail = mailForm ? fichas.find(f => (f.email || '').trim().toLowerCase() === mailForm) : null
-  const fichaEscolhida = fichaTocada ? form.fichaId : (fichaMesmoMail ? fichaMesmoMail.id : 'nova')
+  // Só pré-seleciona com EXATAMENTE uma ficha com o e-mail (Iara, 07/11). Com duas ou mais, fica vazio e o gravar desligado até a admin escolher.
+  const fichasMesmoMail = mailForm ? fichas.filter(f => (f.email || '').trim().toLowerCase() === mailForm) : []
+  const fichaMesmoMail = fichasMesmoMail.length === 1 ? fichasMesmoMail[0] : null
+  const fichaAmbigua = !fichaTocada && fichasMesmoMail.length > 1
+  const fichaPreSel = !fichaTocada && fichaMesmoMail ? fichaMesmoMail : null
+  const fichaEscolhida = fichaTocada ? form.fichaId : (fichaMesmoMail ? fichaMesmoMail.id : fichaAmbigua ? '' : 'nova')
+  // '' = ainda por escolher (e-mail ambíguo): o Criar conta fica desligado
+  const fichaPorEscolher = form.role === 'user' && editingId === 'new' && fichaEscolhida === ''
 
   const load = useCallback(async () => {
     setLoading(true); setErr('')
@@ -172,7 +193,7 @@ export default function AdminHome() {
   // 12-A (R-C1): o acesso nasce ligado a uma ficha. Faz o mesmo que "Ligar conta"
   // em Clientes > Dados: obrigações nos dois sentidos e o contrato da ficha (12-B).
   async function ligarFicha(userId) {
-    if (!userId || form.role !== 'user' || !fichaEscolhida) return
+    if (!userId || form.role !== 'user' || !fichaEscolhida || fichaEscolhida === 'sem') return
     const ok = ({ error }) => { if (error) throw error }
     if (fichaEscolhida === 'nova') {
       const servicos = form.platform === 'esg' ? ['esg'] : form.platform === 'both' ? ['contabilidade', 'esg'] : ['contabilidade']
@@ -184,10 +205,14 @@ export default function AdminHome() {
       return
     }
     const id = fichaEscolhida
-    ok(await supabase.from('clientes').update({ user_id: userId }).eq('id', id))
-    ok(await supabase.from('fiscal_obligations').update({ cliente_id: id }).eq('user_id', userId).is('cliente_id', null))
-    ok(await supabase.from('fiscal_obligations').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
-    ok(await supabase.from('client_billing').update({ user_id: userId }).eq('cliente_id', id).is('user_id', null))
+    // Só liga se a ficha ainda não tiver conta; se outra admin a ligou entretanto, pára antes de mexer em prazos e contrato (Iara, 07/11)
+    // Numa operação só no banco (migração 060, Iara A4): liga a ficha, as obrigações nos dois sentidos e o contrato, ou nada
+    const { error: erroLig } = await supabase.rpc('ligar_conta_ficha', { p_cliente: id, p_user: userId })
+    if (erroLig) throw (erroLig.code === 'P0001' ? new Error(L.fichaJaLigada) : erroLig.code === 'P0002' ? new Error(L.contaJaLigada) : erroLig)
+    // Já não há updates soltos aqui: a função 060 faz obrigações e contrato na mesma transação
+
+
+
   }
 
   // O país vive em company_settings porque é ele que decide as regras fiscais
@@ -232,8 +257,8 @@ export default function AdminHome() {
     marketing: t.toneOrange,
   }
   const roleLabel = (r) => r === 'admin' ? L.admin : r === 'comercial' ? L.roleComercial : r === 'marketing' ? L.roleMarketing : L.userRole
-  const platLabel = (p) => p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : p === 'accounting_lite' ? L.platLite : L.platAcc
-  const platChip = (p) => p === 'esg' ? t.toneBlue : p === 'both' ? t.toneOrange : p === 'accounting_lite' ? { bg: t.segBg, ink: t.textMuted } : t.dueOk
+  const platLabel = (p) => p === 'esg' ? L.platEsg : p === 'both' ? L.platBoth : p === 'accounting_lite' ? L.platLite : p === 'portal' ? L.platPortal : L.platAcc
+  const platChip = (p) => p === 'esg' ? t.toneBlue : p === 'both' ? t.toneOrange : p === 'accounting_lite' || p === 'portal' ? { bg: t.segBg, ink: t.textMuted } : t.dueOk
   // Sem a coluna "Criado" (13-D, 13/10): o "Último acesso" diz o que interessa
   const GRID = '1.1fr 0.9fr 158px 108px 100px 188px'
   // Equipa (3–4 contas) e clientes em secções separadas, em vez de misturados
@@ -267,7 +292,7 @@ export default function AdminHome() {
                 Utilizador (cliente) (13-D, 13/10). */}
             {eCliente && (
               <div><div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.platform}</div>
-                <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="accounting_lite">{L.platLite}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
+                <select value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))} style={selectStyle}><option value="accounting">{L.platAcc}</option><option value="accounting_lite">{L.platLite}</option><option value="portal">{L.platPortal}</option><option value="esg">{L.platEsg}</option><option value="both">{L.platBoth}</option></select>
               </div>
             )}
             {eCliente && (
@@ -284,7 +309,7 @@ export default function AdminHome() {
               <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} style={selectStyle}><option value="user">{L.userRole}</option><option value="admin">{L.admin}</option><option value="comercial">{L.roleComercial}</option><option value="marketing">{L.roleMarketing}</option></select>
             </div>
             <div style={{ display: 'flex', gap: '6px', paddingBottom: '1px' }}>
-              <button onClick={submit} disabled={saving} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: saving?'wait':'pointer', whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.createBtn : L.save)}</button>
+              <button onClick={submit} disabled={saving || fichaPorEscolher} style={{ padding: '9px 16px', background: t.btnBg, color: t.btnInk, border: 'none', borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: saving ? 'wait' : fichaPorEscolher ? 'not-allowed' : 'pointer', opacity: fichaPorEscolher ? 0.5 : 1, whiteSpace: 'nowrap' }}>{saving ? '…' : (editingId === 'new' ? L.createBtn : L.save)}</button>
               <button onClick={closeForm} style={{ padding: '9px 12px', background: t.segBg, border: `1px solid ${t.segBorder}`, borderRadius: '9px', fontWeight: 600, fontSize: '13px', cursor: 'pointer', color: t.textMuted }}>{L.cancel}</button>
             </div>
           </div>
@@ -292,16 +317,22 @@ export default function AdminHome() {
           {eCliente && form.platform === 'accounting_lite' && (
             <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '10px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.platLiteHint}</span></div>
           )}
+          {eCliente && form.platform === 'portal' && (
+            <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '10px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.platPortalHint}</span></div>
+          )}
 
           {/* Ficha do cliente (12-A): só na criação de contas de clientes */}
           {eCliente && editingId === 'new' && (
             <div style={{ marginTop: '14px', maxWidth: '520px' }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: t.textMuted, marginBottom: '6px' }}>{L.ficha}</div>
               <select value={fichaEscolhida} onChange={e => { setFichaTocada(true); setForm(f => ({ ...f, fichaId: e.target.value })) }} style={selectStyle}>
+                {fichaAmbigua && <option value="" disabled>—</option>}
                 <option value="nova">{L.fichaNova}</option>
                 {fichas.map(f => <option key={f.id} value={f.id}>{f.nome}{f.email ? ` (${f.email})` : ''}</option>)}
-                <option value="">{L.fichaNenhuma}</option>
+                <option value="sem">{L.fichaNenhuma}</option>
               </select>
+              {fichaPreSel && <div style={{ fontSize: '12px', fontWeight: 600, color: t.heading, marginTop: '8px' }}>{L.fichaVaiLigar(fichaPreSel.nome)}</div>}
+              {fichaAmbigua && <div style={{ fontSize: '12px', fontWeight: 600, color: t.dueSoon.ink, marginTop: '8px' }}>{L.fichaVarias(fichasMesmoMail.length)}</div>}
               <div style={{ fontSize: '11.5px', color: t.textMuted, marginTop: '8px', lineHeight: 1.5, display: 'flex', gap: '6px', alignItems: 'baseline' }}><IcInfo /><span>{L.fichaHint}</span></div>
             </div>
           )}

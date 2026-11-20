@@ -8,6 +8,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useTheme } from '../../context/ThemeContext'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import { BRAND } from '../../theme'
+import { useAuth } from '../../context/AuthContext'
 
 const BRAND_G = BRAND.green
 
@@ -30,6 +31,7 @@ export default function Clientes() {
   const isMobile = useIsMobile()
   const eid = useEffectiveUserId()
   const { isViewing } = useViewAs()
+  const { isAdmin } = useAuth()
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
@@ -102,6 +104,17 @@ export default function Clientes() {
     <div style={{ width: '100%' }}>
 
       <CabecalhoPagina eyebrow={{ pt: 'Gestão', de: 'Verwaltung', en: 'Management' }} titulo={traduzir(lang, 'nav_clients')} sub={{ pt: 'Os clientes do seu negócio.', de: 'Die Kunden Ihres Unternehmens.', en: 'Your business’s customers.' }} />
+
+      {/* Orientação (decisão de 15/10, ponto 7): esta lista é dos clientes de quem usa a contabilidade; os da LC Office estão na Gestão */}
+      {isAdmin && !isViewing && (
+        <div style={{ background: BG, border: `1px solid ${t.cardBorder}`, borderLeft: `3px solid ${GOLD}`, borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12.5px', color: t.text }}>
+          {lang === 'de'
+            ? 'Diese Liste ist für die Kunden derjenigen, die die Buchhaltung nutzen (Demonstration und Lizenzen). Die Kunden der LC Office finden Sie unter Verwaltung → Kunden.'
+            : lang === 'en'
+              ? 'This list is for the customers of those who use the accounting (demonstration and licences). LC Office clients are in Management → Clients.'
+              : 'Esta lista é para os clientes de quem usa a contabilidade (demonstração e licenças). Os clientes da LC Office estão em Gestão → Clientes.'}
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' }}>
