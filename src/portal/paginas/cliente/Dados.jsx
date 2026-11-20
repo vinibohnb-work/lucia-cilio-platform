@@ -189,6 +189,10 @@ export default function Dados({ cliente, modoCliente, equipa }) {
               {livres.map(x => <option key={x.id} value={x.id}>{x.nome} · {x.email}</option>)}
             </select>
             {conta && <Chip tom={conta.ativo ? 'ok' : 'aviso'}>{conta.ativo ? 'Conta ativa' : 'Ainda não entrou'}</Chip>}
+            {/* Só consulta (item 13): o acesso nasce desta ficha, já com a plataforma "Só consulta", o país e a ficha escolhidos */}
+            {!cliente.userId && (
+              <Botao onClick={() => navigate('/gestao/acessos', { state: { novoAcesso: { email: cliente.email || '', display_name: cliente.nome || '', platform: 'portal', country: ['PT', 'DE'].includes(cliente.pais) ? cliente.pais : '', fichaId: cliente.id } } })}>Criar acesso só consulta</Botao>
+            )}
             <a href="/gestao/acessos" style={{ fontSize: '12px', fontWeight: 700, color: t.accentText, textDecoration: 'none' }}>Criar conta em Acessos →</a>
           </div>
         ) : (

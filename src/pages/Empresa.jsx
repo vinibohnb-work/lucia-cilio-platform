@@ -140,7 +140,7 @@ export default function Empresa() {
         <div style={grid2}>
           <div>
             {label(L.country)}
-            <select value={form.country} onChange={e => update('country', e.target.value)} style={selectStyle}>
+            <select value={form.country} disabled title={lang === 'de' ? 'Wird von LC Office festgelegt.' : lang === 'en' ? 'Set by LC Office.' : 'Definido pela LC Office.'} style={{ ...selectStyle, opacity: 0.7, cursor: 'not-allowed' }}>
               <option value="PT">🇵🇹 Portugal</option>
               <option value="DE">🇩🇪 Deutschland</option>
             </select>

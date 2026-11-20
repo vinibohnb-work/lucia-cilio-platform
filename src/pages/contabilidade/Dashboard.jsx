@@ -264,9 +264,7 @@ export default function Dashboard() {
   const irPct = settings?.ir_reserve_pct != null ? Number(settings.ir_reserve_pct) : 25
   // A reserva usa só o que está lançado (sem as recorrentes por confirmar), a mesma
   // base das Reservas e do EÜR — antes o Painel dava outra reserva para o mesmo ano.
-  // Base sem IVA (R-B5, decisão de 15/10): com IVA, sai o IVA a entregar; isento, o IVA pago é custo.
-  const ivaNaBase = settings?.vat_regime === 'exempt' ? 0 : (ivaLiquidado - ivaDedutivel)
-  const netLancado = revenue - (fixedC + otherC + varC) - ivaNaBase
+  const netLancado = revenue - (fixedC + otherC + varC)
   const irBase = Math.max(0, netLancado)
   const irReserve = irBase * irPct / 100
   const ssEst  = ssBase * 0.214
@@ -277,7 +275,7 @@ export default function Dashboard() {
   const famvLimit = Number(settings?.de_famv_limit) || 0
   const famvMonthly = entries
     .filter(e => e.entry_date?.slice(0, 4) === nowYear)
-    .reduce((s, e) => s + (e.type === 'entrada' ? 1 : -1) * (Number(e.amount || 0) - (settings?.vat_regime === 'exempt' ? 0 : Number(e.vat_amount || 0))), 0) / (new Date().getMonth() + 1)
+    .reduce((s, e) => s + (e.type === 'entrada' ? 1 : -1) * Number(e.amount || 0), 0) / (new Date().getMonth() + 1)
   const famvRatio = famvLimit > 0 ? famvMonthly / famvLimit : 0
   const showFamvWarn = settings?.country === 'DE' && famvLimit > 0 && famvRatio >= 0.8
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { usePortal, acoes } from '../dados'
-import { Titulo, Botao, Chip, Campo, useCampos, Cartao, Ic } from '../ui'
+import { Titulo, Botao, Chip, Campo, useCampos, Cartao, Ic, usePerfil } from '../ui'
 import { PAISES, FORMAS, SERVICOS, periodicidadesPara, SEM_ACOMPANHAMENTO, ESTADOS_CLIENTE, REGIMES, rotuloServico, fmtData, estadoEfetivo, ESTADOS_OBRIG } from '../regras'
 import { proximaObrigacao, docsEmFalta, naoLidas, tarefaAtrasada } from '../seletores'
 
@@ -21,6 +21,7 @@ const VAZIO = { nome: '', pais: '', servicos: ['contabilidade'], forma: '', peri
 const SEM_INATIVOS = 'sem_inativos'
 
 export default function ListaClientes() {
+  const podeCriar = usePerfil().papel === 'admin'   // 056: comercial e marketing só veem
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const s = usePortal()
@@ -120,7 +121,7 @@ export default function ListaClientes() {
         {sel('pais', Object.entries(PAISES), 'Todos os países')}
         {sel('servico', SERVICOS, 'Todos os serviços')}
         {sel('estado', [[SEM_INATIVOS, 'Sem os inativos'], ...Object.entries(ESTADOS_CLIENTE).map(([k, v]) => [k, v.rotulo])], 'Todos os estados')}
-        <Botao variante="primario" onClick={() => setNovo({ ...VAZIO })}><Ic.mais size={16} />Novo cliente</Botao>
+        {podeCriar && <Botao variante="primario" onClick={() => setNovo({ ...VAZIO })}><Ic.mais size={16} />Novo cliente</Botao>}
       </div>
 
       <div style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px', overflowX: 'auto' }}>

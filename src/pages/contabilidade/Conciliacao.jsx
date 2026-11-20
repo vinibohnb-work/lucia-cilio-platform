@@ -51,9 +51,17 @@ export default function Conciliacao() {
   const taxaEmpresa = settings ? (settings.vat_regime === 'exempt' ? 0 : Number(settings.vat_default_rate) || 0) : 0
   const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
   const [aviso, setAviso] = useState('')
+  const [ligacoesExtra, setLigacoesExtra] = useState([])   // lançamentos adicionais dos movimentos (066)
   // ?aba=conciliado (vindo da marca "Ligado ao banco" do Livro de Caixa) abre já na aba certa (QA Nina 18/11)
   const [searchParams] = useSearchParams()
   const [aba, setAba] = useState(() => { const a = searchParams.get('aba'); return ['pendente', 'conciliado', 'ignorado', 'semExtrato'].includes(a) ? a : 'pendente' })
+  // &mov=<id>: o movimento exato vindo da marca; o ecrã rola até ele e destaca-o
+  const movAlvo = searchParams.get('mov')
+  useEffect(() => {
+    if (loading || !movAlvo) return
+    const el = document.getElementById(`mov-${movAlvo}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [loading, movAlvo])
 
   const L = lang === 'de' ? {
     eyebrow: 'Buchhaltung', title: 'Abstimmung Kasse/Bank',
@@ -72,6 +80,7 @@ export default function Conciliacao() {
     semCategoria: '— ohne Kategorie —', categoriaTitulo: 'Kategorie der neuen Buchung', categoriaExtrato: 'Kategorie im Auszug',
     jaLigado: 'Diese Kassenbuchung ist bereits mit einer anderen Bankbewegung verknüpft. Die Liste wurde aktualisiert — bitte eine andere wählen.',
     anexar: 'Beleg anhängen', trocar: 'Ersetzen', retirar: 'Entfernen', aEnviar: 'Wird hochgeladen…', erroAnexo: 'Beleg konnte nicht hochgeladen werden.', tipoAnexo: 'PDF, JPEG, PNG oder WebP bis 10 MB.',
+    conciliarSel: 'Ausgewählte abstimmen', aConciliar: 'Wird abgestimmt…', marcarTodas: 'Alle auswählen', desmarcarTodas: 'Keine auswählen', incluirLote: 'Gemeinsam abstimmen', mesmaData: 'gleicher Betrag und Datum',
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
     subtitle: 'Import a bank statement (CSV or Excel) and match it against the cash book.',
@@ -89,6 +98,7 @@ export default function Conciliacao() {
     semCategoria: '— no category —', categoriaTitulo: 'Category of the new entry', categoriaExtrato: 'Category in the statement',
     jaLigado: 'This cash book entry is already linked to another bank movement. The list was refreshed — please pick another one.',
     anexar: 'Attach receipt', trocar: 'Replace', retirar: 'Remove', aEnviar: 'Uploading…', erroAnexo: 'Could not upload the receipt.', tipoAnexo: 'PDF, JPEG, PNG or WebP up to 10 MB.',
+    conciliarSel: 'Match selected', aConciliar: 'Matching…', marcarTodas: 'Select all', desmarcarTodas: 'Clear selection', incluirLote: 'Match together', mesmaData: 'same amount and date',
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
     subtitle: 'Importa o extrato bancário (CSV ou Excel) e cruza-o com o Livro de Caixa.',
@@ -106,6 +116,7 @@ export default function Conciliacao() {
     semCategoria: '— sem categoria —', categoriaTitulo: 'Categoria do lançamento a criar', categoriaExtrato: 'Categoria no extrato',
     jaLigado: 'Este lançamento do Livro de Caixa já está ligado a outro movimento do banco. A lista foi atualizada — escolhe outro.',
     anexar: 'Anexar comprovativo', trocar: 'Trocar', retirar: 'Retirar', aEnviar: 'A enviar…', erroAnexo: 'Não foi possível enviar o comprovativo.', tipoAnexo: 'PDF, JPEG, PNG ou WebP até 10 MB.',
+    conciliarSel: 'Conciliar selecionados', aConciliar: 'A conciliar…', marcarTodas: 'Marcar todas', desmarcarTodas: 'Desmarcar todas', incluirLote: 'Conciliar em conjunto', mesmaData: 'mesmo valor e data',
   }
 
   const fmt = (v) => (Number(v) || 0).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -114,20 +125,34 @@ export default function Conciliacao() {
   const load = useCallback(async () => {
     if (!eid) return
     setLoading(true)
-    const [tx, ce, imp] = await Promise.all([
+    const [tx, ce, imp, ex] = await Promise.all([
       supabase.from('bank_transactions').select('*').eq('user_id', eid).order('tx_date', { ascending: false }),
       supabase.from('cash_entries').select('id,entry_date,description,type,amount,destination').eq('user_id', eid).eq('destination', 'banco'),
       supabase.from('bank_imports').select('*').eq('user_id', eid).order('created_at', { ascending: false }).limit(6),
+      // Lançamentos adicionais de um movimento (066). Sem a migração, segue vazio.
+      supabase.from('bank_transaction_entries').select('bank_transaction_id,cash_entry_id').eq('user_id', eid),
     ])
-    setTxs(tx.data || []); setEntries(ce.data || []); setImportacoes(imp.data || []); setLoading(false)
+    setTxs(tx.data || []); setEntries(ce.data || []); setImportacoes(imp.data || []); setLigacoesExtra(ex.error ? [] : (ex.data || [])); setLoading(false)
   }, [eid])
   useEffect(() => { load() }, [load])
+
+  // Um movimento pode cobrir vários lançamentos (LUC-243): o primeiro fica no
+  // próprio movimento, os outros em bank_transaction_entries.
+  const extrasPorTx = useMemo(() => {
+    const m = {}
+    for (const x of ligacoesExtra) (m[x.bank_transaction_id] ||= []).push(x.cash_entry_id)
+    return m
+  }, [ligacoesExtra])
+  const entriesUsadas = useMemo(() => new Set([
+    ...txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id),
+    ...ligacoesExtra.map(x => x.cash_entry_id),
+  ]), [txs, ligacoesExtra])
 
   // Sugestões recalculadas sobre o que ainda está pendente
   const { sugestoes, entriesSemPar } = useMemo(() => {
     const pendentes = txs.filter(x => x.status === 'pendente')
       .map(x => ({ fingerprint: x.fingerprint, data: x.tx_date, descricao: x.description, valor: Number(x.amount), tipo: x.type }))
-    const jaUsados = new Set(txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id))
+    const jaUsados = entriesUsadas
     const livres = entries.filter(e => !jaUsados.has(e.id))
     const r = conciliar(pendentes, livres)
     // "Não constam do extrato": só os lançamentos dentro do período dos extratos
@@ -135,7 +160,7 @@ export default function Conciliacao() {
     const periodos = importacoes.filter(i => i.period_start && i.period_end)
     const noPeriodo = (d) => periodos.some(i => d >= i.period_start && d <= i.period_end)
     return { sugestoes: r.sugestoes, entriesSemPar: r.entriesSemPar.filter(e => noPeriodo(e.entry_date)) }
-  }, [txs, entries, importacoes])
+  }, [txs, entries, importacoes, entriesUsadas])
 
   const entryById = useMemo(() => Object.fromEntries(entries.map(e => [e.id, e])), [entries])
 
@@ -146,11 +171,25 @@ export default function Conciliacao() {
   const [escolhas, setEscolhas] = useState({})   // tx.id -> cash_entry id escolhido à mão
   const [erroTx, setErroTx] = useState({})       // tx.id -> mensagem de erro do "Ligar"/"Conciliar", mostrada no card
   const livresPorTipo = useMemo(() => {
-    const usados = new Set(txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id))
     const r = { entrada: [], saida: [] }
-    for (const e of entries) if (!usados.has(e.id) && r[e.type]) r[e.type].push(e)
+    for (const e of entries) if (!entriesUsadas.has(e.id) && r[e.type]) r[e.type].push(e)
     return r
-  }, [txs, entries])
+  }, [entries, entriesUsadas])
+
+  // Ligar a vários lançamentos (LUC-243): a Lúcia marca os lançamentos que o
+  // movimento cobre; a soma aparece ao lado do valor do banco e, se não bater,
+  // fica o aviso (ela pode ligar mesmo assim: comissões, arredondamentos).
+  const [varios, setVarios] = useState({})   // tx.id -> [cash_entry ids] (aberto quando existe)
+  const [aLigar, setALigar] = useState(null)
+  async function ligarVarios(tx, ids) {
+    if (isViewing || ids.length < 2) return
+    setALigar(tx.id); setErroTx(p => { if (!p[tx.id]) return p; const n = { ...p }; delete n[tx.id]; return n })
+    const { error } = await supabase.rpc('conciliar_varios', { p_tx: tx.id, p_entries: ids })
+    setALigar(null)
+    if (error) { setErroTx(p => ({ ...p, [tx.id]: error.code === '23505' ? L.jaLigado : error.message })); load(); return }
+    setVarios(p => { const n = { ...p }; delete n[tx.id]; return n })
+    load()
+  }
   const candidatosDe = (tx) => {
     const dias = (e) => Math.abs((new Date(e.entry_date) - new Date(tx.tx_date)) / 86400000)
     const igual = (e) => Math.abs(Number(e.amount) - Number(tx.amount)) < 0.005
@@ -297,18 +336,34 @@ export default function Conciliacao() {
     setTxs(prev => prev.map(x => x.id === tx.id ? { ...x, comprovativo_path: null, comprovativo_nome: null } : x))
   }
 
-  // Concilia de uma vez tudo o que é inequívoco
-  async function conciliarAutomaticos() {
+  // Conciliação em lote (LUC-243): cada sugestão sem empate ganha uma caixa de
+  // seleção. Vêm já marcadas as de valor e data iguais (e as automáticas); a
+  // Lúcia desmarca o que não quer e confirma tudo de uma vez. As de empate
+  // ("há vários lançamentos iguais") ficam de fora: essas decide-as à mão.
+  const [selecao, setSelecao] = useState({})   // tx.id -> true/false escolhido à mão
+  const [emLote, setEmLote] = useState(false)
+  const sugestaoDe = (tx) => {
+    const s = sugestoes.get(tx.fingerprint)
+    const e = s ? entryById[s.entryId] : null
+    return s && e && !s.ambiguo ? { s, e } : null
+  }
+  const marcadoPorOmissao = (tx) => { const p = sugestaoDe(tx); return !!p && (p.s.automatico || p.e.entry_date === tx.tx_date) }
+  const estaMarcado = (tx) => !!sugestaoDe(tx) && (selecao[tx.id] ?? marcadoPorOmissao(tx))
+  async function conciliarSelecionados() {
     if (isViewing) { setErro(L.verComo); return }
-    const alvos = txs.filter(x => x.status === 'pendente')
-      .map(x => ({ tx: x, s: sugestoes.get(x.fingerprint) }))
-      .filter(({ s }) => s?.automatico)
-    for (const { tx, s } of alvos) await conciliarCom(tx, s.entryId)
+    const alvos = txs.filter(x => x.status === 'pendente' && estaMarcado(x)).map(x => ({ tx: x, entryId: sugestaoDe(x).e.id }))
+    setEmLote(true)
+    // Um a um: se um lançamento já estiver ligado noutro separador, só esse
+    // falha (com o aviso no próprio cartão) e os outros seguem.
+    for (const { tx, entryId } of alvos) await conciliarCom(tx, entryId)
+    setEmLote(false); setSelecao({})
   }
 
   const porStatus = (s) => txs.filter(x => x.status === s)
   const pendentes = porStatus('pendente')
-  const nAutomaticos = pendentes.filter(x => sugestoes.get(x.fingerprint)?.automatico).length
+  const nSelecionados = pendentes.filter(estaMarcado).length
+  const nSelecionaveis = pendentes.filter(x => !!sugestaoDe(x)).length
+  const marcarTodos = (v) => setSelecao(Object.fromEntries(pendentes.filter(x => !!sugestaoDe(x)).map(x => [x.id, v])))
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const btn = { padding: '6px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: 'none' }
@@ -405,11 +460,19 @@ export default function Conciliacao() {
                 background: aba === k ? t.softCardBg : 'transparent', color: aba === k ? t.accentText : t.textMuted,
               }}>{L[k]} ({n})</button>
             ))}
-            {aba === 'pendente' && nAutomaticos > 0 && (
-              <button onClick={conciliarAutomaticos} disabled={isViewing}
-                style={{ ...btn, marginLeft: 'auto', flex: 'none', whiteSpace: 'nowrap', padding: '8px 15px', fontSize: '12px', background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>
-                <IconRaio /> {L.conciliar} {nAutomaticos}
-              </button>
+            {aba === 'pendente' && nSelecionaveis > 0 && (
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: '7px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {!isViewing && (
+                  <button onClick={() => marcarTodos(nSelecionados < nSelecionaveis)}
+                    style={{ ...btn, minHeight: '44px', padding: '0 12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, whiteSpace: 'nowrap' }}>
+                    {nSelecionados < nSelecionaveis ? L.marcarTodas : L.desmarcarTodas}
+                  </button>
+                )}
+                <button onClick={conciliarSelecionados} disabled={isViewing || emLote || !nSelecionados}
+                  style={{ ...btn, minHeight: '44px', flex: 'none', whiteSpace: 'nowrap', padding: '0 15px', fontSize: '12px', background: t.btnBg, color: t.btnInk, opacity: isViewing || emLote || !nSelecionados ? .55 : 1 }}>
+                  <IconRaio /> {emLote ? L.aConciliar : `${L.conciliarSel} (${nSelecionados})`}
+                </button>
+              </div>
             )}
           </div>
 
@@ -440,7 +503,7 @@ export default function Conciliacao() {
                 const sug = s ? entryById[s.entryId] : null
                 const ligado = tx.cash_entry_id ? entryById[tx.cash_entry_id] : null
                 return (
-                  <div key={tx.id} style={{ ...card, padding: '14px 17px', marginBottom: '9px' }}>
+                  <div key={tx.id} id={`mov-${tx.id}`} style={{ ...card, padding: '14px 17px', marginBottom: '9px', ...(movAlvo === tx.id ? { border: `2px solid ${t.accent}` } : {}) }}>
                     <div style={{ display: 'flex', gap: '11px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ flex: 'none', fontSize: '11.5px', color: t.subtle, fontVariantNumeric: 'tabular-nums', width: '78px' }}>{dataFmt(tx.tx_date)}</span>
                       <span style={{ flex: 1, minWidth: '160px', fontSize: '13px', fontWeight: 600, color: t.heading }}>{tx.description}</span>
@@ -476,7 +539,12 @@ export default function Conciliacao() {
                     {/* Já conciliado: mostra com quê */}
                     {tx.status === 'conciliado' && (
                       <div style={{ display: 'flex', gap: '9px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
-                        <span style={{ fontSize: '11.5px', color: t.dueOk.ink, fontWeight: 700 }}>✓ {ligado ? `${dataFmt(ligado.entry_date)} · ${ligado.description}` : '—'}</span>
+                        <span style={{ fontSize: '11.5px', color: t.dueOk.ink, fontWeight: 700, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <span>✓ {ligado ? `${dataFmt(ligado.entry_date)} · ${ligado.description}${extrasPorTx[tx.id]?.length ? ` · ${fmt(ligado.amount)}` : ''}` : '—'}</span>
+                          {(extrasPorTx[tx.id] || []).map(id => entryById[id]).filter(Boolean).map(e => (
+                            <span key={e.id}>✓ {dataFmt(e.entry_date)} · {e.description} · {fmt(e.amount)}</span>
+                          ))}
+                        </span>
                         {!isViewing && <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, marginLeft: 'auto', minHeight: '36px', padding: '0 14px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted }}>{L.desfazer}</button>}
                       </div>
                     )}
@@ -491,6 +559,13 @@ export default function Conciliacao() {
                             </div>
                             <div style={{ fontSize: '12.5px', color: t.text }}>{dataFmt(sug.entry_date)} · {sug.description} · {fmt(sug.amount)}</div>
                             {s.ambiguo && <div style={{ fontSize: '11px', color: t.dueSoon.ink, marginTop: '4px', fontWeight: 600 }}>⚠ {L.ambiguo}</div>}
+                            {!s.ambiguo && !isViewing && (
+                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '44px', marginTop: '2px', fontSize: '12.5px', fontWeight: 600, color: t.heading, cursor: 'pointer' }}>
+                                <input type="checkbox" checked={estaMarcado(tx)} onChange={e => setSelecao(p => ({ ...p, [tx.id]: e.target.checked }))}
+                                  style={{ width: '20px', height: '20px', accentColor: t.accent, cursor: 'pointer' }} />
+                                {L.incluirLote}{sug.entry_date === tx.tx_date ? ` · ${L.mesmaData}` : ''}
+                              </label>
+                            )}
                           </div>
                         )}
                         {tx.raw?.categoria && (
@@ -520,6 +595,58 @@ export default function Conciliacao() {
                                   style={{ ...btn, flex: 'none', minHeight: '44px', padding: '0 16px', background: t.btnBg, color: t.btnInk, opacity: isViewing || !escolhido ? .55 : 1 }}>{LM.ligar}</button>
                               </div>
                               {!candidatos.length && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '4px' }}>{LM.nenhum}</div>}
+                            </div>
+                          )
+                        })()}
+                        {/* Ligar a vários lançamentos (LUC-243) */}
+                        {!isViewing && (livresPorTipo[tx.type] || []).length >= 2 && (() => {
+                          const aberto = !!varios[tx.id]
+                          const LV = lang === 'de'
+                            ? { abrir: 'Mit mehreren Buchungen verknüpfen', fechar: 'Schließen', soma: 'Summe', de: 'von', ligar: (n) => `${n} Buchungen verknüpfen`, naoBate: 'Die Summe stimmt nicht mit dem Bankbetrag überein — prüfe die Auswahl oder verknüpfe trotzdem (z. B. Gebühren).', bate: 'Die Summe stimmt ✓', minimo: 'Mindestens zwei Buchungen wählen.' }
+                            : lang === 'en'
+                              ? { abrir: 'Link to several entries', fechar: 'Close', soma: 'Total', de: 'of', ligar: (n) => `Link ${n} entries`, naoBate: 'The total does not match the bank amount — check the selection or link anyway (e.g. fees).', bate: 'The total matches ✓', minimo: 'Pick at least two entries.' }
+                              : { abrir: 'Ligar a vários lançamentos', fechar: 'Fechar', soma: 'Soma', de: 'de', ligar: (n) => `Ligar ${n} lançamentos`, naoBate: 'A soma não bate com o valor do banco — confere a escolha ou liga mesmo assim (ex.: comissões).', bate: 'A soma bate ✓', minimo: 'Escolhe pelo menos dois lançamentos.' }
+                          if (!aberto) return (
+                            <button onClick={() => setVarios(p => ({ ...p, [tx.id]: [] }))}
+                              style={{ ...btn, minHeight: '44px', padding: '0 4px', marginBottom: '6px', background: 'none', color: t.accentText, textDecoration: 'underline' }}>{LV.abrir}</button>
+                          )
+                          const dias = (e) => Math.abs((new Date(e.entry_date) - new Date(tx.tx_date)) / 86400000)
+                          const lista = [...livresPorTipo[tx.type]].filter(e => Number(e.amount) <= Number(tx.amount) + 0.005).sort((a, b) => dias(a) - dias(b)).slice(0, 40)
+                          const marcados = varios[tx.id]
+                          const soma = marcados.reduce((s, id) => s + (Number(entryById[id]?.amount) || 0), 0)
+                          const bate = Math.abs(soma - Number(tx.amount)) < 0.005
+                          return (
+                            <div style={{ border: `1px solid ${t.cardBorder}`, borderRadius: '10px', padding: '8px 10px', marginBottom: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <span style={{ flex: 1, fontSize: '11px', fontWeight: 700, color: t.textMuted }}>{LV.abrir}</span>
+                                <button onClick={() => setVarios(p => { const n = { ...p }; delete n[tx.id]; return n })}
+                                  style={{ ...btn, minHeight: '44px', padding: '0 10px', background: 'none', color: t.subtle, textDecoration: 'underline' }}>{LV.fechar}</button>
+                              </div>
+                              <div style={{ maxHeight: '260px', overflowY: 'auto' }}>
+                                {lista.map(e => (
+                                  <label key={e.id} style={{ display: 'flex', alignItems: 'center', gap: '9px', minHeight: '44px', fontSize: '12.5px', color: t.text, cursor: 'pointer', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
+                                    <input type="checkbox" checked={marcados.includes(e.id)}
+                                      onChange={ev => setVarios(p => ({ ...p, [tx.id]: ev.target.checked ? [...(p[tx.id] || []), e.id] : (p[tx.id] || []).filter(x => x !== e.id) }))}
+                                      style={{ width: '20px', height: '20px', flex: 'none', accentColor: t.accent, cursor: 'pointer' }} />
+                                    <span style={{ flex: 'none', width: '72px', color: t.subtle, fontVariantNumeric: 'tabular-nums' }}>{dataFmt(e.entry_date)}</span>
+                                    <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.description}</span>
+                                    <span style={{ flex: 'none', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(e.amount)}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <div style={{ fontSize: '12.5px', fontWeight: 700, color: t.heading, marginTop: '6px', fontVariantNumeric: 'tabular-nums' }}>
+                                {LV.soma}: {fmt(soma)} {LV.de} {fmt(tx.amount)}
+                              </div>
+                              {marcados.length >= 2 && (
+                                <div role={bate ? undefined : 'alert'} style={{ fontSize: '12px', fontWeight: 600, marginTop: '4px', borderRadius: '8px', padding: bate ? 0 : '7px 10px', background: bate ? 'none' : t.dueSoon.bg, color: bate ? t.dueOk.ink : t.dueSoon.ink }}>
+                                  {bate ? LV.bate : `⚠ ${LV.naoBate}`}
+                                </div>
+                              )}
+                              {marcados.length < 2 && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '4px' }}>{LV.minimo}</div>}
+                              <button onClick={() => ligarVarios(tx, marcados)} disabled={marcados.length < 2 || aLigar === tx.id}
+                                style={{ ...btnToque, marginTop: '7px', background: t.btnBg, color: t.btnInk, opacity: marcados.length < 2 || aLigar === tx.id ? .55 : 1 }}>
+                                {aLigar === tx.id ? L.aConciliar : LV.ligar(marcados.length)}
+                              </button>
                             </div>
                           )
                         })()}

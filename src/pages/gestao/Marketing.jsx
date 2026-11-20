@@ -44,7 +44,8 @@ const VAZIO = { id: null, data: '', hora: '', formato: 'post', estado: 'ideia', 
 export default function Marketing({ clienteId = null }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
-  const { user } = useAuth()
+  const { user, role } = useAuth()
+  const soVer = role === 'comercial'   // 056 (decisão do Vini, 07/11): o comercial vê o Marketing sem gravar, enviar imagem nem apagar
   const c = useCampos()
   const { lang } = useLang()
   // Textos novos de 13/10 já nas três línguas (o resto do ecrã ainda é só pt)
@@ -143,7 +144,7 @@ export default function Marketing({ clienteId = null }) {
         <Pilulas opcoes={[['feed', 'Feed'], ['calendario', 'Calendário'], ['lista', 'Lista'], ['notas', `Anotações${notas.filter(n => !n.feita).length ? ` (${notas.filter(n => !n.feita).length})` : ''}`]]} valor={vista} aoMudar={setVista} />
         <div style={{ flex: 1 }} />
         {/* A linha "3 ideias · 2 rascunhos…" saiu (13-D, 13/10): os estados já estão em chips na Lista e nas Próximas */}
-        <Botao variante="primario" onClick={() => setEditar({ ...VAZIO, data: hoje() })}><Ic.mais size={16} />Nova publicação</Botao>
+        {!soVer && <Botao variante="primario" onClick={() => setEditar({ ...VAZIO, data: hoje() })}><Ic.mais size={16} />Nova publicação</Botao>}
       </div>
 
       {erro && <div role="alert" style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{erro}</div>}
@@ -201,7 +202,7 @@ export default function Marketing({ clienteId = null }) {
                 {celulas.map((dia, i) => (
                   <div key={i} style={{ minHeight: '92px', borderRadius: '9px', padding: '6px', background: dia ? t.softCardBg : 'transparent', border: dia === hoje() ? `2px solid ${t.accent}` : '2px solid transparent' }}>
                     {dia && <>
-                      <button onClick={() => setEditar({ ...VAZIO, data: dia })} aria-label={`Nova publicação a ${fmtData(dia)}`}
+                      <button disabled={soVer} onClick={() => setEditar({ ...VAZIO, data: dia })} aria-label={`Nova publicação a ${fmtData(dia)}`}
                         style={{ display: 'block', width: '100%', textAlign: 'left', border: 'none', background: 'none', padding: 0, fontSize: '12px', fontWeight: 700, color: t.textMuted, cursor: 'pointer', marginBottom: '4px' }}>{Number(dia.slice(8))}</button>
                       {posts.filter(p => p.data === dia).map(p => (
                         <button key={p.id} onClick={() => setEditar({ ...VAZIO, ...p })}
@@ -243,31 +244,31 @@ export default function Marketing({ clienteId = null }) {
       {/* ── Anotações da equipa ── */}
       {carregado && vista === 'notas' && (
         <Cartao titulo="Anotações da equipa" icone={<Ic.mensagens />}>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: soVer ? 'none' : 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
             <input value={novaNota} onChange={e => setNovaNota(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') juntarNota() }}
               placeholder="Ideia, lembrete ou pedido para a equipa…" aria-label="Nova anotação" style={{ ...c.input, flex: '1 1 260px' }} />
             <Botao variante="primario" onClick={juntarNota}>Juntar</Botao>
           </div>
           {notas.length === 0 ? <Vazio>Sem anotações.</Vazio> : notas.map((n, i) => (
             <div key={n.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '9px 0', borderTop: i ? `1px solid ${t.rowBorder}` : 'none' }}>
-              <input type="checkbox" checked={n.feita} onChange={() => alternarNota(n)} aria-label="Marcar como feita" style={{ marginTop: '3px', width: '16px', height: '16px', cursor: 'pointer' }} />
+              <input type="checkbox" checked={n.feita} disabled={soVer} onChange={() => { if (!soVer) alternarNota(n) }} aria-label="Marcar como feita" style={{ marginTop: '3px', width: '16px', height: '16px', cursor: 'pointer' }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '13.5px', color: n.feita ? t.subtle : t.heading, textDecoration: n.feita ? 'line-through' : 'none', whiteSpace: 'pre-wrap' }}>{n.texto}</div>
                 <div style={{ fontSize: '11px', color: t.subtle, marginTop: '2px' }}>{n.autor || '—'} · {fmtData(n.created_at?.slice(0, 10))}</div>
               </div>
-              <button onClick={() => apagarNota(n)} aria-label="Apagar anotação" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '14px', padding: '4px' }}>✕</button>
+              {!soVer && <button onClick={() => apagarNota(n)} aria-label="Apagar anotação" style={{ background: 'none', border: 'none', color: t.subtle, cursor: 'pointer', fontSize: '14px', padding: '4px' }}>✕</button>}
             </div>
           ))}
         </Cartao>
       )}
 
       {editar && <EditorPublicacao inicial={editar} url={editar.imagem_path ? urls[editar.imagem_path] : null}
-        aoFechar={() => setEditar(null)} aoGuardar={async (p, f) => { if (await guardar(p, f)) setEditar(null) }} aoApagar={apagar} />}
+        aoFechar={() => setEditar(null)} aoGuardar={async (p, f) => { if (await guardar(p, f)) setEditar(null) }} aoApagar={apagar} soVer={soVer} />}
     </div>
   )
 }
 
-function EditorPublicacao({ inicial, url, aoFechar, aoGuardar, aoApagar }) {
+function EditorPublicacao({ inicial, url, aoFechar, aoGuardar, aoApagar, soVer = false }) {
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const c = useCampos()
@@ -292,10 +293,10 @@ function EditorPublicacao({ inicial, url, aoFechar, aoGuardar, aoApagar }) {
           <div style={{ aspectRatio: p.formato === 'story' || p.formato === 'reel' ? '9 / 16' : '1 / 1', maxHeight: '420px', borderRadius: '10px', overflow: 'hidden', background: t.softCardBg, border: `1px dashed ${t.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
             {previa ? <img src={previa} alt="Pré-visualização" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '12px', color: t.subtle }}>Sem imagem</span>}
           </div>
-          <label style={{ display: 'inline-flex', marginTop: '10px', padding: '8px 14px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, fontSize: '12.5px', fontWeight: 700, color: t.heading, cursor: 'pointer' }}>
+          {!soVer && <label style={{ display: 'inline-flex', marginTop: '10px', padding: '8px 14px', borderRadius: '9px', border: `1px solid ${t.cardBorder}`, fontSize: '12.5px', fontWeight: 700, color: t.heading, cursor: 'pointer' }}>
             {previa ? 'Trocar imagem' : 'Escolher imagem'}
             <input type="file" accept="image/*" onChange={escolher} style={{ display: 'none' }} />
-          </label>
+          </label>}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <Campo rotulo="Título interno"><input value={p.titulo || ''} onChange={set('titulo')} placeholder="ex.: Dica fiscal da semana" style={c.input} /></Campo>
@@ -316,10 +317,10 @@ function EditorPublicacao({ inicial, url, aoFechar, aoGuardar, aoApagar }) {
         </div>
       </div>
       <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-        <Botao variante="primario" disabled={aGuardar} onClick={async () => { setAGuardar(true); await aoGuardar(p, ficheiro); setAGuardar(false) }}>{aGuardar ? 'A guardar…' : 'Guardar'}</Botao>
+        {!soVer && <Botao variante="primario" disabled={aGuardar} onClick={async () => { setAGuardar(true); await aoGuardar(p, ficheiro); setAGuardar(false) }}>{aGuardar ? 'A guardar…' : 'Guardar'}</Botao>}
         <Botao onClick={aoFechar}>Cancelar</Botao>
         <div style={{ flex: 1 }} />
-        {inicial.id && <Botao variante="perigo" onClick={() => aoApagar(inicial)}>Apagar</Botao>}
+        {inicial.id && !soVer && <Botao variante="perigo" onClick={() => aoApagar(inicial)}>Apagar</Botao>}
         {inicial.autor && <span style={{ alignSelf: 'center', fontSize: '11.5px', color: t.subtle }}>criada por {inicial.autor}</span>}
       </div>
     </Janela>
