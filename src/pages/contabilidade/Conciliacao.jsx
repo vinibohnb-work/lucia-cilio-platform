@@ -55,6 +55,13 @@ export default function Conciliacao() {
   // ?aba=conciliado (vindo da marca "Ligado ao banco" do Livro de Caixa) abre já na aba certa (QA Nina 18/11)
   const [searchParams] = useSearchParams()
   const [aba, setAba] = useState(() => { const a = searchParams.get('aba'); return ['pendente', 'conciliado', 'ignorado', 'semExtrato'].includes(a) ? a : 'pendente' })
+  // &mov=<id>: o movimento exato vindo da marca; o ecrã rola até ele e destaca-o
+  const movAlvo = searchParams.get('mov')
+  useEffect(() => {
+    if (loading || !movAlvo) return
+    const el = document.getElementById(`mov-${movAlvo}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [loading, movAlvo])
 
   const L = lang === 'de' ? {
     eyebrow: 'Buchhaltung', title: 'Abstimmung Kasse/Bank',
@@ -496,7 +503,7 @@ export default function Conciliacao() {
                 const sug = s ? entryById[s.entryId] : null
                 const ligado = tx.cash_entry_id ? entryById[tx.cash_entry_id] : null
                 return (
-                  <div key={tx.id} style={{ ...card, padding: '14px 17px', marginBottom: '9px' }}>
+                  <div key={tx.id} id={`mov-${tx.id}`} style={{ ...card, padding: '14px 17px', marginBottom: '9px', ...(movAlvo === tx.id ? { border: `2px solid ${t.accent}` } : {}) }}>
                     <div style={{ display: 'flex', gap: '11px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ flex: 'none', fontSize: '11.5px', color: t.subtle, fontVariantNumeric: 'tabular-nums', width: '78px' }}>{dataFmt(tx.tx_date)}</span>
                       <span style={{ flex: 1, minWidth: '160px', fontSize: '13px', fontWeight: 600, color: t.heading }}>{tx.description}</span>

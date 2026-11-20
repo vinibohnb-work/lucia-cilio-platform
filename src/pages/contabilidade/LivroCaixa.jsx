@@ -459,7 +459,7 @@ export default function LivroCaixa() {
                       const rot = lang === 'de' ? 'Mit Bank abgestimmt' : lang === 'en' ? 'Matched with bank' : 'Ligado ao banco'
                       const det = `${m.tx_date.split('-').reverse().join('/')} · ${m.description} · ${m.type === 'entrada' ? '+' : '−'}€ ${fmt(m.amount)}`
                       return (
-                        <Link to="/contabilidade/conciliacao?aba=conciliado" title={`${rot}: ${det}`}
+                        <Link to={`/contabilidade/conciliacao?aba=conciliado&mov=${m.id}`} title={`${rot}: ${det}`}
                           style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', maxWidth: '100%', padding: '1px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: '#e0f2fe', color: '#075985', textDecoration: 'none' }}>
                           <span>🏦 ✓ {rot}</span>
                           <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '220px' }}>· {det}</span>
