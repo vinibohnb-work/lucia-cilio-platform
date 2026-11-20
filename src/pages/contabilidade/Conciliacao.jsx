@@ -72,6 +72,7 @@ export default function Conciliacao() {
     semCategoria: '— ohne Kategorie —', categoriaTitulo: 'Kategorie der neuen Buchung', categoriaExtrato: 'Kategorie im Auszug',
     jaLigado: 'Diese Kassenbuchung ist bereits mit einer anderen Bankbewegung verknüpft. Die Liste wurde aktualisiert — bitte eine andere wählen.',
     anexar: 'Beleg anhängen', trocar: 'Ersetzen', retirar: 'Entfernen', aEnviar: 'Wird hochgeladen…', erroAnexo: 'Beleg konnte nicht hochgeladen werden.', tipoAnexo: 'PDF, JPEG, PNG oder WebP bis 10 MB.',
+    conciliarSel: 'Ausgewählte abstimmen', aConciliar: 'Wird abgestimmt…', marcarTodas: 'Alle auswählen', desmarcarTodas: 'Keine auswählen', incluirLote: 'Gemeinsam abstimmen', mesmaData: 'gleicher Betrag und Datum',
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
     subtitle: 'Import a bank statement (CSV or Excel) and match it against the cash book.',
@@ -89,6 +90,7 @@ export default function Conciliacao() {
     semCategoria: '— no category —', categoriaTitulo: 'Category of the new entry', categoriaExtrato: 'Category in the statement',
     jaLigado: 'This cash book entry is already linked to another bank movement. The list was refreshed — please pick another one.',
     anexar: 'Attach receipt', trocar: 'Replace', retirar: 'Remove', aEnviar: 'Uploading…', erroAnexo: 'Could not upload the receipt.', tipoAnexo: 'PDF, JPEG, PNG or WebP up to 10 MB.',
+    conciliarSel: 'Match selected', aConciliar: 'Matching…', marcarTodas: 'Select all', desmarcarTodas: 'Clear selection', incluirLote: 'Match together', mesmaData: 'same amount and date',
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
     subtitle: 'Importa o extrato bancário (CSV ou Excel) e cruza-o com o Livro de Caixa.',
@@ -106,6 +108,7 @@ export default function Conciliacao() {
     semCategoria: '— sem categoria —', categoriaTitulo: 'Categoria do lançamento a criar', categoriaExtrato: 'Categoria no extrato',
     jaLigado: 'Este lançamento do Livro de Caixa já está ligado a outro movimento do banco. A lista foi atualizada — escolhe outro.',
     anexar: 'Anexar comprovativo', trocar: 'Trocar', retirar: 'Retirar', aEnviar: 'A enviar…', erroAnexo: 'Não foi possível enviar o comprovativo.', tipoAnexo: 'PDF, JPEG, PNG ou WebP até 10 MB.',
+    conciliarSel: 'Conciliar selecionados', aConciliar: 'A conciliar…', marcarTodas: 'Marcar todas', desmarcarTodas: 'Desmarcar todas', incluirLote: 'Conciliar em conjunto', mesmaData: 'mesmo valor e data',
   }
 
   const fmt = (v) => (Number(v) || 0).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -297,18 +300,34 @@ export default function Conciliacao() {
     setTxs(prev => prev.map(x => x.id === tx.id ? { ...x, comprovativo_path: null, comprovativo_nome: null } : x))
   }
 
-  // Concilia de uma vez tudo o que é inequívoco
-  async function conciliarAutomaticos() {
+  // Conciliação em lote (LUC-243): cada sugestão sem empate ganha uma caixa de
+  // seleção. Vêm já marcadas as de valor e data iguais (e as automáticas); a
+  // Lúcia desmarca o que não quer e confirma tudo de uma vez. As de empate
+  // ("há vários lançamentos iguais") ficam de fora: essas decide-as à mão.
+  const [selecao, setSelecao] = useState({})   // tx.id -> true/false escolhido à mão
+  const [emLote, setEmLote] = useState(false)
+  const sugestaoDe = (tx) => {
+    const s = sugestoes.get(tx.fingerprint)
+    const e = s ? entryById[s.entryId] : null
+    return s && e && !s.ambiguo ? { s, e } : null
+  }
+  const marcadoPorOmissao = (tx) => { const p = sugestaoDe(tx); return !!p && (p.s.automatico || p.e.entry_date === tx.tx_date) }
+  const estaMarcado = (tx) => !!sugestaoDe(tx) && (selecao[tx.id] ?? marcadoPorOmissao(tx))
+  async function conciliarSelecionados() {
     if (isViewing) { setErro(L.verComo); return }
-    const alvos = txs.filter(x => x.status === 'pendente')
-      .map(x => ({ tx: x, s: sugestoes.get(x.fingerprint) }))
-      .filter(({ s }) => s?.automatico)
-    for (const { tx, s } of alvos) await conciliarCom(tx, s.entryId)
+    const alvos = txs.filter(x => x.status === 'pendente' && estaMarcado(x)).map(x => ({ tx: x, entryId: sugestaoDe(x).e.id }))
+    setEmLote(true)
+    // Um a um: se um lançamento já estiver ligado noutro separador, só esse
+    // falha (com o aviso no próprio cartão) e os outros seguem.
+    for (const { tx, entryId } of alvos) await conciliarCom(tx, entryId)
+    setEmLote(false); setSelecao({})
   }
 
   const porStatus = (s) => txs.filter(x => x.status === s)
   const pendentes = porStatus('pendente')
-  const nAutomaticos = pendentes.filter(x => sugestoes.get(x.fingerprint)?.automatico).length
+  const nSelecionados = pendentes.filter(estaMarcado).length
+  const nSelecionaveis = pendentes.filter(x => !!sugestaoDe(x)).length
+  const marcarTodos = (v) => setSelecao(Object.fromEntries(pendentes.filter(x => !!sugestaoDe(x)).map(x => [x.id, v])))
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const btn = { padding: '6px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: 'none' }
@@ -405,11 +424,19 @@ export default function Conciliacao() {
                 background: aba === k ? t.softCardBg : 'transparent', color: aba === k ? t.accentText : t.textMuted,
               }}>{L[k]} ({n})</button>
             ))}
-            {aba === 'pendente' && nAutomaticos > 0 && (
-              <button onClick={conciliarAutomaticos} disabled={isViewing}
-                style={{ ...btn, marginLeft: 'auto', flex: 'none', whiteSpace: 'nowrap', padding: '8px 15px', fontSize: '12px', background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>
-                <IconRaio /> {L.conciliar} {nAutomaticos}
-              </button>
+            {aba === 'pendente' && nSelecionaveis > 0 && (
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: '7px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {!isViewing && (
+                  <button onClick={() => marcarTodos(nSelecionados < nSelecionaveis)}
+                    style={{ ...btn, minHeight: '44px', padding: '0 12px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, whiteSpace: 'nowrap' }}>
+                    {nSelecionados < nSelecionaveis ? L.marcarTodas : L.desmarcarTodas}
+                  </button>
+                )}
+                <button onClick={conciliarSelecionados} disabled={isViewing || emLote || !nSelecionados}
+                  style={{ ...btn, minHeight: '44px', flex: 'none', whiteSpace: 'nowrap', padding: '0 15px', fontSize: '12px', background: t.btnBg, color: t.btnInk, opacity: isViewing || emLote || !nSelecionados ? .55 : 1 }}>
+                  <IconRaio /> {emLote ? L.aConciliar : `${L.conciliarSel} (${nSelecionados})`}
+                </button>
+              </div>
             )}
           </div>
 
@@ -491,6 +518,13 @@ export default function Conciliacao() {
                             </div>
                             <div style={{ fontSize: '12.5px', color: t.text }}>{dataFmt(sug.entry_date)} · {sug.description} · {fmt(sug.amount)}</div>
                             {s.ambiguo && <div style={{ fontSize: '11px', color: t.dueSoon.ink, marginTop: '4px', fontWeight: 600 }}>⚠ {L.ambiguo}</div>}
+                            {!s.ambiguo && !isViewing && (
+                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '44px', marginTop: '2px', fontSize: '12.5px', fontWeight: 600, color: t.heading, cursor: 'pointer' }}>
+                                <input type="checkbox" checked={estaMarcado(tx)} onChange={e => setSelecao(p => ({ ...p, [tx.id]: e.target.checked }))}
+                                  style={{ width: '20px', height: '20px', accentColor: t.accent, cursor: 'pointer' }} />
+                                {L.incluirLote}{sug.entry_date === tx.tx_date ? ` · ${L.mesmaData}` : ''}
+                              </label>
+                            )}
                           </div>
                         )}
                         {tx.raw?.categoria && (
