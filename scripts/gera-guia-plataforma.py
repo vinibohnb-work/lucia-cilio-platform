@@ -27,11 +27,23 @@ from reportlab.lib.units import cm
 from reportlab.platypus import (BaseDocTemplate, Frame, Image, KeepTogether, NextPageTemplate, PageBreak,
                                 PageTemplate, Paragraph, Spacer, Table, TableStyle)
 
-VERSAO = "1.2"
-DATA = date(2026, 10, 1)
+VERSAO = "1.3"
+DATA = date(2026, 11, 8)
 
 # (data, o que mudou na plataforma, o que mudou neste guia) — mais recente primeiro
 REGISTO = [
+    ("07/11/2026", "Criar um acesso de cliente em Gestão de Acessos já liga a conta a uma ficha: escolhe-se uma ficha existente ou cria-se uma nova "
+     "com o mesmo nome (R-C1, em parte). Ligar a conta à ficha leva também o contrato da ficha, que passa a aparecer no Início do cliente (R-C8).",
+     "v1.3: Gestão de Acessos, Dados do cliente, Início, CRM e Estado da revisão. Prints de Acessos e Dados do cliente ainda anteriores."),
+    ("06/11/2026", "Serviço Marketing nas fichas (filtro, ficha e Novo cliente, que passa a aceitar vários serviços) e periodicidade \"Sem acompanhamento\" "
+     "para quem não tem Contabilidade. Os clientes com Marketing ganham o separador Marketing na ficha, só para a equipa (migração 055).",
+     "v1.3: Clientes, Dados do cliente."),
+    ("05/11/2026", "Consultoria: bloco 5 opcional de Marketing, fora do progresso e do relatório para o banco. Consultoria e Histórico avisa no ecrã "
+     "que o cliente vê o que lá se escreve (R-C5, em parte).",
+     "v1.3: Consultoria — ficha, Conta na plataforma."),
+    ("29/10/2026", "Categorias próprias por cliente (na ficha, para entradas e saídas); as entradas passam a ter categoria; comprovativo em cada movimento "
+     "da Conciliação; reuniões com hora e botão Google Calendar na Agenda e nas Tarefas (migração 053).",
+     "v1.3: Livro de Caixa, Conciliação, Agenda, Dados do cliente. Prints de Livro de Caixa, Conciliação e Agenda ainda anteriores."),
     ("07/11/2026", "A reserva de IR do Painel passa a usar só os lançamentos registados, como Reservas e EÜR: o mesmo ano dá a mesma reserva. "
      "As despesas recorrentes por confirmar continuam no cartão Custos fixos e no Resultado do ano, e uma linha na reserva diz quanto ficou de fora.",
      "Painel, legenda 6."),
@@ -274,10 +286,11 @@ S += ecra(K, "Clientes", "Menu Clientes · /gestao/clientes · administradora e 
      "Pode ser uma já vencida — fica a vermelho. Fonte: <i>fiscal_obligations</i>."),
     (2, "Atenção", "\"N doc. em falta\" = documentos em falta de qualquer ano; \"N tarefas em atraso\" = tarefas por fazer com prazo "
      "anterior a hoje; \"N mensagens\" = mensagens do cliente por ler. Sem nada disto: \"Tudo em dia\"."),
-    (3, "Serviço", "Um chip por cada serviço marcado na ficha (Contabilidade, ESG, Consultoria, Organização)."),
+    (3, "Serviço", "Um chip por cada serviço marcado na ficha (Contabilidade, ESG, Consultoria, Organização, Marketing). O filtro de cima usa a mesma lista."),
     (4, "Estado", "O estado da ficha (Ativo, Onboarding, Pausado, Inativo). É escolhido à mão; não depende da conta."),
     (5, "Responsável", "Quem da equipa acompanha o cliente (texto da ficha)."),
-    (6, "+ Novo cliente", "Cria a ficha com o perfil fiscal e gera logo o calendário fiscal do ano corrente. O responsável é quem a criou."),
+    (6, "+ Novo cliente", "Cria a ficha com um ou mais serviços. Com Contabilidade, pede forma e regime e gera logo o calendário fiscal do ano corrente; "
+     "sem Contabilidade, a periodicidade fica \"Sem acompanhamento\". O responsável é quem a criou."),
     (7, "Menu da Gestão", "Clientes · Serviços · Gestão. O número em Tarefas é o de tarefas em atraso (aparece depois de o portal abrir)."),
 ], ["\"Tudo em dia\" ignora obrigações em atraso — só a coluna Próxima obrigação fica a vermelho (R-B11).",
     "\"N mensagens\" está sempre a zero: o cliente ainda não responde pela plataforma (R-D5)."])
@@ -349,10 +362,15 @@ S += ecra(K, "Página do cliente — Dados do cliente", "Separador Dados do clie
           "O perfil do cliente, mantido pela equipa. É ele que decide o calendário fiscal.", "g-dados", [
     (1, "Identificação e contactos", "Nome, pessoa, setor, e-mail, telefone (usado no WhatsApp), estado."),
     (2, "Perfil fiscal", "País, forma jurídica, regime, periodicidade, software, trabalhadores. Mudar exige gerar o ano outra vez (não duplica)."),
-    (3, "Serviços contratados", "Decide o que se gera: sem Contabilidade, não há calendário fiscal nem relatórios trimestrais."),
+    (3, "Serviços contratados", "Decide o que se gera: sem Contabilidade, não há calendário fiscal nem relatórios trimestrais, e a periodicidade "
+     "passa a \"Sem acompanhamento\" (ligar a Contabilidade repõe \"trimestral\"). Com Marketing, aparece o separador Marketing 🔒 (feed, calendário, "
+     "lista e anotações deste cliente), só para a equipa: o cliente não o vê."),
     (4, "Gestão interna", "Responsável, horas incluídas por mês, cliente desde."),
     (5, "Avença", "Lida do contrato ativo do Financeiro ligado a esta ficha. Só leitura; muda-se no Financeiro. Só a administradora vê."),
-    (6, "Conta na plataforma", "Liga a ficha à conta do cliente. Ao ligar, as obrigações da conta aparecem aqui e as daqui passam a aparecer ao cliente."),
+    (6, "Conta na plataforma", "Liga a ficha à conta do cliente. Ao ligar, as obrigações da conta aparecem aqui, as daqui passam a aparecer ao cliente e o "
+     "contrato da ficha passa a ser também da conta (aparece no Início do cliente). Uma conta criada em Gestão de Acessos já pode nascer ligada."),
+    (7, "Categorias dos lançamentos", "Categorias próprias deste cliente, de entradas e de saídas (por exemplo dízimos, doações). Juntam-se às de base nos "
+     "seletores da conta dele: Livro de Caixa, Conciliação e Despesas Recorrentes. <i>Não aparece no print (anterior a 29/10).</i>"),
 ], ["Os campos gravam a cada tecla — dois pedidos seguidos podem chegar fora de ordem (R-B11).",
     "Trocar o país não limpa a forma jurídica e o regime (R-B11).",
     "O lado do cliente tem o seu próprio país e regime (Empresa); os dois não se sincronizam (R-C2)."])
@@ -376,7 +394,8 @@ S += ecra(K, "Página do cliente — Conta na plataforma", "Separador Conta na p
     (5, "Clientes", "Quantos clientes <b>do cliente</b> estão na lista dele (Contabilidade → Clientes)."),
     (6, "Lucro / limite (mês)", "Só Alemanha: lucro mensal real (média do ano) ÷ limite da Familienversicherung — a mesma regra do Painel e de Reservas. 🔴 acima, 🟡 a partir de 80%."),
     (7, "Onboarding", "Seis passos lidos do que existe: conta, dados da empresa, contrato anexado, mensagem enviada, primeiro acesso, primeiros documentos."),
-    (8, "Consultoria e Histórico", "Registos de reuniões, notas, recomendações e relatórios. <b>São visíveis ao cliente</b> na página Consultoria."),
+    (8, "Consultoria e Histórico", "Registos de reuniões, notas, recomendações e relatórios. <b>São visíveis ao cliente</b> na página Consultoria — o ecrã avisa: "
+     "\"O cliente vê o que escreves aqui\". O que é só da equipa vai para as Notas internas."),
 ], ["\"Conta ativa\" usa também o e-mail confirmado — e todas as contas nascem confirmadas, por isso aparecem sempre ativas (R-B11)."])
 
 S += ecra(K, "Agenda", "Menu Agenda · /gestao/agenda",
@@ -385,6 +404,9 @@ S += ecra(K, "Agenda", "Menu Agenda · /gestao/agenda",
     (2, "Filtros", "Cliente, país e responsável (nas obrigações, o responsável é o da ficha do cliente)."),
     (3, "Prazos fiscais", "Liga ou desliga as obrigações; \"Mostrar concluídas\" inclui o que já está fechado."),
     (4, "Legenda", "📅 prazo fiscal · ✓ tarefa · vermelho = em atraso (tarefa vencida ou obrigação em atraso pela data)."),
+    (5, "Reuniões", "No formulário escolhe-se Tarefa ou Reunião; a reunião tem dia, hora e duração, e a hora aparece antes do assunto. "
+     "\"Google Calendar ↗\" abre o calendário de quem clica com a reunião já preenchida (assunto, cliente, contactos, notas, hora de Lisboa): basta guardar. "
+     "<i>Não aparece no print (anterior a 29/10).</i>"),
 ])
 
 S += ecra(K, "Tarefas", "Menu Tarefas · /gestao/tarefas",
@@ -427,7 +449,8 @@ S += ecra(K, "Consultoria — ficha", "Consultorias → Abrir · /gestao/consult
     (4, "Relatório", "Gera o relatório com IA a partir do que está preenchido; o texto editado à mão sobrepõe-se ao da IA."),
 ], ["Números do plano (lib/consultoriaCalc): retirada privada = despesas − rendimentos (mín. 0), ×12 no ano; necessidade de capital = "
     "investimentos + constituição + reserva (reserva = custos do ano 1 ÷ 12 × meses); lucro por ano = receitas − custos; liquidez = saldo acumulado mês a mês.",
-    "Grava sozinha 0,7 s depois da última alteração, juntando tudo o que mudou, e ao sair da página. Lê números como se escrevem (\"1.500\", \"1.500,50\")."])
+    "Grava sozinha 0,7 s depois da última alteração, juntando tudo o que mudou, e ao sair da página. Lê números como se escrevem (\"1.500\", \"1.500,50\").",
+    "Bloco 5 · Marketing (opcional, desde 05/11): perguntas de diagnóstico de marketing. Não conta para o progresso nem para o bloco atual e fica fora do relatório para o banco."])
 
 S += ecra(K, "Diagnósticos", "Menu Diagnósticos · /gestao/diagnosticos · administradora e comercial",
           "As respostas do formulário público /diagnostico. A triagem decide o que sobe ao CRM.", "g-diagnosticos", [
@@ -448,7 +471,7 @@ S += ecra(K, "Prospeção (CRM)", "Menu Prospeção (CRM) · /gestao/crm · admi
      "arquitetura, indústria: 20), dor preenchida (15). Verde a partir de 70; os cartões ordenam-se por ela."),
     (4, "⏱ há N dias", "Dias desde o último contacto registado (\"✓ Registar contacto\")."),
     (5, "+1 tentativa", "Conta tentativas na etapa Em abordagem."),
-], ["Em Fechado, \"Criar contrato\" e \"Criar acesso\" não criam a ficha do cliente na Gestão (R-C1).",
+], ["Em Fechado, \"Criar acesso\" leva a Gestão de Acessos, onde a conta nasce ligada a uma ficha (nova ou existente). \"Criar contrato\" sozinho ainda não cria a ficha (R-C1, em parte).",
     "Leads vindos do diagnóstico perdem a origem quando são editados (R-B11)."], altura_max=10 * cm)
 
 S += ecra(K, "Financeiro", "Menu Financeiro · /gestao/financeiro · só administradora",
@@ -469,7 +492,10 @@ S += ecra(K, "Gestão de Acessos", "Menu Gestão de Acessos · /gestao/acessos �
     (2, "Perfil", "Cliente, Administradora, Comercial ou Marketing."),
     (3, "Último acesso", "Sem acesso aparece \"pendente\"."),
     (4, "+ Novo Utilizador", "Cria a conta com palavra-passe temporária (obrigatório mudar no primeiro acesso). País e serviço vão para os dados da empresa."),
-], ["Criar uma conta não cria a ficha do cliente na Gestão — liga-se depois em Dados do cliente (R-C1).",
+    (5, "Ficha do cliente", "Só ao criar a conta de um cliente: \"+ Criar ficha nova com este nome\" (ficha em Onboarding, com os serviços da plataforma "
+     "escolhida), uma ficha que já existe, ou \"Sem ficha (só a conta)\". Ao ligar, as obrigações e o contrato da ficha passam para a conta, como em Dados do cliente. "
+     "<i>Não aparece no print (anterior a 07/11).</i>"),
+], ["Escolher \"Sem ficha\" deixa a conta solta: liga-se depois em Dados do cliente → Conta na plataforma.",
     "Os rótulos \"Comercial (só CRM)\" e \"Marketing (só Marketing)\" estão desatualizados (R-A4)."], altura_max=7 * cm)
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -580,7 +606,7 @@ S += ecra(K, "Início", "Menu Início · /contabilidade/inicio · a página de e
     (3, "Próximo pagamento", "O contrato ativo da conta (Financeiro): o primeiro mês devido sem pagamento registado, até 24 meses à frente."),
     (4, "Documentos deste mês", "Atalho para enviar documentos (Empresa)."),
     (5, "Menu do cliente", "Contabilidade e Gestão; na Alemanha também Reservas e EÜR."),
-], ["O contrato é procurado pela conta; um contrato ligado só à ficha da Gestão não aparece (R-C8)."])
+], ["O contrato é procurado pela conta. Desde 07/11, ligar a conta à ficha (em Dados do cliente ou ao criar o acesso) passa-lhe o contrato da ficha (R-C8)."])
 
 S += ecra(K, "Painel", "Menu Painel · /contabilidade/dashboard",
           "Como está o negócio: entradas, saídas, resultado, IVA, reserva e break-even. Anual ou por trimestre.", "c-painel", [
@@ -613,7 +639,9 @@ S += ecra(K, "Livro de Caixa", "Menu Livro de Caixa · /contabilidade/caixa",
     (5, "Em Caixa", "Saldo dos movimentos com destino Caixa."),
     (6, "No Banco", "Saldo dos movimentos com destino Banco."),
 ], ["Valor sempre bruto; o IVA de cada linha = valor × taxa ÷ (100 + taxa).",
-    "Filtra-se por ano (o corrente por omissão, ou todos) e por mês dentro do ano."])
+    "Filtra-se por ano (o corrente por omissão, ou todos) e por mês dentro do ano.",
+    "Desde 29/10 as entradas também têm categoria (serviços, vendas, subsídios, outras receitas), e a equipa pode dar a cada cliente categorias próprias "
+    "(Dados do cliente). O EÜR mostra-as pelo nome; o Painel conta as próprias de saída como custo fixo, como as sem categoria."])
 
 S += ecra(K, "Conciliação", "Menu Conciliação · /contabilidade/conciliacao",
           "Importa o extrato bancário e cruza-o com o Livro de Caixa.", "c-conciliacao", [
@@ -624,7 +652,9 @@ S += ecra(K, "Conciliação", "Menu Conciliação · /contabilidade/conciliacao"
     (4, "Não constam do extrato", "Lançamentos de banco sem par no extrato."),
     (5, "Criar lançamento", "Cria a linha no Livro de Caixa a partir do extrato."),
 ], ["\"Não constam do extrato\" conta lançamentos de todas as datas, mesmo fora do período importado (R-B11).",
-    "\"Criar lançamento\" pede a taxa de IVA (por omissão a da empresa); a categoria escolhe-se depois no Livro de Caixa."], altura_max=9.5 * cm)
+    "\"Criar lançamento\" pede a taxa de IVA (por omissão a da empresa) e a categoria (de entrada ou de saída, incluindo as próprias do cliente).",
+    "Cada movimento pode ter o seu comprovativo: anexar, abrir, trocar ou retirar. Fica na pasta privada do cliente; retirar só desliga o ficheiro (o cliente não apaga documentos). "
+    "<i>No print ainda não aparece.</i>"], altura_max=9.5 * cm)
 
 S += ecra(K, "Despesas Recorrentes", "Menu Despesas Recorrentes · /contabilidade/recorrentes",
           "Os custos fixos do mês: define-se o modelo e confirma-se o valor real em cada mês.", "c-recorrentes", [
@@ -835,7 +865,10 @@ S.append(P("<b>Fase 1 feita a 01/10</b> (com a migração 038): R-A1, R-A2, R-A3
            "R-C3 · R-D1, R-D2, R-D3, R-D8, R-D9. Do R-B5 ficou feito: custos fixos só até ao mês corrente e o nome \"Resultado após reserva\"."))
 S.append(P("<b>À espera de decisão da Lúcia:</b> papéis da equipa (R-A4); reserva sobre o resultado com ou sem IVA e o \"Total\" de Reservas (resto do R-B5); "
            "Calculadora de Preços (R-B7, sessão combinada a 01/10); retirar ou não Contabilidade → Clientes (R-D7). O Marketing (R-D6) já não sai: vai ter a prévia do Instagram (reunião de 01/10)."))
-S.append(P("<b>Ainda em aberto, sem decisão pendente:</b> R-A5, R-B10, R-B11 (pacotes de acertos da ESG e do portal), a Fase 2 (R-C1, R-C2, R-C4 a R-C8) e a Fase 3."))
+S.append(P("<b>Feito até 07/11:</b> R-C8 (ligar a conta à ficha leva o contrato); R-C1 em parte (criar um acesso liga ou cria a ficha; o contrato "
+           "criado no CRM ainda não); R-C5 em parte (Consultoria e Histórico diz no ecrã que o cliente vê); R-D6 (o Marketing tem conteúdo: o da LC Office e, "
+           "por cliente com o serviço, um separador só da equipa)."))
+S.append(P("<b>Ainda em aberto, sem decisão pendente:</b> R-A5, R-B10, R-B11 (pacotes de acertos da ESG e do portal), o resto da Fase 2 (R-C1, R-C2, R-C4 a R-C7) e a Fase 3."))
 S += [PageBreak(), P("REVISÃO GERAL", kicker), P("Proposta de simplificação", h1)]
 S.append(P("Em três fases, da mais urgente para a mais estrutural. As duas primeiras cabem antes do fecho do contrato (novembro)."))
 S.append(P("Fase 1 · Acertos sem mudar o modelo (2 a 3 semanas)", h2))

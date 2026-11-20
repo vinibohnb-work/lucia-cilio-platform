@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { IconFicheiro, IconRaio } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
@@ -50,7 +51,9 @@ export default function Conciliacao() {
   const taxaEmpresa = settings ? (settings.vat_regime === 'exempt' ? 0 : Number(settings.vat_default_rate) || 0) : 0
   const vatOptions = [...(VAT_RATES[settings?.country] || VAT_RATES.PT), 0]
   const [aviso, setAviso] = useState('')
-  const [aba, setAba] = useState('pendente')
+  // ?aba=conciliado (vindo da marca "Ligado ao banco" do Livro de Caixa) abre já na aba certa (QA Nina 18/11)
+  const [searchParams] = useSearchParams()
+  const [aba, setAba] = useState(() => { const a = searchParams.get('aba'); return ['pendente', 'conciliado', 'ignorado', 'semExtrato'].includes(a) ? a : 'pendente' })
 
   const L = lang === 'de' ? {
     eyebrow: 'Buchhaltung', title: 'Abstimmung Kasse/Bank',
@@ -67,6 +70,7 @@ export default function Conciliacao() {
     importados: 'Importierte Kontoauszüge', abrirFicheiro: 'Öffnen', semFicheiro: 'ohne Datei',
     verComo: 'Im Ansichtsmodus nicht möglich.',
     semCategoria: '— ohne Kategorie —', categoriaTitulo: 'Kategorie der neuen Buchung', categoriaExtrato: 'Kategorie im Auszug',
+    jaLigado: 'Diese Kassenbuchung ist bereits mit einer anderen Bankbewegung verknüpft. Die Liste wurde aktualisiert — bitte eine andere wählen.',
     anexar: 'Beleg anhängen', trocar: 'Ersetzen', retirar: 'Entfernen', aEnviar: 'Wird hochgeladen…', erroAnexo: 'Beleg konnte nicht hochgeladen werden.', tipoAnexo: 'PDF, JPEG, PNG oder WebP bis 10 MB.',
   } : lang === 'en' ? {
     eyebrow: 'Accounting', title: 'Cash/bank reconciliation',
@@ -83,6 +87,7 @@ export default function Conciliacao() {
     importados: 'Imported statements', abrirFicheiro: 'Open', semFicheiro: 'no file',
     verComo: 'Not available in view-as mode.',
     semCategoria: '— no category —', categoriaTitulo: 'Category of the new entry', categoriaExtrato: 'Category in the statement',
+    jaLigado: 'This cash book entry is already linked to another bank movement. The list was refreshed — please pick another one.',
     anexar: 'Attach receipt', trocar: 'Replace', retirar: 'Remove', aEnviar: 'Uploading…', erroAnexo: 'Could not upload the receipt.', tipoAnexo: 'PDF, JPEG, PNG or WebP up to 10 MB.',
   } : {
     eyebrow: 'Contabilidade', title: 'Conciliação caixa/banco',
@@ -99,6 +104,7 @@ export default function Conciliacao() {
     verComo: 'Não disponível no modo "ver como".',
     importados: 'Extratos importados', abrirFicheiro: 'Abrir', semFicheiro: 'sem ficheiro',
     semCategoria: '— sem categoria —', categoriaTitulo: 'Categoria do lançamento a criar', categoriaExtrato: 'Categoria no extrato',
+    jaLigado: 'Este lançamento do Livro de Caixa já está ligado a outro movimento do banco. A lista foi atualizada — escolhe outro.',
     anexar: 'Anexar comprovativo', trocar: 'Trocar', retirar: 'Retirar', aEnviar: 'A enviar…', erroAnexo: 'Não foi possível enviar o comprovativo.', tipoAnexo: 'PDF, JPEG, PNG ou WebP até 10 MB.',
   }
 
@@ -132,6 +138,27 @@ export default function Conciliacao() {
   }, [txs, entries, importacoes])
 
   const entryById = useMemo(() => Object.fromEntries(entries.map(e => [e.id, e])), [entries])
+
+  // Escolha à mão (29/10): para um movimento sem par, os lançamentos do caixa
+  // ainda livres do mesmo tipo. Primeiro os de valor igual com data a até 45
+  // dias (os candidatos), depois os outros, por proximidade de data.
+  // O índice único da 030 garante que um lançamento só liga a um movimento.
+  const [escolhas, setEscolhas] = useState({})   // tx.id -> cash_entry id escolhido à mão
+  const [erroTx, setErroTx] = useState({})       // tx.id -> mensagem de erro do "Ligar"/"Conciliar", mostrada no card
+  const livresPorTipo = useMemo(() => {
+    const usados = new Set(txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id))
+    const r = { entrada: [], saida: [] }
+    for (const e of entries) if (!usados.has(e.id) && r[e.type]) r[e.type].push(e)
+    return r
+  }, [txs, entries])
+  const candidatosDe = (tx) => {
+    const dias = (e) => Math.abs((new Date(e.entry_date) - new Date(tx.tx_date)) / 86400000)
+    const igual = (e) => Math.abs(Number(e.amount) - Number(tx.amount)) < 0.005
+    const todos = [...(livresPorTipo[tx.type] || [])].sort((a, b) => dias(a) - dias(b))
+    const candidatos = todos.filter(e => igual(e) && dias(e) <= 45)
+    const ids = new Set(candidatos.map(e => e.id))
+    return { candidatos, outros: todos.filter(e => !ids.has(e.id)) }
+  }
 
   // ── Ler o ficheiro (no browser; nada sobe sem ela confirmar) ──
   async function lerFicheiro(file) {
@@ -218,9 +245,16 @@ export default function Conciliacao() {
   // ── Ações sobre um movimento ──
   async function conciliarCom(tx, entryId) {
     if (isViewing) return
+    setErro(''); setErroTx(p => { if (!p[tx.id]) return p; const n = { ...p }; delete n[tx.id]; return n })
     setTxs(prev => prev.map(x => x.id === tx.id ? { ...x, status: 'conciliado', cash_entry_id: entryId } : x))
     const { error } = await supabase.from('bank_transactions')
       .update({ status: 'conciliado', cash_entry_id: entryId, matched_at: new Date().toISOString() }).eq('id', tx.id)
+      // 23505 = índice único uq_bank_tx_one_entry (030): o lançamento já está ligado a outro
+      // movimento (ex.: noutro separador). O banco recusa; a tela explica e recarrega (B1).
+      .then(r => (r.error?.code === '23505' ? { ...r, error: { ...r.error, message: L.jaLigado } } : r))
+    // B2 do QA: a mensagem fica no próprio card (no telemóvel o topo não se vê);
+    // B1: a escolha à mão é limpa, para o "Ligar" não repetir o mesmo erro.
+    if (error) { setErroTx(p => ({ ...p, [tx.id]: error.message })); setEscolhas(p => { const n = { ...p }; delete n[tx.id]; return n }); load(); return }
     if (error) { setErro(error.message); load() }
   }
   async function marcar(tx, status) {
@@ -278,6 +312,9 @@ export default function Conciliacao() {
 
   const card = { background: t.cardBg, border: `1px solid ${t.cardBorder}`, boxShadow: t.cardShadow, borderRadius: '14px' }
   const btn = { padding: '6px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', border: 'none' }
+  // Ações do movimento pendente: área de toque de 44px; seletores com 16px para o iPhone não dar zoom (QA Nina 18/11)
+  const btnToque = { ...btn, minHeight: '44px', padding: '0 14px' }
+  const selToque = { ...btnToque, fontSize: '16px', fontWeight: 600 }
 
   if (loading) return <EsqueletoPagina />
 
@@ -412,6 +449,10 @@ export default function Conciliacao() {
                       </span>
                     </div>
 
+                    {erroTx[tx.id] && (
+                      <div role="alert" style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '9px', padding: '9px 11px', fontSize: '12.5px', fontWeight: 600, marginTop: '8px' }}>{erroTx[tx.id]}</div>
+                    )}
+
                     {/* Comprovativo do movimento (29/10) */}
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginTop: '6px' }}>
                       {tx.comprovativo_path ? (
@@ -436,7 +477,7 @@ export default function Conciliacao() {
                     {tx.status === 'conciliado' && (
                       <div style={{ display: 'flex', gap: '9px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${t.rowBorder || t.cardBorder}` }}>
                         <span style={{ fontSize: '11.5px', color: t.dueOk.ink, fontWeight: 700 }}>✓ {ligado ? `${dataFmt(ligado.entry_date)} · ${ligado.description}` : '—'}</span>
-                        {!isViewing && <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, marginLeft: 'auto', background: 'none', color: t.subtle, textDecoration: 'underline', padding: 0 }}>{L.desfazer}</button>}
+                        {!isViewing && <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, marginLeft: 'auto', minHeight: '36px', padding: '0 14px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted }}>{L.desfazer}</button>}
                       </div>
                     )}
 
@@ -455,29 +496,56 @@ export default function Conciliacao() {
                         {tx.raw?.categoria && (
                           <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '7px' }}>{L.categoriaExtrato}: {tx.raw.categoria}</div>
                         )}
+                        {(() => {
+                          const { candidatos, outros } = candidatosDe(tx)
+                          if (!candidatos.length && !outros.length) return null
+                          const LM = lang === 'de'
+                            ? { rot: 'Kassenbuchung selbst wählen', esc: '— Buchung wählen —', cand: 'Gleicher Betrag, nahes Datum', outros: 'Andere offene Buchungen', ligar: 'Verknüpfen', nenhum: 'Keine Buchung mit gleichem Betrag — wähle aus den anderen oder lege eine neue an.' }
+                            : lang === 'en'
+                              ? { rot: 'Pick the cash book entry yourself', esc: '— choose an entry —', cand: 'Same amount, close date', outros: 'Other open entries', ligar: 'Link', nenhum: 'No entry with the same amount — pick from the others or create a new one.' }
+                              : { rot: 'Escolher o lançamento do Livro de Caixa', esc: '— escolher lançamento —', cand: 'Mesmo valor, data próxima', outros: 'Outros lançamentos sem par', ligar: 'Ligar', nenhum: 'Nenhum lançamento com o mesmo valor — escolhe entre os outros ou cria um novo.' }
+                          const opcao = (e) => <option key={e.id} value={e.id}>{dataFmt(e.entry_date)} · {e.description} · {fmt(e.amount)}</option>
+                          const escolhido = escolhas[tx.id] && (livresPorTipo[tx.type] || []).some(e => e.id === escolhas[tx.id]) ? escolhas[tx.id] : ''
+                          return (
+                            <div style={{ marginBottom: '8px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: t.textMuted, marginBottom: '4px' }}>{LM.rot}</div>
+                              <div style={{ display: 'flex', gap: '7px', flexWrap: 'nowrap', alignItems: 'center' }}>
+                                <select value={escolhido} onChange={e => setEscolhas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label={LM.rot}
+                                  style={{ ...btn, fontSize: '16px', fontWeight: 600, flex: '1 1 0', minWidth: 0, minHeight: '44px', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                                  <option value="">{LM.esc}</option>
+                                  {!!candidatos.length && <optgroup label={LM.cand}>{candidatos.map(opcao)}</optgroup>}
+                                  {!!outros.length && <optgroup label={LM.outros}>{outros.map(opcao)}</optgroup>}
+                                </select>
+                                <button onClick={() => conciliarCom(tx, escolhido)} disabled={isViewing || !escolhido}
+                                  style={{ ...btn, flex: 'none', minHeight: '44px', padding: '0 16px', background: t.btnBg, color: t.btnInk, opacity: isViewing || !escolhido ? .55 : 1 }}>{LM.ligar}</button>
+                              </div>
+                              {!candidatos.length && <div style={{ fontSize: '11px', color: t.subtle, marginTop: '4px' }}>{LM.nenhum}</div>}
+                            </div>
+                          )
+                        })()}
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap' }}>
-                          {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btn, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
+                          {sug && <button onClick={() => conciliarCom(tx, sug.id)} disabled={isViewing} style={{ ...btnToque, background: t.btnBg, color: t.btnInk, opacity: isViewing ? .55 : 1 }}>{L.conciliar}</button>}
                           <select value={taxas[tx.id] ?? taxaEmpresa} onChange={e => setTaxas(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing} aria-label="IVA"
                             title={lang === 'de' ? 'USt für die neue Buchung' : lang === 'en' ? 'VAT for the new entry' : 'IVA do lançamento a criar'}
-                            style={{ ...btn, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                            style={{ ...selToque, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                             {vatOptions.map(r => <option key={r} value={r}>{(lang === 'de' ? 'USt ' : lang === 'en' ? 'VAT ' : 'IVA ') + r + '%'}</option>)}
                           </select>
                           <select value={categoriaDe(tx)} onChange={e => setCategorias(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing}
                             aria-label={L.categoriaTitulo}
                             title={tx.raw?.categoria ? `${L.categoriaExtrato}: ${tx.raw.categoria}` : L.categoriaTitulo}
-                            style={{ ...btn, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                            style={{ ...selToque, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                             <option value="">{L.semCategoria}</option>
                             {opcoesCategorias(tx.type, extras, lang).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </select>
-                          <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btn, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
-                          <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btn, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
+                          <button onClick={() => criarLancamento(tx)} disabled={isViewing} style={{ ...btnToque, background: t.segBg, border: `1px solid ${t.segBorder}`, color: t.heading, opacity: isViewing ? .55 : 1 }}>{L.criar}</button>
+                          <button onClick={() => marcar(tx, 'ignorado')} disabled={isViewing} style={{ ...btnToque, background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted, opacity: isViewing ? .55 : 1 }}>{L.ignorar}</button>
                         </div>
                       </div>
                     )}
 
                     {tx.status === 'ignorado' && !isViewing && (
                       <div style={{ marginTop: '7px' }}>
-                        <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, background: 'none', color: t.subtle, textDecoration: 'underline', padding: 0 }}>{L.desfazer}</button>
+                        <button onClick={() => marcar(tx, 'pendente')} style={{ ...btn, minHeight: '36px', padding: '0 14px', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.textMuted }}>{L.desfazer}</button>
                       </div>
                     )}
                   </div>
