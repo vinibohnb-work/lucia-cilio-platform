@@ -6,6 +6,8 @@ import { supabase } from './supabase'
 export const BUCKET_PAGINA = 'eventos-pagina'
 const SITE = typeof window !== 'undefined' && window.location.hostname.endsWith('lcoffice.pt') ? 'https://lcoffice.pt' : (typeof window !== 'undefined' ? window.location.origin : '')
 export const linkPagina = (id) => `${SITE}/momentos/?e=${encodeURIComponent(id)}`
+// Para o WhatsApp e as redes: mostra o título, a data e a imagem desta edição (api/momentos-partilha.js)
+export const linkPartilha = (id) => `${SITE}/momentos/e/${encodeURIComponent(id)}`
 
 export const PAGINA_VAZIA = {
   hora_inicio: '15:00', hora_fim: '19:30', rececao: '', tema_1: '', tema_2: '',

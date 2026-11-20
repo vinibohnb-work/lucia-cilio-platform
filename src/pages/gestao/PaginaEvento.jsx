@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { Cartao, Botao, Chip, useCampos } from '../../portal/ui'
-import { BUCKET_PAGINA, PAGINA_VAZIA, caminhoNoBucket, linkPagina } from '../../lib/paginaEvento'
+import { BUCKET_PAGINA, PAGINA_VAZIA, caminhoNoBucket, linkPagina, linkPartilha } from '../../lib/paginaEvento'
 
 // Página do evento (LUC-242, migração 065). A Lúcia perguntou a 29/10 "como é que eu vou
 // fazer para mudar os palestrantes?": aqui ela escreve o conteúdo da landing de cada edição
@@ -187,6 +187,13 @@ export default function PaginaEvento({ evento, avisar, aoMudar, aoDuplicar }) {
 
       <h3 style={subtitulo}>Partilha (WhatsApp, redes)</h3>
       {fotoCampo(p.og_imagem, 'og', (url) => muda('og_imagem', url), 'Imagem de partilha (horizontal, 1200×630)')}
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginTop: '10px', fontSize: '13px', color: t.textMuted }}>
+        <span>Para partilhar no WhatsApp use este link: a pré-visualização mostra o título, a data e a imagem desta edição.</span>
+        <Botao onClick={async () => {
+          try { await navigator.clipboard.writeText(linkPartilha(evento.id)); avisar('ok', 'Link de partilha copiado.') }
+          catch { window.prompt('Copie o link:', linkPartilha(evento.id)) }
+        }}>Copiar link de partilha</Botao>
+      </div>
 
       <div style={{ marginTop: '18px', padding: '12px 0 0', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', borderTop: `1px solid ${t.cardBorder}` }}>
         <Botao variante="primario" onClick={guardar} disabled={aGravar || !sujo}>{aGravar ? 'A guardar…' : 'Guardar página'}</Botao>
