@@ -448,7 +448,8 @@ function TratamentoCalculator({ lang, irDefault, settings }) {
   const [currentPrice, setCurrentPrice] = useState(75)
   const [reserveBasis, setReserveBasis] = useState('gewinn')
 
-  const vatRegime = settings?.vat_regime || 'exempt'
+  // Mesma regra das Reservas, do Painel e do EÜR: só 'exempt' é isento; vazio = regime normal.
+  const vatRegime = settings?.vat_regime === 'exempt' ? 'exempt' : 'normal'
   const vatPct = Number(settings?.vat_default_rate) || (isDE ? 19 : 23)
   const r = computeTreatment({ minutePrice, durationMin, material, monthlyFixed, productiveHours, profitPct, reservePct, vatPct, vatRegime, currentPrice, reserveBasis })
 
