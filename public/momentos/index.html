@@ -311,6 +311,7 @@ footer img { height: 44px; width: auto; margin-bottom: 12px }
 footer a { color: var(--cream-3); text-decoration: none; font-weight: 600 }
 footer a:hover { color: var(--gold-2) }
 footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
+.a-carregar main { visibility: hidden } /* LUC-242: até o conteúdo da edição chegar (máx. 2,5 s) */
 .so-leitores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
 </style>
 </head>
@@ -607,6 +608,153 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
   </div>
 </footer>
 
+<script>
+// Página por edição (LUC-242, migração 065): o conteúdo vem de Gestão → Eventos → Página do evento.
+// lcoffice.pt/momentos/ mostra a edição marcada como atual; lcoffice.pt/momentos/?e=<id> mostra
+// aquela edição. O HTML acima fica como reserva (a edição de 24/10) se o servidor não responder.
+// Tudo entra por textContent/atributos: nada do que a Lúcia escreve é interpretado como HTML.
+window.paginaPronta = (async () => {
+  const raiz = document.documentElement
+  raiz.classList.add('a-carregar')
+  const mostrar = () => raiz.classList.remove('a-carregar')
+  const prazo = setTimeout(mostrar, 2500)
+  const pedido = new URLSearchParams(location.search).get('e') || ''
+  let dados = null
+  try {
+    const r = await fetch('/api/evento?pagina=' + encodeURIComponent(pedido), { cache: 'no-store' })
+    if (r.ok) dados = await r.json()
+  } catch { /* sem rede: fica o conteúdo de reserva */ }
+  try { if (dados && dados.pagina) aplicar(dados.evento, dados.pagina) } catch (e) { console.error('pagina', e) }
+  clearTimeout(prazo); mostrar()
+  return dados
+
+  function el (tag, props = {}, filhos = []) {
+    const n = document.createElement(tag)
+    for (const [k, v] of Object.entries(props)) {
+      if (v == null || v === false) continue
+      if (k === 'texto') n.textContent = v
+      else if (k === 'classe') n.className = v
+      else n.setAttribute(k, v)
+    }
+    for (const f of [].concat(filhos)) if (f) n.append(f)
+    return n
+  }
+  function ico (id, estilo) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    s.setAttribute('class', 'ico'); if (estilo) s.setAttribute('style', estilo)
+    const u = document.createElementNS('http://www.w3.org/2000/svg', 'use'); u.setAttribute('href', '#' + id); s.append(u)
+    return s
+  }
+  const txt = (v) => (typeof v === 'string' ? v.trim() : '')
+  const lista = (v) => (Array.isArray(v) ? v : [])
+  const imagem = (v) => { const s = txt(v); return /^\/momentos\//.test(s) || /^https:\/\//.test(s) ? s : '' }
+  const ligacao = (v) => { const s = txt(v); return /^https:\/\//.test(s) ? s : '' }
+  const insta = (v) => { const s = txt(v).replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').split(/[/?#]/)[0]; return /^[A-Za-z0-9._]{1,30}$/.test(s) ? s : '' }
+  const hora = (v) => txt(v).replace(':', 'h')
+  const set = (sel, v) => { const n = document.querySelector(sel); if (n && v) n.textContent = v }
+
+  function aplicar (ev, p) {
+    const id = ev.id
+    const data = ev.data ? new Date(ev.data + 'T12:00:00Z') : null
+    const dataLonga = data ? data.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : ''
+    const diaMes = data ? data.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', timeZone: 'UTC' }) : ''
+    let semana = data ? data.toLocaleDateString('pt-PT', { weekday: 'long', timeZone: 'UTC' }) : ''
+    semana = semana.charAt(0).toUpperCase() + semana.slice(1)
+    const ini = hora(p.hora_inicio), fim = hora(p.hora_fim)
+    const local = txt(p.local_nome) || txt(ev.local)
+    const cidade = txt(p.local_cidade)
+    const luma = ligacao(p.luma_url)
+    const preco = txt(p.preco)
+    const pessoas = lista(p.palestrantes).filter(x => txt(x && x.nome))
+
+    // Partilha e título (para o navegador; a pré-visualização do WhatsApp vem do servidor)
+    const titulo = `${ev.nome}${diaMes ? ' · ' + diaMes : ''}${cidade ? ', ' + cidade : ''}`
+    document.title = ev.nome
+    for (const sel of ['meta[property="og:title"]', 'meta[name="twitter:title"]']) document.querySelector(sel)?.setAttribute('content', titulo)
+    const og = imagem(p.og_imagem)
+    if (og) for (const sel of ['meta[property="og:image"]', 'meta[name="twitter:image"]']) document.querySelector(sel)?.setAttribute('content', new URL(og, location.origin).href)
+
+    // Topo e hero
+    document.querySelectorAll('[data-area-evento]').forEach(a => { a.dataset.areaEvento = id })
+    document.querySelectorAll('[data-feedback-evento]').forEach(a => { a.dataset.feedbackEvento = id })
+    document.querySelectorAll('a[href^="/feedback/"]').forEach(a => { a.href = '/feedback/#e=' + encodeURIComponent(id) })
+    document.querySelectorAll('a[href*="luma.com"]').forEach(a => { if (luma) a.href = luma; else a.hidden = true })
+    set('.hero .pill', ev.nome)
+    const h1 = document.getElementById('h-hero')
+    if (h1 && (txt(p.tema_1) || txt(p.tema_2))) h1.replaceChildren(el('span', { classe: 'linha', texto: txt(p.tema_1) }), el('span', { classe: 'gold', texto: txt(p.tema_2) }))
+    const factos = document.querySelectorAll('.hero .fact')
+    const facto = (i, b, s) => { const f = factos[i]; if (!f) return; f.querySelector('b').textContent = b; f.querySelector('small').textContent = s }
+    if (dataLonga) facto(0, dataLonga, semana)
+    if (ini) facto(1, fim ? `${ini} – ${fim}` : ini, txt(p.rececao))
+    if (local) facto(2, local, cidade)
+    const cta = document.querySelector('.hero .cta-row .btn')
+    if (cta) cta.replaceChildren(ico('i-ticket'), preco ? `Garantir o meu lugar · ${preco}` : 'Garantir o meu lugar')
+
+    // Mosaico: a primeira pessoa grande, até seis
+    const mosaico = document.querySelector('.mosaic')
+    if (mosaico && pessoas.length) mosaico.replaceChildren(...pessoas.slice(0, 6).map((x, i) => {
+      const foto = imagem(x.foto)
+      const tag = el('figcaption', { classe: 'tag', texto: i === 0 ? txt(x.nome) : (txt(x.curto) || txt(x.nome)) })
+      if (i === 0 && txt(x.area)) tag.append(' ', el('span', { texto: txt(x.area) }))
+      return el('figure', { classe: i === 0 ? 'big' : null }, [foto && el('img', { src: foto, alt: txt(x.nome), width: 560, height: 700, loading: i === 0 ? 'eager' : null }), tag])
+    }))
+
+    // Programa
+    set('#programa .sec-head p', txt(p.programa_resumo))
+    const agenda = document.querySelector('.agenda')
+    const itens = lista(p.programa).filter(x => txt(x && x.titulo))
+    if (agenda && itens.length) agenda.replaceChildren(...itens.map(x => el('li', {}, [
+      el('span', { classe: 'h', texto: txt(x.hora) }),
+      el('div', { classe: 'c' }, [txt(x.tipo) && el('span', { classe: 'tipo', texto: txt(x.tipo) }), el('span', { classe: 'o', texto: txt(x.titulo) }), txt(x.quem) && el('span', { classe: 'q', texto: txt(x.quem) })]),
+    ])))
+
+    // Oradores
+    set('#h-oradores', txt(p.oradores_titulo))
+    const grelha = document.querySelector('.oradores-grid')
+    if (grelha && pessoas.length) grelha.replaceChildren(...pessoas.map(x => {
+      const foto = imagem(x.foto), ig = insta(x.instagram)
+      return el('article', { classe: 'orador' }, [
+        el('figure', {}, [foto && el('img', { src: foto, alt: txt(x.nome), width: 560, height: 700, loading: 'lazy' }), txt(x.selo) && el('span', { classe: 'pill pill-gold badge', texto: txt(x.selo) })]),
+        el('div', { classe: 'body' }, [
+          txt(x.area) && el('span', { classe: 'area', texto: txt(x.area) }),
+          el('h3', { texto: txt(x.nome) }),
+          txt(x.texto) && el('p', { texto: txt(x.texto) }),
+          lista(x.topicos).filter(t => txt(t)).length ? el('ul', {}, lista(x.topicos).filter(t => txt(t)).map(t => el('li', { texto: txt(t) }))) : null,
+          ig && el('a', { classe: 'ig', href: `https://www.instagram.com/${ig}/`, target: '_blank', rel: 'noopener' }, [ico('i-ig', 'width:16px;height:16px'), '@' + ig]),
+        ]),
+      ])
+    }))
+    if (!pessoas.length) document.getElementById('oradores')?.setAttribute('hidden', '')
+
+    // Bilhete e local
+    const precoB = document.querySelector('.ticket .preco b')
+    if (precoB) { if (preco) precoB.textContent = preco; else precoB.closest('.preco').hidden = true }
+    const inclui = document.querySelector('.ticket .inclui')
+    const incluiItens = lista(p.inclui).filter(t => txt(t))
+    if (inclui && incluiItens.length) inclui.replaceChildren(...incluiItens.map(t => el('li', {}, [ico('i-check'), txt(t)])))
+    const linhas = document.querySelectorAll('.local .linha')
+    const linha = (i, b, s) => { const n = linhas[i]; if (!n) return; n.querySelector('b').textContent = b; n.querySelector('span').textContent = s }
+    if (dataLonga) linha(0, `${semana}, ${dataLonga}`, ini && fim ? `das ${ini} às ${fim}` : ini)
+    if (local) linha(1, cidade ? `${local}, ${cidade}` : local, txt(p.morada))
+    const lat = Number(p.mapa_lat), lng = Number(p.mapa_lng)
+    const mapa = document.querySelector('.local .mapa')
+    if (mapa) {
+      if (Number.isFinite(lat) && Number.isFinite(lng) && (lat || lng)) {
+        const bbox = [lng - 0.0045, lat - 0.0026, lng + 0.0045, lat + 0.0026].map(n => n.toFixed(5)).join('%2C')
+        const f = mapa.querySelector('iframe')
+        f.src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`
+        f.title = 'Mapa: ' + [local, txt(p.morada)].filter(Boolean).join(', ')
+      } else mapa.hidden = true
+    }
+    const abrir = document.querySelector('.local .abrir-mapa')
+    const busca = [local, txt(p.morada)].filter(Boolean).join(' ')
+    if (abrir && busca) abrir.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(busca)
+
+    // Contagem (o script seguinte lê isto)
+    window.paginaEvento = { data: ev.data, inicio: txt(p.hora_inicio), fim: txt(p.hora_fim), dataCurta: diaMes, local }
+  }
+})()
+</script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script>
 (function () {
@@ -658,22 +806,35 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
 // Contagem até às 15h00 de Lisboa: a 24/10/2026 Portugal ainda está na hora de verão (WEST, UTC+1);
 // a mudança para UTC+0 é só no domingo 25/10. O cálculo usa o instante absoluto, por isso
 // a contagem é igual em qualquer fuso de quem abre a página.
-(function () {
-  const alvo = new Date('2026-10-24T15:00:00+01:00').getTime()
-  const fim = new Date('2026-10-24T19:30:00+01:00').getTime()
+// LUC-242: a data e as horas vêm da edição (window.paginaEvento); a hora é a de Lisboa,
+// com o desvio certo (verão/inverno) calculado para aquele dia.
+(async function () {
+  await (window.paginaPronta || Promise.resolve())
+  const pe = window.paginaEvento || {}
+  const lisboa = (dia, hm) => {
+    const [a, mes, di] = dia.split('-').map(Number), [hh, mm] = (hm || '00:00').split(':').map(Number)
+    const palpite = Date.UTC(a, mes - 1, di, hh, mm)
+    const partes = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Lisbon', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(palpite)).map(x => [x.type, x.value]))
+    const visto = Date.UTC(+partes.year, +partes.month - 1, +partes.day, +partes.hour, +partes.minute)
+    return palpite - (visto - palpite)
+  }
+  const temData = /^\d{4}-\d{2}-\d{2}$/.test(pe.data || '') && /^\d{1,2}:\d{2}$/.test(pe.inicio || '')
+  const alvo = temData ? lisboa(pe.data, pe.inicio) : new Date('2026-10-24T15:00:00+01:00').getTime()
+  const fim = temData ? (/^\d{1,2}:\d{2}$/.test(pe.fim || '') ? lisboa(pe.data, pe.fim) : alvo + 4 * 3600e3) : new Date('2026-10-24T19:30:00+01:00').getTime()
+  const quando = pe.dataCurta || '24 de outubro', onde = pe.local || 'District Space'
   const d = document.getElementById('c-d'), h = document.getElementById('c-h'), m = document.getElementById('c-m'), sg = document.getElementById('c-s')
   const rot = document.getElementById('count-label'), nums = document.getElementById('count')
   const pad = n => String(n).padStart(2, '0')
   function tick () {
     const agora = Date.now()
-    if (agora >= fim) { rot.textContent = 'O encontro de 24 de outubro já aconteceu. Obrigada a quem esteve connosco.'; nums.hidden = true; return }
-    if (agora >= alvo) { rot.textContent = 'O encontro está a decorrer no District Space, em Lisboa.'; nums.hidden = true; return }
+    if (agora >= fim) { rot.textContent = `O encontro de ${quando} já aconteceu. Obrigada a quem esteve connosco.`; nums.hidden = true; return }
+    if (agora >= alvo) { rot.textContent = `O encontro está a decorrer no ${onde}.`; nums.hidden = true; return }
     let s = Math.floor((alvo - agora) / 1000)
     const dias = Math.floor(s / 86400); s -= dias * 86400
     const horas = Math.floor(s / 3600); s -= horas * 3600
     const min = Math.floor(s / 60); s -= min * 60
     d.textContent = dias; h.textContent = pad(horas); m.textContent = pad(min); sg.textContent = pad(s)
-    rot.textContent = dias === 0 ? 'É hoje. Até já, no District Space.' : dias === 1 ? 'Falta um dia para o encontro' : `Faltam ${dias} dias para o encontro`
+    rot.textContent = dias === 0 ? `É hoje. Até já, no ${onde}.` : dias === 1 ? 'Falta um dia para o encontro' : `Faltam ${dias} dias para o encontro`
   }
   tick(); setInterval(tick, 1000)
 })()
@@ -682,6 +843,7 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
 // Botão "Área de participantes": funciona como o QR code só no dia do evento (a janela
 // aberto_de/aberto_ate de Gestão → Eventos); antes e depois fica bloqueado.
 (async () => {
+  await (window.paginaPronta || Promise.resolve()) // LUC-242: o id do evento vem da edição
   const ligacoes = document.querySelectorAll('[data-area-evento]')
   if (!ligacoes.length) return
   const bloquear = (titulo) => ligacoes.forEach(a => { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); a.classList.add('fechado'); a.title = titulo })
@@ -704,6 +866,7 @@ footer .fl { display: flex; flex-wrap: wrap; gap: 18px }
 // Feedback dos participantes (13/11, migração 062): a secção e o link do rodapé só
 // aparecem enquanto o formulário estiver aberto em Gestão → Eventos.
 (async () => {
+  await (window.paginaPronta || Promise.resolve()) // LUC-242: o id do evento vem da edição
   const blocos = document.querySelectorAll('[data-feedback-evento]')
   if (!blocos.length) return
   try {
