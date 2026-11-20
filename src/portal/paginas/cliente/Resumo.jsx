@@ -20,7 +20,6 @@ const ROTULO_VALOR = { pagar: 'a pagar', credito: 'crédito', reembolso: 'reembo
 function EstadoO({ o }) { const e = estadoEfetivo(o); return <Chip tom={ESTADOS_OBRIG[e].tom}>{ESTADOS_OBRIG[e].rotulo}</Chip> }
 
 export default function Resumo({ cliente, base, modoCliente }) {
-  const leitura = usePerfil().papel === 'leitura'   // comercial e marketing (056): sem obrigações, só a agenda
   const { t } = useTheme()
   const isMobile = useIsMobile()
   const s = usePortal()
