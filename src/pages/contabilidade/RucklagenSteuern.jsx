@@ -204,13 +204,14 @@ export default function RucklagenSteuern() {
   }
 
   // ── Cálculos ──
-  const comIva = (settings?.vat_regime || 'normal') !== 'exempt'
+  // Uma só regra de "tem IVA" para a base da reserva e para o IVA a pagar (revisão do Théo).
+  const isRegel = (settings?.vat_regime || 'normal') !== 'exempt'
   // Base da reserva de IR sem IVA (R-B5, decisão de 15/10): com IVA, receitas e despesas
   // líquidas; isento de IVA, o IVA pago nas despesas é custo, por isso fica tudo em bruto.
-  const gewinn = comIva ? (einnahmen - ustEin) - (ausgaben - vorsteuer) : einnahmen - ausgaben
+  const gewinn = isRegel ? (einnahmen - ustEin) - (ausgaben - vorsteuer) : einnahmen - ausgaben
   const gewinnPos = Math.max(0, gewinn)
   const steuerRuecklage = gewinnPos * pct / 100
-  const isRegel = (settings?.vat_regime || 'normal') !== 'exempt'
+  // isRegel definido uma vez, acima
   const zahllast = ustEin - vorsteuer
   const zahllastPos = Math.max(0, zahllast)
   const vorsorge = num(kranken) + num(renten) + num(sonstige)
