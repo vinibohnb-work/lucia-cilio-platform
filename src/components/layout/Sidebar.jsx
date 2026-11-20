@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { t as translate } from '../../i18n/translations'
 import { getCompanySettings } from '../../lib/companySettings'
-import { isLite, LITE_SECTIONS } from '../../lib/platformHome'
+import { isLite, LITE_SECTIONS, isPortal, PORTAL_PATHS } from '../../lib/platformHome'
 import { useFiscalAlerts } from '../../hooks/useFiscalAlerts'
 import { useEffectiveUserId, useViewAs } from '../../context/ViewAsContext'
 import Flag from '../Flag'
@@ -113,9 +113,9 @@ const NAV = {
       { to: '/gestao/clientes',   Icon: IconClientes,   labelKey: 'nav_clientes_ativos', roles: STAFF },
       { to: '/gestao/agenda',     Icon: IconCalendario, labelKey: 'nav_agenda',          roles: STAFF },
       { to: '/gestao/tarefas',    Icon: IconTarefas,    labelKey: 'nav_tarefas',         roles: STAFF },
-      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: STAFF },
+      { to: '/gestao/mensagens',  Icon: IconMensagens,  labelKey: 'nav_mensagens',       roles: ['admin'] },   // 056: mensagens só da administradora
       { to: '/gestao/horas',      Icon: IconHoras,      labelKey: 'nav_horas',           roles: STAFF },
-      { to: '/gestao/relatorios', Icon: IconBarras,     labelKey: 'nav_relatorios_trim', roles: STAFF },
+      { to: '/gestao/relatorios', Icon: IconBarras,     labelKey: 'nav_relatorios_trim', roles: ['admin'] },   // 056: relatórios só da administradora
     ]},
     { key: 'section_comercial', items: [
       { to: '/gestao/crm',          Icon: IconFunil,      labelKey: 'nav_crm',          roles: ['admin', 'comercial'] },
@@ -167,7 +167,10 @@ export default function Sidebar() {
         ? (platformFromPath === 'management' ? 'accounting' : platformFromPath)
         : (platform === 'esg' ? 'esg' : 'accounting')
   // Contabilidade Lite: só a secção "Contabilidade" (esconde a secção "Gestão")
-  const lite = isLite(platform)
+  // Só consulta (item 13): o menu mostra só o Início e os prazos (vale também
+  // em "ver como" de um cliente só consulta).
+  const soConsulta = isPortal(isViewing ? viewAs?.platform : platform)
+  const lite = isLite(platform) || soConsulta
   // Itens sem `roles` são visíveis a todos; com `roles`, só a quem consta.
   const sections = (NAV[viewPlatform] || NAV.accounting)
     .filter(sec => !lite || LITE_SECTIONS.includes(sec.key))
@@ -178,6 +181,7 @@ export default function Sidebar() {
         .filter(it => !(casoId && it.soCliente))
         .filter(it => !(!casoId && it.soEquipa))   // documentos do caso: só dentro da Gestão
         .filter(it => !(lite && it.semLite))
+        .filter(it => !soConsulta || PORTAL_PATHS.includes(it.to))
         .map(it => it.rota ? { ...it, to: `${esgBase}/${it.rota}` } : it),
     })).filter(sec => sec.items.length > 0)
 

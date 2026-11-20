@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
 import { Cartao, Botao, Chip, Vazio, Janela, Pilulas, useCampos } from '../../portal/ui'
 import FeedbackEvento from './FeedbackEvento'
+import PaginaEvento from './PaginaEvento'
+import { BUCKET_PAGINA, copiarFotos, linkPagina } from '../../lib/paginaEvento'
 
 // Repositório de eventos da Lúcia (pedido de 22/10; antes servia só o Momentos
 // de 24/10). Cada evento tem a sua landing page (no lcoffice.pt ou externa) e,
@@ -283,12 +285,34 @@ export default function Eventos() {
     // Fotografias primeiro (RGPD); os participantes saem em cascata com o evento
     const { data: ficheiros } = await supabase.storage.from(BUCKET).list(sel.id, { limit: 1000 })
     if (ficheiros?.length) await supabase.storage.from(BUCKET).remove(ficheiros.map(f => `${sel.id}/${f.name}`))
+    // Fotos da página da edição (LUC-242, bucket público)
+    const { data: daPagina } = await supabase.storage.from(BUCKET_PAGINA).list(sel.id, { limit: 1000 })
+    if (daPagina?.length) await supabase.storage.from(BUCKET_PAGINA).remove(daPagina.map(f => `${sel.id}/${f.name}`))
     const { error, count } = await supabase.from('eventos').delete({ count: 'exact' }).eq('id', sel.id)
     setConfirmar('')
     if (error || count === 0) { avisar('erro', 'Não foi possível eliminar o evento.'); return }
     setSelId(null)
     await carregar()
     avisar('ok', 'Evento eliminado.')
+  }
+
+  // Duplicar edição (LUC-242): mesmo nome, local e página (fotos copiadas para a pasta nova);
+  // sem área de participantes, sem feedback e não fica como atual. A Lúcia muda a data depois.
+  async function duplicar() {
+    const id = novoId(sel.nome, hoje)
+    const { error } = await supabase.from('eventos').insert({ id, nome: sel.nome, data: sel.data, local: sel.local || null, landing_url: linkPagina(id) })
+    if (error) { avisar('erro', 'Não foi possível duplicar a edição.'); return }
+    const pagina = await copiarFotos(sel.pagina, sel.id, id)
+    await supabase.from('eventos').update({ pagina }).eq('id', id)
+    await carregar()
+    setSelId(id); setPessoas([]); setConfirmar('')
+    avisar('ok', 'Edição duplicada. Mude a data no cartão "Evento" e o resto na "Página do evento".')
+  }
+
+  async function mudarPagina(patch, ok, ficouAtual) {
+    const r = await alterar(patch, ok)
+    if (r && ficouAtual) setEventos(evs => evs.map(e => e.id === sel.id ? e : { ...e, pagina_atual: false }))
+    return r
   }
 
   async function copiar(texto) {
@@ -481,6 +505,8 @@ export default function Eventos() {
           </div>
         )}
       </Cartao>
+
+      <PaginaEvento key={'pg-' + sel.id + (sel.pagina ? '-1' : '-0')} evento={sel} avisar={avisar} aoMudar={mudarPagina} aoDuplicar={duplicar} />
 
       <PalestrasAvaliacoes key={sel.id} evento={sel} avisar={avisar} />
 

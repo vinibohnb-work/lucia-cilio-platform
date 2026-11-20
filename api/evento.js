@@ -122,6 +122,18 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
     return [200, { evento: infoEvento(evento) }]
   }
 
+  // Página do evento (migração 065, LUC-242): a landing pede o conteúdo da edição.
+  // ?pagina= (vazio) → a edição marcada como atual; ?pagina=<id> → aquela edição.
+  if (metodo === 'GET' && query.pagina !== undefined) {
+    const pedido = typeof query.pagina === 'string' ? query.pagina : ''
+    if (pedido && !idEventoValido(pedido)) return [404, { error: 'Edição não encontrada.' }]
+    let q = db.from('eventos').select('id, nome, data, local, landing_url, pagina').not('pagina', 'is', null)
+    q = pedido ? q.eq('id', pedido) : q.eq('pagina_atual', true)
+    const { data: evento } = await q.maybeSingle()
+    if (!evento) return [404, { error: 'Edição não encontrada.' }]
+    return [200, { evento: infoEvento(evento), pagina: evento.pagina }]
+  }
+
   if (metodo === 'POST' && body.acao === 'feedback') {
     if (!idEventoValido(body.evento)) return [404, { error: 'Este formulário não existe.' }]
     // Robôs: o campo escondido preenchido ou o envio rápido demais recebem "ok" e nada se grava

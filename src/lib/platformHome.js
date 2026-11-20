@@ -23,7 +23,17 @@ export function homePathFor(role, platform) {
 export const isLite = (platform) => platform === 'accounting_lite'
 
 // Para efeitos de plataforma, "lite" é Contabilidade — o que muda é o âmbito.
-export const basePlatform = (platform) => (isLite(platform) ? 'accounting' : platform)
+// "Só consulta" (portal do cliente, item 13) também é Contabilidade, com âmbito mínimo.
+export const basePlatform = (platform) => (isLite(platform) || isPortal(platform) ? 'accounting' : platform)
+
+// ── Só consulta (portal do cliente, item 13) ────────────────────────────────
+// Para quem não usa a contabilidade da plataforma (trabalhadores independentes,
+// ex.: reunião de 29/10). Portal informativo e sem valores (25/09 e 08/10):
+// vê o Início e os prazos; não marca, não edita, não lança nada.
+export const isPortal = (platform) => platform === 'portal'
+export const PORTAL_PATHS = ['/contabilidade/inicio', '/contabilidade/obrigacoes']
+export const portalAllows = (pathname) =>
+  PORTAL_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
 
 // Secções do menu visíveis em lite
 export const LITE_SECTIONS = ['section_acc']

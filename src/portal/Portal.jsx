@@ -28,7 +28,10 @@ export default function Portal() {
   if (!s.carregado) return <EsqueletoPagina cartoes={3} linhas={6} />
 
   return (
-    <PerfilContext.Provider value={{ papel: admin ? 'admin' : 'colaboradora', clienteId: null }}>
+    // Migração 056 (decisão do Vini, 07/11): só a administradora altera a gestão;
+    // comercial e marketing veem a lista e a ficha básica ("leitura"). O marketing
+    // edita só a área de Marketing (marketing = true).
+    <PerfilContext.Provider value={{ papel: admin ? 'admin' : 'leitura', marketing: admin || role === 'marketing', clienteId: null }}>
       {s.erro && (
         <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', marginBottom: '16px', borderRadius: '10px', background: t.dueLate.bg, color: t.dueLate.ink, fontSize: '13px', fontWeight: 600 }}>
           <span style={{ flex: 1 }}>{s.erro}</span>

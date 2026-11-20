@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { IconImprimir } from '../../components/Icones'
 import EsqueletoPagina from '../../components/EsqueletoPagina'
 import { useLang } from '../../context/LangContext'
@@ -31,6 +32,7 @@ export default function RelatorioEUR() {
   const [empresa, setEmpresa] = useState('')
   const [loading, setLoading] = useState(true)
   const [aberta, setAberta] = useState(null)     // key da linha expandida
+  const [semPar, setSemPar] = useState(0)        // movimentos do banco do ano por conciliar (29/10): avisa, não bloqueia
 
   const L = lang === 'de' ? {
     eyebrow: 'Buchhaltung', title: 'EÜR-Bericht',
@@ -96,6 +98,9 @@ export default function RelatorioEUR() {
       getCompanySettings(eid),
     ])
     setEntries(ce.data || [])
+    const bt = await supabase.from('bank_transactions').select('id', { count: 'exact', head: true }).eq('user_id', eid)
+      .eq('status', 'pendente').gte('tx_date', `${ano}-01-01`).lte('tx_date', `${ano}-12-31`)
+    setSemPar(bt?.count || 0)
     setRegime(cs?.vat_regime === 'exempt' ? 'exempt' : 'normal')
     setEmpresa(cs?.company_name || '')
     setLoading(false)
@@ -244,6 +249,18 @@ export default function RelatorioEUR() {
       {/* Regime aplicado — sempre à vista, porque muda todos os números */}
       <div style={{ background: t.chipBg, color: t.chipText, borderRadius: '10px', padding: '10px 14px', fontSize: '12px', fontWeight: 600, marginBottom: '14px', lineHeight: 1.5 }}>
         ⚖ {isento ? L.regimeKlein : L.regimeNormal}
+        {semPar > 0 && (
+          <div style={{ background: t.dueSoon.bg, color: t.dueSoon.ink, borderRadius: '8px', padding: '8px 12px', marginTop: '8px' }}>
+            ⚠ {lang === 'de'
+              ? `${semPar} Bankbewegung(en) aus ${ano} noch ohne Kassenbuchung — der Bericht kann unvollständig sein.`
+              : lang === 'en'
+                ? `${semPar} bank transaction(s) from ${ano} still without a cash book entry — the report may be incomplete.`
+                : `${semPar} movimento(s) do banco de ${ano} ainda sem par no Livro de Caixa — o relatório pode estar incompleto.`}{' '}
+            <Link to="/contabilidade/conciliacao" style={{ color: 'inherit', textDecoration: 'underline' }}>
+              {lang === 'de' ? 'Zur Abstimmung' : lang === 'en' ? 'Go to reconciliation' : 'Ir à conciliação'}
+            </Link>
+          </div>
+        )}
       </div>
 
       {!temDados && (
