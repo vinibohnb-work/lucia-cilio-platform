@@ -4,6 +4,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { supabase } from '../../lib/supabase'
 import { dataCurta } from '../../lib/formato'
 import { Cartao, Botao, Chip, Vazio, Janela, Pilulas, useCampos } from '../../portal/ui'
+import FeedbackEvento from './FeedbackEvento'
 
 // Repositório de eventos da Lúcia (pedido de 22/10; antes servia só o Momentos
 // de 24/10). Cada evento tem a sua landing page (no lcoffice.pt ou externa) e,
@@ -28,7 +29,11 @@ const novoId = (nome, data) => {
   const base = String(nome || 'evento').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'evento'
   return `${base}-${String(data || '').slice(0, 7)}-${crypto.randomUUID().slice(0, 4)}`.replace(/--+/g, '-')
 }
-const primeiroNome = (n) => String(n || '').trim().split(/\s+/)[0] || ''
+// Perfil apagado depois do evento (apagarPerfis): o nome fica assim e o resto vazio
+const ANONIMO = 'Participante (perfil apagado)'
+// Token novo e aleatório (o formato que a api/evento.js aceita): o link antigo deixa de valer
+const novoToken = () => btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+const primeiroNome = (n) =>String(n || '').trim().split(/\s+/)[0] || ''
 const hojeLisboa = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Lisbon' }).format(new Date())
 const ligacaoValida = (v) => {
   let s = String(v || '').trim()
@@ -246,7 +251,7 @@ export default function Eventos() {
 
   const carregarPessoas = useCallback(async (id) => {
     const { data } = await supabase.from('evento_participantes')
-      .select('id, nome, negocio, cargo, localidade, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', id).order('nome')
+      .select('id, nome, negocio, cargo, localidade, instagram, partilhar, foto_path, ultimo_acesso, created_at').eq('evento_id', id).order('nome')
     setPessoas(data || [])
   }, [])
   useEffect(() => { if (selId) carregarPessoas(selId) }, [selId, carregarPessoas])
@@ -299,6 +304,33 @@ export default function Eventos() {
     avisar('ok', `${p.nome} removido da área de participantes.`)
     carregarPessoas(sel.id)
     setContagem(m => ({ ...m, [sel.id]: Math.max(0, (m[sel.id] || 1) - 1) }))
+  }
+
+  // Apagar os perfis depois do evento (RGPD, revisão da Iara de 06/11; o aviso da área
+  // promete "os perfis são apagados depois"). Anonimiza em vez de apagar as linhas, porque
+  // as avaliações (051) saem em cascata com o participante: ficam as notas, sem nomes, e o
+  // número de quem entrou. Apaga as fotografias do bucket e troca o token de cada um, para o
+  // link pessoal deixar de abrir a área. O link das fotografias do evento (Drive) fica.
+  async function apagarPerfis() {
+    setConfirmar('')
+    const { data: ficheiros } = await supabase.storage.from(BUCKET).list(sel.id, { limit: 1000 })
+    if (ficheiros?.length) {
+      const { error } = await supabase.storage.from(BUCKET).remove(ficheiros.map(f => `${sel.id}/${f.name}`))
+      if (error) { avisar('erro', 'Não foi possível apagar as fotografias. Nada foi alterado.'); return }
+    }
+    const alvo = pessoas.filter(p => p.nome !== ANONIMO)
+    let falhas = 0
+    for (const p of alvo) {
+      const { error, count } = await supabase.from('evento_participantes').update({
+        nome: ANONIMO, email: null, negocio: null, cargo: null, localidade: null, sobre: null,
+        instagram: null, linkedin: null, site: null, foto_path: null, partilhar: false,
+        token: novoToken(), updated_at: new Date().toISOString(),
+      }, { count: 'exact' }).eq('id', p.id)
+      if (error || count === 0) falhas++
+    }
+    await carregarPessoas(sel.id)
+    if (falhas) avisar('erro', `${falhas} de ${alvo.length} perfis não foram apagados. Tente de novo.`)
+    else avisar('ok', `${alvo.length} perfis e as fotografias apagados. As avaliações ficam, sem nomes.`)
   }
 
   if (carregando) return <div style={{ color: t.subtle, padding: '20px 0' }}>A carregar…</div>
@@ -357,6 +389,7 @@ export default function Eventos() {
 
   // ── Um evento ─────────────────────────────────────────────────────────────
   const partilham = pessoas.filter(p => p.partilhar).length
+  const porApagar = pessoas.filter(p => p.nome !== ANONIMO).length
   const est = estadoArea(sel, hoje)
   const gravarLanding = (v) => {
     const l = ligacaoValida(v)
@@ -451,19 +484,32 @@ export default function Eventos() {
 
       <PalestrasAvaliacoes key={sel.id} evento={sel} avisar={avisar} />
 
+      {/* Formulário de feedback (pedido da Letícia, 13/11; migração 062) */}
+      <FeedbackEvento key={'fb-' + sel.id} evento={sel} alterar={alterar} avisar={avisar} />
+
       {(sel.codigo || pessoas.length > 0) && (
         <Cartao titulo="Quem entrou" semPadding>
+          {/* Lembrete (16/11): a área prometeu apagar os perfis depois do evento */}
+          {porApagar > 0 && sel.data && sel.data < hoje && (
+            <div role="note" style={{ margin: '0 20px 14px', padding: '10px 14px', borderRadius: '10px', background: t.softCardBg, fontSize: '13px', color: t.text, lineHeight: 1.5 }}>
+              O evento já passou. A área de participantes prometeu que os perfis são apagados depois: quando já não precisar dos contactos, use <strong>Apagar perfis e fotografias</strong>, no fim da página.
+            </div>
+          )}
           {pessoas.length === 0
             ? <div style={{ padding: '0 20px 20px' }}><Vazio>Ainda ninguém entrou. A lista enche-se no dia, à medida que as pessoas leem o QR.</Vazio></div>
             : (
               <div className="table-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead><tr><th style={th}>Nome</th><th style={th}>Empresa · cargo</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
+                  <thead><tr><th style={th}>Nome</th><th style={th}>Empresa · cargo</th><th style={th}>Instagram</th><th style={th}>Perfil</th><th style={th}>Entrou</th><th style={th}><span className="so-leitores">Ações</span></th></tr></thead>
                   <tbody>
                     {pessoas.map(p => (
                       <tr key={p.id}>
                         <td style={{ ...c.td, fontWeight: 700, color: t.heading }}>{p.nome}</td>
                         <td style={c.td}>{[p.negocio, p.cargo].filter(Boolean).join(' · ') || '—'}{p.localidade ? <span style={{ color: t.subtle }}> · {p.localidade}</span> : null}</td>
+                        {/* Só a equipa vê (14/11): a api/evento.js já o limpa para o @ do perfil, por isso o link é seguro */}
+                        <td style={{ ...c.td, whiteSpace: 'nowrap' }}>{p.instagram
+                          ? <a href={`https://www.instagram.com/${encodeURIComponent(p.instagram)}/`} target="_blank" rel="noopener noreferrer" style={{ color: t.accentText, fontWeight: 700, textDecoration: 'none' }}>@{p.instagram}</a>
+                          : <span style={{ color: t.subtle }}>—</span>}</td>
                         <td style={c.td}>{p.partilhar ? <Chip tom="ok">Partilha</Chip> : <Chip>Não partilha</Chip>}</td>
                         <td style={{ ...c.td, fontVariantNumeric: 'tabular-nums' }}>{dataCurta(p.created_at.slice(0, 10))}</td>
                         <td style={{ ...c.td, whiteSpace: 'nowrap' }}>
@@ -486,9 +532,16 @@ export default function Eventos() {
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
         <p style={{ fontSize: '12px', color: t.subtle, margin: 0, flex: '1 1 320px' }}>
-          Só aparece aos outros quem marcar "Partilhar". Se alguém entrar sem ser do evento, remova-o; se o QR circular fora da sala, gere um novo.
+          Só aparece aos outros quem marcar "Partilhar". O Instagram desta lista é só para uso interno da equipa. Se alguém entrar sem ser do evento, remova-o; se o QR circular fora da sala, gere um novo.
         </p>
-        {confirmar === 'eliminar' ? (
+        {porApagar > 0 && (confirmar === 'perfis' ? (
+          <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px' }}>Apagar nome, contactos, empresa e fotografia de {porApagar} {porApagar === 1 ? 'participante' : 'participantes'} e desligar os links pessoais? Ficam as avaliações, sem nomes. Não se pode desfazer.</span>
+            <Botao variante="perigo" onClick={apagarPerfis}>Apagar perfis</Botao>
+            <Botao onClick={() => setConfirmar('')}>Cancelar</Botao>
+          </span>
+        ) : confirmar !== 'eliminar' && <Botao onClick={() => setConfirmar('perfis')}>Apagar perfis e fotografias</Botao>)}
+        {confirmar === 'perfis' ? null : confirmar === 'eliminar' ? (
           <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '12px' }}>Eliminar o evento, os perfis e as fotografias? Não se pode desfazer.</span>
             <Botao variante="perigo" onClick={eliminar}>Eliminar</Botao>

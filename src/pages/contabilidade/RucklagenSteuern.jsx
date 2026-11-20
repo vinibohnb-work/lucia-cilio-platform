@@ -111,7 +111,9 @@ export default function RucklagenSteuern() {
     ovUst: 'Voraussichtliche USt-Zahllast', ovUstSub: 'An Finanzamt',
     ovVorsorge: 'Monatliche Vorsorge (gesamt)', ovVorsorgeSub: 'Für Versicherungen und Rücklagen',
     glance: 'Auf einen Blick', glanceSub: 'Dieser Betrag ist nicht frei verfügbar.',
-    forTax: 'Für Steuern reserviert', forVorsorge: 'Für Vorsorge (monatlich)', total: 'Gesamt (aktuell)',
+    forTax: 'Für Steuern reserviert', forVorsorge: 'Für Vorsorge (Jahr bis heute)', forVorsorgeAno: 'Für Vorsorge (Jahr)', total: 'Gesamt (Jahr bis heute)', totalAno: 'Gesamt (Jahr)',
+    totalSub: (m) => `Steuern des Jahres + ${m} ${m === 1 ? 'Monat' : 'Monate'} Vorsorge`,
+    gewinnNet: '(Einnahmen − Ausgaben, ohne USt)', gewinnKlein: '(Einnahmen − Ausgaben; gezahlte USt zählt als Kosten)',
     tip: 'Tipp', tipText: 'Passe deine Rücklagen regelmäßig an deine tatsächliche Situation und deinen Gewinn an.',
     famvTitle: 'Familienversicherung – Check', famvLimitL: 'Grenze pro Monat', famvProfit: 'Monatsgewinn',
     famvSrcPlan: 'aus Monatsplanung', famvSrcReal: 'Ø aus Kassenbuch (laufendes Jahr)',
@@ -120,7 +122,7 @@ export default function RucklagenSteuern() {
     famvNote: 'Für Selbständige zählt grundsätzlich der regelmäßige Gewinn, nicht der Umsatz. Die Krankenkasse entscheidet im Einzelfall — Angaben prüfen lassen.',
     goal: 'Ziel dieses Moduls',
     goalText: 'Wir zeigen, wie viel Geld du reservieren solltest, damit du liquide bleibst und keine Überraschungen erlebst.',
-    avail: 'Verfügbar', availSub: '(frei nutzbar)', resFin: 'Reserviert für Finanzamt', resVor: 'Reserviert für Vorsorge',
+    saldo: 'Kontostand', avail: 'Verfügbar', availSub: '(frei nutzbar)', resFin: 'Reserviert für Finanzamt', resVor: 'Reserviert für Vorsorge',
     disclaimer: 'Alle Werte sind Schätzungen und dienen zur besseren Planung. Keine Steuerberatung.',
     saved: 'Gespeichert ✓', saveErr: 'Speichern fehlgeschlagen (Migration 009 nötig).', loading: 'Wird geladen…',
   } : lang === 'en' ? {
@@ -147,7 +149,9 @@ export default function RucklagenSteuern() {
     ovUst: 'Estimated VAT payable', ovUstSub: 'To the Finanzamt',
     ovVorsorge: 'Monthly provision (total)', ovVorsorgeSub: 'For insurance and reserves',
     glance: 'At a glance', glanceSub: 'This amount is not free to use.',
-    forTax: 'Reserved for taxes', forVorsorge: 'For provision (monthly)', total: 'Total (current)',
+    forTax: 'Reserved for taxes', forVorsorge: 'For provision (year to date)', forVorsorgeAno: 'For provision (year)', total: 'Total (year to date)', totalAno: 'Total for the year',
+    totalSub: (m) => `taxes for the year + ${m} ${m === 1 ? 'month' : 'months'} of provision`,
+    gewinnNet: '(Income − Expenses, excl. VAT)', gewinnKlein: '(Income − Expenses; VAT paid counts as a cost)',
     tip: 'Tip', tipText: 'Adjust your reserves regularly to your real situation and profit.',
     famvTitle: 'Family Insurance – Check', famvLimitL: 'Limit per month', famvProfit: 'Monthly profit',
     famvSrcPlan: 'from Monthly Plan', famvSrcReal: 'real average from Cash Book (current year)',
@@ -156,7 +160,7 @@ export default function RucklagenSteuern() {
     famvNote: 'For the self-employed, regular profit counts, not revenue. The Krankenkasse (health insurer) decides case by case — have the figures confirmed.',
     goal: 'Purpose of this module',
     goalText: 'We show how much money you should set aside to stay liquid and avoid surprises.',
-    avail: 'Available', availSub: '(free to use)', resFin: 'Reserved for Finanzamt', resVor: 'Reserved for provision',
+    saldo: 'Account balance', avail: 'Available', availSub: '(free to use)', resFin: 'Reserved for Finanzamt', resVor: 'Reserved for provision',
     disclaimer: 'All values are estimates and serve for better planning. Not tax advice.',
     saved: 'Saved ✓', saveErr: 'Save failed (migration 009 required).', loading: 'Loading…',
   } : {
@@ -183,7 +187,9 @@ export default function RucklagenSteuern() {
     ovUst: 'IVA previsto a pagar', ovUstSub: 'Ao Finanzamt',
     ovVorsorge: 'Previdência mensal (total)', ovVorsorgeSub: 'Para seguros e reservas',
     glance: 'Em resumo', glanceSub: 'Este montante não está livre para uso.',
-    forTax: 'Reservado para impostos', forVorsorge: 'Para previdência (mensal)', total: 'Total (atual)',
+    forTax: 'Reservado para impostos', forVorsorge: 'Para previdência (ano até hoje)', forVorsorgeAno: 'Para previdência (ano)', total: 'Total (ano até hoje)', totalAno: 'Total do ano',
+    totalSub: (m) => `impostos do ano + ${m} ${m === 1 ? 'mês' : 'meses'} de previdência`,
+    gewinnNet: '(Receitas − Despesas, sem IVA)', gewinnKlein: '(Receitas − Despesas; o IVA pago conta como custo)',
     tip: 'Dica', tipText: 'Ajusta as tuas reservas regularmente à tua situação real e ao teu lucro.',
     famvTitle: 'Familienversicherung – Verificação', famvLimitL: 'Limite por mês', famvProfit: 'Lucro mensal',
     famvSrcPlan: 'do Planeamento Mensal', famvSrcReal: 'média real do Livro de Caixa (ano corrente)',
@@ -192,13 +198,16 @@ export default function RucklagenSteuern() {
     famvNote: 'Para independentes conta o lucro regular, não a faturação. A Krankenkasse (seguradora de saúde) decide caso a caso — confirmar os valores.',
     goal: 'Objetivo deste módulo',
     goalText: 'Mostramos quanto dinheiro deves reservar para te manteres líquido e não teres surpresas.',
-    avail: 'Disponível', availSub: '(uso livre)', resFin: 'Reservado p/ Finanzamt', resVor: 'Reservado p/ previdência',
+    saldo: 'Saldo da conta', avail: 'Disponível', availSub: '(uso livre)', resFin: 'Reservado p/ Finanzamt', resVor: 'Reservado p/ previdência',
     disclaimer: 'Todos os valores são estimativas e servem para melhor planeamento. Não é aconselhamento fiscal.',
     saved: 'Guardado ✓', saveErr: 'Falha ao guardar (é necessária a migração 009).', loading: 'A carregar…',
   }
 
   // ── Cálculos ──
-  const gewinn = einnahmen - ausgaben
+  const comIva = (settings?.vat_regime || 'normal') !== 'exempt'
+  // Base da reserva de IR sem IVA (R-B5, decisão de 15/10): com IVA, receitas e despesas
+  // líquidas; isento de IVA, o IVA pago nas despesas é custo, por isso fica tudo em bruto.
+  const gewinn = comIva ? (einnahmen - ustEin) - (ausgaben - vorsteuer) : einnahmen - ausgaben
   const gewinnPos = Math.max(0, gewinn)
   const steuerRuecklage = gewinnPos * pct / 100
   const isRegel = (settings?.vat_regime || 'normal') !== 'exempt'
@@ -206,7 +215,10 @@ export default function RucklagenSteuern() {
   const zahllastPos = Math.max(0, zahllast)
   const vorsorge = num(kranken) + num(renten) + num(sonstige)
   const fuerSteuer = steuerRuecklage + (isRegel ? zahllastPos : 0)
-  const gesamt = fuerSteuer + vorsorge
+  // Total no mesmo período (decisão de 15/10): impostos do ano até hoje + a previdência
+  // dos meses já passados — antes somava a reserva do ano com a previdência de um mês.
+  const mesesAno = year === new Date().getFullYear() ? new Date().getMonth() + 1 : 12
+  const gesamt = fuerSteuer + vorsorge * mesesAno
 
   // ── Familienversicherung: lucro mensal (plano, senão média real) vs limite ──
   const planTotals = plan?.items?.length
@@ -282,7 +294,7 @@ export default function RucklagenSteuern() {
                 <div>
                   <div style={capLabel}>{L.gewinn}</div>
                   <div style={money(t.heading)}>{fmt2(gewinn)}</div>
-                  <div style={sub}>{L.gewinnSub}</div>
+                  <div style={sub}>{isRegel ? L.gewinnNet : L.gewinnKlein}</div>
                 </div>
                 <div>
                   <div style={capLabel}>{L.pctLabel}</div>
@@ -411,12 +423,14 @@ export default function RucklagenSteuern() {
                 </div>
                 <p style={{ margin: 0, fontSize: '12.5px', color: t.textMuted, lineHeight: 1.55 }}>{L.goalText}</p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: t.textMuted, textAlign: 'center' }}>
-                <div><div style={{ fontSize: '22px' }}>👛</div><div style={{ marginTop: '3px' }}>{L.avail}<br/><span style={{ color: t.subtle }}>{L.availSub}</span></div></div>
-                <span style={{ fontSize: '18px', color: t.subtle }}>=</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: t.textMuted, textAlign: 'center', flexWrap: 'wrap' }}>
+                <div><div style={{ fontSize: '22px' }}>🏦</div><div style={{ marginTop: '3px' }}>{L.saldo}</div></div>
+                <span style={{ fontSize: '18px', color: t.subtle }}>−</span>
                 <div><div style={{ fontSize: '22px' }}>🏛️</div><div style={{ marginTop: '3px' }}>{L.resFin}</div></div>
                 <span style={{ fontSize: '18px', color: t.subtle }}>−</span>
                 <div><div style={{ fontSize: '22px' }}>🛡️</div><div style={{ marginTop: '3px' }}>{L.resVor}</div></div>
+                <span style={{ fontSize: '18px', color: t.subtle }}>=</span>
+                <div><div style={{ fontSize: '22px' }}>👛</div><div style={{ marginTop: '3px' }}>{L.avail}<br/><span style={{ color: t.subtle }}>{L.availSub}</span></div></div>
               </div>
             </div>
           </div>
@@ -455,7 +469,7 @@ export default function RucklagenSteuern() {
                 <div style={{ ...money(tone.blue.ink), fontSize: '21px', marginTop: '3px' }}>{fmt2(vorsorge)}</div>
                 <div style={sub}>{L.ovVorsorgeSub}</div>
               </div>
-              <Ring pct={0.75} color={tone.blue.ink} track={tone.blue.soft} />
+              {/* Sem anel: era fixo em 75% e não media nada (QA Nina 18/11) */}
             </div>
 
             {/* Auf einen Blick */}
@@ -467,12 +481,13 @@ export default function RucklagenSteuern() {
                 <div style={{ ...money(tone.green.ink), fontSize: '20px' }}>{fmt2(fuerSteuer)}</div>
               </div>
               <div style={{ marginBottom: '13px' }}>
-                <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{L.forVorsorge}</div>
-                <div style={{ ...money(tone.blue.ink), fontSize: '20px' }}>{fmt2(vorsorge)}</div>
+                <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{Number(year) === new Date().getFullYear() ? L.forVorsorge : L.forVorsorgeAno}</div>
+                <div style={{ ...money(tone.blue.ink), fontSize: '20px' }}>{fmt2(vorsorge * mesesAno)}</div>
               </div>
               <div style={{ borderTop: `1px solid ${t.cardBorder}`, paddingTop: '12px' }}>
-                <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{L.total}</div>
+                <div style={{ fontSize: '12px', color: t.textMuted, marginBottom: '2px' }}>{Number(year) === new Date().getFullYear() ? L.total : L.totalAno}</div>
                 <div style={{ ...money(t.heading), fontSize: '24px' }}>{fmt2(gesamt)}</div>
+                <div style={sub}>{L.totalSub(mesesAno)}</div>
               </div>
               {savingMsg && <div style={{ fontSize: '11.5px', fontWeight: 700, color: savingMsg === L.saved ? tone.green.ink : t.neg, marginTop: '10px' }}>{savingMsg}</div>}
             </div>
