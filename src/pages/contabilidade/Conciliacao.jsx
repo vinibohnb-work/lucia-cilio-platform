@@ -44,7 +44,7 @@ export default function Conciliacao() {
   // omissão, a proposta a partir da coluna de categoria do extrato; a pessoa
   // confirma ou troca. As opções juntam a base às categorias do cliente (ficha).
   const [categorias, setCategorias] = useState({})   // tx.id -> chave escolhida
-  const categoriaDe = (tx) => categorias[tx.id] ?? (tx.type === 'saida' ? sugerirCategoria(tx.raw?.categoria) : '')
+  const categoriaDe = (tx) => categorias[tx.id] ?? (tx.type === 'saida' ? sugerirCategoria(tx.categoria_extrato) : '')
   const extras = useCategoriasExtra(eid)
   const [aAnexar, setAAnexar] = useState(null)   // tx.id a enviar comprovativo
   useEffect(() => { if (eid) getCompanySettings(eid).then(setSettings) }, [eid])
@@ -121,19 +121,97 @@ export default function Conciliacao() {
 
   const fmt = (v) => (Number(v) || 0).toLocaleString(lang === 'de' ? 'de-DE' : lang === 'en' ? 'en-GB' : 'pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const dataFmt = (d) => dataCurta(d, lang)
+  // LUC-267: período da lista, paginação e resultado do lote
+  const LP = lang === 'de' ? {
+    periodo: 'Zeitraum', meses: (n) => `Letzte ${n} Monate`, tudo: 'Gesamter Verlauf', mostrarMais: (n) => `Weitere anzeigen (${n})`,
+    resultadoLote: (ok, f) => `${ok} abgestimmt${f ? ` · ${f} fehlgeschlagen (siehe Karte)` : ''}.`,
+  } : lang === 'en' ? {
+    periodo: 'Period', meses: (n) => `Last ${n} months`, tudo: 'Full history', mostrarMais: (n) => `Show more (${n})`,
+    resultadoLote: (ok, f) => `${ok} matched${f ? ` · ${f} failed (see the card)` : ''}.`,
+  } : {
+    periodo: 'Período', meses: (n) => `Últimos ${n} meses`, tudo: 'Todo o histórico', mostrarMais: (n) => `Mostrar mais (${n})`,
+    resultadoLote: (ok, f) => `${ok} conciliado${ok === 1 ? '' : 's'}${f ? ` · ${f} falhou${f === 1 ? '' : 'aram'} (vê o cartão)` : ''}.`,
+  }
 
+  // Carga por período (LUC-267). Antes vinha todo o histórico do banco e do
+  // caixa de uma vez (e o Supabase corta em 1000 linhas por pedido sem avisar).
+  // Agora: os pendentes vêm sempre todos (são o trabalho por fazer); conciliados
+  // e ignorados só do período escolhido; os lançamentos do caixa desde o mais
+  // antigo que ainda pode ser par de um pendente; e só as colunas que o ecrã usa
+  // (a linha original do extrato, raw, fica no banco: só a categoria vem).
+  const [periodo, setPeriodo] = useState(12)        // meses; 0 = todo o histórico
+  const [usadosFora, setUsadosFora] = useState([])  // { id, cash_entry_id } de movimentos fora do período
+  const [limiteLista, setLimiteLista] = useState(100)
   const load = useCallback(async () => {
     if (!eid) return
     setLoading(true)
-    const [tx, ce, imp, ex] = await Promise.all([
-      supabase.from('bank_transactions').select('*').eq('user_id', eid).order('tx_date', { ascending: false }),
-      supabase.from('cash_entries').select('id,entry_date,description,type,amount,destination').eq('user_id', eid).eq('destination', 'banco'),
+    const COLS_TX = 'id,tx_date,description,amount,type,status,cash_entry_id,fingerprint,comprovativo_path,comprovativo_nome,categoria_extrato:raw->>categoria'
+    const COLS_CE = 'id,entry_date,description,type,amount,destination'
+    // Lê em páginas de 1000 até acabar
+    const todas = async (mk) => {
+      const r = []
+      for (let de = 0; ; de += 1000) {
+        const { data, error } = await mk().range(de, de + 999)
+        if (error || !data) break
+        r.push(...data)
+        if (data.length < 1000) break
+      }
+      return r
+    }
+    const iso = (d) => d.toISOString().slice(0, 10)
+    const hoje = new Date()
+    const desde = periodo ? iso(new Date(hoje.getFullYear(), hoje.getMonth() - periodo, hoje.getDate())) : null
+    const [pend, tratados, usados, imp, ex] = await Promise.all([
+      todas(() => supabase.from('bank_transactions').select(COLS_TX).eq('user_id', eid).eq('status', 'pendente').order('tx_date', { ascending: false }).order('id')),
+      todas(() => {
+        let q = supabase.from('bank_transactions').select(COLS_TX).eq('user_id', eid).neq('status', 'pendente')
+        if (desde) q = q.gte('tx_date', desde)
+        return q.order('tx_date', { ascending: false }).order('id')
+      }),
+      // Que lançamentos já estão ligados, em todo o histórico (só duas colunas):
+      // um lançamento ligado a um movimento antigo não pode voltar a ser sugerido.
+      desde ? todas(() => supabase.from('bank_transactions').select('id,cash_entry_id').eq('user_id', eid).not('cash_entry_id', 'is', null).order('id')) : Promise.resolve([]),
       supabase.from('bank_imports').select('*').eq('user_id', eid).order('created_at', { ascending: false }).limit(6),
       // Lançamentos adicionais de um movimento (066). Sem a migração, segue vazio.
-      supabase.from('bank_transaction_entries').select('bank_transaction_id,cash_entry_id').eq('user_id', eid),
+      todas(() => supabase.from('bank_transaction_entries').select('bank_transaction_id,cash_entry_id').eq('user_id', eid).order('id')),
     ])
-    setTxs(tx.data || []); setEntries(ce.data || []); setImportacoes(imp.data || []); setLigacoesExtra(ex.error ? [] : (ex.data || [])); setLoading(false)
-  }, [eid])
+    let lista = [...pend, ...tratados].sort((a, b) => (a.tx_date < b.tx_date ? 1 : a.tx_date > b.tx_date ? -1 : 0))
+    // Vindo da marca "Ligado ao banco" com um movimento fora do período: traz só esse
+    if (movAlvo && !lista.some(x => x.id === movAlvo)) {
+      const { data: alvo } = await supabase.from('bank_transactions').select(COLS_TX).eq('user_id', eid).eq('id', movAlvo).maybeSingle()
+      if (alvo) lista = [...lista, alvo]
+    }
+    // Lançamentos do caixa: desde o início do período, recuado até 45 dias antes
+    // do pendente mais antigo (a janela dos candidatos) e até ao início do
+    // extrato mais antigo listado (para "Não constam do extrato").
+    let desdeCE = desde
+    if (desdeCE) {
+      for (const x of pend) {
+        const d = new Date(x.tx_date); d.setDate(d.getDate() - 45)
+        if (iso(d) < desdeCE) desdeCE = iso(d)
+      }
+      for (const i of imp.data || []) if (i.period_start && i.period_start < desdeCE) desdeCE = i.period_start
+    }
+    let ce = await todas(() => {
+      let q = supabase.from('cash_entries').select(COLS_CE).eq('user_id', eid).eq('destination', 'banco')
+      if (desdeCE) q = q.gte('entry_date', desdeCE)
+      return q.order('entry_date', { ascending: false }).order('id')
+    })
+    // Os lançamentos ligados aos movimentos carregados que ficaram antes do período
+    const exList = ex || []
+    const idsCarregados = new Set(lista.map(x => x.id))
+    const temCe = new Set(ce.map(e => e.id))
+    const emFalta = [...new Set([
+      ...lista.map(x => x.cash_entry_id),
+      ...exList.filter(x => idsCarregados.has(x.bank_transaction_id)).map(x => x.cash_entry_id),
+    ])].filter(id => id && !temCe.has(id))
+    for (let i = 0; i < emFalta.length; i += 150) {
+      const { data } = await supabase.from('cash_entries').select(COLS_CE).eq('user_id', eid).in('id', emFalta.slice(i, i + 150))
+      if (data) ce = [...ce, ...data]
+    }
+    setTxs(lista); setEntries(ce); setImportacoes(imp.data || []); setLigacoesExtra(exList)
+    setUsadosFora(usados.filter(u => !idsCarregados.has(u.id))); setLoading(false)
+  }, [eid, periodo, movAlvo])
   useEffect(() => { load() }, [load])
 
   // Um movimento pode cobrir vários lançamentos (LUC-243): o primeiro fica no
@@ -145,8 +223,9 @@ export default function Conciliacao() {
   }, [ligacoesExtra])
   const entriesUsadas = useMemo(() => new Set([
     ...txs.filter(x => x.cash_entry_id).map(x => x.cash_entry_id),
+    ...usadosFora.map(x => x.cash_entry_id),
     ...ligacoesExtra.map(x => x.cash_entry_id),
-  ]), [txs, ligacoesExtra])
+  ]), [txs, usadosFora, ligacoesExtra])
 
   // Sugestões recalculadas sobre o que ainda está pendente
   const { sugestoes, entriesSemPar } = useMemo(() => {
@@ -352,10 +431,28 @@ export default function Conciliacao() {
   async function conciliarSelecionados() {
     if (isViewing) { setErro(L.verComo); return }
     const alvos = txs.filter(x => x.status === 'pendente' && estaMarcado(x)).map(x => ({ tx: x, entryId: sugestaoDe(x).e.id }))
-    setEmLote(true)
-    // Um a um: se um lançamento já estiver ligado noutro separador, só esse
-    // falha (com o aviso no próprio cartão) e os outros seguem.
-    for (const { tx, entryId } of alvos) await conciliarCom(tx, entryId)
+    if (!alvos.length) return
+    setEmLote(true); setErro(''); setAviso('')
+    // Uma só ida ao banco (LUC-267, função conciliar_lote da 067): cada par é
+    // gravado à parte lá dentro; se um lançamento já estiver ligado noutro
+    // separador, só esse falha (com o aviso no próprio cartão) e os outros seguem.
+    const ids = new Set(alvos.map(a => a.tx.id))
+    const porTx = Object.fromEntries(alvos.map(a => [a.tx.id, a.entryId]))
+    setTxs(prev => prev.map(x => ids.has(x.id) ? { ...x, status: 'conciliado', cash_entry_id: porTx[x.id] } : x))
+    const { data, error } = await supabase.rpc('conciliar_lote', { p_pares: alvos.map(a => ({ tx: a.tx.id, entry: a.entryId })) })
+    if (error && (error.code === 'PGRST202' || error.code === '42883')) {
+      // Função ainda não criada no banco: segue como antes, um a um
+      for (const { tx, entryId } of alvos) await conciliarCom(tx, entryId)
+    } else if (error) {
+      setErro(error.message); load()
+    } else {
+      const falhas = data?.falhas || []
+      if (falhas.length) {
+        setErroTx(p => ({ ...p, ...Object.fromEntries(falhas.map(f => [f.tx, f.code === '23505' ? L.jaLigado : f.message])) }))
+        load()
+      }
+      setAviso(LP.resultadoLote(data?.ok ?? 0, falhas.length))
+    }
     setEmLote(false); setSelecao({})
   }
 
@@ -454,12 +551,19 @@ export default function Conciliacao() {
         <>
           <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
             {[['pendente', pendentes.length], ['conciliado', porStatus('conciliado').length], ['ignorado', porStatus('ignorado').length], ['semExtrato', entriesSemPar.length]].map(([k, n]) => (
-              <button key={k} onClick={() => setAba(k)} style={{
+              <button key={k} onClick={() => { setAba(k); setLimiteLista(100) }} style={{
                 padding: '7px 14px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                 border: `1px solid ${aba === k ? t.accent : t.cardBorder}`,
                 background: aba === k ? t.softCardBg : 'transparent', color: aba === k ? t.accentText : t.textMuted,
               }}>{L[k]} ({n})</button>
             ))}
+            {(aba === 'conciliado' || aba === 'ignorado') && (
+              <select value={periodo} onChange={e => { setPeriodo(Number(e.target.value)); setLimiteLista(100) }} aria-label={LP.periodo}
+                style={{ ...selToque, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+                {[3, 12, 24].map(n => <option key={n} value={n}>{LP.meses(n)}</option>)}
+                <option value={0}>{LP.tudo}</option>
+              </select>
+            )}
             {aba === 'pendente' && nSelecionaveis > 0 && (
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '7px', alignItems: 'center', flexWrap: 'wrap' }}>
                 {!isViewing && (
@@ -498,7 +602,11 @@ export default function Conciliacao() {
                   {aba === 'pendente' ? L.tudoOk : '—'}
                 </div>
               )}
-              {porStatus(aba).map(tx => {
+              {(() => {
+                const lista = porStatus(aba)
+                const idxAlvo = movAlvo ? lista.findIndex(x => x.id === movAlvo) : -1
+                return lista.slice(0, Math.max(limiteLista, idxAlvo + 1))
+              })().map(tx => {
                 const s = sugestoes.get(tx.fingerprint)
                 const sug = s ? entryById[s.entryId] : null
                 const ligado = tx.cash_entry_id ? entryById[tx.cash_entry_id] : null
@@ -568,8 +676,8 @@ export default function Conciliacao() {
                             )}
                           </div>
                         )}
-                        {tx.raw?.categoria && (
-                          <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '7px' }}>{L.categoriaExtrato}: {tx.raw.categoria}</div>
+                        {tx.categoria_extrato && (
+                          <div style={{ fontSize: '11px', color: t.subtle, marginBottom: '7px' }}>{L.categoriaExtrato}: {tx.categoria_extrato}</div>
                         )}
                         {(() => {
                           const { candidatos, outros } = candidatosDe(tx)
@@ -659,7 +767,7 @@ export default function Conciliacao() {
                           </select>
                           <select value={categoriaDe(tx)} onChange={e => setCategorias(p => ({ ...p, [tx.id]: e.target.value }))} disabled={isViewing}
                             aria-label={L.categoriaTitulo}
-                            title={tx.raw?.categoria ? `${L.categoriaExtrato}: ${tx.raw.categoria}` : L.categoriaTitulo}
+                            title={tx.categoria_extrato ? `${L.categoriaExtrato}: ${tx.categoria_extrato}` : L.categoriaTitulo}
                             style={{ ...selToque, maxWidth: '100%', background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
                             <option value="">{L.semCategoria}</option>
                             {opcoesCategorias(tx.type, extras, lang).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -678,6 +786,12 @@ export default function Conciliacao() {
                   </div>
                 )
               })}
+              {porStatus(aba).length > limiteLista && (
+                <button onClick={() => setLimiteLista(n => n + 100)}
+                  style={{ ...btnToque, width: '100%', background: 'transparent', border: `1px solid ${t.cardBorder}`, color: t.accentText }}>
+                  {LP.mostrarMais(porStatus(aba).length - limiteLista)}
+                </button>
+              )}
             </>
           )}
         </>
