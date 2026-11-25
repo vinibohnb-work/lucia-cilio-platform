@@ -114,6 +114,11 @@ export default function PaginaEvento({ evento, avisar, aoMudar, aoDuplicar }) {
       <p style={{ margin: '0 0 12px', fontSize: '13px', color: t.textMuted, lineHeight: 1.5 }}>
         A data e o nome vêm do cartão "Evento", acima. O visual, "O evento", "Quem organiza", as perguntas frequentes e o rodapé são iguais em todas as edições.
       </p>
+      {!evento.pagina_atual && (
+        <p style={{ margin: '0 0 12px', fontSize: '13px', color: t.textMuted, lineHeight: 1.5 }}>
+          Enquanto não carregar em "Mostrar em lcoffice.pt/momentos", só a equipa (com sessão iniciada neste navegador) vê esta edição; para os outros o endereço mostra a página geral. Depois da data do evento fica sempre visível.
+        </p>
+      )}
 
       <h3 style={subtitulo}>Destaque</h3>
       <div style={grelha}>
