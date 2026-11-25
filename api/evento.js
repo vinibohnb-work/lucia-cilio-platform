@@ -104,7 +104,22 @@ async function fotosAssinadas(db, linhas) {
   return Object.fromEntries((data || []).filter(x => x.signedUrl).map(x => [x.path, x.signedUrl]))
 }
 
-export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeLisboa()) {
+// LUC-268: publicada = a edição de lcoffice.pt/momentos ou uma que já aconteceu (data de Lisboa)
+export const edicaoPublicada = (e, hoje) => e?.pagina_atual === true || (typeof e?.data === 'string' && e.data < hoje)
+
+// Pré-visualização: a sessão do painel (Bearer) de alguém da equipa
+const EQUIPA = ['admin', 'comercial', 'marketing']
+async function daEquipa(db, sessao) {
+  if (!sessao) return false
+  try {
+    const { data: quem, error } = await db.auth.getUser(sessao)
+    if (error || !quem?.user) return false
+    const { data: prof } = await db.from('profiles').select('role').eq('id', quem.user.id).maybeSingle()
+    return EQUIPA.includes(prof?.role)
+  } catch { return false }
+}
+
+export async function tratar(db, { metodo, query = {}, body = {}, sessao = '' }, hoje = hojeLisboa()) {
   // Botão da landing: dá o código do QR só dentro da janela do evento
   if (metodo === 'GET' && query.entrada !== undefined) {
     if (typeof query.entrada !== 'string' || !/^[a-z0-9-]{2,80}$/.test(query.entrada)) return [404, { error: 'Evento não encontrado.' }]
@@ -124,13 +139,17 @@ export async function tratar(db, { metodo, query = {}, body = {} }, hoje = hojeL
 
   // Página do evento (migração 065, LUC-242): a landing pede o conteúdo da edição.
   // ?pagina= (vazio) → a edição marcada como atual; ?pagina=<id> → aquela edição.
+  // LUC-268 (revisão de segurança): uma edição em preparação (palestrantes, preço, local)
+  // não abre pelo endereço antes de a Lúcia a mostrar em lcoffice.pt/momentos. Só abrem a
+  // atual e as que já aconteceram; a equipa com sessão iniciada vê qualquer uma (pré-visualização).
   if (metodo === 'GET' && query.pagina !== undefined) {
     const pedido = typeof query.pagina === 'string' ? query.pagina : ''
     if (pedido && !idEventoValido(pedido)) return [404, { error: 'Edição não encontrada.' }]
-    let q = db.from('eventos').select('id, nome, data, local, landing_url, pagina').not('pagina', 'is', null)
+    let q = db.from('eventos').select('id, nome, data, local, landing_url, pagina, pagina_atual').not('pagina', 'is', null)
     q = pedido ? q.eq('id', pedido) : q.eq('pagina_atual', true)
     const { data: evento } = await q.maybeSingle()
     if (!evento) return [404, { error: 'Edição não encontrada.' }]
+    if (!edicaoPublicada(evento, hoje) && !(await daEquipa(db, sessao))) return [404, { error: 'Edição não encontrada.' }]
     return [200, { evento: infoEvento(evento), pagina: evento.pagina }]
   }
 
@@ -286,7 +305,8 @@ export default async function handler(req, res) {
   if (!URL || !SERVICE_KEY) return res.status(500).json({ error: 'Servidor sem configuração.' })
   const db = createClient(URL, SERVICE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
   try {
-    const [estado, corpo] = await tratar(db, { metodo: req.method, query: req.query || {}, body: req.body || {} })
+    const sessao = String(req.headers?.authorization || '').replace(/^Bearer\s+/i, '').trim()
+    const [estado, corpo] = await tratar(db, { metodo: req.method, query: req.query || {}, body: req.body || {}, sessao })
     return res.status(estado).json(corpo)
   } catch (e) {
     console.error('api/evento', e)

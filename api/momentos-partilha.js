@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { edicaoPublicada, hojeLisboa } from './evento.js'
 
 // ============================================================================
 // Link de partilha de cada edição do Momentos (LUC-242, migração 065).
@@ -68,10 +69,11 @@ export default async function handler(req, res) {
   if (URL_DB && SERVICE_KEY && (!pedido || idValido(pedido))) {
     try {
       const db = createClient(URL_DB, SERVICE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
-      let q = db.from('eventos').select('id, nome, data, local, pagina').not('pagina', 'is', null)
+      let q = db.from('eventos').select('id, nome, data, local, pagina, pagina_atual').not('pagina', 'is', null)
       q = pedido ? q.eq('id', pedido) : q.eq('pagina_atual', true)
       const { data } = await q.maybeSingle()
-      evento = data || null
+      // LUC-268: edição ainda não publicada → pré-visualização genérica (sem título, data nem imagem dela)
+      evento = data && edicaoPublicada(data, hojeLisboa()) ? data : null
     } catch (e) { console.error('api/momentos-partilha', e) }
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
