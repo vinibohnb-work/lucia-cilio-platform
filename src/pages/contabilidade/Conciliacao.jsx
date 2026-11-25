@@ -132,6 +132,10 @@ export default function Conciliacao() {
     periodo: 'Período', meses: (n) => `Últimos ${n} meses`, tudo: 'Todo o histórico', mostrarMais: (n) => `Mostrar mais (${n})`,
     resultadoLote: (ok, f) => `${ok} conciliado${ok === 1 ? '' : 's'}${f ? ` · ${f} falhou${f === 1 ? '' : 'aram'} (vê o cartão)` : ''}.`,
   }
+  // LUC-269: falha ao carregar a lista
+  const LE = lang === 'de' ? { erroCarga: 'Nicht alle Bewegungen konnten geladen werden. Bitte erneut versuchen.', tentar: 'Erneut versuchen' }
+    : lang === 'en' ? { erroCarga: 'Could not load all the transactions. Please try again.', tentar: 'Try again' }
+    : { erroCarga: 'Não foi possível carregar todos os movimentos. Tenta de novo.', tentar: 'Tentar de novo' }
 
   // Carga por período (LUC-267). Antes vinha todo o histórico do banco e do
   // caixa de uma vez (e o Supabase corta em 1000 linhas por pedido sem avisar).
@@ -142,22 +146,36 @@ export default function Conciliacao() {
   const [periodo, setPeriodo] = useState(12)        // meses; 0 = todo o histórico
   const [usadosFora, setUsadosFora] = useState([])  // { id, cash_entry_id } de movimentos fora do período
   const [limiteLista, setLimiteLista] = useState(100)
+  // LUC-269: a primeira carga mostra o esqueleto; as seguintes (trocar o
+  // período, recarregar depois de uma ação) mantêm a lista, esbatida e com
+  // "A carregar…", até chegar a nova. Se uma leitura falhar, aparece o aviso
+  // e fica a lista anterior inteira, nunca uma lista parcial.
+  const carregou = useRef(false)
+  const [aRecarregar, setARecarregar] = useState(false)
+  const [erroCarga, setErroCarga] = useState(false)
   const load = useCallback(async () => {
     if (!eid) return
-    setLoading(true)
+    if (carregou.current) setARecarregar(true); else setLoading(true)
+    setErroCarga(false)
+    try {
     const COLS_TX = 'id,tx_date,description,amount,type,status,cash_entry_id,fingerprint,comprovativo_path,comprovativo_nome,categoria_extrato:raw->>categoria'
     const COLS_CE = 'id,entry_date,description,type,amount,destination'
-    // Lê em páginas de 1000 até acabar
+    // Lê em páginas de 1000 até acabar; um erro numa página interrompe a carga
+    // inteira (antes parava em silêncio e a lista ficava incompleta)
     const todas = async (mk) => {
       const r = []
       for (let de = 0; ; de += 1000) {
         const { data, error } = await mk().range(de, de + 999)
-        if (error || !data) break
+        if (error) throw error
+        if (!data) break
         r.push(...data)
         if (data.length < 1000) break
       }
       return r
     }
+    // Lançamentos adicionais (066): sem a migração a tabela não existe e segue vazio
+    const extrasOuVazio = () => todas(() => supabase.from('bank_transaction_entries').select('bank_transaction_id,cash_entry_id').eq('user_id', eid).order('id'))
+      .catch(e => { if (e?.code === '42P01' || e?.code === 'PGRST205') return []; throw e })
     const iso = (d) => d.toISOString().slice(0, 10)
     const hoje = new Date()
     const desde = periodo ? iso(new Date(hoje.getFullYear(), hoje.getMonth() - periodo, hoje.getDate())) : null
@@ -173,8 +191,9 @@ export default function Conciliacao() {
       desde ? todas(() => supabase.from('bank_transactions').select('id,cash_entry_id').eq('user_id', eid).not('cash_entry_id', 'is', null).order('id')) : Promise.resolve([]),
       supabase.from('bank_imports').select('*').eq('user_id', eid).order('created_at', { ascending: false }).limit(6),
       // Lançamentos adicionais de um movimento (066). Sem a migração, segue vazio.
-      todas(() => supabase.from('bank_transaction_entries').select('bank_transaction_id,cash_entry_id').eq('user_id', eid).order('id')),
+      extrasOuVazio(),
     ])
+    if (imp.error) throw imp.error
     let lista = [...pend, ...tratados].sort((a, b) => (a.tx_date < b.tx_date ? 1 : a.tx_date > b.tx_date ? -1 : 0))
     // Vindo da marca "Ligado ao banco" com um movimento fora do período: traz só esse
     if (movAlvo && !lista.some(x => x.id === movAlvo)) {
@@ -206,11 +225,18 @@ export default function Conciliacao() {
       ...exList.filter(x => idsCarregados.has(x.bank_transaction_id)).map(x => x.cash_entry_id),
     ])].filter(id => id && !temCe.has(id))
     for (let i = 0; i < emFalta.length; i += 150) {
-      const { data } = await supabase.from('cash_entries').select(COLS_CE).eq('user_id', eid).in('id', emFalta.slice(i, i + 150))
+      const { data, error } = await supabase.from('cash_entries').select(COLS_CE).eq('user_id', eid).in('id', emFalta.slice(i, i + 150))
+      if (error) throw error
       if (data) ce = [...ce, ...data]
     }
     setTxs(lista); setEntries(ce); setImportacoes(imp.data || []); setLigacoesExtra(exList)
-    setUsadosFora(usados.filter(u => !idsCarregados.has(u.id))); setLoading(false)
+    setUsadosFora(usados.filter(u => !idsCarregados.has(u.id)))
+    carregou.current = true
+    } catch {
+      setErroCarga(true)
+    } finally {
+      setLoading(false); setARecarregar(false)
+    }
   }, [eid, periodo, movAlvo])
   useEffect(() => { load() }, [load])
 
@@ -477,6 +503,13 @@ export default function Conciliacao() {
       </div>
 
       {erro && <div style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{erro}</div>}
+      {erroCarga && (
+        <div role="alert" style={{ background: t.dueLate.bg, color: t.dueLate.ink, borderRadius: '10px', padding: '8px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <span style={{ flex: 1, minWidth: '180px' }}>{LE.erroCarga}</span>
+          <button onClick={load} disabled={aRecarregar}
+            style={{ ...btn, minHeight: '44px', padding: '0 14px', background: 'transparent', border: `1px solid ${t.dueLate.ink}`, color: t.dueLate.ink }}>{aRecarregar ? L.loading : LE.tentar}</button>
+        </div>
+      )}
       {aviso && <div style={{ background: t.chipBg, color: t.chipText, borderRadius: '10px', padding: '11px 15px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>{aviso}</div>}
 
       {/* Importar */}
@@ -519,7 +552,7 @@ export default function Conciliacao() {
         </div>
       )}
 
-      {!txs.length && !previa && (
+      {!txs.length && !previa && !erroCarga && (
         <div style={{ ...card, padding: '34px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: '34px', marginBottom: '10px' }}>🏦</div>
           <div style={{ fontSize: '14px', color: t.textMuted }}>{L.vazio}</div>
@@ -548,7 +581,7 @@ export default function Conciliacao() {
       )}
 
       {!!txs.length && (
-        <>
+        <div aria-busy={aRecarregar} style={{ opacity: aRecarregar ? .55 : 1, pointerEvents: aRecarregar ? 'none' : undefined, transition: 'opacity .15s' }}>
           <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '14px', alignItems: 'center' }}>
             {[['pendente', pendentes.length], ['conciliado', porStatus('conciliado').length], ['ignorado', porStatus('ignorado').length], ['semExtrato', entriesSemPar.length]].map(([k, n]) => (
               <button key={k} onClick={() => { setAba(k); setLimiteLista(100) }} style={{
@@ -558,12 +591,13 @@ export default function Conciliacao() {
               }}>{L[k]} ({n})</button>
             ))}
             {(aba === 'conciliado' || aba === 'ignorado') && (
-              <select value={periodo} onChange={e => { setPeriodo(Number(e.target.value)); setLimiteLista(100) }} aria-label={LP.periodo}
-                style={{ ...selToque, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: 'pointer' }}>
+              <select value={periodo} onChange={e => { setPeriodo(Number(e.target.value)); setLimiteLista(100) }} aria-label={LP.periodo} disabled={aRecarregar}
+                style={{ ...selToque, background: t.cardBg, border: `1px solid ${t.cardBorder}`, color: t.heading, cursor: aRecarregar ? 'wait' : 'pointer' }}>
                 {[3, 12, 24].map(n => <option key={n} value={n}>{LP.meses(n)}</option>)}
                 <option value={0}>{LP.tudo}</option>
               </select>
             )}
+            {aRecarregar && <span role="status" style={{ fontSize: '12px', fontWeight: 700, color: t.accentText }}>{L.loading}</span>}
             {aba === 'pendente' && nSelecionaveis > 0 && (
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '7px', alignItems: 'center', flexWrap: 'wrap' }}>
                 {!isViewing && (
@@ -794,7 +828,7 @@ export default function Conciliacao() {
               )}
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   )
