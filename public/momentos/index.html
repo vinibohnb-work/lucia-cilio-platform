@@ -621,7 +621,10 @@ window.paginaPronta = (async () => {
   const pedido = new URLSearchParams(location.search).get('e') || ''
   let dados = null
   try {
-    const r = await fetch('/api/evento?pagina=' + encodeURIComponent(pedido), { cache: 'no-store' })
+    // LUC-268: edição ainda não publicada só abre para a equipa com sessão no painel (mesmo domínio)
+    const cab = {}
+    if (pedido) try { const s = JSON.parse(localStorage.getItem('lc-office-auth') || 'null'); if (s && s.access_token) cab.Authorization = 'Bearer ' + s.access_token } catch { /* sem sessão */ }
+    const r = await fetch('/api/evento?pagina=' + encodeURIComponent(pedido), { cache: 'no-store', headers: cab })
     if (r.ok) dados = await r.json()
   } catch { /* sem rede: fica o conteúdo de reserva */ }
   try { if (dados && dados.pagina) aplicar(dados.evento, dados.pagina) } catch (e) { console.error('pagina', e) }
